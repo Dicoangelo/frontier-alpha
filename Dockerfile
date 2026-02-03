@@ -2,15 +2,18 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Install dependencies
+# Install ALL dependencies (including dev for build)
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy source
 COPY . .
 
-# Build TypeScript
-RUN npm run build
+# Build TypeScript (backend only)
+RUN npm run build:server
+
+# Remove dev dependencies after build
+RUN npm prune --production
 
 # Expose port
 EXPOSE 3000

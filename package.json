@@ -8,6 +8,7 @@
     "dev": "tsx watch src/index.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run client:dev\"",
     "build": "tsc && npm run client:build",
+    "build:server": "tsc",
     "start": "node dist/index.js",
     "test": "vitest",
     "lint": "eslint src --ext .ts",

@@ -1,0 +1,9 @@
+fastapi==0.109.0
+uvicorn==0.27.0
+pandas==2.1.4
+numpy==1.26.3
+scikit-learn==1.4.0
+PyPortfolioOpt==1.5.5
+transformers==4.37.0
+torch==2.1.2
+yfinance==0.2.35

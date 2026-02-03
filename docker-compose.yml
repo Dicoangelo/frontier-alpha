@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - POLYGON_API_KEY=${POLYGON_API_KEY}
+      - ALPHA_VANTAGE_API_KEY=${ALPHA_VANTAGE_API_KEY}
+    depends_on:
+      - redis
+      - postgres
+
+  ml:
+    build:
+      context: ./ml
+      dockerfile: Dockerfile.ml
+    ports:
+      - "8000:8000"
+    environment:
+      - ML_DEVICE=cpu
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=frontier_alpha
+      - POSTGRES_USER=frontier
+      - POSTGRES_PASSWORD=frontier123
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  redis-data:
+  postgres-data:

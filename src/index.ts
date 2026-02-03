@@ -376,8 +376,9 @@ export class FrontierAlphaServer {
 
         try {
           const prices = new Map<string, any[]>();
+          // Request 300 days to ensure enough data for momentum calculations (need 252 + 21 + buffer)
           for (const symbol of [...symbols, 'SPY']) {
-            const symbolPrices = await this.dataProvider.getHistoricalPrices(symbol, 252);
+            const symbolPrices = await this.dataProvider.getHistoricalPrices(symbol, 300);
             prices.set(symbol, symbolPrices);
           }
 

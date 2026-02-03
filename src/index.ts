@@ -380,9 +380,11 @@ export class FrontierAlphaServer {
           for (const symbol of [...symbols, 'SPY']) {
             const symbolPrices = await this.dataProvider.getHistoricalPrices(symbol, 300);
             prices.set(symbol, symbolPrices);
+            console.log(`[FACTORS] ${symbol}: fetched ${symbolPrices.length} prices`);
           }
 
           const exposures = await this.factorEngine.calculateExposures(symbols, prices);
+          console.log(`[FACTORS] Calculated exposures for ${exposures.size} symbols`);
 
           return {
             success: true,

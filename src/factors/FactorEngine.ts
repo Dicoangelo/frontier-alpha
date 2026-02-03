@@ -79,7 +79,11 @@ export class FactorEngine {
     
     for (const symbol of symbols) {
       const symbolPrices = prices.get(symbol);
-      if (!symbolPrices || symbolPrices.length < 252) continue;
+      if (!symbolPrices || symbolPrices.length < 252) {
+        console.log(`[FACTOR_ENGINE] Skipping ${symbol}: only ${symbolPrices?.length || 0} prices (need 252)`);
+        continue;
+      }
+      console.log(`[FACTOR_ENGINE] Processing ${symbol}: ${symbolPrices.length} prices`);
       
       const symbolExposures: FactorExposure[] = [];
       

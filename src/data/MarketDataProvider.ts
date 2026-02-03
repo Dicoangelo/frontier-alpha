@@ -342,7 +342,8 @@ export class MarketDataProvider {
     // Generate enough calendar days to get the requested trading days
     // (approximately 7/5 ratio for weekdays)
     let calendarDays = 0;
-    while (prices.length < days) {
+    const maxCalendarDays = days * 2;  // Safety limit
+    while (prices.length < days && calendarDays < maxCalendarDays) {
       const date = new Date();
       date.setDate(date.getDate() - calendarDays);
       calendarDays++;
@@ -367,6 +368,7 @@ export class MarketDataProvider {
     }
 
     // Reverse to chronological order (oldest first)
+    console.log(`[MOCK_PRICES] Generated ${prices.length} trading days for ${symbol} (requested ${days})`);
     return prices.reverse();
   }
 

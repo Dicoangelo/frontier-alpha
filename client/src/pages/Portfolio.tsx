@@ -7,20 +7,21 @@ import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
 
 interface Position {
-  id: string;
+  id?: string;
   symbol: string;
   shares: number;
-  avg_cost: number;
-  current_price?: number;
-  unrealized_pnl?: number;
+  costBasis: number;
+  currentPrice: number;
+  unrealizedPnL: number;
+  weight: number;
 }
 
 interface PortfolioData {
   id: string;
   name: string;
-  cash_balance: number;
+  cash: number;
   positions: Position[];
-  total_value: number;
+  totalValue: number;
 }
 
 export function Portfolio() {
@@ -85,7 +86,7 @@ export function Portfolio() {
     setFormData({
       symbol: position.symbol,
       shares: position.shares.toString(),
-      avgCost: position.avg_cost.toString(),
+      avgCost: position.costBasis.toString(),
     });
   };
 
@@ -106,8 +107,8 @@ export function Portfolio() {
   }
 
   const positions = portfolio?.data?.positions || [];
-  const cashBalance = portfolio?.data?.cash_balance || 0;
-  const totalValue = portfolio?.data?.total_value || 0;
+  const cashBalance = portfolio?.data?.cash || 0;
+  const totalValue = portfolio?.data?.totalValue || 0;
 
   return (
     <div className="space-y-6">
@@ -264,15 +265,15 @@ export function Portfolio() {
                       <>
                         <td className="py-3 px-4 font-medium">{position.symbol}</td>
                         <td className="py-3 px-4 text-right">{position.shares.toFixed(2)}</td>
-                        <td className="py-3 px-4 text-right">${position.avg_cost.toFixed(2)}</td>
+                        <td className="py-3 px-4 text-right">${position.costBasis.toFixed(2)}</td>
                         <td className="py-3 px-4 text-right">
-                          ${(position.current_price || position.avg_cost).toFixed(2)}
+                          ${(position.currentPrice || position.costBasis).toFixed(2)}
                         </td>
                         <td className={`py-3 px-4 text-right ${
-                          (position.unrealized_pnl || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                          (position.unrealizedPnL || 0) >= 0 ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          {(position.unrealized_pnl || 0) >= 0 ? '+' : ''}
-                          ${(position.unrealized_pnl || 0).toFixed(2)}
+                          {(position.unrealizedPnL || 0) >= 0 ? '+' : ''}
+                          ${(position.unrealizedPnL || 0).toFixed(2)}
                         </td>
                         <td className="py-3 px-4 text-right">
                           <button

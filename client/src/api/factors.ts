@@ -12,13 +12,38 @@ export interface PortfolioFactors {
   insight?: string;
 }
 
+interface ApiResponse {
+  success: boolean;
+  data: Record<string, FactorExposure[]>;
+  meta?: { timestamp: string; requestId: string; latencyMs: number };
+}
+
 export const factorsApi = {
   getFactors: async (symbols: string[]): Promise<PortfolioFactors> => {
     if (symbols.length === 0) {
       return { factors: [], lastUpdated: new Date().toISOString() };
     }
-    const response = await api.get(`/portfolio/factors/${symbols.join(',')}`);
-    return response.data;
+    const response = await api.get<ApiResponse>(`/portfolio/factors/${symbols.join(',')}`);
+
+    // Transform backend response { data: { AAPL: [...], NVDA: [...] } }
+    // into { factors: [...all factors with symbols and categories...] }
+    const factorsBySymbol = (response as unknown as ApiResponse).data || {};
+    const allFactors: FactorExposureWithCategory[] = [];
+
+    for (const [symbol, factors] of Object.entries(factorsBySymbol)) {
+      for (const factor of factors) {
+        allFactors.push({
+          ...factor,
+          symbol,
+          category: categorizeFactorName(factor.factor),
+        });
+      }
+    }
+
+    return {
+      factors: allFactors,
+      lastUpdated: (response as unknown as ApiResponse).meta?.timestamp || new Date().toISOString(),
+    };
   },
 
   getFactorsByCategory: async (symbols: string[]): Promise<Record<string, FactorExposureWithCategory[]>> => {
@@ -27,8 +52,8 @@ export const factorsApi = {
   },
 
   refreshFactors: async (symbols: string[]): Promise<PortfolioFactors> => {
-    const response = await api.post('/portfolio/factors/refresh', { symbols });
-    return response.data;
+    // Use the same endpoint - no separate refresh endpoint on backend
+    return factorsApi.getFactors(symbols);
   },
 };
 

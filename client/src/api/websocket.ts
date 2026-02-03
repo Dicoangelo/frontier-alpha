@@ -7,10 +7,12 @@ class WebSocketClient {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
 
-  connect(url: string = 'ws://localhost:3000/ws/quotes') {
+  connect(url?: string) {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const wsUrl = url || apiUrl.replace('https://', 'wss://').replace('http://', 'ws://') + '/ws/quotes';
     if (this.ws?.readyState === WebSocket.OPEN) return;
 
-    this.ws = new WebSocket(url);
+    this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
       console.log('WebSocket connected');
@@ -37,7 +39,7 @@ class WebSocketClient {
     };
   }
 
-  private attemptReconnect(url: string) {
+  private attemptReconnect(url?: string) {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       setTimeout(() => this.connect(url), this.reconnectDelay * this.reconnectAttempts);

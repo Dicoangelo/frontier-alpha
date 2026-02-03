@@ -1,0 +1,42 @@
+import { Bell, Settings } from 'lucide-react';
+import { useAlertsStore } from '@/stores/alertsStore';
+
+export function Header() {
+  const unreadCount = useAlertsStore((state) => state.unreadCount);
+
+  return (
+    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b z-50">
+      <div className="flex items-center justify-between h-full px-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
+            <span className="text-white text-xl">F</span>
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Frontier Alpha</h1>
+            <p className="text-xs text-gray-500">Cognitive Factor Intelligence</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-sm text-green-600">Live</span>
+          </div>
+
+          <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+
+          <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+            <Settings className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}

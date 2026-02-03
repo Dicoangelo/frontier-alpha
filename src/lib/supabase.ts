@@ -8,7 +8,9 @@ if (!supabaseServiceKey) {
 }
 
 // Server-side client with service role key (bypasses RLS)
-export const supabaseAdmin: SupabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+// Use a dummy key for local development when no service key is provided
+const effectiveKey = supabaseServiceKey || 'dummy-key-for-local-dev';
+export const supabaseAdmin: SupabaseClient = createClient(supabaseUrl, effectiveKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,

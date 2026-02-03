@@ -4,7 +4,9 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.SUPABASE_URL || 'https://rqidgeittsjkpkykmdrz.supabase.co';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+// Use a dummy key for local development when no service key is provided
+const effectiveKey = supabaseServiceKey || 'dummy-key-for-local-dev';
+const supabase = createClient(supabaseUrl, effectiveKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,

@@ -334,23 +334,27 @@ export class MarketDataProvider {
     const prices: Price[] = [];
     const hash = symbol.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
     let price = 50 + (hash % 450);
-    
+
     // Generate with random walk + drift
     const drift = 0.0003;  // ~7.5% annual return
     const vol = 0.015;     // ~24% annual volatility
-    
-    for (let i = days; i >= 0; i--) {
+
+    // Generate enough calendar days to get the requested trading days
+    // (approximately 7/5 ratio for weekdays)
+    let calendarDays = 0;
+    while (prices.length < days) {
       const date = new Date();
-      date.setDate(date.getDate() - i);
-      
+      date.setDate(date.getDate() - calendarDays);
+      calendarDays++;
+
       // Skip weekends
       if (date.getDay() === 0 || date.getDay() === 6) continue;
-      
+
       const dailyReturn = drift + vol * this.boxMullerRandom();
       price = price * (1 + dailyReturn);
-      
+
       const dailyVol = Math.abs(this.boxMullerRandom()) * 0.01;
-      
+
       prices.push({
         symbol,
         timestamp: date,
@@ -361,8 +365,9 @@ export class MarketDataProvider {
         volume: Math.floor(1000000 + Math.random() * 9000000),
       });
     }
-    
-    return prices;
+
+    // Reverse to chronological order (oldest first)
+    return prices.reverse();
   }
 
   private generateFactorReturns(factor: string, days: number): number[] {

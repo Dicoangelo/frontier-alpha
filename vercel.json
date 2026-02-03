@@ -3,12 +3,7 @@
   "outputDirectory": "client/dist",
   "framework": "vite",
   "installCommand": "npm install && cd client && npm install",
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "@vercel/node@3"
-    }
-  },
-  "rewrites": [
+    "rewrites": [
     { "source": "/api/:path*", "destination": "/api/:path*" },
     { "source": "/health", "destination": "/api/health" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }

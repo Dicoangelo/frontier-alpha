@@ -7,6 +7,21 @@ export const portfolioApi = {
     return response.data;
   },
 
+  addPosition: async (symbol: string, shares: number, avgCost: number) => {
+    const response = await api.post('/portfolio/positions', { symbol, shares, avgCost });
+    return response.data;
+  },
+
+  updatePosition: async (id: string, shares: number, avgCost: number) => {
+    const response = await api.put(`/portfolio/positions/${id}`, { shares, avgCost });
+    return response.data;
+  },
+
+  deletePosition: async (id: string) => {
+    const response = await api.delete(`/portfolio/positions/${id}`);
+    return response.data;
+  },
+
   optimize: async (
     symbols: string[],
     config: OptimizationConfig

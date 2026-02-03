@@ -1,7 +1,8 @@
+import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Briefcase, Sparkles, BarChart3, Calendar, Settings } from 'lucide-react';
 
 const navigation = [
-  { name: 'Dashboard', icon: LayoutDashboard, href: '/', active: true },
+  { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
   { name: 'Portfolio', icon: Briefcase, href: '/portfolio' },
   { name: 'Optimize', icon: Sparkles, href: '/optimize' },
   { name: 'Factors', icon: BarChart3, href: '/factors' },
@@ -14,12 +15,13 @@ export function Sidebar() {
     <aside className="fixed left-0 top-16 bottom-0 w-64 bg-white border-r">
       <nav className="p-4 space-y-1">
         {navigation.map((item) => (
-          <a
+          <NavLink
             key={item.name}
-            href={item.href}
-            className={`
+            to={item.href}
+            end={item.href === '/'}
+            className={({ isActive }) => `
               flex items-center gap-3 px-4 py-3 rounded-lg transition
-              ${item.active
+              ${isActive
                 ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 font-medium'
                 : 'text-gray-600 hover:bg-gray-50'
               }
@@ -27,7 +29,7 @@ export function Sidebar() {
           >
             <item.icon className="w-5 h-5" />
             {item.name}
-          </a>
+          </NavLink>
         ))}
       </nav>
 

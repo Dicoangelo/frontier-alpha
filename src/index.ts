@@ -16,7 +16,7 @@
  * - /ws/quotes - Real-time quote streaming
  */
 
-import Fastify, { FastifyInstance } from 'fastify';
+import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import cors from '@fastify/cors';
 import websocket from '@fastify/websocket';
 
@@ -25,6 +25,9 @@ import { PortfolioOptimizer } from './optimizer/PortfolioOptimizer.js';
 import { CognitiveExplainer } from './core/CognitiveExplainer.js';
 import { EarningsOracle } from './core/EarningsOracle.js';
 import { MarketDataProvider } from './data/MarketDataProvider.js';
+import { authMiddleware, optionalAuthMiddleware } from './middleware/auth.js';
+import { portfolioService } from './services/PortfolioService.js';
+import { supabaseAdmin } from './lib/supabase.js';
 
 import type {
   APIResponse,
@@ -66,8 +69,9 @@ export class FrontierAlphaServer {
   private dataProvider: MarketDataProvider;
   private config: ServerConfig;
 
-  // In-memory portfolio state (in production: use database)
+  // In-memory portfolio state (fallback for unauthenticated requests)
   private currentPortfolio: Portfolio | null = null;
+  private useDatabase: boolean = !!process.env.SUPABASE_SERVICE_KEY;
 
   constructor(config: Partial<ServerConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -108,14 +112,49 @@ export class FrontierAlphaServer {
     });
 
     // ========================================
-    // Portfolio Endpoints
+    // Portfolio Endpoints (Protected)
     // ========================================
-    
-    this.app.get<{ Reply: APIResponse<Portfolio> }>(
+
+    this.app.get<{ Reply: APIResponse<any> }>(
       '/api/v1/portfolio',
+      { preHandler: this.useDatabase ? authMiddleware : undefined },
       async (request, reply) => {
         const start = Date.now();
-        
+
+        // If using database and user is authenticated
+        if (this.useDatabase && request.user) {
+          const dbPortfolio = await portfolioService.getPortfolio(request.user.id);
+
+          if (!dbPortfolio) {
+            return reply.status(404).send({
+              success: false,
+              error: { code: 'NOT_FOUND', message: 'No portfolio found' },
+            });
+          }
+
+          // Get current quotes for positions
+          const quotes = new Map<string, number>();
+          for (const position of dbPortfolio.positions) {
+            const quote = await this.dataProvider.getQuote(position.symbol);
+            if (quote) {
+              quotes.set(position.symbol, quote.last);
+            }
+          }
+
+          const portfolio = portfolioService.toAPIFormat(dbPortfolio, quotes);
+
+          return {
+            success: true,
+            data: portfolio,
+            meta: {
+              timestamp: new Date(),
+              requestId: request.id,
+              latencyMs: Date.now() - start,
+            },
+          };
+        }
+
+        // Fallback to in-memory portfolio
         if (!this.currentPortfolio) {
           return reply.status(404).send({
             success: false,
@@ -132,6 +171,156 @@ export class FrontierAlphaServer {
             latencyMs: Date.now() - start,
           },
         };
+      }
+    );
+
+    // Add position
+    this.app.post<{
+      Body: { symbol: string; shares: number; avgCost: number };
+      Reply: APIResponse<any>;
+    }>(
+      '/api/v1/portfolio/positions',
+      { preHandler: authMiddleware },
+      async (request, reply) => {
+        const start = Date.now();
+        const { symbol, shares, avgCost } = request.body;
+
+        if (!request.user) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+          });
+        }
+
+        try {
+          const position = await portfolioService.addPosition(
+            request.user.id,
+            symbol,
+            shares,
+            avgCost
+          );
+
+          if (!position) {
+            return reply.status(400).send({
+              success: false,
+              error: { code: 'ADD_FAILED', message: 'Failed to add position' },
+            });
+          }
+
+          return {
+            success: true,
+            data: position,
+            meta: {
+              timestamp: new Date(),
+              requestId: request.id,
+              latencyMs: Date.now() - start,
+            },
+          };
+        } catch (error: any) {
+          return reply.status(500).send({
+            success: false,
+            error: { code: 'SERVER_ERROR', message: error.message },
+          });
+        }
+      }
+    );
+
+    // Update position
+    this.app.put<{
+      Params: { id: string };
+      Body: { shares: number; avgCost: number };
+      Reply: APIResponse<any>;
+    }>(
+      '/api/v1/portfolio/positions/:id',
+      { preHandler: authMiddleware },
+      async (request, reply) => {
+        const start = Date.now();
+        const { id } = request.params;
+        const { shares, avgCost } = request.body;
+
+        if (!request.user) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+          });
+        }
+
+        try {
+          const position = await portfolioService.updatePosition(
+            request.user.id,
+            id,
+            shares,
+            avgCost
+          );
+
+          if (!position) {
+            return reply.status(404).send({
+              success: false,
+              error: { code: 'NOT_FOUND', message: 'Position not found' },
+            });
+          }
+
+          return {
+            success: true,
+            data: position,
+            meta: {
+              timestamp: new Date(),
+              requestId: request.id,
+              latencyMs: Date.now() - start,
+            },
+          };
+        } catch (error: any) {
+          return reply.status(500).send({
+            success: false,
+            error: { code: 'SERVER_ERROR', message: error.message },
+          });
+        }
+      }
+    );
+
+    // Delete position
+    this.app.delete<{
+      Params: { id: string };
+      Reply: APIResponse<{ deleted: boolean }>;
+    }>(
+      '/api/v1/portfolio/positions/:id',
+      { preHandler: authMiddleware },
+      async (request, reply) => {
+        const start = Date.now();
+        const { id } = request.params;
+
+        if (!request.user) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+          });
+        }
+
+        try {
+          const deleted = await portfolioService.deletePosition(request.user.id, id);
+
+          if (!deleted) {
+            return reply.status(404).send({
+              success: false,
+              error: { code: 'NOT_FOUND', message: 'Position not found' },
+            });
+          }
+
+          return {
+            success: true,
+            data: { deleted: true },
+            meta: {
+              timestamp: new Date(),
+              requestId: request.id,
+              latencyMs: Date.now() - start,
+            },
+          };
+        } catch (error: any) {
+          return reply.status(500).send({
+            success: false,
+            error: { code: 'SERVER_ERROR', message: error.message },
+          });
+        }
       }
     );
 
@@ -380,21 +569,210 @@ export class FrontierAlphaServer {
     );
 
     // ========================================
+    // User Settings Endpoints (Protected)
+    // ========================================
+
+    this.app.get<{ Reply: APIResponse<any> }>(
+      '/api/v1/settings',
+      { preHandler: authMiddleware },
+      async (request, reply) => {
+        const start = Date.now();
+
+        if (!request.user) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+          });
+        }
+
+        const { data, error } = await supabaseAdmin
+          .from('frontier_user_settings')
+          .select('*')
+          .eq('user_id', request.user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          return reply.status(500).send({
+            success: false,
+            error: { code: 'FETCH_ERROR', message: error.message },
+          });
+        }
+
+        return {
+          success: true,
+          data: data || {
+            display_name: null,
+            risk_tolerance: 'moderate',
+            notifications_enabled: true,
+            email_alerts: true,
+            max_position_pct: 20,
+            stop_loss_pct: 10,
+            take_profit_pct: 25,
+          },
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      }
+    );
+
+    this.app.put<{
+      Body: {
+        display_name?: string;
+        risk_tolerance?: 'conservative' | 'moderate' | 'aggressive';
+        notifications_enabled?: boolean;
+        email_alerts?: boolean;
+        max_position_pct?: number;
+        stop_loss_pct?: number;
+        take_profit_pct?: number;
+      };
+      Reply: APIResponse<any>;
+    }>(
+      '/api/v1/settings',
+      { preHandler: authMiddleware },
+      async (request, reply) => {
+        const start = Date.now();
+
+        if (!request.user) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+          });
+        }
+
+        const { data, error } = await supabaseAdmin
+          .from('frontier_user_settings')
+          .upsert({
+            user_id: request.user.id,
+            ...request.body,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          return reply.status(500).send({
+            success: false,
+            error: { code: 'UPDATE_ERROR', message: error.message },
+          });
+        }
+
+        return {
+          success: true,
+          data,
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      }
+    );
+
+    // ========================================
+    // Alerts Endpoints (Protected)
+    // ========================================
+
+    this.app.get<{ Reply: APIResponse<any[]> }>(
+      '/api/v1/alerts',
+      { preHandler: authMiddleware },
+      async (request, reply) => {
+        const start = Date.now();
+
+        if (!request.user) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+          });
+        }
+
+        const { data, error } = await supabaseAdmin
+          .from('frontier_risk_alerts')
+          .select('*')
+          .eq('user_id', request.user.id)
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (error) {
+          return reply.status(500).send({
+            success: false,
+            error: { code: 'FETCH_ERROR', message: error.message },
+          });
+        }
+
+        return {
+          success: true,
+          data: data || [],
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      }
+    );
+
+    this.app.put<{
+      Params: { id: string };
+      Reply: APIResponse<any>;
+    }>(
+      '/api/v1/alerts/:id/acknowledge',
+      { preHandler: authMiddleware },
+      async (request, reply) => {
+        const start = Date.now();
+        const { id } = request.params;
+
+        if (!request.user) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+          });
+        }
+
+        const { data, error } = await supabaseAdmin
+          .from('frontier_risk_alerts')
+          .update({ acknowledged_at: new Date().toISOString() })
+          .eq('id', id)
+          .eq('user_id', request.user.id)
+          .select()
+          .single();
+
+        if (error) {
+          return reply.status(500).send({
+            success: false,
+            error: { code: 'UPDATE_ERROR', message: error.message },
+          });
+        }
+
+        return {
+          success: true,
+          data,
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      }
+    );
+
+    // ========================================
     // WebSocket for Real-time Quotes
     // ========================================
 
-    this.app.get('/ws/quotes', { websocket: true }, (connection, req) => {
+    this.app.get('/ws/quotes', { websocket: true }, (connection: any, req) => {
       const symbols = new Set<string>();
 
       connection.socket.on('message', async (message: Buffer) => {
         try {
           const data = JSON.parse(message.toString());
-          
+
           if (data.type === 'subscribe') {
             for (const symbol of data.symbols || []) {
               symbols.add(symbol);
             }
-            
+
             // Start streaming quotes
             const unsubscribe = await this.dataProvider.subscribeQuotes(
               Array.from(symbols),

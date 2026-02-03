@@ -9,6 +9,7 @@
  */
 
 import type { Price, Quote, Asset } from '../types/index.js';
+import { supabaseAdmin } from '../lib/supabase.js';
 
 // ============================================================================
 // CONFIGURATION
@@ -28,7 +29,8 @@ export class MarketDataProvider {
   private config: DataProviderConfig;
   private priceCache: Map<string, { prices: Price[]; timestamp: number }> = new Map();
   private quoteCache: Map<string, { quote: Quote; timestamp: number }> = new Map();
-  
+  private useSupabaseCache: boolean = !!process.env.SUPABASE_SERVICE_KEY;
+
   constructor(config: DataProviderConfig = {}) {
     this.config = {
       cacheTTLSeconds: 60,
@@ -38,31 +40,129 @@ export class MarketDataProvider {
 
   /**
    * Get real-time quote for a symbol
+   * Priority: Memory cache -> Supabase cache -> Polygon.io -> Alpha Vantage -> Mock
    */
   async getQuote(symbol: string): Promise<Quote | null> {
-    // Check cache
-    const cached = this.quoteCache.get(symbol);
+    const upperSymbol = symbol.toUpperCase();
+
+    // Check memory cache first
+    const memoryCached = this.quoteCache.get(upperSymbol);
     const now = Date.now();
-    
-    if (cached && (now - cached.timestamp) < (this.config.cacheTTLSeconds || 60) * 1000) {
-      return cached.quote;
+
+    if (memoryCached && (now - memoryCached.timestamp) < (this.config.cacheTTLSeconds || 60) * 1000) {
+      return memoryCached.quote;
     }
-    
+
+    // Check Supabase cache (1 hour TTL)
+    if (this.useSupabaseCache) {
+      try {
+        const { data: cachedQuote } = await supabaseAdmin
+          .from('frontier_quote_cache')
+          .select('*')
+          .eq('symbol', upperSymbol)
+          .single();
+
+        if (cachedQuote) {
+          const cacheAge = now - new Date(cachedQuote.cached_at).getTime();
+          if (cacheAge < 3600 * 1000) {  // 1 hour cache for DB
+            const quote: Quote = {
+              symbol: cachedQuote.symbol,
+              timestamp: new Date(cachedQuote.cached_at),
+              bid: cachedQuote.price * 0.9999,
+              ask: cachedQuote.price * 1.0001,
+              last: cachedQuote.price,
+              change: cachedQuote.change,
+              changePercent: cachedQuote.change_percent,
+            };
+            this.quoteCache.set(upperSymbol, { quote, timestamp: now });
+            return quote;
+          }
+        }
+      } catch (e) {
+        console.error(`Supabase cache error for ${upperSymbol}:`, e);
+      }
+    }
+
     // Fetch from Polygon.io
     if (this.config.polygonApiKey) {
       try {
-        const quote = await this.fetchPolygonQuote(symbol);
+        const quote = await this.fetchPolygonQuote(upperSymbol);
         if (quote) {
-          this.quoteCache.set(symbol, { quote, timestamp: now });
+          this.quoteCache.set(upperSymbol, { quote, timestamp: now });
+          await this.cacheQuoteToSupabase(quote);
           return quote;
         }
       } catch (e) {
-        console.error(`Polygon quote error for ${symbol}:`, e);
+        console.error(`Polygon quote error for ${upperSymbol}:`, e);
       }
     }
-    
+
+    // Fetch from Alpha Vantage (as backup for real quotes)
+    if (this.config.alphaVantageApiKey) {
+      try {
+        const quote = await this.fetchAlphaVantageQuote(upperSymbol);
+        if (quote) {
+          this.quoteCache.set(upperSymbol, { quote, timestamp: now });
+          await this.cacheQuoteToSupabase(quote);
+          return quote;
+        }
+      } catch (e) {
+        console.error(`Alpha Vantage quote error for ${upperSymbol}:`, e);
+      }
+    }
+
     // Fallback: Generate mock quote for demo
-    return this.generateMockQuote(symbol);
+    return this.generateMockQuote(upperSymbol);
+  }
+
+  /**
+   * Cache quote to Supabase for rate limiting
+   */
+  private async cacheQuoteToSupabase(quote: Quote): Promise<void> {
+    if (!this.useSupabaseCache) return;
+
+    try {
+      await supabaseAdmin
+        .from('frontier_quote_cache')
+        .upsert({
+          symbol: quote.symbol,
+          price: quote.last,
+          change: quote.change,
+          change_percent: quote.changePercent,
+          cached_at: new Date().toISOString(),
+        });
+    } catch (e) {
+      console.error('Failed to cache quote to Supabase:', e);
+    }
+  }
+
+  /**
+   * Fetch quote from Alpha Vantage GLOBAL_QUOTE endpoint
+   */
+  private async fetchAlphaVantageQuote(symbol: string): Promise<Quote | null> {
+    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${this.config.alphaVantageApiKey}`;
+
+    const response = await fetch(url);
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const globalQuote = data['Global Quote'];
+
+    if (!globalQuote || !globalQuote['05. price']) return null;
+
+    const price = parseFloat(globalQuote['05. price']);
+    const change = parseFloat(globalQuote['09. change'] || '0');
+    const changePercent = parseFloat((globalQuote['10. change percent'] || '0').replace('%', ''));
+
+    return {
+      symbol,
+      timestamp: new Date(),
+      bid: price * 0.9999,
+      ask: price * 1.0001,
+      last: price,
+      change,
+      changePercent,
+    };
   }
 
   /**
@@ -148,15 +248,15 @@ export class MarketDataProvider {
 
   private async fetchPolygonQuote(symbol: string): Promise<Quote | null> {
     const url = `https://api.polygon.io/v2/last/trade/${symbol}?apiKey=${this.config.polygonApiKey}`;
-    
+
     const response = await fetch(url);
     if (!response.ok) return null;
-    
-    const data = await response.json();
+
+    const data = await response.json() as { results?: { t: number; p: number } };
     const trade = data.results;
-    
+
     if (!trade) return null;
-    
+
     return {
       symbol,
       timestamp: new Date(trade.t),

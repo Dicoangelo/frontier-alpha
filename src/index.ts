@@ -108,7 +108,7 @@ export class FrontierAlphaServer {
     // Health Check
     // ========================================
     this.app.get('/health', async () => {
-      return { status: 'ok', timestamp: new Date().toISOString() };
+      return { status: 'ok', timestamp: new Date().toISOString(), version: '1.0.3-debug' };
     });
 
     // ========================================

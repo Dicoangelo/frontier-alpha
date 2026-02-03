@@ -49,6 +49,7 @@ export interface FactorExposure {
 }
 
 export interface Position {
+  id: string;
   symbol: string;
   shares: number;
   weight: number;

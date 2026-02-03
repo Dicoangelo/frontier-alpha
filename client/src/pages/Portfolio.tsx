@@ -7,7 +7,7 @@ import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
 
 interface Position {
-  id?: string;
+  id: string;
   symbol: string;
   shares: number;
   costBasis: number;

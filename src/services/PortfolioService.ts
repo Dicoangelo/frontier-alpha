@@ -259,6 +259,7 @@ export class PortfolioService {
       const costBasis = shares * avgCost;
 
       return {
+        id: p.id,
         symbol: p.symbol,
         shares,
         weight: 0, // Will be calculated after total value is known

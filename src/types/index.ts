@@ -117,6 +117,22 @@ export interface SentimentScore {
   scores: { positive: number; neutral: number; negative: number };
 }
 
+export interface EarningsEvent {
+  symbol: string;
+  reportDate: Date;
+  fiscalQuarter: string;
+  estimatedEPS: number;
+  actualEPS?: number;
+}
+
+export interface EarningsReaction {
+  symbol: string;
+  reportDate: Date;
+  surprise: number;
+  priceChange: number;
+  volumeChange: number;
+}
+
 export interface EarningsImpactForecast {
   symbol: string;
   reportDate: Date;

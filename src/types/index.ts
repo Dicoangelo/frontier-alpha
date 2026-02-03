@@ -122,16 +122,23 @@ export interface EarningsEvent {
   symbol: string;
   reportDate: Date;
   fiscalQuarter: string;
-  estimatedEPS: number;
+  estimatedEPS?: number;
+  epsEstimate?: number;
+  revenueEstimate?: number;
   actualEPS?: number;
 }
 
 export interface EarningsReaction {
   symbol: string;
   reportDate: Date;
-  surprise: number;
-  priceChange: number;
-  volumeChange: number;
+  surprise?: number;
+  priceChange?: number;
+  priceChangePre?: number;
+  priceChangePost: number;
+  volumeChange?: number;
+  volumeRatio?: number;
+  impliedMove?: number;
+  actualMove: number;
 }
 
 export interface EarningsImpactForecast {

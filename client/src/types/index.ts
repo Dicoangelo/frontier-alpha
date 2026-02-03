@@ -61,6 +61,17 @@ export interface EarningsEvent {
   explanation: string;
 }
 
+export interface EarningsImpactForecast {
+  symbol: string;
+  reportDate: Date;
+  expectedMove: number;
+  expectedDirection: 'up' | 'down' | 'neutral';
+  confidence: number;
+  historicalAvgMove?: number;
+  recommendation: 'hold' | 'reduce' | 'hedge' | 'add';
+  explanation: string;
+}
+
 export interface OptimizationConfig {
   objective: 'max_sharpe' | 'min_volatility' | 'risk_parity';
   riskFreeRate: number;

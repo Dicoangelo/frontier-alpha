@@ -1,6 +1,7 @@
 interface BadgeProps {
-  variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+  variant?: 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'default';
   children: React.ReactNode;
+  className?: string;
 }
 
 const variants = {
@@ -9,11 +10,12 @@ const variants = {
   danger: 'bg-red-100 text-red-800',
   info: 'bg-blue-100 text-blue-800',
   neutral: 'bg-gray-100 text-gray-800',
+  default: 'bg-gray-100 text-gray-600',
 };
 
-export function Badge({ variant, children }: BadgeProps) {
+export function Badge({ variant = 'default', children, className = '' }: BadgeProps) {
   return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${variants[variant]}`}>
+    <span className={`px-2 py-1 rounded-full text-xs font-medium ${variants[variant]} ${className}`}>
       {children}
     </span>
   );

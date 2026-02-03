@@ -88,3 +88,60 @@ export interface FrontierUserSettings {
   created_at: string;
   updated_at: string;
 }
+
+// New tables for Phase 2
+
+export interface FrontierFactorExposure {
+  id: string;
+  portfolio_id: string;
+  position_id: string | null;
+  symbol: string;
+  factor_name: string;
+  factor_category: 'style' | 'macro' | 'sector' | 'volatility' | 'sentiment';
+  exposure: number;
+  t_stat: number | null;
+  confidence: number | null;
+  contribution: number | null;
+  calculation_date: string;
+  created_at: string;
+  expires_at: string;
+}
+
+export interface FrontierEarningsEvent {
+  id: string;
+  symbol: string;
+  report_date: string;
+  report_time: 'pre_market' | 'post_market' | 'during_market' | 'unknown' | null;
+  fiscal_quarter: string;
+  estimated_eps: number | null;
+  actual_eps: number | null;
+  status: 'upcoming' | 'confirmed' | 'reported';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FrontierEarningsForecast {
+  id: string;
+  user_id: string;
+  symbol: string;
+  report_date: string;
+  expected_move: number;
+  expected_direction: 'up' | 'down' | 'neutral';
+  confidence: number;
+  historical_avg_move: number | null;
+  recommendation: 'hold' | 'reduce' | 'hedge' | 'add';
+  explanation: string;
+  created_at: string;
+  expires_at: string;
+}
+
+export interface FrontierEarningsHistory {
+  id: string;
+  symbol: string;
+  report_date: string;
+  fiscal_quarter: string;
+  price_change_post: number;
+  volume_ratio: number | null;
+  actual_move: number;
+  created_at: string;
+}

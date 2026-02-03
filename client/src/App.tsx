@@ -5,6 +5,8 @@ import { useAuthStore } from '@/stores/authStore';
 import { Layout } from '@/components/layout/Layout';
 import { Dashboard } from '@/pages/Dashboard';
 import { Portfolio } from '@/pages/Portfolio';
+import { Factors } from '@/pages/Factors';
+import { Earnings } from '@/pages/Earnings';
 import { Optimize } from '@/pages/Optimize';
 import { Settings } from '@/pages/Settings';
 import { Login } from '@/pages/Login';
@@ -88,6 +90,26 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <Portfolio />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/factors"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Factors />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/earnings"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Earnings />
             </Layout>
           </ProtectedRoute>
         }

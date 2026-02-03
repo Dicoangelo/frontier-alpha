@@ -368,7 +368,6 @@ export class MarketDataProvider {
     }
 
     // Reverse to chronological order (oldest first)
-    console.log(`[MOCK_PRICES] Generated ${prices.length} trading days for ${symbol} (requested ${days})`);
     return prices.reverse();
   }
 

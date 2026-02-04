@@ -148,14 +148,14 @@ export class Backtester {
     const drawdowns: Drawdown[] = [];
     
     let cash = config.initialCapital;
-    let positions = new Map<string, number>();  // symbol -> shares
+    const positions = new Map<string, number>();  // symbol -> shares
     let portfolioValue = config.initialCapital;
     let highWaterMark = config.initialCapital;
     let currentDrawdownStart: Date | null = null;
     
     // Get benchmark prices
     const benchmarkPrices = prices.get(config.benchmarkSymbol) || [];
-    let benchmarkStartPrice = benchmarkPrices[0]?.close || 100;
+    const benchmarkStartPrice = benchmarkPrices[0]?.close || 100;
     
     // Sort dates
     const allDates = this.getAllDates(prices, config.startDate, config.endDate);

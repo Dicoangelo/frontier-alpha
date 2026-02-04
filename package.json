@@ -15,7 +15,7 @@
     "test:e2e": "vitest run tests/e2e",
     "test:coverage": "vitest run --coverage",
     "test:all": "npm run test:unit && cd client && npm run test:run",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src/",
     "client:dev": "cd client && npm run dev",
     "client:build": "cd client && npm run build",
     "client:install": "cd client && npm install",
@@ -48,6 +48,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/node": "^20.11.5",
     "@types/pg": "^8.11.0",
     "@types/ws": "^8.5.10",
@@ -59,6 +60,7 @@
     "eslint": "^8.56.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
+    "typescript-eslint": "^8.54.0",
     "vitest": "^1.2.2"
   }
 }

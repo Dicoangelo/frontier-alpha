@@ -107,7 +107,7 @@ export class PortfolioOptimizer {
     const n = mu.length;
     
     // Use gradient descent for max Sharpe
-    let weights = this.equalWeight(n);
+    const weights = this.equalWeight(n);
     const lr = 0.01;
     const iterations = 1000;
     
@@ -154,7 +154,7 @@ export class PortfolioOptimizer {
     // w* = Σ^(-1) * 1 / (1' * Σ^(-1) * 1)
     
     // For simplicity, use gradient descent
-    let weights = this.equalWeight(n);
+    const weights = this.equalWeight(n);
     const lr = 0.01;
     const iterations = 1000;
     
@@ -190,7 +190,7 @@ export class PortfolioOptimizer {
    */
   private riskParity(sigma: number[][]): number[] {
     const n = sigma.length;
-    let weights = this.equalWeight(n);
+    const weights = this.equalWeight(n);
     const lr = 0.01;
     const iterations = 1000;
     

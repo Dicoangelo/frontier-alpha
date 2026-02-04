@@ -12,7 +12,7 @@
  * - AI-powered explanations
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // ============================================================================
 // TYPES (inline for single-file deployment)
@@ -115,9 +115,9 @@ const Badge: React.FC<{
   );
 };
 
-const ProgressBar: React.FC<{ 
-  value: number; 
-  max?: number; 
+export const ProgressBar: React.FC<{
+  value: number;
+  max?: number;
   color?: string;
   showLabel?: boolean;
 }> = ({ value, max = 1, color = 'blue', showLabel = false }) => {
@@ -299,7 +299,8 @@ const RiskDashboard: React.FC<{ metrics: RiskMetrics; alerts: RiskAlert[] }> = (
 };
 
 const EarningsCalendar: React.FC<{ events: EarningsEvent[] }> = ({ events }) => {
-  const mockEvents: EarningsEvent[] = [
+  // Use provided events or fall back to mock data
+  const displayEvents: EarningsEvent[] = events.length > 0 ? events : [
     { symbol: 'NVDA', date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), expectedMove: 0.082, recommendation: 'hold' },
     { symbol: 'MSFT', date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), expectedMove: 0.045, recommendation: 'hold' },
     { symbol: 'AAPL', date: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000), expectedMove: 0.038, recommendation: 'hold' },
@@ -308,7 +309,7 @@ const EarningsCalendar: React.FC<{ events: EarningsEvent[] }> = ({ events }) => 
   return (
     <Card title="Upcoming Earnings">
       <div className="space-y-3">
-        {mockEvents.map(event => (
+        {displayEvents.map(event => (
           <div key={event.symbol} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div>
               <p className="font-semibold text-gray-800">{event.symbol}</p>

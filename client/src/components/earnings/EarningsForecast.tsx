@@ -1,9 +1,12 @@
-import { TrendingUp, TrendingDown, Minus, RefreshCw, BarChart3 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { TrendingUp, TrendingDown, Minus, RefreshCw, BarChart3, HelpCircle } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { Badge } from '@/components/shared/Badge';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
+import { HelpTooltip } from '@/components/help';
 import { getDirectionColor, getRecommendationBadge } from '@/hooks/useEarnings';
+import { EarningsIV } from '@/components/options/ImpliedVolatility';
 import type { EarningsImpactForecast } from '@/types';
 
 interface EarningsForecastProps {
@@ -84,16 +87,19 @@ export function EarningsForecast({
       }
     >
       <div className="space-y-6">
-        {/* Expected Move */}
+        {/* Expected Move - Historical */}
         <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
           <div>
-            <p className="text-sm text-gray-500">Expected Move</p>
+            <div className="flex items-center gap-1">
+              <p className="text-sm text-gray-500">Historical Expected Move</p>
+              <HelpTooltip metricKey="expectedMove" size="sm" />
+            </div>
             <p className="text-2xl font-bold text-gray-900">
               ±{(forecast.expectedMove * 100).toFixed(1)}%
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-500">Historical Avg</p>
+            <p className="text-sm text-gray-500">Past 8 Quarters Avg</p>
             <p className="text-lg font-medium text-gray-600">
               {forecast.historicalAvgMove
                 ? `±${(forecast.historicalAvgMove * 100).toFixed(1)}%`
@@ -101,6 +107,13 @@ export function EarningsForecast({
             </p>
           </div>
         </div>
+
+        {/* Options-Implied Move */}
+        <EarningsIV
+          symbol={symbol}
+          daysToEarnings={Math.max(1, Math.ceil((new Date(forecast.reportDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))}
+          historicalAvgMove={forecast.expectedMove * 100}
+        />
 
         {/* Direction & Confidence */}
         <div className="grid grid-cols-2 gap-4">
@@ -138,7 +151,10 @@ export function EarningsForecast({
         {/* Beat Rate (if available) */}
         {forecast.beatRate !== undefined && (
           <div className="p-4 border rounded-lg">
-            <p className="text-sm text-gray-500 mb-2">Historical Beat Rate</p>
+            <div className="flex items-center gap-1 mb-2">
+              <p className="text-sm text-gray-500">Historical Beat Rate</p>
+              <HelpTooltip metricKey="beatRate" size="sm" />
+            </div>
             <div className="flex items-center gap-3">
               <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
                 <div
@@ -199,6 +215,17 @@ export function EarningsForecast({
             day: 'numeric',
             year: 'numeric',
           })}
+        </div>
+
+        {/* Learn More Link */}
+        <div className="text-center">
+          <Link
+            to="/help#earnings-forecasts"
+            className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+          >
+            <HelpCircle className="w-4 h-4" />
+            How forecasts work
+          </Link>
         </div>
       </div>
     </Card>

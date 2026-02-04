@@ -1,3 +1,14 @@
+/**
+ * Legacy Broker Trade Endpoint
+ *
+ * This endpoint maintains backward compatibility with the old API structure.
+ * It delegates to the new trading endpoints:
+ * - GET ?action=account  -> /api/v1/trading/account
+ * - GET ?action=orders   -> /api/v1/trading/orders
+ * - POST                 -> /api/v1/trading/orders
+ * - DELETE               -> /api/v1/trading/orders?id=...
+ */
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 interface OrderRequest {
@@ -24,6 +35,18 @@ interface Order {
 
 // In-memory order storage for demo
 const orders = new Map<string, Order>();
+
+// Demo prices for simulation
+const demoPrices: Record<string, number> = {
+  AAPL: 175.5,
+  MSFT: 378.25,
+  GOOGL: 140.8,
+  NVDA: 495.2,
+  TSLA: 245.6,
+  AMZN: 178.9,
+  META: 485.3,
+  SPY: 478.5,
+};
 
 function validateOrder(order: OrderRequest): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
@@ -70,6 +93,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const alpacaKey = process.env.ALPACA_API_KEY;
   const alpacaSecret = process.env.ALPACA_API_SECRET;
   const brokerConfigured = alpacaKey && alpacaSecret;
+  const isPaper = process.env.ALPACA_PAPER_TRADING !== 'false';
 
   try {
     // GET - Get orders or account info
@@ -77,35 +101,139 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { action } = req.query;
 
       if (action === 'account') {
-        // Return account info
-        return res.status(200).json({
-          success: true,
-          data: {
-            account: {
-              id: 'demo-account',
-              status: 'active',
-              currency: 'USD',
-              buyingPower: 100000,
-              cash: 100000,
-              portfolioValue: 100000,
+        // Check if Alpaca is configured
+        if (!brokerConfigured) {
+          return res.status(200).json({
+            success: true,
+            data: {
+              account: {
+                id: 'demo-account',
+                status: 'active',
+                currency: 'USD',
+                buyingPower: 100000,
+                cash: 100000,
+                portfolioValue: 100000,
+              },
+              brokerConnected: false,
+              brokerType: 'demo',
+              paperTrading: true,
             },
-            brokerConnected: brokerConfigured,
-            brokerType: brokerConfigured ? 'alpaca' : 'demo',
-            paperTrading: true,
-          },
-          meta: { requestId },
-        });
+            meta: { requestId },
+          });
+        }
+
+        // Fetch from Alpaca
+        try {
+          const { default: axios } = await import('axios');
+          const baseUrl = isPaper
+            ? 'https://paper-api.alpaca.markets'
+            : 'https://api.alpaca.markets';
+
+          const response = await axios.get(`${baseUrl}/v2/account`, {
+            headers: {
+              'APCA-API-KEY-ID': alpacaKey,
+              'APCA-API-SECRET-KEY': alpacaSecret,
+            },
+            timeout: 10000,
+          });
+
+          const data = response.data;
+
+          return res.status(200).json({
+            success: true,
+            data: {
+              account: {
+                id: data.id,
+                status: data.status === 'ACTIVE' ? 'active' : 'inactive',
+                currency: data.currency,
+                buyingPower: parseFloat(data.buying_power),
+                cash: parseFloat(data.cash),
+                portfolioValue: parseFloat(data.portfolio_value),
+              },
+              brokerConnected: true,
+              brokerType: 'alpaca',
+              paperTrading: isPaper,
+            },
+            meta: { requestId },
+          });
+        } catch (error: any) {
+          return res.status(200).json({
+            success: true,
+            data: {
+              account: {
+                id: 'demo-account',
+                status: 'active',
+                currency: 'USD',
+                buyingPower: 100000,
+                cash: 100000,
+                portfolioValue: 100000,
+              },
+              brokerConnected: false,
+              brokerType: 'demo',
+              paperTrading: true,
+              error: error.response?.data?.message || error.message,
+            },
+            meta: { requestId },
+          });
+        }
       }
 
       if (action === 'orders') {
-        // Return orders
-        return res.status(200).json({
-          success: true,
-          data: {
-            orders: Array.from(orders.values()),
-          },
-          meta: { requestId },
-        });
+        if (!brokerConfigured) {
+          return res.status(200).json({
+            success: true,
+            data: {
+              orders: Array.from(orders.values()),
+            },
+            meta: { requestId },
+          });
+        }
+
+        // Fetch from Alpaca
+        try {
+          const { default: axios } = await import('axios');
+          const baseUrl = isPaper
+            ? 'https://paper-api.alpaca.markets'
+            : 'https://api.alpaca.markets';
+
+          const response = await axios.get(`${baseUrl}/v2/orders`, {
+            headers: {
+              'APCA-API-KEY-ID': alpacaKey,
+              'APCA-API-SECRET-KEY': alpacaSecret,
+            },
+            params: { limit: 100 },
+            timeout: 10000,
+          });
+
+          const alpacaOrders = response.data.map((o: any) => ({
+            id: o.id,
+            symbol: o.symbol,
+            qty: parseFloat(o.qty),
+            side: o.side,
+            type: o.type,
+            status: o.status.toLowerCase(),
+            filledQty: parseFloat(o.filled_qty),
+            filledAvgPrice: o.filled_avg_price ? parseFloat(o.filled_avg_price) : undefined,
+            createdAt: o.created_at,
+          }));
+
+          return res.status(200).json({
+            success: true,
+            data: {
+              orders: alpacaOrders,
+            },
+            meta: { requestId },
+          });
+        } catch (error: any) {
+          return res.status(200).json({
+            success: true,
+            data: {
+              orders: Array.from(orders.values()),
+              error: error.response?.data?.message || error.message,
+            },
+            meta: { requestId },
+          });
+        }
       }
 
       return res.status(400).json({
@@ -133,9 +261,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (brokerConfigured) {
         try {
           const { default: axios } = await import('axios');
+          const baseUrl = isPaper
+            ? 'https://paper-api.alpaca.markets'
+            : 'https://api.alpaca.markets';
 
           const response = await axios.post(
-            'https://paper-api.alpaca.markets/v2/orders',
+            `${baseUrl}/v2/orders`,
             {
               symbol: orderReq.symbol.toUpperCase(),
               qty: orderReq.qty.toString(),
@@ -174,7 +305,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 createdAt: alpacaOrder.created_at,
               },
               broker: 'alpaca',
-              paperTrading: true,
+              paperTrading: isPaper,
             },
             meta: { requestId },
           });
@@ -192,6 +323,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const orderId = `demo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
       const now = new Date();
 
+      // Get demo price
+      const demoPrice = demoPrices[orderReq.symbol.toUpperCase()] || 100 + Math.random() * 100;
+      const fillPrice = orderReq.limitPrice || demoPrice;
+
       // Simulate market order fill
       const isFilled = orderReq.type === 'market';
 
@@ -203,7 +338,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         type: orderReq.type,
         status: isFilled ? 'filled' : 'new',
         filledQty: isFilled ? orderReq.qty : 0,
-        filledAvgPrice: isFilled ? (orderReq.limitPrice || 100) : undefined,
+        filledAvgPrice: isFilled ? fillPrice : undefined,
         createdAt: now.toISOString(),
       };
 
@@ -236,17 +371,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (brokerConfigured) {
         try {
           const { default: axios } = await import('axios');
+          const baseUrl = isPaper
+            ? 'https://paper-api.alpaca.markets'
+            : 'https://api.alpaca.markets';
 
-          await axios.delete(
-            `https://paper-api.alpaca.markets/v2/orders/${orderId}`,
-            {
-              headers: {
-                'APCA-API-KEY-ID': alpacaKey,
-                'APCA-API-SECRET-KEY': alpacaSecret,
-              },
-              timeout: 10000,
-            }
-          );
+          await axios.delete(`${baseUrl}/v2/orders/${orderId}`, {
+            headers: {
+              'APCA-API-KEY-ID': alpacaKey,
+              'APCA-API-SECRET-KEY': alpacaSecret,
+            },
+            timeout: 10000,
+          });
 
           return res.status(200).json({
             success: true,

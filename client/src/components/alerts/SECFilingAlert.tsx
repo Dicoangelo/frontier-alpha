@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   FileText,
@@ -7,11 +7,20 @@ import {
   AlertTriangle,
   Calendar,
   Building2,
+  Clock,
+  TrendingUp,
+  Filter,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Badge } from '@/components/shared/Badge';
 import { api } from '@/api/client';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface SECFiling {
   id: string;
@@ -24,6 +33,7 @@ interface SECFiling {
   symbol?: string;
   companyName: string;
   description: string;
+  formUrl?: string;
 }
 
 interface FilingAlert {
@@ -35,53 +45,135 @@ interface FilingAlert {
   timestamp: string;
   filing: SECFiling;
   suggestedAction: string;
+  typeDescription?: string;
 }
 
 interface SECFilingAlertProps {
   symbols: string[];
   className?: string;
   maxAlerts?: number;
+  showFilters?: boolean;
+  compact?: boolean;
 }
 
+interface FilingSummary {
+  total: number;
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+  byType?: Record<string, number>;
+  bySymbol?: Record<string, number>;
+}
+
+type FilterType = 'all' | '8-K' | '10-K' | '10-Q' | '4' | 'SC 13D' | 'other';
+type SeverityFilter = 'all' | 'critical' | 'high' | 'medium' | 'low';
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
 const severityColors: Record<string, string> = {
-  critical: 'bg-red-100 text-red-700 border-red-200',
-  high: 'bg-orange-100 text-orange-700 border-orange-200',
-  medium: 'bg-amber-100 text-amber-700 border-amber-200',
-  low: 'bg-blue-100 text-blue-700 border-blue-200',
+  critical: 'bg-red-100 text-red-800 border-red-200',
+  high: 'bg-orange-100 text-orange-800 border-orange-200',
+  medium: 'bg-amber-100 text-amber-800 border-amber-200',
+  low: 'bg-blue-100 text-blue-800 border-blue-200',
+};
+
+const severityDotColors: Record<string, string> = {
+  critical: 'bg-red-500',
+  high: 'bg-orange-500',
+  medium: 'bg-amber-500',
+  low: 'bg-blue-500',
 };
 
 const filingTypeIcons: Record<string, string> = {
-  '8-K': '📊',
-  '10-K': '📈',
-  '10-Q': '📋',
-  '4': '👤',
-  'SC 13D': '🎯',
-  'SC 13G': '📌',
-  'DEF 14A': '🗳️',
-  'S-1': '🚀',
+  '8-K': '8K',
+  '8-K/A': '8K',
+  '10-K': '10K',
+  '10-K/A': '10K',
+  '10-Q': '10Q',
+  '10-Q/A': '10Q',
+  '4': 'F4',
+  '4/A': 'F4',
+  'SC 13D': '13D',
+  'SC 13D/A': '13D',
+  'SC 13G': '13G',
+  'SC 13G/A': '13G',
+  '13F-HR': '13F',
+  '13F-HR/A': '13F',
+  'DEF 14A': 'DEF',
+  'DEFA14A': 'DEF',
+  'S-1': 'S1',
+  'S-1/A': 'S1',
+  'S-3': 'S3',
+  'NT 10-K': 'NT',
+  'NT 10-Q': 'NT',
+};
+
+const filingTypeBadgeColors: Record<string, string> = {
+  '8-K': 'bg-purple-100 text-purple-700',
+  '10-K': 'bg-green-100 text-green-700',
+  '10-Q': 'bg-blue-100 text-blue-700',
+  '4': 'bg-indigo-100 text-indigo-700',
+  'SC 13D': 'bg-red-100 text-red-700',
+  'SC 13G': 'bg-pink-100 text-pink-700',
+  '13F-HR': 'bg-gray-100 text-gray-700',
+  'DEF 14A': 'bg-teal-100 text-teal-700',
+  'S-1': 'bg-emerald-100 text-emerald-700',
+  'NT 10-K': 'bg-red-200 text-red-800',
+  'NT 10-Q': 'bg-orange-200 text-orange-800',
 };
 
 const filingTypeLabels: Record<string, string> = {
   '8-K': 'Material Event',
+  '8-K/A': 'Material Event (Amended)',
   '10-K': 'Annual Report',
+  '10-K/A': 'Annual Report (Amended)',
   '10-Q': 'Quarterly Report',
-  '4': 'Insider Trade',
-  'SC 13D': 'Activist Ownership',
-  'SC 13G': 'Institutional Ownership',
+  '10-Q/A': 'Quarterly Report (Amended)',
+  '4': 'Insider Transaction',
+  '4/A': 'Insider Transaction (Amended)',
+  'SC 13D': 'Activist Ownership (>5%)',
+  'SC 13D/A': 'Activist Ownership (Amended)',
+  'SC 13G': 'Passive Ownership (>5%)',
+  'SC 13G/A': 'Passive Ownership (Amended)',
+  '13F-HR': 'Institutional Holdings',
+  '13F-HR/A': 'Institutional Holdings (Amended)',
   'DEF 14A': 'Proxy Statement',
-  'S-1': 'IPO Filing',
-  '13F-HR': 'Fund Holdings',
+  'DEFA14A': 'Additional Proxy Materials',
+  'S-1': 'IPO Registration',
+  'S-1/A': 'IPO Registration (Amended)',
+  'S-3': 'Shelf Registration',
+  '424B4': 'Prospectus',
+  '424B5': 'Prospectus Supplement',
+  'NT 10-K': 'Late Annual Filing Notice',
+  'NT 10-Q': 'Late Quarterly Filing Notice',
+  '6-K': 'Foreign Issuer Report',
+  '20-F': 'Foreign Annual Report',
 };
 
-function formatDate(dateString: string): string {
+// ============================================================================
+// UTILITIES
+// ============================================================================
+
+/**
+ * Format time since filing in a human-readable way
+ */
+function formatTimeSince(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return 'Today';
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
 
   return date.toLocaleDateString('en-US', {
     month: 'short',
@@ -90,13 +182,203 @@ function formatDate(dateString: string): string {
   });
 }
 
+/**
+ * Format date for display
+ */
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+/**
+ * Check if filing is recent (within 24 hours)
+ */
+function isRecentFiling(dateString: string): boolean {
+  const date = new Date(dateString);
+  const now = new Date();
+  return now.getTime() - date.getTime() < 24 * 60 * 60 * 1000;
+}
+
+/**
+ * Get the base filing type (without amendments)
+ */
+function getBaseFilingType(type: string): string {
+  return type.replace(/\/A$/, '');
+}
+
+// ============================================================================
+// FILING TYPE BADGE COMPONENT
+// ============================================================================
+
+function FilingTypeBadge({ type }: { type: string }) {
+  const baseType = getBaseFilingType(type);
+  const icon = filingTypeIcons[type] || filingTypeIcons[baseType] || type.slice(0, 3).toUpperCase();
+  const colorClass = filingTypeBadgeColors[baseType] || 'bg-gray-100 text-gray-700';
+  const isAmended = type.endsWith('/A');
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${colorClass}`}
+      title={filingTypeLabels[type] || type}
+    >
+      {icon}
+      {isAmended && <span className="text-[10px] opacity-75">(A)</span>}
+    </span>
+  );
+}
+
+// ============================================================================
+// SEVERITY INDICATOR COMPONENT
+// ============================================================================
+
+function SeverityIndicator({ severity }: { severity: string }) {
+  return (
+    <span
+      className={`w-2 h-2 rounded-full ${severityDotColors[severity] || 'bg-gray-400'}`}
+      title={`${severity.charAt(0).toUpperCase() + severity.slice(1)} priority`}
+    />
+  );
+}
+
+// ============================================================================
+// SINGLE FILING CARD COMPONENT
+// ============================================================================
+
+interface FilingCardProps {
+  alert: FilingAlert;
+  expanded: boolean;
+  onToggle: () => void;
+  compact?: boolean;
+}
+
+function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardProps) {
+  const isRecent = isRecentFiling(alert.timestamp);
+
+  return (
+    <div
+      className={`p-3 rounded-lg border transition-all cursor-pointer hover:shadow-sm ${
+        severityColors[alert.severity]
+      } ${expanded ? 'ring-2 ring-blue-500 shadow-md' : ''}`}
+      onClick={onToggle}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <div className="flex-shrink-0 flex items-center gap-2">
+            <SeverityIndicator severity={alert.severity} />
+            <FilingTypeBadge type={alert.filing.type} />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-gray-900 truncate">
+                {alert.filing.symbol || alert.filing.companyName}
+              </span>
+              {isRecent && (
+                <span className="px-1.5 py-0.5 text-[10px] font-bold bg-green-500 text-white rounded animate-pulse">
+                  NEW
+                </span>
+              )}
+              {alert.severity === 'critical' && (
+                <AlertTriangle className="w-4 h-4 text-red-600" />
+              )}
+            </div>
+            {!compact && (
+              <p className="text-sm opacity-75 truncate">
+                {filingTypeLabels[alert.filing.type] || alert.filing.type}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-sm text-gray-600 flex-shrink-0">
+          <Clock className="w-3.5 h-3.5" />
+          <span className="whitespace-nowrap">{formatTimeSince(alert.timestamp)}</span>
+          {expanded ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
+        </div>
+      </div>
+
+      {/* Expanded details */}
+      {expanded && (
+        <div className="mt-3 pt-3 border-t border-current/20 space-y-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Building2 className="w-4 h-4" />
+            <span className="font-medium">{alert.filing.companyName}</span>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm">
+            <Calendar className="w-4 h-4" />
+            <span>Filed: {formatDate(alert.timestamp)}</span>
+          </div>
+
+          {alert.filing.accessionNumber && (
+            <div className="text-xs text-gray-600">
+              Accession: {alert.filing.accessionNumber}
+            </div>
+          )}
+
+          <div className="p-2 bg-white/50 rounded text-sm">
+            <TrendingUp className="w-4 h-4 inline mr-2" />
+            <span className="font-medium">Suggested Action: </span>
+            {alert.suggestedAction}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={alert.filing.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              View Filing
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+            {alert.filing.formUrl && (
+              <a
+                href={alert.filing.formUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                All Documents
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 export function SECFilingAlert({
   symbols,
   className = '',
   maxAlerts = 10,
+  showFilters = true,
+  compact = false,
 }: SECFilingAlertProps) {
   const [expandedAlert, setExpandedAlert] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<FilterType>('all');
+  const [filterSeverity, setFilterSeverity] = useState<SeverityFilter>('all');
+  const [showAllFilings, setShowAllFilings] = useState(false);
 
+  // Fetch filings from API
   const {
     data: response,
     isLoading,
@@ -105,27 +387,84 @@ export function SECFilingAlert({
     isFetching,
   } = useQuery({
     queryKey: ['sec-filings', symbols.join(',')],
-    queryFn: () => api.get(`/alerts/sec-filings?symbols=${symbols.join(',')}`),
+    queryFn: async () => {
+      // Try new endpoint first, fall back to alerts endpoint
+      try {
+        const result = await api.get(`/sec/filings?symbols=${symbols.join(',')}`);
+        // Transform response to match expected format
+        if (result?.data?.filings) {
+          return {
+            data: {
+              alerts: result.data.filings,
+              summary: result.data.summary,
+            },
+          };
+        }
+        return result;
+      } catch {
+        // Fall back to alerts endpoint
+        return api.get(`/alerts/sec-filings?symbols=${symbols.join(',')}`);
+      }
+    },
     enabled: symbols.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 10 * 60 * 1000, // Auto-refresh every 10 minutes
   });
 
-  const alerts: FilingAlert[] = response?.data?.alerts?.slice(0, maxAlerts) || [];
-  const summary = response?.data?.summary || {
-    total: 0,
-    critical: 0,
-    high: 0,
-    medium: 0,
-    low: 0,
+  const allAlerts: FilingAlert[] = response?.data?.alerts || response?.data?.filings || [];
+  const summary: FilingSummary = response?.data?.summary || {
+    total: allAlerts.length,
+    critical: allAlerts.filter((a) => a.severity === 'critical').length,
+    high: allAlerts.filter((a) => a.severity === 'high').length,
+    medium: allAlerts.filter((a) => a.severity === 'medium').length,
+    low: allAlerts.filter((a) => a.severity === 'low').length,
   };
+
+  // Filter alerts based on user selection
+  const filteredAlerts = useMemo(() => {
+    let filtered = allAlerts;
+
+    // Filter by filing type
+    if (filterType !== 'all') {
+      if (filterType === 'other') {
+        const mainTypes = ['8-K', '10-K', '10-Q', '4', 'SC 13D'];
+        filtered = filtered.filter(
+          (a) => !mainTypes.some((t) => a.filing.type.startsWith(t))
+        );
+      } else {
+        filtered = filtered.filter((a) => a.filing.type.startsWith(filterType));
+      }
+    }
+
+    // Filter by severity
+    if (filterSeverity !== 'all') {
+      filtered = filtered.filter((a) => a.severity === filterSeverity);
+    }
+
+    return filtered;
+  }, [allAlerts, filterType, filterSeverity]);
+
+  const visibleAlerts = showAllFilings
+    ? filteredAlerts
+    : filteredAlerts.slice(0, maxAlerts);
 
   const toggleExpand = (id: string) => {
     setExpandedAlert(expandedAlert === id ? null : id);
   };
 
+  // Count filing types for filter badges
+  const typeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const alert of allAlerts) {
+      const baseType = getBaseFilingType(alert.filing.type);
+      counts[baseType] = (counts[baseType] || 0) + 1;
+    }
+    return counts;
+  }, [allAlerts]);
+
   return (
     <Card className={`p-6 ${className}`}>
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <FileText className="w-5 h-5 text-blue-600" />
@@ -142,9 +481,7 @@ export function SECFilingAlert({
           onClick={() => refetch()}
           disabled={isFetching}
         >
-          <RefreshCw
-            className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`}
-          />
+          <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
         </Button>
       </div>
 
@@ -155,15 +492,67 @@ export function SECFilingAlert({
             <Badge variant="danger">{summary.critical} Critical</Badge>
           )}
           {summary.high > 0 && (
-            <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded-full">
-              {summary.high} High Priority
-            </span>
+            <Badge variant="warning">{summary.high} High</Badge>
           )}
           {summary.medium > 0 && (
             <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
               {summary.medium} Medium
             </span>
           )}
+          {summary.low > 0 && (
+            <Badge variant="info">{summary.low} Low</Badge>
+          )}
+        </div>
+      )}
+
+      {/* Filters */}
+      {showFilters && allAlerts.length > 0 && (
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <Filter className="w-4 h-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Filter by type:</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setFilterType('all')}
+              className={`px-2 py-1 text-xs rounded-full transition-colors ${
+                filterType === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              All ({allAlerts.length})
+            </button>
+            {['8-K', '10-K', '10-Q', '4', 'SC 13D'].map((type) =>
+              typeCounts[type] ? (
+                <button
+                  key={type}
+                  onClick={() => setFilterType(type as FilterType)}
+                  className={`px-2 py-1 text-xs rounded-full transition-colors ${
+                    filterType === type
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {type} ({typeCounts[type]})
+                </button>
+              ) : null
+            )}
+            {Object.keys(typeCounts).some(
+              (t) => !['8-K', '10-K', '10-Q', '4', 'SC 13D'].includes(t)
+            ) && (
+              <button
+                onClick={() => setFilterType('other')}
+                className={`px-2 py-1 text-xs rounded-full transition-colors ${
+                  filterType === 'other'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                Other
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -192,73 +581,60 @@ export function SECFilingAlert({
       )}
 
       {/* Empty state */}
-      {!isLoading && !error && alerts.length === 0 && (
+      {!isLoading && !error && filteredAlerts.length === 0 && (
         <div className="py-8 text-center text-gray-500">
           <FileText className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-          <p>No recent SEC filings for your portfolio</p>
-          <p className="text-sm mt-1">Filings from the last 30 days will appear here</p>
+          {filterType !== 'all' || filterSeverity !== 'all' ? (
+            <>
+              <p>No filings match the current filters</p>
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-2"
+                onClick={() => {
+                  setFilterType('all');
+                  setFilterSeverity('all');
+                }}
+              >
+                Clear Filters
+              </Button>
+            </>
+          ) : (
+            <>
+              <p>No recent SEC filings for your portfolio</p>
+              <p className="text-sm mt-1">
+                Filings from the last 30 days will appear here
+              </p>
+            </>
+          )}
         </div>
       )}
 
       {/* Filing list */}
-      {alerts.length > 0 && (
+      {visibleAlerts.length > 0 && (
         <div className="space-y-3">
-          {alerts.map((alert) => (
-            <div
+          {visibleAlerts.map((alert) => (
+            <FilingCard
               key={alert.id}
-              className={`p-3 rounded-lg border transition-all cursor-pointer ${
-                severityColors[alert.severity]
-              } ${expandedAlert === alert.id ? 'ring-2 ring-blue-500' : ''}`}
-              onClick={() => toggleExpand(alert.id)}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3">
-                  <span className="text-xl">
-                    {filingTypeIcons[alert.filing.type] || '📄'}
-                  </span>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">
-                        {alert.filing.symbol || alert.filing.companyName}
-                      </span>
-                      <span className="text-sm font-medium px-1.5 py-0.5 bg-white/50 rounded">
-                        {alert.filing.type}
-                      </span>
-                    </div>
-                    <p className="text-sm opacity-80">
-                      {filingTypeLabels[alert.filing.type] || alert.filing.type}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {formatDate(alert.timestamp)}
-                </div>
-              </div>
-
-              {/* Expanded details */}
-              {expandedAlert === alert.id && (
-                <div className="mt-3 pt-3 border-t border-current/20">
-                  <div className="flex items-center gap-2 text-sm mb-2">
-                    <Building2 className="w-4 h-4" />
-                    <span>{alert.filing.companyName}</span>
-                  </div>
-                  <p className="text-sm mb-3">{alert.suggestedAction}</p>
-                  <a
-                    href={alert.filing.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1 text-sm font-medium underline"
-                  >
-                    View Filing on SEC.gov
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              )}
-            </div>
+              alert={alert}
+              expanded={expandedAlert === alert.id}
+              onToggle={() => toggleExpand(alert.id)}
+              compact={compact}
+            />
           ))}
         </div>
+      )}
+
+      {/* Show more/less button */}
+      {filteredAlerts.length > maxAlerts && (
+        <button
+          onClick={() => setShowAllFilings(!showAllFilings)}
+          className="w-full mt-3 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+        >
+          {showAllFilings
+            ? 'Show less'
+            : `Show ${filteredAlerts.length - maxAlerts} more filings`}
+        </button>
       )}
 
       {/* Footer */}
@@ -269,12 +645,12 @@ export function SECFilingAlert({
             {symbols.length > 5 && ` +${symbols.length - 5} more`}
           </span>
           <a
-            href="https://www.sec.gov/edgar"
+            href="https://www.sec.gov/edgar/searchedgar/companysearch"
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-500 hover:underline"
           >
-            SEC EDGAR
+            SEC EDGAR Search
           </a>
         </div>
       )}
@@ -282,8 +658,33 @@ export function SECFilingAlert({
   );
 }
 
-// Demo component
+// ============================================================================
+// DEMO/STANDALONE COMPONENT
+// ============================================================================
+
 export function SECFilingAlertDemo() {
-  const demoSymbols = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN'];
-  return <SECFilingAlert symbols={demoSymbols} />;
+  const demoSymbols = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSLA'];
+  return <SECFilingAlert symbols={demoSymbols} maxAlerts={10} showFilters={true} />;
+}
+
+// ============================================================================
+// COMPACT WIDGET FOR DASHBOARD
+// ============================================================================
+
+export function SECFilingWidget({
+  symbols,
+  className = '',
+}: {
+  symbols: string[];
+  className?: string;
+}) {
+  return (
+    <SECFilingAlert
+      symbols={symbols}
+      className={className}
+      maxAlerts={5}
+      showFilters={false}
+      compact={true}
+    />
+  );
 }

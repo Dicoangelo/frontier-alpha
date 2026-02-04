@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Edit2, X, Check } from 'lucide-react';
+import { Plus, Trash2, Edit2, X, Check, Share2 } from 'lucide-react';
 import { api, isNetworkError, getErrorMessage } from '@/api/client';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
 import { SkeletonPortfolioPage } from '@/components/shared/Skeleton';
 import { PortfolioExport } from '@/components/portfolio/PortfolioExport';
+import { ShareModal } from '@/components/portfolio/ShareModal';
 import { DataLoadError, NetworkError, EmptyPortfolio } from '@/components/shared/EmptyState';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { BottomSheet, useBottomSheet } from '@/components/shared/BottomSheet';
@@ -35,6 +36,7 @@ export function Portfolio() {
   const isMobile = useIsMobile();
   const addPositionSheet = useBottomSheet();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ symbol: '', shares: '', avgCost: '' });
 
@@ -200,23 +202,33 @@ export function Portfolio() {
         <h1 className="text-2xl font-bold text-gray-900">Portfolio Management</h1>
         <div className="flex items-center gap-3">
           {portfolio?.data && (
-            <PortfolioExport
-              portfolio={{
-                id: portfolio.data.id,
-                name: portfolio.data.name,
-                positions: portfolio.data.positions.map((p) => ({
-                  symbol: p.symbol,
-                  shares: p.shares,
-                  weight: p.weight,
-                  costBasis: p.costBasis,
-                  currentPrice: p.currentPrice,
-                  unrealizedPnL: p.unrealizedPnL,
-                })),
-                cash: portfolio.data.cash,
-                totalValue: portfolio.data.totalValue,
-                currency: 'USD',
-              }}
-            />
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowShareModal(true)}
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+              <PortfolioExport
+                portfolio={{
+                  id: portfolio.data.id,
+                  name: portfolio.data.name,
+                  positions: portfolio.data.positions.map((p) => ({
+                    symbol: p.symbol,
+                    shares: p.shares,
+                    weight: p.weight,
+                    costBasis: p.costBasis,
+                    currentPrice: p.currentPrice,
+                    unrealizedPnL: p.unrealizedPnL,
+                  })),
+                  cash: portfolio.data.cash,
+                  totalValue: portfolio.data.totalValue,
+                  currency: 'USD',
+                }}
+              />
+            </>
           )}
           <Button onClick={handleAddPositionClick}>
             <Plus className="w-4 h-4 mr-2" />
@@ -432,6 +444,16 @@ export function Portfolio() {
           }}
         />
       </BottomSheet>
+
+      {/* Share Modal */}
+      {portfolio?.data && (
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          portfolioId={portfolio.data.id}
+          portfolioName={portfolio.data.name}
+        />
+      )}
     </div>
   );
 

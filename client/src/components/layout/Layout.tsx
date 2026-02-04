@@ -4,6 +4,7 @@ import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { MobileNav } from './MobileNav';
 import { SkipToMain } from '@/components/shared/VisuallyHidden';
+import { HelpPanel, useHelpPanel, FloatingHelpButton } from '@/components/help';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { isOpen: helpOpen, openHelp, closeHelp, initialTopic } = useHelpPanel();
 
   // Close sidebar when pressing Escape
   useEffect(() => {
@@ -42,7 +44,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Skip to main content link for keyboard users */}
       <SkipToMain />
 
-      <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+      <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} onHelpClick={() => openHelp()} />
 
       {/* Desktop Sidebar */}
       <aside className="hidden lg:block" aria-label="Main navigation">
@@ -86,6 +88,12 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Mobile Bottom Navigation */}
       <MobileNav />
+
+      {/* Floating Help Button (mobile) */}
+      <FloatingHelpButton onClick={() => openHelp()} />
+
+      {/* Help Panel */}
+      <HelpPanel isOpen={helpOpen} onClose={closeHelp} initialTopic={initialTopic} />
     </div>
   );
 }

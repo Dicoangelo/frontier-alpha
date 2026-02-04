@@ -119,3 +119,58 @@ export interface CognitiveExplanation {
   confidence: number;
   timestamp: Date;
 }
+
+// Portfolio Sharing Types
+export interface PortfolioShare {
+  id: string;
+  portfolioId: string;
+  portfolioName: string;
+  shareUrl: string;
+  permissions: 'view' | 'edit';
+  sharedWithEmail: string | null;
+  createdAt: string;
+  expiresAt: string | null;
+  accessCount: number;
+  lastAccessed: string | null;
+  isExpired: boolean;
+}
+
+export interface CreateShareRequest {
+  portfolioId: string;
+  permissions: 'view' | 'edit';
+  expiresIn?: number;
+  shareWithEmail?: string;
+}
+
+export interface CreateShareResponse {
+  id: string;
+  shareToken: string;
+  shareUrl: string;
+  permissions: 'view' | 'edit';
+  expiresAt: string | null;
+  sharedWithEmail: string | null;
+  createdAt: string;
+}
+
+export interface SharedPortfolioData {
+  portfolio: {
+    id: string;
+    name: string;
+    ownerName: string;
+    positions: Position[];
+    cash: number;
+    totalValue: number;
+    currency: string;
+    benchmark: string;
+  };
+  share: {
+    permissions: 'view' | 'edit';
+    expiresAt: string | null;
+  };
+  factorExposures: FactorExposure[];
+  metrics: {
+    positionCount: number;
+    totalPnL: number;
+    topHolding: Position | null;
+  };
+}

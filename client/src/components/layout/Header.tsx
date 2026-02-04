@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
-import { Settings, Menu } from 'lucide-react';
+import { Settings, Menu, HelpCircle } from 'lucide-react';
 import { AlertDropdown } from '@/components/alerts/AlertDropdown';
+import { HelpKeyboardHint } from '@/components/help';
 
 interface HeaderProps {
   onMenuClick?: () => void;
+  onHelpClick?: () => void;
 }
 
-export function Header({ onMenuClick }: HeaderProps) {
+export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b z-50">
       <div className="flex items-center justify-between h-full px-4 sm:px-6">
@@ -38,6 +40,17 @@ export function Header({ onMenuClick }: HeaderProps) {
           </div>
 
           <AlertDropdown />
+
+          {/* Help button with keyboard hint */}
+          <HelpKeyboardHint />
+          <button
+            onClick={onHelpClick}
+            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            aria-label="Open help (press ? key)"
+            title="Help (press ?)"
+          >
+            <HelpCircle className="w-5 h-5" />
+          </button>
 
           {/* Settings - hidden on mobile (available in bottom nav) */}
           <Link

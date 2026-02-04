@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Download, Share2, Copy, Check, FileJson, FileText, X } from 'lucide-react';
+import { Download, Share2, Copy, Check, FileJson, FileText, X, Link2 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
+import { ShareModal } from './ShareModal';
 
 interface Position {
   symbol: string;
@@ -22,11 +23,13 @@ interface Portfolio {
 
 interface PortfolioExportProps {
   portfolio: Portfolio;
+  onOpenShareModal?: () => void;
 }
 
-export function PortfolioExport({ portfolio }: PortfolioExportProps) {
+export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExportProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const exportAsCSV = () => {
     const headers = ['Symbol', 'Shares', 'Weight %', 'Cost Basis', 'Current Price', 'Unrealized P&L'];
@@ -160,13 +163,31 @@ export function PortfolioExport({ portfolio }: PortfolioExportProps) {
               <div className="my-2 border-t border-gray-100" />
 
               <button
+                onClick={() => {
+                  setIsOpen(false);
+                  if (onOpenShareModal) {
+                    onOpenShareModal();
+                  } else {
+                    setShowShareModal(true);
+                  }
+                }}
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-gray-50"
+              >
+                <Link2 className="h-5 w-5 text-purple-600" />
+                <div>
+                  <p className="font-medium text-gray-700">Create Share Link</p>
+                  <p className="text-xs text-gray-500">Generate secure share URL</p>
+                </div>
+              </button>
+
+              <button
                 onClick={shareViaWebShare}
                 className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-gray-50"
               >
-                <Share2 className="h-5 w-5 text-purple-600" />
+                <Share2 className="h-5 w-5 text-blue-600" />
                 <div>
-                  <p className="font-medium text-gray-700">Share Portfolio</p>
-                  <p className="text-xs text-gray-500">Send allocation to others</p>
+                  <p className="font-medium text-gray-700">Quick Share</p>
+                  <p className="text-xs text-gray-500">Use device share menu</p>
                 </div>
               </button>
 
@@ -180,13 +201,23 @@ export function PortfolioExport({ portfolio }: PortfolioExportProps) {
                   <Copy className="h-5 w-5 text-gray-400" />
                 )}
                 <div>
-                  <p className="font-medium text-gray-700">{copied ? 'Copied!' : 'Copy Link'}</p>
-                  <p className="text-xs text-gray-500">Share link to clipboard</p>
+                  <p className="font-medium text-gray-700">{copied ? 'Copied!' : 'Copy Page URL'}</p>
+                  <p className="text-xs text-gray-500">Copy current page link</p>
                 </div>
               </button>
             </div>
           </div>
         </>
+      )}
+
+      {/* Share Modal (if not using external handler) */}
+      {!onOpenShareModal && (
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          portfolioId={portfolio.id}
+          portfolioName={portfolio.name}
+        />
       )}
     </div>
   );

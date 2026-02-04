@@ -8,6 +8,7 @@ import {
   Calendar,
   Bell,
   Settings,
+  HelpCircle,
 } from 'lucide-react';
 
 const navigation = [
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Earnings', icon: Calendar, href: '/earnings' },
   { name: 'Alerts', icon: Bell, href: '/alerts' },
   { name: 'Settings', icon: Settings, href: '/settings' },
+  { name: 'Help', icon: HelpCircle, href: '/help' },
 ];
 
 interface SidebarProps {

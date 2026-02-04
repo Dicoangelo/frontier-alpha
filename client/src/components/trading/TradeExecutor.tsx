@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -11,42 +10,21 @@ import {
   RefreshCw,
   Wallet,
   Activity,
+  Eye,
+  AlertTriangle,
+  Zap,
 } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Badge } from '@/components/shared/Badge';
-import { api } from '@/api/client';
-
-interface OrderRequest {
-  symbol: string;
-  qty: number;
-  side: 'buy' | 'sell';
-  type: 'market' | 'limit' | 'stop' | 'stop_limit';
-  timeInForce?: 'day' | 'gtc' | 'ioc' | 'fok';
-  limitPrice?: number;
-  stopPrice?: number;
-}
-
-interface Order {
-  id: string;
-  symbol: string;
-  qty: number;
-  side: string;
-  type: string;
-  status: string;
-  filledQty: number;
-  filledAvgPrice?: number;
-  createdAt: string;
-}
-
-interface Account {
-  id: string;
-  status: string;
-  currency: string;
-  buyingPower: number;
-  cash: number;
-  portfolioValue: number;
-}
+import {
+  useTrading,
+  useQuote,
+  type OrderRequest,
+  type Order,
+  type OrderPreview,
+  type OrderValidation,
+} from '@/hooks/useTrading';
 
 interface TradeExecutorProps {
   defaultSymbol?: string;
@@ -55,17 +33,17 @@ interface TradeExecutorProps {
 }
 
 const orderTypeOptions = [
-  { value: 'market', label: 'Market' },
-  { value: 'limit', label: 'Limit' },
-  { value: 'stop', label: 'Stop' },
-  { value: 'stop_limit', label: 'Stop Limit' },
+  { value: 'market', label: 'Market', description: 'Execute immediately at current price' },
+  { value: 'limit', label: 'Limit', description: 'Execute at specified price or better' },
+  { value: 'stop', label: 'Stop', description: 'Triggers market order when price reaches stop' },
+  { value: 'stop_limit', label: 'Stop Limit', description: 'Triggers limit order when price reaches stop' },
 ];
 
 const timeInForceOptions = [
-  { value: 'day', label: 'Day' },
-  { value: 'gtc', label: 'GTC' },
-  { value: 'ioc', label: 'IOC' },
-  { value: 'fok', label: 'FOK' },
+  { value: 'day', label: 'Day', description: 'Valid until market close' },
+  { value: 'gtc', label: 'GTC', description: 'Good til canceled' },
+  { value: 'ioc', label: 'IOC', description: 'Immediate or cancel' },
+  { value: 'fok', label: 'FOK', description: 'Fill or kill' },
 ];
 
 const statusColors: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
@@ -84,7 +62,20 @@ export function TradeExecutor({
   onOrderSubmitted,
   className = '',
 }: TradeExecutorProps) {
-  const queryClient = useQueryClient();
+  const {
+    account,
+    brokerConnected,
+    brokerType,
+    paperTrading,
+    accountLoading,
+    orders,
+    ordersLoading,
+    refetchOrders,
+    submitOrder,
+    cancelOrder,
+    orderPreview,
+    isMarketOpen,
+  } = useTrading();
 
   // Form state
   const [symbol, setSymbol] = useState(defaultSymbol);
@@ -94,60 +85,67 @@ export function TradeExecutor({
   const [timeInForce, setTimeInForce] = useState<'day' | 'gtc' | 'ioc' | 'fok'>('day');
   const [limitPrice, setLimitPrice] = useState<number | undefined>(undefined);
   const [stopPrice, setStopPrice] = useState<number | undefined>(undefined);
+  const [extendedHours, setExtendedHours] = useState(false);
 
-  // Fetch account info
-  const { data: accountData, isLoading: accountLoading } = useQuery({
-    queryKey: ['broker-account'],
-    queryFn: () => api.get('/broker/trade?action=account'),
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
-  });
+  // Preview state
+  const [showPreview, setShowPreview] = useState(false);
+  const [preview, setPreview] = useState<OrderPreview | null>(null);
+  const [validation, setValidation] = useState<OrderValidation | null>(null);
 
-  const account: Account | null = accountData?.data?.account || null;
-  const brokerConnected = accountData?.data?.brokerConnected || false;
-  const brokerType = accountData?.data?.brokerType || 'demo';
-  const paperTrading = accountData?.data?.paperTrading ?? true;
+  // Success/error state
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // Fetch orders
-  const {
-    data: ordersData,
-    isLoading: ordersLoading,
-    refetch: refetchOrders,
-  } = useQuery({
-    queryKey: ['broker-orders'],
-    queryFn: () => api.get('/broker/trade?action=orders'),
-    staleTime: 10 * 1000,
-    refetchInterval: 30 * 1000,
-  });
+  // Get real-time quote for the symbol
+  const { data: quote } = useQuote(symbol);
 
-  const orders: Order[] = ordersData?.data?.orders || [];
+  // Update default symbol when prop changes
+  useEffect(() => {
+    if (defaultSymbol) {
+      setSymbol(defaultSymbol);
+    }
+  }, [defaultSymbol]);
 
-  // Submit order mutation
-  const submitOrderMutation = useMutation({
-    mutationFn: (orderReq: OrderRequest) => api.post('/broker/trade', orderReq),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['broker-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['broker-account'] });
-      if (onOrderSubmitted && data?.data?.order) {
-        onOrderSubmitted(data.data.order);
-      }
-      // Reset form
-      setSymbol('');
-      setQty(1);
-      setLimitPrice(undefined);
-      setStopPrice(undefined);
-    },
-  });
+  // Auto-fill limit price from quote
+  useEffect(() => {
+    if (quote && (orderType === 'limit' || orderType === 'stop_limit') && !limitPrice) {
+      setLimitPrice(side === 'buy' ? quote.ask : quote.bid);
+    }
+  }, [quote, orderType, side, limitPrice]);
 
-  // Cancel order mutation
-  const cancelOrderMutation = useMutation({
-    mutationFn: (orderId: string) => api.delete(`/broker/trade?orderId=${orderId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['broker-orders'] });
-    },
-  });
+  const needsLimitPrice = orderType === 'limit' || orderType === 'stop_limit';
+  const needsStopPrice = orderType === 'stop' || orderType === 'stop_limit';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle order preview
+  const handlePreview = useCallback(async () => {
+    if (!symbol.trim() || qty <= 0) return;
+
+    const orderReq: Partial<OrderRequest> = {
+      symbol: symbol.toUpperCase(),
+      qty,
+      side,
+      type: orderType,
+    };
+
+    if (needsLimitPrice && limitPrice) {
+      orderReq.limitPrice = limitPrice;
+    }
+
+    if (needsStopPrice && stopPrice) {
+      orderReq.stopPrice = stopPrice;
+    }
+
+    try {
+      const result = await orderPreview.mutateAsync(orderReq);
+      setPreview(result.preview);
+      setValidation(result.validation);
+      setShowPreview(true);
+    } catch (error) {
+      console.error('Preview failed:', error);
+    }
+  }, [symbol, qty, side, orderType, limitPrice, stopPrice, needsLimitPrice, needsStopPrice, orderPreview]);
+
+  // Handle order submission
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!symbol.trim()) return;
@@ -159,21 +157,51 @@ export function TradeExecutor({
       side,
       type: orderType,
       timeInForce,
+      extendedHours,
     };
 
-    if (orderType === 'limit' || orderType === 'stop_limit') {
+    if (needsLimitPrice && limitPrice) {
       orderReq.limitPrice = limitPrice;
     }
 
-    if (orderType === 'stop' || orderType === 'stop_limit') {
+    if (needsStopPrice && stopPrice) {
       orderReq.stopPrice = stopPrice;
     }
 
-    submitOrderMutation.mutate(orderReq);
+    try {
+      const result = await submitOrder.mutateAsync(orderReq);
+
+      setSubmitSuccess(true);
+      setTimeout(() => setSubmitSuccess(false), 3000);
+
+      if (onOrderSubmitted && result.order) {
+        onOrderSubmitted(result.order);
+      }
+
+      // Reset form
+      setSymbol('');
+      setQty(1);
+      setLimitPrice(undefined);
+      setStopPrice(undefined);
+      setShowPreview(false);
+      setPreview(null);
+      setValidation(null);
+    } catch (error) {
+      console.error('Order submission failed:', error);
+    }
   };
 
-  const needsLimitPrice = orderType === 'limit' || orderType === 'stop_limit';
-  const needsStopPrice = orderType === 'stop' || orderType === 'stop_limit';
+  // Confirm and submit from preview
+  const handleConfirmOrder = () => {
+    setShowPreview(false);
+    const form = document.getElementById('order-form') as HTMLFormElement;
+    if (form) {
+      form.requestSubmit();
+    }
+  };
+
+  // Calculate estimated cost
+  const estimatedCost = quote ? qty * (side === 'buy' ? quote.ask : quote.bid) : 0;
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -191,6 +219,9 @@ export function TradeExecutor({
             {paperTrading && (
               <Badge variant="info">Paper Trading</Badge>
             )}
+            {!isMarketOpen && (
+              <Badge variant="neutral">Market Closed</Badge>
+            )}
           </div>
         </div>
 
@@ -204,19 +235,19 @@ export function TradeExecutor({
             <div>
               <p className="text-xs text-gray-500">Buying Power</p>
               <p className="text-lg font-semibold text-green-600">
-                ${account.buyingPower.toLocaleString()}
+                ${account.buyingPower.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Cash</p>
               <p className="text-lg font-semibold text-gray-900">
-                ${account.cash.toLocaleString()}
+                ${account.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Portfolio Value</p>
               <p className="text-lg font-semibold text-gray-900">
-                ${account.portfolioValue.toLocaleString()}
+                ${account.portfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
           </div>
@@ -232,18 +263,29 @@ export function TradeExecutor({
           <h3 className="font-semibold text-gray-900">Place Order</h3>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Symbol */}
+        <form id="order-form" onSubmit={handleSubmit} className="space-y-4">
+          {/* Symbol with Quote */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Symbol</label>
-            <input
-              type="text"
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-              placeholder="AAPL"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={symbol}
+                onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+                placeholder="AAPL"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+              {quote && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-sm">
+                  <span className="text-gray-500">Bid:</span>
+                  <span className="font-medium">${quote.bid.toFixed(2)}</span>
+                  <span className="text-gray-400">|</span>
+                  <span className="text-gray-500">Ask:</span>
+                  <span className="font-medium">${quote.ask.toFixed(2)}</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Side Toggle */}
@@ -288,6 +330,11 @@ export function TradeExecutor({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             />
+            {estimatedCost > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                Estimated {side === 'buy' ? 'cost' : 'proceeds'}: ${estimatedCost.toFixed(2)}
+              </p>
+            )}
           </div>
 
           {/* Order Type */}
@@ -361,34 +408,59 @@ export function TradeExecutor({
             </div>
           )}
 
+          {/* Extended Hours */}
+          {!isMarketOpen && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={extendedHours}
+                onChange={(e) => setExtendedHours(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">Extended hours trading</span>
+            </label>
+          )}
+
           {/* Error Display */}
-          {submitOrderMutation.isError && (
+          {submitOrder.isError && (
             <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg">
               <AlertCircle className="w-4 h-4" />
               <span className="text-sm">
-                {(submitOrderMutation.error as any)?.response?.data?.error || 'Order submission failed'}
+                {(submitOrder.error as any)?.response?.data?.error || 'Order submission failed'}
               </span>
             </div>
           )}
 
           {/* Success Display */}
-          {submitOrderMutation.isSuccess && (
+          {submitSuccess && (
             <div className="flex items-center gap-2 p-3 bg-green-50 text-green-700 rounded-lg">
               <CheckCircle className="w-4 h-4" />
               <span className="text-sm">Order submitted successfully!</span>
             </div>
           )}
 
-          {/* Submit Button */}
-          <Button
-            type="submit"
-            variant={side === 'buy' ? 'primary' : 'danger'}
-            fullWidth
-            isLoading={submitOrderMutation.isPending}
-            leftIcon={side === 'buy' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-          >
-            {side === 'buy' ? 'Buy' : 'Sell'} {symbol || 'Stock'}
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handlePreview}
+              disabled={!symbol.trim() || qty <= 0 || orderPreview.isPending}
+              leftIcon={<Eye className="w-4 h-4" />}
+              className="flex-1"
+            >
+              Preview
+            </Button>
+            <Button
+              type="submit"
+              variant={side === 'buy' ? 'primary' : 'danger'}
+              isLoading={submitOrder.isPending}
+              leftIcon={side === 'buy' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+              className="flex-1"
+            >
+              {side === 'buy' ? 'Buy' : 'Sell'} {symbol || 'Stock'}
+            </Button>
+          </div>
 
           {!brokerConnected && (
             <p className="text-xs text-center text-gray-500">
@@ -397,6 +469,137 @@ export function TradeExecutor({
           )}
         </form>
       </Card>
+
+      {/* Order Preview Modal */}
+      {showPreview && preview && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Order Preview</h3>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Order Summary */}
+              <div className="p-4 bg-gray-50 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Symbol</span>
+                  <span className="font-semibold">{preview.symbol}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Side</span>
+                  <Badge variant={preview.side === 'buy' ? 'success' : 'danger'}>
+                    {preview.side.toUpperCase()}
+                  </Badge>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Quantity</span>
+                  <span className="font-semibold">{preview.qty}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Order Type</span>
+                  <span className="font-semibold capitalize">{preview.type}</span>
+                </div>
+              </div>
+
+              {/* Price Details */}
+              <div className="p-4 border border-gray-200 rounded-lg space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Current Price</span>
+                  <span>${preview.currentPrice.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Estimated Price</span>
+                  <span>${preview.estimatedPrice.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Estimated Cost</span>
+                  <span>${preview.estimatedCost.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Fees</span>
+                  <span>${preview.estimatedFees.toFixed(2)}</span>
+                </div>
+                {preview.slippageEstimate > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Est. Slippage</span>
+                    <span className="text-yellow-600">${preview.slippageEstimate.toFixed(2)}</span>
+                  </div>
+                )}
+                <hr className="my-2" />
+                <div className="flex justify-between font-semibold">
+                  <span>Total</span>
+                  <span>${preview.estimatedTotal.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Market Impact */}
+              <div className="flex items-center gap-2">
+                <Zap className={`w-4 h-4 ${
+                  preview.marketImpact === 'high' ? 'text-red-500' :
+                  preview.marketImpact === 'medium' ? 'text-yellow-500' :
+                  'text-green-500'
+                }`} />
+                <span className="text-sm text-gray-600">
+                  Market Impact: <span className="font-medium capitalize">{preview.marketImpact}</span>
+                </span>
+              </div>
+
+              {/* Validation */}
+              {validation && (
+                <>
+                  {validation.errors.length > 0 && (
+                    <div className="p-3 bg-red-50 rounded-lg">
+                      {validation.errors.map((error, i) => (
+                        <div key={i} className="flex items-start gap-2 text-red-700 text-sm">
+                          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <span>{error}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {validation.warnings.length > 0 && (
+                    <div className="p-3 bg-yellow-50 rounded-lg space-y-1">
+                      {validation.warnings.map((warning, i) => (
+                        <div key={i} className="flex items-start gap-2 text-yellow-700 text-sm">
+                          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <span>{warning}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPreview(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant={side === 'buy' ? 'primary' : 'danger'}
+                  onClick={handleConfirmOrder}
+                  disabled={!!(validation && !validation.valid)}
+                  isLoading={submitOrder.isPending ?? false}
+                  className="flex-1"
+                >
+                  Confirm {side === 'buy' ? 'Buy' : 'Sell'}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Orders List */}
       <Card className="p-4">
@@ -428,7 +631,7 @@ export function TradeExecutor({
           </div>
         ) : (
           <div className="space-y-3">
-            {orders.map((order) => (
+            {orders.slice(0, 10).map((order) => (
               <div
                 key={order.id}
                 className="p-3 border border-gray-100 rounded-lg flex items-center justify-between"
@@ -453,7 +656,7 @@ export function TradeExecutor({
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-500">
-                      {order.qty} shares @ {order.type === 'market' ? 'Market' : `$${order.filledAvgPrice || '—'}`}
+                      {order.qty} shares @ {order.type === 'market' ? 'Market' : `$${order.limitPrice || order.filledAvgPrice || '-'}`}
                     </p>
                   </div>
                 </div>
@@ -467,8 +670,8 @@ export function TradeExecutor({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => cancelOrderMutation.mutate(order.id)}
-                      disabled={cancelOrderMutation.isPending}
+                      onClick={() => cancelOrder.mutate(order.id)}
+                      disabled={cancelOrder.isPending}
                     >
                       <X className="w-4 h-4 text-red-500" />
                     </Button>
@@ -495,35 +698,41 @@ export function TradeExecutorCompact({
 }) {
   const [qty, setQty] = useState(1);
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
-  const queryClient = useQueryClient();
+  const { submitOrder } = useTrading();
+  const { data: quote } = useQuote(symbol);
 
-  const submitOrderMutation = useMutation({
-    mutationFn: (orderReq: OrderRequest) => api.post('/broker/trade', orderReq),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['broker-orders'] });
-      if (onOrderSubmitted && data?.data?.order) {
-        onOrderSubmitted(data.data.order);
+  const handleQuickTrade = async () => {
+    try {
+      const result = await submitOrder.mutateAsync({
+        symbol: symbol.toUpperCase(),
+        qty,
+        side,
+        type: 'market',
+        timeInForce: 'day',
+      });
+
+      if (onOrderSubmitted && result.order) {
+        onOrderSubmitted(result.order);
       }
-    },
-  });
-
-  const handleQuickTrade = () => {
-    submitOrderMutation.mutate({
-      symbol: symbol.toUpperCase(),
-      qty,
-      side,
-      type: 'market',
-      timeInForce: 'day',
-    });
+    } catch (error) {
+      console.error('Quick trade failed:', error);
+    }
   };
+
+  const estimatedCost = quote ? qty * (side === 'buy' ? quote.ask : quote.bid) : 0;
 
   return (
     <div className={`p-4 bg-gray-50 rounded-lg ${className}`}>
-      <div className="flex items-center gap-3">
-        <DollarSign className="w-5 h-5 text-blue-600" />
-        <span className="font-semibold text-gray-900">{symbol}</span>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <DollarSign className="w-5 h-5 text-blue-600" />
+          <span className="font-semibold text-gray-900">{symbol}</span>
+        </div>
+        {quote && (
+          <span className="text-sm text-gray-600">${quote.last.toFixed(2)}</span>
+        )}
       </div>
-      <div className="mt-3 flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <input
           type="number"
           value={qty}
@@ -538,7 +747,7 @@ export function TradeExecutorCompact({
             setSide('buy');
             handleQuickTrade();
           }}
-          isLoading={submitOrderMutation.isPending && side === 'buy'}
+          isLoading={submitOrder.isPending && side === 'buy'}
           className="flex-1 bg-green-600 hover:bg-green-700"
         >
           Buy
@@ -550,18 +759,23 @@ export function TradeExecutorCompact({
             setSide('sell');
             handleQuickTrade();
           }}
-          isLoading={submitOrderMutation.isPending && side === 'sell'}
+          isLoading={submitOrder.isPending && side === 'sell'}
           className="flex-1"
         >
           Sell
         </Button>
       </div>
-      {submitOrderMutation.isError && (
-        <p className="mt-2 text-xs text-red-600">
-          {(submitOrderMutation.error as any)?.response?.data?.error || 'Order failed'}
+      {estimatedCost > 0 && (
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          Est. {side === 'buy' ? 'cost' : 'proceeds'}: ${estimatedCost.toFixed(2)}
         </p>
       )}
-      {submitOrderMutation.isSuccess && (
+      {submitOrder.isError && (
+        <p className="mt-2 text-xs text-red-600">
+          {(submitOrder.error as any)?.response?.data?.error || 'Order failed'}
+        </p>
+      )}
+      {submitOrder.isSuccess && (
         <p className="mt-2 text-xs text-green-600">Order submitted!</p>
       )}
     </div>

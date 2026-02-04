@@ -1,5 +1,6 @@
 import { Card } from '@/components/shared/Card';
 import { Badge } from '@/components/shared/Badge';
+import { HelpTooltip } from '@/components/help';
 import { Shield, TrendingDown, Activity, Target } from 'lucide-react';
 import type { RiskMetrics as RiskMetricsType } from '@/types';
 
@@ -16,6 +17,7 @@ export function RiskMetrics({ metrics }: RiskMetricsProps) {
           label="Sharpe Ratio"
           value={metrics.sharpeRatio.toFixed(2)}
           badge={metrics.sharpeRatio >= 1 ? { variant: 'success', text: 'Good' } : { variant: 'warning', text: 'Fair' }}
+          helpKey="sharpeRatio"
         />
 
         <MetricCard
@@ -23,6 +25,7 @@ export function RiskMetrics({ metrics }: RiskMetricsProps) {
           label="Volatility (Ann.)"
           value={`${(metrics.volatility * 100).toFixed(1)}%`}
           badge={metrics.volatility <= 0.20 ? { variant: 'success', text: 'Normal' } : { variant: 'warning', text: 'Elevated' }}
+          helpKey="volatility"
         />
 
         <MetricCard
@@ -30,6 +33,7 @@ export function RiskMetrics({ metrics }: RiskMetricsProps) {
           label="Max Drawdown"
           value={`${(metrics.maxDrawdown * 100).toFixed(1)}%`}
           badge={Math.abs(metrics.maxDrawdown) <= 0.10 ? { variant: 'success', text: 'OK' } : { variant: 'danger', text: 'High' }}
+          helpKey="maxDrawdown"
         />
 
         <MetricCard
@@ -37,6 +41,7 @@ export function RiskMetrics({ metrics }: RiskMetricsProps) {
           label="VaR (95%)"
           value={`${(metrics.var95 * 100).toFixed(1)}%`}
           badge={{ variant: 'info', text: 'Daily' }}
+          helpKey="var95"
         />
       </div>
     </Card>
@@ -48,17 +53,20 @@ function MetricCard({
   label,
   value,
   badge,
+  helpKey,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   badge: { variant: 'success' | 'warning' | 'danger' | 'info'; text: string };
+  helpKey?: string;
 }) {
   return (
     <div className="p-4 bg-gray-50 rounded-lg">
       <div className="flex items-center gap-2 mb-2">
         {icon}
         <p className="text-sm text-gray-500">{label}</p>
+        {helpKey && <HelpTooltip metricKey={helpKey} size="sm" />}
       </div>
       <div className="flex items-center justify-between">
         <p className="text-xl font-bold text-gray-800">{value}</p>

@@ -19,6 +19,8 @@ const Optimize = lazy(() => import('@/pages/Optimize').then(m => ({ default: m.O
 const Alerts = lazy(() => import('@/pages/Alerts').then(m => ({ default: m.Alerts })));
 const Trading = lazy(() => import('@/pages/Trading'));
 const Settings = lazy(() => import('@/pages/Settings').then(m => ({ default: m.Settings })));
+const Help = lazy(() => import('@/pages/Help').then(m => ({ default: m.Help })));
+const SharedPortfolio = lazy(() => import('@/pages/SharedPortfolio'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -179,6 +181,21 @@ function AppRoutes() {
             </Layout>
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/help"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Help />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      {/* Public route for shared portfolios - no auth required */}
+      <Route
+        path="/shared/:token"
+        element={<SharedPortfolio />}
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

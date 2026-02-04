@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus, HelpCircle } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { FactorBar } from './FactorBar';
 import type { FactorExposure } from '@/types';
@@ -126,6 +127,13 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
         <div className="text-center py-8 text-gray-500">
           <p>No factor exposures calculated yet.</p>
           <p className="text-sm mt-2">Add positions to see factor analysis.</p>
+          <Link
+            to="/help#what-are-factors"
+            className="inline-flex items-center gap-1 mt-4 text-sm text-blue-600 hover:text-blue-700"
+          >
+            <HelpCircle className="w-4 h-4" />
+            Learn about factors
+          </Link>
         </div>
       ) : viewMode === 'grouped' ? (
         <div className="space-y-4">

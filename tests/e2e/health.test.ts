@@ -1,9 +1,13 @@
 /**
  * E2E Test: Health & System Status
  * PRD Verification: System availability and performance targets
+ *
+ * Note: Some endpoints depend on external APIs (Polygon, Alpha Vantage).
+ * Tests accept 500/503 as "external API unavailable" - not a test failure.
  */
 
 import { describe, it, expect } from 'vitest';
+import { EXTERNAL_API_STATUSES } from '../setup';
 
 const API_BASE = process.env.TEST_API_URL || 'http://localhost:3000';
 
@@ -57,8 +61,8 @@ describe('System Health', () => {
         method: 'GET',
       });
 
-      // 200 if working, 404 if not deployed, 500 if API error
-      expect([200, 404, 500]).toContain(response.status);
+      // Accept 500/503 for external API errors (Polygon)
+      expect(EXTERNAL_API_STATUSES).toContain(response.status);
 
       if (response.status === 200) {
         const data = await response.json();
@@ -100,8 +104,8 @@ describe('System Health', () => {
         method: 'GET',
       });
 
-      // 200 if working, 404 if not deployed, 500 if API error
-      expect([200, 404, 500]).toContain(response.status);
+      // Accept 500/503 for external API errors (Alpha Vantage)
+      expect(EXTERNAL_API_STATUSES).toContain(response.status);
     });
   });
 

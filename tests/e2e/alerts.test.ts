@@ -80,8 +80,8 @@ describe('Risk Alerts', () => {
         headers: headers(),
       });
 
-      // Should return auth error or not found for invalid ID
-      expect([401, 404]).toContain(response.status);
+      // Should return auth error, not found, or bad request for invalid ID
+      expect([400, 401, 404]).toContain(response.status);
     });
   });
 

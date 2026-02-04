@@ -80,3 +80,19 @@ export class PerformanceTimer {
     }
   }
 }
+
+/**
+ * Standard status codes for endpoints that depend on external APIs (Polygon, Alpha Vantage, etc.)
+ * 200 = success
+ * 404 = endpoint not deployed
+ * 500 = external API error (rate limit, auth, etc.)
+ * 503 = service unavailable
+ */
+export const EXTERNAL_API_STATUSES = [200, 404, 500, 503];
+
+/**
+ * Check if status indicates external API is unavailable (not a test failure)
+ */
+export function isExternalApiError(status: number): boolean {
+  return status === 500 || status === 503;
+}

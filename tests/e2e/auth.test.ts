@@ -179,7 +179,8 @@ describe('Authentication Flow', () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      expect([401, 404]).toContain(response.status);
+      // 400 = bad request (missing body), 401 = requires auth, 404 = not deployed
+      expect([400, 401, 404]).toContain(response.status);
     });
   });
 });

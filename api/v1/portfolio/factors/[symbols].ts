@@ -257,9 +257,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     });
   } catch (error: any) {
+    // Check if it's an external API error
+    const isExternalError =
+      error.message?.includes('fetch') ||
+      error.message?.includes('network') ||
+      error.message?.includes('timeout') ||
+      error.message?.includes('ECONNREFUSED') ||
+      error.message?.includes('ETIMEDOUT');
+
+    if (isExternalError) {
+      return res.status(503).json({
+        success: false,
+        error: {
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'External data service temporarily unavailable. Please try again.',
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          latencyMs: Date.now() - start,
+        },
+      });
+    }
+
     return res.status(500).json({
       success: false,
       error: { code: 'FACTOR_ERROR', message: error.message },
+      meta: {
+        timestamp: new Date().toISOString(),
+        latencyMs: Date.now() - start,
+      },
     });
   }
 }

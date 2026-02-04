@@ -15,7 +15,7 @@ interface Quote {
 const quoteCache = new Map<string, Quote>();
 
 // Fetch real-time quotes from Polygon.io REST API
-async function fetchPolygonQuotes(symbols: string[], apiKey: string): Promise<Quote[]> {
+async function fetchPolygonQuotes(symbols: string[], apiKey: string): Promise<{ quotes: Quote[]; error?: string }> {
   const quotes: Quote[] = [];
 
   // Use Polygon's snapshot endpoint for multiple symbols
@@ -23,10 +23,16 @@ async function fetchPolygonQuotes(symbols: string[], apiKey: string): Promise<Qu
   const url = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${tickersParam}&apiKey=${apiKey}`;
 
   try {
-    const response = await fetch(url);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
-      console.error(`Polygon API error: ${response.status}`);
-      return [];
+      const errorMsg = `Polygon API error: ${response.status} ${response.statusText}`;
+      console.error(errorMsg);
+      return { quotes: [], error: errorMsg };
     }
 
     const data = await response.json();
@@ -47,11 +53,15 @@ async function fetchPolygonQuotes(symbols: string[], apiKey: string): Promise<Qu
         quoteCache.set(quote.symbol, quote);
       }
     }
-  } catch (error) {
-    console.error('Failed to fetch Polygon quotes:', error);
-  }
 
-  return quotes;
+    return { quotes };
+  } catch (error: any) {
+    const errorMsg = error.name === 'AbortError'
+      ? 'Polygon API request timed out'
+      : `Failed to fetch Polygon quotes: ${error.message}`;
+    console.error(errorMsg);
+    return { quotes: [], error: errorMsg };
+  }
 }
 
 // Generate simulated quote updates for demo/development
@@ -140,7 +150,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Send initial quotes
     let quotes: Quote[] = [];
     if (apiKey && isProduction) {
-      quotes = await fetchPolygonQuotes(symbols, apiKey);
+      const result = await fetchPolygonQuotes(symbols, apiKey);
+      quotes = result.quotes;
     }
 
     // Fill in any missing with mock data
@@ -170,7 +181,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Fetch updated quotes
       let updatedQuotes: Quote[] = [];
       if (apiKey && isProduction) {
-        updatedQuotes = await fetchPolygonQuotes(symbols, apiKey);
+        const result = await fetchPolygonQuotes(symbols, apiKey);
+        updatedQuotes = result.quotes;
       }
 
       // Fill in with mock updates for development
@@ -197,9 +209,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   let quotes: Quote[] = [];
   let source = 'mock';
+  let apiError: string | undefined;
 
   if (apiKey && isProduction) {
-    quotes = await fetchPolygonQuotes(symbols, apiKey);
+    const result = await fetchPolygonQuotes(symbols, apiKey);
+    quotes = result.quotes;
+    apiError = result.error;
     if (quotes.length > 0) {
       source = 'polygon';
     }

@@ -14,10 +14,14 @@ export function Earnings() {
   const { data: portfolio, isLoading: portfolioLoading } = useQuery({
     queryKey: ['portfolio'],
     queryFn: portfolioApi.getPortfolio,
+    retry: false,
   });
 
+  // Use portfolio symbols if available, otherwise use demo symbols
+  const DEMO_SYMBOLS = ['NVDA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'JPM', 'V', 'JNJ'];
   const symbols = useMemo(() => {
-    return portfolio?.positions?.map(p => p.symbol) || [];
+    const portfolioSymbols = portfolio?.positions?.map(p => p.symbol) || [];
+    return portfolioSymbols.length > 0 ? portfolioSymbols : DEMO_SYMBOLS;
   }, [portfolio]);
 
   // Get upcoming earnings

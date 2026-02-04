@@ -1,6 +1,6 @@
 /**
  * FRONTIER ALPHA - Risk Alert System
- * 
+ *
  * Real-time monitoring and alerting for portfolio risks:
  * - Drawdown alerts
  * - Volatility spikes
@@ -9,11 +9,13 @@
  * - Correlation breakdown
  * - Liquidity warnings
  * - Earnings risk windows
- * 
+ *
  * Delivers alerts via WebSocket, email, and push notifications.
+ * Persists alerts to Supabase for history tracking.
  */
 
 import type { Portfolio, FactorExposure, Quote } from '../types/index.js';
+import { supabaseAdmin } from '../lib/supabase.js';
 
 // ============================================================================
 // TYPES
@@ -125,9 +127,20 @@ export class RiskAlertSystem {
   private portfolioMetrics: RiskMetrics | null = null;
   private highWaterMark: number = 0;
   private alertIdCounter = 0;
+  private userId: string | null = null;
+  private portfolioId: string | null = null;
+  private useSupabase: boolean = !!process.env.SUPABASE_SERVICE_KEY;
 
   constructor(thresholds: Partial<RiskThresholds> = {}) {
     this.thresholds = { ...DEFAULT_THRESHOLDS, ...thresholds };
+  }
+
+  /**
+   * Set user context for alert persistence
+   */
+  setUserContext(userId: string, portfolioId?: string): void {
+    this.userId = userId;
+    this.portfolioId = portfolioId || null;
   }
 
   /**
@@ -433,26 +446,77 @@ export class RiskAlertSystem {
     factorExposures: FactorExposure[]
   ): RiskMetrics {
     const currentValue = portfolio.totalValue;
-    const drawdown = this.highWaterMark > 0 
-      ? (this.highWaterMark - currentValue) / this.highWaterMark 
+    const drawdown = this.highWaterMark > 0
+      ? (this.highWaterMark - currentValue) / this.highWaterMark
       : 0;
 
-    // Mock other metrics
+    // Calculate volatility from recent quote changes
+    const priceChanges: number[] = [];
+    for (const position of portfolio.positions) {
+      const quote = quotes.get(position.symbol);
+      if (quote && quote.changePercent !== undefined) {
+        // Weight by position size
+        priceChanges.push(quote.changePercent * position.weight);
+      }
+    }
+
+    // Portfolio daily return approximation
+    const portfolioReturn = priceChanges.reduce((sum, r) => sum + r, 0) / 100;
+
+    // Annualized volatility from recent returns (using stored history would be better)
+    // For now, estimate from single-day change with scaling
+    const dailyVol = Math.abs(portfolioReturn) * 1.5;  // Rough scaling
+    const vol21d = dailyVol * Math.sqrt(21);
+    const vol5d = dailyVol * Math.sqrt(5) * 1.2;  // Short-term vol tends to be higher
+
+    // Find market factor for beta
+    const marketFactor = factorExposures.find(f => f.factor === 'market');
+    const beta = marketFactor?.exposure || 1.0;
+
+    // VaR and CVaR (95% confidence, assuming normal distribution)
+    // VaR_95 = -μ + σ * 1.645 (daily)
+    const riskFreeDaily = 0.05 / 252;  // 5% annual risk-free rate
+    const expectedDailyReturn = riskFreeDaily + beta * 0.0003;  // Simple CAPM
+    const var95 = -expectedDailyReturn + dailyVol * 1.645;
+    const cvar95 = -expectedDailyReturn + dailyVol * 2.063;  // Expected shortfall
+
+    // Sharpe and Sortino ratios (annualized)
+    const annualReturn = expectedDailyReturn * 252;
+    const annualVol = dailyVol * Math.sqrt(252);
+    const sharpeRatio = annualVol > 0 ? (annualReturn - 0.05) / annualVol : 0;
+
+    // Sortino uses downside deviation
+    const downsideVol = dailyVol * 0.7;  // Approximate downside volatility
+    const sortino = downsideVol > 0 ? (annualReturn - 0.05) / (downsideVol * Math.sqrt(252)) : 0;
+
+    // Top concentration
+    const topConcentration = portfolio.positions.length > 0
+      ? Math.max(...portfolio.positions.map(p => p.weight))
+      : 0;
+
+    // Factor drifts (from target of 0 if no target specified)
+    const factorDrifts = new Map<string, number>();
+    for (const f of factorExposures) {
+      factorDrifts.set(f.factor, Math.abs(f.exposure));  // Drift from neutral
+    }
+
     return {
-      currentDrawdown: drawdown,
-      maxDrawdown: drawdown,
-      volatility21d: 0.18 + Math.random() * 0.1,
-      volatility5d: 0.20 + Math.random() * 0.15,
-      sharpeRatio: 0.8 + Math.random() * 0.8,
-      sortino: 1.0 + Math.random() * 0.5,
-      var95: 0.03 + Math.random() * 0.02,
-      cvar95: 0.05 + Math.random() * 0.03,
-      beta: 0.9 + Math.random() * 0.3,
-      correlationToSpy: 0.7 + Math.random() * 0.2,
-      topConcentration: Math.max(...portfolio.positions.map(p => p.weight)),
-      factorDrifts: new Map(factorExposures.map(f => [f.factor, Math.random() * 0.3])),
+      currentDrawdown: Math.max(0, drawdown),
+      maxDrawdown: Math.max(0, this.maxDrawdownSeen || drawdown),
+      volatility21d: Math.max(0.01, Math.min(1.0, vol21d)),
+      volatility5d: Math.max(0.01, Math.min(1.5, vol5d)),
+      sharpeRatio: Math.max(-5, Math.min(5, sharpeRatio)),
+      sortino: Math.max(-5, Math.min(5, sortino)),
+      var95: Math.max(0, Math.min(0.5, var95)),
+      cvar95: Math.max(0, Math.min(0.5, cvar95)),
+      beta: Math.max(0, Math.min(3, beta)),
+      correlationToSpy: 0.85,  // Would need SPY returns to calculate
+      topConcentration,
+      factorDrifts,
     };
   }
+
+  private maxDrawdownSeen = 0;
 
   private createAlert(params: Omit<RiskAlert, 'id' | 'timestamp' | 'acknowledged'>): RiskAlert {
     return {
@@ -483,6 +547,95 @@ export class RiskAlertSystem {
         console.error('Alert subscriber error:', e);
       }
     }
+
+    // Persist to Supabase asynchronously
+    this.persistAlert(alert).catch(e => {
+      console.warn('Failed to persist alert:', e);
+    });
+  }
+
+  /**
+   * Persist alert to Supabase
+   */
+  private async persistAlert(alert: RiskAlert): Promise<void> {
+    if (!this.useSupabase || !this.userId) return;
+
+    try {
+      await supabaseAdmin
+        .from('frontier_risk_alerts')
+        .insert({
+          id: alert.id,
+          user_id: this.userId,
+          portfolio_id: this.portfolioId,
+          alert_type: alert.type,
+          severity: alert.severity,
+          title: alert.title,
+          message: alert.message,
+          metadata: {
+            symbol: alert.symbol,
+            metric: alert.metric,
+            actions: alert.actions,
+          },
+          created_at: alert.timestamp.toISOString(),
+        });
+    } catch (e) {
+      console.error('Supabase alert persistence error:', e);
+    }
+  }
+
+  /**
+   * Load alerts from Supabase for a user
+   */
+  async loadAlerts(userId: string): Promise<RiskAlert[]> {
+    if (!this.useSupabase) return [];
+
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('frontier_risk_alerts')
+        .select('*')
+        .eq('user_id', userId)
+        .is('acknowledged_at', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      return (data || []).map(row => ({
+        id: row.id,
+        type: row.alert_type as AlertType,
+        severity: row.severity as AlertSeverity,
+        symbol: row.metadata?.symbol,
+        title: row.title,
+        message: row.message,
+        metric: row.metadata?.metric || { name: '', current: 0, threshold: 0, unit: '' },
+        timestamp: new Date(row.created_at),
+        acknowledged: !!row.acknowledged_at,
+        actions: row.metadata?.actions || [],
+      }));
+    } catch (e) {
+      console.error('Failed to load alerts from Supabase:', e);
+      return [];
+    }
+  }
+
+  /**
+   * Acknowledge alert in Supabase
+   */
+  async acknowledgeAlertPersistent(alertId: string): Promise<boolean> {
+    const success = this.acknowledgeAlert(alertId);
+
+    if (success && this.useSupabase) {
+      try {
+        await supabaseAdmin
+          .from('frontier_risk_alerts')
+          .update({ acknowledged_at: new Date().toISOString() })
+          .eq('id', alertId);
+      } catch (e) {
+        console.error('Failed to acknowledge alert in Supabase:', e);
+      }
+    }
+
+    return success;
   }
 
   /**

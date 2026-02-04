@@ -11,11 +11,16 @@
     "build:server": "esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=dist/index.js --format=esm --packages=external",
     "start": "node dist/index.js",
     "test": "vitest",
+    "test:e2e": "vitest run tests/e2e",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint src --ext .ts",
     "client:dev": "cd client && npm run dev",
     "client:build": "cd client && npm run build",
     "client:install": "cd client && npm install",
-    "ml:start": "cd ml && uvicorn main:app --reload --port 8000"
+    "ml:start": "cd ml && uvicorn main:app --reload --port 8000",
+    "download-ken-french": "tsx scripts/download-ken-french.ts",
+    "db:migrate": "cd supabase && supabase db push",
+    "db:reset": "cd supabase && supabase db reset"
   },
   "keywords": [
     "fintech",
@@ -44,7 +49,9 @@
     "@types/pg": "^8.11.0",
     "@types/ws": "^8.5.10",
     "@vercel/node": "^5.5.28",
+    "adm-zip": "^0.5.10",
     "concurrently": "^9.2.1",
+    "csv-parse": "^5.5.3",
     "esbuild": "^0.27.2",
     "eslint": "^8.56.0",
     "tsx": "^4.7.0",

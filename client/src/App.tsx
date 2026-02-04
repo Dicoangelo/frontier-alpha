@@ -3,11 +3,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { Layout } from '@/components/layout/Layout';
+import { Landing } from '@/pages/Landing';
 import { Dashboard } from '@/pages/Dashboard';
 import { Portfolio } from '@/pages/Portfolio';
 import { Factors } from '@/pages/Factors';
 import { Earnings } from '@/pages/Earnings';
 import { Optimize } from '@/pages/Optimize';
+import { Alerts } from '@/pages/Alerts';
 import { Settings } from '@/pages/Settings';
 import { Login } from '@/pages/Login';
 import { Spinner } from '@/components/shared/Spinner';
@@ -33,7 +35,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/landing" replace />;
   }
 
   return <>{children}</>;
@@ -51,7 +53,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -67,11 +69,29 @@ function AppRoutes() {
   return (
     <Routes>
       <Route
+        path="/landing"
+        element={
+          <PublicRoute>
+            <Landing />
+          </PublicRoute>
+        }
+      />
+      <Route
         path="/login"
         element={
           <PublicRoute>
             <Login />
           </PublicRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Dashboard />
+            </Layout>
+          </ProtectedRoute>
         }
       />
       <Route
@@ -120,6 +140,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <Optimize />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/alerts"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Alerts />
             </Layout>
           </ProtectedRoute>
         }

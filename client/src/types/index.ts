@@ -18,10 +18,11 @@ export interface Portfolio {
 
 export interface Quote {
   symbol: string;
-  timestamp: Date;
+  timestamp: number | Date;
   bid: number;
   ask: number;
   last: number;
+  volume: number;
   change: number;
   changePercent: number;
 }
@@ -68,8 +69,25 @@ export interface EarningsImpactForecast {
   expectedDirection: 'up' | 'down' | 'neutral';
   confidence: number;
   historicalAvgMove?: number;
+  beatRate?: number;
   recommendation: 'hold' | 'reduce' | 'hedge' | 'add';
   explanation: string;
+  factors?: {
+    historicalPattern: string;
+    recentTrend: string;
+    riskAssessment: string;
+  };
+}
+
+export interface HistoricalEarningsReaction {
+  reportDate: string;
+  fiscalQuarter: string;
+  estimatedEps: number;
+  actualEps: number | null;
+  surprise: number | null;
+  priceMove: number | null;
+  postEarningsDrift: number | null;
+  outcome: 'beat' | 'miss' | 'inline' | 'unknown';
 }
 
 export interface OptimizationConfig {

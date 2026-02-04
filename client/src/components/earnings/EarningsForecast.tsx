@@ -135,11 +135,61 @@ export function EarningsForecast({
           </Badge>
         </div>
 
+        {/* Beat Rate (if available) */}
+        {forecast.beatRate !== undefined && (
+          <div className="p-4 border rounded-lg">
+            <p className="text-sm text-gray-500 mb-2">Historical Beat Rate</p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${
+                    forecast.beatRate > 60 ? 'bg-green-500' :
+                    forecast.beatRate < 40 ? 'bg-red-500' : 'bg-yellow-500'
+                  }`}
+                  style={{ width: `${forecast.beatRate}%` }}
+                />
+              </div>
+              <span className={`font-bold ${
+                forecast.beatRate > 60 ? 'text-green-600' :
+                forecast.beatRate < 40 ? 'text-red-600' : 'text-yellow-600'
+              }`}>
+                {forecast.beatRate.toFixed(0)}%
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* AI Explanation */}
         <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
           <p className="text-sm font-medium text-blue-800 mb-2">AI Analysis</p>
           <p className="text-sm text-blue-700">{forecast.explanation}</p>
         </div>
+
+        {/* Factor Analysis (if available) */}
+        {forecast.factors && (
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-gray-700">Factor Analysis</p>
+            <div className="grid gap-2 text-sm">
+              <div className="flex justify-between p-2 bg-gray-50 rounded">
+                <span className="text-gray-500">Historical Pattern</span>
+                <span className="text-gray-700">{forecast.factors.historicalPattern}</span>
+              </div>
+              <div className="flex justify-between p-2 bg-gray-50 rounded">
+                <span className="text-gray-500">Recent Trend</span>
+                <span className="text-gray-700">{forecast.factors.recentTrend}</span>
+              </div>
+              <div className="flex justify-between p-2 bg-gray-50 rounded">
+                <span className="text-gray-500">Risk Assessment</span>
+                <span className={`font-medium ${
+                  forecast.factors.riskAssessment.includes('HIGH') ? 'text-red-600' :
+                  forecast.factors.riskAssessment.includes('LOW') ? 'text-green-600' : 'text-yellow-600'
+                }`}>
+                  {forecast.factors.riskAssessment}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Report Date */}
         <div className="text-center text-sm text-gray-500">

@@ -65,12 +65,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Generate mock quotes for positions
+    // Fetch real quotes for positions
+    const symbols = (positions || []).map((p: any) => p.symbol);
+    const quotesMap = new Map<string, { price: number; change: number }>();
+
+    if (symbols.length > 0) {
+      const polygonApiKey = process.env.POLYGON_API_KEY;
+      if (polygonApiKey) {
+        try {
+          const tickersParam = symbols.join(',');
+          const polygonUrl = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${tickersParam}&apiKey=${polygonApiKey}`;
+          const polygonResponse = await fetch(polygonUrl);
+          if (polygonResponse.ok) {
+            const polygonData = await polygonResponse.json();
+            if (polygonData.tickers) {
+              for (const ticker of polygonData.tickers) {
+                quotesMap.set(ticker.ticker, {
+                  price: ticker.day?.c || ticker.prevDay?.c || 0,
+                  change: ticker.todaysChangePerc || 0,
+                });
+              }
+            }
+          }
+        } catch (quoteError) {
+          console.warn('Failed to fetch Polygon quotes:', quoteError);
+        }
+      }
+    }
+
+    // Build positions with quotes (fallback to deterministic mock if no real quotes)
     const positionsWithQuotes = (positions || []).map((pos: any) => {
-      const hash = pos.symbol.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0);
-      const basePrice = 50 + (hash % 450);
-      const noise = (Math.random() - 0.5) * 0.02;
-      const currentPrice = basePrice * (1 + noise);
+      const quote = quotesMap.get(pos.symbol);
+      let currentPrice: number;
+
+      if (quote && quote.price > 0) {
+        currentPrice = quote.price;
+      } else {
+        // Fallback: deterministic price based on symbol hash
+        const hash = pos.symbol.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0);
+        currentPrice = 50 + (hash % 450);
+      }
+
       const unrealizedPnL = (currentPrice - pos.avg_cost) * pos.shares;
 
       return {

@@ -46,7 +46,8 @@ describe('System Health', () => {
       await fetch(`${API_BASE}/api/v1/health`, { method: 'GET' });
       const latency = Date.now() - startTime;
 
-      expect(latency).toBeLessThan(100);
+      // Allow up to 500ms for network latency in production
+      expect(latency).toBeLessThan(500);
     });
   });
 

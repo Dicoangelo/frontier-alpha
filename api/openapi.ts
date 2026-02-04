@@ -1,6 +1,662 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+
+// Embed the OpenAPI spec directly to avoid Vercel serverless file read issues
+const spec = {
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Frontier Alpha API",
+    "description": "AI-Powered Cognitive Factor Intelligence Platform API.\n\nFrontier Alpha provides sophisticated portfolio analytics, factor analysis, earnings intelligence,\nand risk management tools for modern portfolio management.\n\n## Authentication\n\nMost endpoints require authentication via Bearer token. After logging in through `/api/v1/auth/login`,\ninclude the access token in the `Authorization` header:\n\n```\nAuthorization: Bearer <access_token>\n```\n\n## Rate Limiting\n\nAPI requests are rate-limited based on your tier:\n- **Free tier**: 100 requests/minute\n- **Pro tier**: 500 requests/minute\n- **API tier**: 1000 requests/minute\n\nRate limit headers are included in all responses:\n- `X-RateLimit-Limit`: Maximum requests allowed\n- `X-RateLimit-Remaining`: Requests remaining in current window\n- `X-RateLimit-Reset`: Unix timestamp when the limit resets\n\n## Error Codes\n\n| Code | HTTP Status | Description |\n|------|-------------|-------------|\n| BAD_REQUEST | 400 | Invalid request parameters |\n| UNAUTHORIZED | 401 | Missing or invalid authentication |\n| FORBIDDEN | 403 | Access denied |\n| NOT_FOUND | 404 | Resource not found |\n| VALIDATION_ERROR | 422 | Request validation failed |\n| RATE_LIMITED | 429 | Rate limit exceeded |\n| SERVER_ERROR | 500 | Internal server error |\n| DATABASE_ERROR | 500 | Database operation failed |\n| EXTERNAL_API_ERROR | 502 | External service error |\n| TIMEOUT | 504 | Operation timed out |",
+    "version": "1.0.5",
+    "contact": {
+      "name": "Frontier Alpha Support",
+      "email": "support@frontier-alpha.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    { "url": "/api/v1", "description": "Production API (v1)" },
+    { "url": "http://localhost:3000/api/v1", "description": "Local development" }
+  ],
+  "tags": [
+    { "name": "Health", "description": "API health and status checks" },
+    { "name": "Authentication", "description": "User authentication and session management" },
+    { "name": "Portfolio", "description": "Portfolio management and analysis" },
+    { "name": "Positions", "description": "Position management (CRUD operations)" },
+    { "name": "Factors", "description": "Factor analysis and exposures" },
+    { "name": "Quotes", "description": "Real-time and historical quotes" },
+    { "name": "Earnings", "description": "Earnings calendar, forecasts, and history" },
+    { "name": "Alerts", "description": "Risk alerts and notifications" },
+    { "name": "Sentiment", "description": "News sentiment analysis" },
+    { "name": "Options", "description": "Options analytics and implied volatility" },
+    { "name": "Broker", "description": "Trade execution (paper trading)" },
+    { "name": "Settings", "description": "User settings and preferences" },
+    { "name": "Cache", "description": "Cache management (admin)" },
+    { "name": "Errors", "description": "Error reporting" }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "description": "Returns the health status of the API and its dependencies. Use `quick=true` for a fast response without dependency checks.",
+        "operationId": "getHealth",
+        "parameters": [
+          { "name": "quick", "in": "query", "description": "Skip dependency checks for faster response", "schema": { "type": "boolean", "default": false } }
+        ],
+        "responses": {
+          "200": {
+            "description": "API is healthy or degraded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthCheck" },
+                "example": {
+                  "status": "healthy",
+                  "timestamp": "2024-01-15T10:30:00Z",
+                  "version": "1.0.5",
+                  "environment": "production",
+                  "checks": {
+                    "api": { "status": "ok", "latencyMs": 5 },
+                    "database": { "status": "ok" },
+                    "external": { "status": "ok" }
+                  },
+                  "metrics": { "uptime": 86400, "memoryUsage": 128, "requestCount": 10542 }
+                }
+              }
+            }
+          },
+          "503": { "description": "API is unhealthy", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HealthCheck" } } } }
+        }
+      }
+    },
+    "/auth/signup": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Create new account",
+        "description": "Register a new user account",
+        "operationId": "signup",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SignupRequest" } } } },
+        "responses": {
+          "201": { "description": "Account created successfully", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SignupResponse" } } } },
+          "400": { "description": "Validation error or duplicate email", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "503": { "description": "Authentication service unavailable", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login",
+        "description": "Authenticate with email and password",
+        "operationId": "login",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } } },
+        "responses": {
+          "200": { "description": "Login successful", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } } },
+          "401": { "description": "Invalid credentials", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "503": { "description": "Authentication service unavailable", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Logout",
+        "description": "Invalidate current session",
+        "operationId": "logout",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Logout successful", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } } },
+          "401": { "description": "Not authenticated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Refresh token",
+        "description": "Get new access token using refresh token",
+        "operationId": "refreshToken",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RefreshRequest" } } } },
+        "responses": {
+          "200": { "description": "Token refreshed successfully", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RefreshResponse" } } } },
+          "401": { "description": "Invalid or expired refresh token", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Get current user",
+        "description": "Returns the authenticated user's profile and settings",
+        "operationId": "getCurrentUser",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "User profile", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserProfileResponse" } } } },
+          "401": { "description": "Not authenticated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/portfolio": {
+      "get": {
+        "tags": ["Portfolio"],
+        "summary": "Get portfolio summary",
+        "description": "Returns portfolio with positions, current values, and P&L",
+        "operationId": "getPortfolio",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Portfolio summary", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PortfolioResponse" } } } },
+          "401": { "description": "Not authenticated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "404": { "description": "No portfolio found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/portfolio/risk": {
+      "get": {
+        "tags": ["Portfolio"],
+        "summary": "Get portfolio risk metrics",
+        "description": "Returns comprehensive risk metrics including VaR, CVaR, Sharpe ratio, and Monte Carlo simulation results.",
+        "operationId": "getPortfolioRisk",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Risk metrics", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RiskMetricsResponse" } } } },
+          "401": { "description": "Not authenticated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/portfolio/attribution": {
+      "get": {
+        "tags": ["Portfolio"],
+        "summary": "Get performance attribution",
+        "description": "Returns Brinson-Fachler performance attribution analysis",
+        "operationId": "getPortfolioAttribution",
+        "parameters": [
+          { "name": "period", "in": "query", "description": "Attribution period", "schema": { "type": "string", "enum": ["1W", "1M", "3M", "6M", "1Y", "YTD"], "default": "1M" } },
+          { "name": "symbols", "in": "query", "description": "Comma-separated symbols (optional, uses portfolio if omitted)", "schema": { "type": "string", "example": "NVDA,AAPL,MSFT" } }
+        ],
+        "responses": {
+          "200": { "description": "Attribution analysis", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AttributionResponse" } } } }
+        }
+      }
+    },
+    "/portfolio/positions": {
+      "get": {
+        "tags": ["Positions"],
+        "summary": "List all positions",
+        "description": "Returns all positions in the user's portfolio",
+        "operationId": "listPositions",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of positions", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PositionListResponse" } } } },
+          "401": { "description": "Not authenticated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "post": {
+        "tags": ["Positions"],
+        "summary": "Add position",
+        "description": "Add a new position or average into existing position",
+        "operationId": "addPosition",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddPositionRequest" } } } },
+        "responses": {
+          "201": { "description": "Position created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PositionResponse" } } } },
+          "200": { "description": "Position updated (averaged in)", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PositionResponse" } } } },
+          "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "401": { "description": "Not authenticated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/portfolio/positions/{id}": {
+      "parameters": [{ "name": "id", "in": "path", "required": true, "description": "Position ID", "schema": { "type": "string", "format": "uuid" } }],
+      "get": {
+        "tags": ["Positions"],
+        "summary": "Get position",
+        "description": "Returns a single position by ID",
+        "operationId": "getPosition",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Position details", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PositionResponse" } } } },
+          "404": { "description": "Position not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "put": {
+        "tags": ["Positions"],
+        "summary": "Update position",
+        "description": "Update position shares or cost basis",
+        "operationId": "updatePosition",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdatePositionRequest" } } } },
+        "responses": {
+          "200": { "description": "Position updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PositionResponse" } } } },
+          "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "404": { "description": "Position not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["Positions"],
+        "summary": "Delete position",
+        "description": "Remove a position from the portfolio",
+        "operationId": "deletePosition",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Position deleted", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DeleteResponse" } } } },
+          "404": { "description": "Position not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/portfolio/factors/{symbols}": {
+      "get": {
+        "tags": ["Factors"],
+        "summary": "Get factor exposures",
+        "description": "Calculate factor exposures for specified symbols. Returns market beta, momentum, volatility, and other factor loadings.",
+        "operationId": "getFactorExposures",
+        "parameters": [{ "name": "symbols", "in": "path", "required": true, "description": "Comma-separated stock symbols", "schema": { "type": "string", "example": "NVDA,AAPL,MSFT" } }],
+        "responses": {
+          "200": { "description": "Factor exposures", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FactorExposuresResponse" } } } },
+          "400": { "description": "Invalid symbols", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/quotes/{symbol}": {
+      "get": {
+        "tags": ["Quotes"],
+        "summary": "Get quote",
+        "description": "Returns current quote for a single symbol",
+        "operationId": "getQuote",
+        "parameters": [{ "name": "symbol", "in": "path", "required": true, "description": "Stock symbol", "schema": { "type": "string", "example": "AAPL" } }],
+        "responses": {
+          "200": { "description": "Quote data", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/QuoteResponse" } } } },
+          "400": { "description": "Invalid symbol", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/quotes/stream": {
+      "get": {
+        "tags": ["Quotes"],
+        "summary": "Stream quotes",
+        "description": "Get quotes for multiple symbols. Supports SSE streaming for real-time updates. Set `sse=true` for Server-Sent Events streaming.",
+        "operationId": "streamQuotes",
+        "parameters": [
+          { "name": "symbols", "in": "query", "required": true, "description": "Comma-separated symbols (max 50)", "schema": { "type": "string", "example": "NVDA,AAPL,MSFT,GOOGL" } },
+          { "name": "sse", "in": "query", "description": "Enable Server-Sent Events streaming", "schema": { "type": "boolean", "default": false } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quotes or SSE stream",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/QuotesResponse" } },
+              "text/event-stream": { "schema": { "type": "string", "description": "SSE stream of quote updates" } }
+            }
+          },
+          "400": { "description": "Invalid request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/earnings/upcoming": {
+      "get": {
+        "tags": ["Earnings"],
+        "summary": "Get upcoming earnings",
+        "description": "Returns upcoming earnings calendar with AI-powered recommendations",
+        "operationId": "getUpcomingEarnings",
+        "parameters": [
+          { "name": "daysAhead", "in": "query", "description": "Number of days to look ahead", "schema": { "type": "integer", "default": 30, "minimum": 1, "maximum": 90 } },
+          { "name": "symbols", "in": "query", "description": "Filter by symbols (comma-separated)", "schema": { "type": "string", "example": "NVDA,AAPL" } }
+        ],
+        "responses": {
+          "200": { "description": "Earnings calendar", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EarningsCalendarResponse" } } } }
+        }
+      }
+    },
+    "/earnings/history/{symbol}": {
+      "get": {
+        "tags": ["Earnings"],
+        "summary": "Get earnings history",
+        "description": "Returns historical earnings reactions for a symbol",
+        "operationId": "getEarningsHistory",
+        "parameters": [{ "name": "symbol", "in": "path", "required": true, "description": "Stock symbol", "schema": { "type": "string", "example": "NVDA" } }],
+        "responses": {
+          "200": { "description": "Historical earnings data", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EarningsHistoryResponse" } } } },
+          "400": { "description": "Invalid symbol", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/earnings/forecast/{symbol}": {
+      "get": {
+        "tags": ["Earnings"],
+        "summary": "Get earnings forecast",
+        "description": "Returns AI-powered earnings forecast and trading recommendation",
+        "operationId": "getEarningsForecast",
+        "parameters": [
+          { "name": "symbol", "in": "path", "required": true, "description": "Stock symbol", "schema": { "type": "string", "example": "NVDA" } },
+          { "name": "reportDate", "in": "query", "description": "Expected report date (YYYY-MM-DD)", "schema": { "type": "string", "format": "date" } }
+        ],
+        "responses": {
+          "200": { "description": "Earnings forecast", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/EarningsForecastResponse" } } } },
+          "400": { "description": "Invalid symbol", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/alerts": {
+      "get": {
+        "tags": ["Alerts"],
+        "summary": "Get active alerts",
+        "description": "Returns all active risk alerts for the user",
+        "operationId": "getAlerts",
+        "responses": {
+          "200": { "description": "Active alerts", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AlertsResponse" } } } }
+        }
+      }
+    },
+    "/alerts/notify": {
+      "post": {
+        "tags": ["Alerts"],
+        "summary": "Send alert notifications",
+        "description": "Send alert notifications via email",
+        "operationId": "sendAlertNotifications",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NotifyRequest" } } } },
+        "responses": {
+          "200": { "description": "Notifications sent", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NotifyResponse" } } } },
+          "400": { "description": "Invalid request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/alerts/factor-drift": {
+      "get": {
+        "tags": ["Alerts"],
+        "summary": "Get factor drift targets",
+        "description": "Returns default factor targets and predefined strategies",
+        "operationId": "getFactorDriftTargets",
+        "responses": {
+          "200": { "description": "Factor drift configuration", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FactorDriftConfigResponse" } } } }
+        }
+      },
+      "post": {
+        "tags": ["Alerts"],
+        "summary": "Check factor drift",
+        "description": "Analyze factor drift against targets and generate alerts",
+        "operationId": "checkFactorDrift",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FactorDriftRequest" } } } },
+        "responses": {
+          "200": { "description": "Factor drift analysis", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FactorDriftResponse" } } } },
+          "400": { "description": "Invalid request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/alerts/sec-filings": {
+      "get": {
+        "tags": ["Alerts"],
+        "summary": "Get SEC filing alerts",
+        "description": "Returns recent SEC filings for watchlist symbols",
+        "operationId": "getSECFilings",
+        "parameters": [{ "name": "symbols", "in": "query", "description": "Comma-separated symbols (defaults to common tickers)", "schema": { "type": "string", "example": "AAPL,MSFT,NVDA" } }],
+        "responses": {
+          "200": { "description": "SEC filing alerts", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SECFilingsResponse" } } } }
+        }
+      },
+      "post": {
+        "tags": ["Alerts"],
+        "summary": "Check SEC filings for symbols",
+        "description": "Check for new SEC filings for specified symbols",
+        "operationId": "checkSECFilings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["symbols"],
+                "properties": {
+                  "symbols": { "type": "array", "items": { "type": "string" }, "maxItems": 20, "example": ["AAPL", "MSFT", "NVDA"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "SEC filing alerts", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SECFilingsResponse" } } } }
+        }
+      }
+    },
+    "/sentiment/{symbol}": {
+      "get": {
+        "tags": ["Sentiment"],
+        "summary": "Get news sentiment",
+        "description": "Returns AI-analyzed news sentiment for a symbol",
+        "operationId": "getSentiment",
+        "parameters": [{ "name": "symbol", "in": "path", "required": true, "description": "Stock symbol", "schema": { "type": "string", "example": "NVDA" } }],
+        "responses": {
+          "200": { "description": "Sentiment analysis", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SentimentResponse" } } } },
+          "400": { "description": "Invalid symbol", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/options/iv": {
+      "get": {
+        "tags": ["Options"],
+        "summary": "Get implied volatility",
+        "description": "Returns implied volatility metrics for symbols",
+        "operationId": "getImpliedVolatility",
+        "parameters": [{ "name": "symbols", "in": "query", "required": true, "description": "Comma-separated symbols (max 10)", "schema": { "type": "string", "example": "NVDA,AAPL,TSLA" } }],
+        "responses": {
+          "200": { "description": "IV data", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IVResponse" } } } },
+          "400": { "description": "Invalid request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/broker/trade": {
+      "get": {
+        "tags": ["Broker"],
+        "summary": "Get account or orders",
+        "description": "Returns broker account info or order list",
+        "operationId": "getBrokerInfo",
+        "parameters": [{ "name": "action", "in": "query", "required": true, "description": "Action to perform", "schema": { "type": "string", "enum": ["account", "orders"] } }],
+        "responses": {
+          "200": { "description": "Account or orders", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BrokerAccountResponse" } } } }
+        }
+      },
+      "post": {
+        "tags": ["Broker"],
+        "summary": "Submit order",
+        "description": "Submit a trade order (paper trading or live with broker configured)",
+        "operationId": "submitOrder",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderRequest" } } } },
+        "responses": {
+          "200": { "description": "Order submitted", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderResponse" } } } },
+          "400": { "description": "Invalid order", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["Broker"],
+        "summary": "Cancel order",
+        "description": "Cancel a pending order",
+        "operationId": "cancelOrder",
+        "parameters": [{ "name": "orderId", "in": "query", "required": true, "description": "Order ID to cancel", "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "Order canceled", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DeleteResponse" } } } },
+          "404": { "description": "Order not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/settings/notifications": {
+      "get": {
+        "tags": ["Settings"],
+        "summary": "Get notification settings",
+        "description": "Returns current notification preferences",
+        "operationId": "getNotificationSettings",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Notification settings", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NotificationSettingsResponse" } } } }
+        }
+      },
+      "put": {
+        "tags": ["Settings"],
+        "summary": "Update notification settings",
+        "description": "Update notification preferences",
+        "operationId": "updateNotificationSettings",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NotificationSettingsRequest" } } } },
+        "responses": {
+          "200": { "description": "Settings updated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NotificationSettingsResponse" } } } },
+          "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/cache/stats": {
+      "get": {
+        "tags": ["Cache"],
+        "summary": "Get cache statistics",
+        "description": "Returns cache hit rates and memory usage",
+        "operationId": "getCacheStats",
+        "responses": {
+          "200": { "description": "Cache statistics", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CacheStatsResponse" } } } }
+        }
+      },
+      "post": {
+        "tags": ["Cache"],
+        "summary": "Invalidate cache",
+        "description": "Invalidate specific cache types",
+        "operationId": "invalidateCache",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action", "type"],
+                "properties": {
+                  "action": { "type": "string", "enum": ["invalidate"] },
+                  "type": { "type": "string", "enum": ["quotes", "factors", "api", "all"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Cache invalidated", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CacheInvalidateResponse" } } } }
+        }
+      },
+      "delete": {
+        "tags": ["Cache"],
+        "summary": "Clear all cache",
+        "description": "Clear entire cache",
+        "operationId": "clearCache",
+        "responses": {
+          "200": { "description": "Cache cleared", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } } }
+        }
+      }
+    },
+    "/errors/report": {
+      "post": {
+        "tags": ["Errors"],
+        "summary": "Report client error",
+        "description": "Submit a client-side error report for monitoring",
+        "operationId": "reportError",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorReport" } } } },
+        "responses": {
+          "200": { "description": "Error reported", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessResponse" } } } },
+          "400": { "description": "Invalid error report", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT access token from /auth/login"
+      }
+    },
+    "schemas": {
+      "SuccessResponse": { "type": "object", "required": ["success"], "properties": { "success": { "type": "boolean", "example": true }, "data": { "type": "object" }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "ErrorResponse": { "type": "object", "required": ["success", "error"], "properties": { "success": { "type": "boolean", "example": false }, "error": { "type": "object", "required": ["code", "message"], "properties": { "code": { "type": "string", "enum": ["BAD_REQUEST", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND", "VALIDATION_ERROR", "RATE_LIMITED", "SERVER_ERROR", "DATABASE_ERROR", "EXTERNAL_API_ERROR", "TIMEOUT"] }, "message": { "type": "string" }, "details": { "type": "object" }, "retryAfter": { "type": "integer", "description": "Seconds until rate limit resets" } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "ResponseMeta": { "type": "object", "properties": { "timestamp": { "type": "string", "format": "date-time" }, "requestId": { "type": "string" }, "latencyMs": { "type": "integer" } } },
+      "DeleteResponse": { "type": "object", "required": ["success", "data"], "properties": { "success": { "type": "boolean", "example": true }, "data": { "type": "object", "properties": { "deleted": { "type": "boolean", "example": true } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "HealthCheck": { "type": "object", "required": ["status", "timestamp", "version", "environment", "checks", "metrics"], "properties": { "status": { "type": "string", "enum": ["healthy", "degraded", "unhealthy"] }, "timestamp": { "type": "string", "format": "date-time" }, "version": { "type": "string" }, "environment": { "type": "string" }, "checks": { "type": "object", "properties": { "api": { "type": "object", "properties": { "status": { "type": "string", "enum": ["ok", "error"] }, "latencyMs": { "type": "number" } } }, "database": { "type": "object", "properties": { "status": { "type": "string", "enum": ["ok", "error"] }, "message": { "type": "string" } } }, "external": { "type": "object", "properties": { "status": { "type": "string", "enum": ["ok", "error"] }, "message": { "type": "string" } } } } }, "metrics": { "type": "object", "properties": { "uptime": { "type": "number", "description": "Uptime in seconds" }, "memoryUsage": { "type": "number", "description": "Memory usage in MB" }, "requestCount": { "type": "number" } } } } },
+      "SignupRequest": { "type": "object", "required": ["email", "password"], "properties": { "email": { "type": "string", "format": "email" }, "password": { "type": "string", "minLength": 8 }, "name": { "type": "string" } } },
+      "SignupResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "user": { "$ref": "#/components/schemas/User" }, "session": { "$ref": "#/components/schemas/Session" }, "confirmationRequired": { "type": "boolean" } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "LoginRequest": { "type": "object", "required": ["email", "password"], "properties": { "email": { "type": "string", "format": "email" }, "password": { "type": "string" } } },
+      "LoginResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "user": { "$ref": "#/components/schemas/User" }, "accessToken": { "type": "string" }, "refreshToken": { "type": "string" }, "expiresAt": { "type": "integer" }, "expiresIn": { "type": "integer" } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "RefreshRequest": { "type": "object", "required": ["refreshToken"], "properties": { "refreshToken": { "type": "string" } } },
+      "RefreshResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "accessToken": { "type": "string" }, "refreshToken": { "type": "string" }, "expiresAt": { "type": "integer" }, "expiresIn": { "type": "integer" }, "user": { "$ref": "#/components/schemas/User" } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "User": { "type": "object", "properties": { "id": { "type": "string", "format": "uuid" }, "email": { "type": "string", "format": "email" }, "name": { "type": "string" }, "avatarUrl": { "type": "string", "format": "uri" }, "createdAt": { "type": "string", "format": "date-time" }, "lastSignIn": { "type": "string", "format": "date-time" }, "emailConfirmed": { "type": "boolean" } } },
+      "Session": { "type": "object", "properties": { "accessToken": { "type": "string" }, "refreshToken": { "type": "string" }, "expiresAt": { "type": "integer" } } },
+      "UserProfileResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "user": { "$ref": "#/components/schemas/User" }, "settings": { "type": "object", "properties": { "notifications": { "type": "boolean" }, "theme": { "type": "string" }, "riskTolerance": { "type": "string" } } } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "Portfolio": { "type": "object", "properties": { "id": { "type": "string", "format": "uuid" }, "name": { "type": "string" }, "positions": { "type": "array", "items": { "$ref": "#/components/schemas/PositionWithQuote" } }, "cash": { "type": "number" }, "totalValue": { "type": "number" }, "currency": { "type": "string", "default": "USD" } } },
+      "PositionWithQuote": { "type": "object", "properties": { "id": { "type": "string", "format": "uuid" }, "symbol": { "type": "string" }, "shares": { "type": "number" }, "weight": { "type": "number", "description": "Portfolio weight (0-1)" }, "costBasis": { "type": "number" }, "currentPrice": { "type": "number" }, "unrealizedPnL": { "type": "number" } } },
+      "PortfolioResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "$ref": "#/components/schemas/Portfolio" }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "Position": { "type": "object", "properties": { "id": { "type": "string", "format": "uuid" }, "symbol": { "type": "string" }, "shares": { "type": "number" }, "costBasis": { "type": "number" } } },
+      "AddPositionRequest": { "type": "object", "required": ["symbol", "shares", "avgCost"], "properties": { "symbol": { "type": "string", "example": "NVDA" }, "shares": { "type": "number", "minimum": 0.01, "example": 100 }, "avgCost": { "type": "number", "minimum": 0.01, "example": 450.50 } } },
+      "UpdatePositionRequest": { "type": "object", "properties": { "shares": { "type": "number", "minimum": 0.01 }, "avgCost": { "type": "number", "minimum": 0.01 } } },
+      "PositionResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "$ref": "#/components/schemas/Position" }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "PositionListResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/Position" } }, "meta": { "allOf": [{ "$ref": "#/components/schemas/ResponseMeta" }, { "type": "object", "properties": { "count": { "type": "integer" } } }] } } },
+      "RiskMetrics": { "type": "object", "properties": { "var95": { "type": "number", "description": "95% Value at Risk (annual)" }, "cvar95": { "type": "number", "description": "95% Conditional VaR (annual)" }, "sharpeRatio": { "type": "number", "description": "Sharpe ratio (annualized)" }, "sortinoRatio": { "type": "number", "description": "Sortino ratio (annualized)" }, "volatility": { "type": "number", "description": "Annualized volatility" }, "maxDrawdown": { "type": "number", "description": "Maximum drawdown (historical)" }, "beta": { "type": "number", "description": "Market beta" }, "informationRatio": { "type": "number", "description": "Information ratio vs benchmark" }, "tailRisk": { "type": "number", "description": "Average of worst 1% outcomes" }, "probPositive": { "type": "number", "description": "Probability of positive annual return" } } },
+      "RiskMetricsResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "$ref": "#/components/schemas/RiskMetrics" }, "meta": { "allOf": [{ "$ref": "#/components/schemas/ResponseMeta" }, { "type": "object", "properties": { "source": { "type": "string" }, "dataPoints": { "type": "integer" }, "simulations": { "type": "integer" } } }] } } },
+      "AttributionResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "period": { "type": "object", "properties": { "start": { "type": "string" }, "end": { "type": "string" }, "label": { "type": "string" } } }, "portfolioReturn": { "type": "number" }, "benchmarkReturn": { "type": "number" }, "activeReturn": { "type": "number" }, "allocationEffect": { "type": "number" }, "selectionEffect": { "type": "number" }, "interactionEffect": { "type": "number" }, "sectorAttribution": { "type": "array", "items": { "type": "object" } }, "factorAttribution": { "type": "array", "items": { "type": "object" } } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "FactorExposure": { "type": "object", "properties": { "factor": { "type": "string" }, "exposure": { "type": "number" }, "tStat": { "type": "number" }, "confidence": { "type": "number" }, "contribution": { "type": "number" } } },
+      "FactorExposuresResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "additionalProperties": { "type": "array", "items": { "$ref": "#/components/schemas/FactorExposure" } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "Quote": { "type": "object", "properties": { "symbol": { "type": "string" }, "timestamp": { "type": "string", "format": "date-time" }, "bid": { "type": "number" }, "ask": { "type": "number" }, "last": { "type": "number" }, "change": { "type": "number" }, "changePercent": { "type": "number" }, "volume": { "type": "integer" } } },
+      "QuoteResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "$ref": "#/components/schemas/Quote" }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "QuotesResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/Quote" } }, "meta": { "allOf": [{ "$ref": "#/components/schemas/ResponseMeta" }, { "type": "object", "properties": { "source": { "type": "string" }, "count": { "type": "integer" } } }] } } },
+      "EarningsEvent": { "type": "object", "properties": { "id": { "type": "string" }, "symbol": { "type": "string" }, "reportDate": { "type": "string", "format": "date" }, "reportTime": { "type": "string", "enum": ["pre_market", "post_market", "during_market"] }, "fiscalQuarter": { "type": "string" }, "estimatedEps": { "type": "number" }, "actualEps": { "type": "number" }, "status": { "type": "string", "enum": ["upcoming", "confirmed", "reported"] }, "expectedMove": { "type": "number", "description": "Expected price move (decimal)" }, "recommendation": { "type": "string", "enum": ["hold", "reduce", "hedge", "add"] }, "explanation": { "type": "string" } } },
+      "EarningsCalendarResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/EarningsEvent" } }, "meta": { "allOf": [{ "$ref": "#/components/schemas/ResponseMeta" }, { "type": "object", "properties": { "source": { "type": "string" }, "count": { "type": "integer" } } }] } } },
+      "HistoricalReaction": { "type": "object", "properties": { "reportDate": { "type": "string", "format": "date" }, "fiscalQuarter": { "type": "string" }, "estimatedEps": { "type": "number" }, "actualEps": { "type": "number" }, "surprise": { "type": "number" }, "priceMove": { "type": "number" }, "postEarningsDrift": { "type": "number" }, "outcome": { "type": "string", "enum": ["beat", "miss", "inline", "unknown"] } } },
+      "EarningsHistoryResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "symbol": { "type": "string" }, "reactions": { "type": "array", "items": { "$ref": "#/components/schemas/HistoricalReaction" } }, "summary": { "type": "object", "properties": { "quarters": { "type": "integer" }, "beatRate": { "type": "number" }, "avgMove": { "type": "number" }, "avgBeatMove": { "type": "number" }, "avgMissMove": { "type": "number" } } } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "EarningsForecast": { "type": "object", "properties": { "symbol": { "type": "string" }, "reportDate": { "type": "string", "format": "date" }, "expectedMove": { "type": "number" }, "expectedDirection": { "type": "string", "enum": ["up", "down", "neutral"] }, "confidence": { "type": "number", "minimum": 0, "maximum": 1 }, "historicalAvgMove": { "type": "number" }, "beatRate": { "type": "number" }, "recommendation": { "type": "string", "enum": ["hold", "reduce", "hedge", "add"] }, "explanation": { "type": "string" }, "factors": { "type": "object", "properties": { "historicalPattern": { "type": "string" }, "recentTrend": { "type": "string" }, "riskAssessment": { "type": "string" } } } } },
+      "EarningsForecastResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "$ref": "#/components/schemas/EarningsForecast" }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "Alert": { "type": "object", "properties": { "id": { "type": "string" }, "type": { "type": "string" }, "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] }, "title": { "type": "string" }, "message": { "type": "string" }, "timestamp": { "type": "string", "format": "date-time" }, "acknowledged": { "type": "boolean" } } },
+      "AlertsResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/Alert" } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "NotifyRequest": { "type": "object", "required": ["alerts"], "properties": { "alerts": { "type": "array", "items": { "$ref": "#/components/schemas/Alert" } }, "userId": { "type": "string" }, "email": { "type": "string", "format": "email" }, "mode": { "type": "string", "enum": ["immediate", "digest"], "default": "immediate" }, "settings": { "type": "object" } } },
+      "NotifyResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "sent": { "type": "integer" }, "failed": { "type": "integer" }, "results": { "type": "array", "items": { "type": "object" } } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "FactorTarget": { "type": "object", "properties": { "factor": { "type": "string" }, "target": { "type": "number" }, "tolerance": { "type": "number" } } },
+      "FactorDriftRequest": { "type": "object", "required": ["exposures"], "properties": { "exposures": { "type": "array", "items": { "type": "object", "properties": { "factor": { "type": "string" }, "exposure": { "type": "number" } } } }, "targets": { "type": "array", "items": { "$ref": "#/components/schemas/FactorTarget" } } } },
+      "FactorDriftResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "alerts": { "type": "array", "items": { "$ref": "#/components/schemas/Alert" } }, "summary": { "type": "object", "properties": { "totalFactorsTracked": { "type": "integer" }, "factorsWithinTolerance": { "type": "integer" }, "factorsOutsideTolerance": { "type": "integer" }, "overallHealth": { "type": "string", "enum": ["healthy", "warning", "critical"] } } }, "drifts": { "type": "array", "items": { "type": "object" } } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "FactorDriftConfigResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "defaultTargets": { "type": "array", "items": { "$ref": "#/components/schemas/FactorTarget" } }, "strategies": { "type": "object" } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "SECFiling": { "type": "object", "properties": { "id": { "type": "string" }, "type": { "type": "string" }, "title": { "type": "string" }, "accessionNumber": { "type": "string" }, "filedAt": { "type": "string", "format": "date-time" }, "url": { "type": "string", "format": "uri" }, "cik": { "type": "string" }, "symbol": { "type": "string" }, "companyName": { "type": "string" }, "description": { "type": "string" } } },
+      "SECFilingsResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "alerts": { "type": "array", "items": { "allOf": [{ "$ref": "#/components/schemas/Alert" }, { "type": "object", "properties": { "filing": { "$ref": "#/components/schemas/SECFiling" }, "suggestedAction": { "type": "string" } } }] } }, "summary": { "type": "object", "properties": { "total": { "type": "integer" }, "critical": { "type": "integer" }, "high": { "type": "integer" }, "medium": { "type": "integer" }, "low": { "type": "integer" } } } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "SentimentScore": { "type": "object", "properties": { "symbol": { "type": "string" }, "overallSentiment": { "type": "number", "minimum": -1, "maximum": 1 }, "sentimentLabel": { "type": "string", "enum": ["Bearish", "Somewhat-Bearish", "Neutral", "Somewhat-Bullish", "Bullish"] }, "newsCount": { "type": "integer" }, "relevanceScore": { "type": "number" }, "buzzScore": { "type": "number" }, "timestamp": { "type": "string", "format": "date-time" }, "sources": { "type": "array", "items": { "type": "object", "properties": { "title": { "type": "string" }, "source": { "type": "string" }, "url": { "type": "string", "format": "uri" }, "sentiment": { "type": "number" }, "relevance": { "type": "number" }, "publishedAt": { "type": "string", "format": "date-time" } } } } } },
+      "SentimentResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "$ref": "#/components/schemas/SentimentScore" }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "IVData": { "type": "object", "properties": { "symbol": { "type": "string" }, "ivRank": { "type": "number" }, "ivPercentile": { "type": "number" }, "atmIV": { "type": "number" }, "iv30": { "type": "number" }, "putCallRatio": { "type": "number" }, "expectedMove": { "type": "object", "properties": { "weekly": { "type": "number" }, "monthly": { "type": "number" }, "quarterly": { "type": "number" } } }, "skew": { "type": "number" }, "timestamp": { "type": "string", "format": "date-time" }, "signal": { "type": "string", "enum": ["high_iv", "low_iv", "neutral"] }, "recommendation": { "type": "string" } } },
+      "IVResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "symbols": { "type": "object", "additionalProperties": { "$ref": "#/components/schemas/IVData" } }, "portfolio": { "type": "object", "properties": { "averageIV": { "type": "number" }, "averageIVRank": { "type": "number" }, "highIVPositions": { "type": "array", "items": { "type": "string" } }, "lowIVPositions": { "type": "array", "items": { "type": "string" } } } } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "OrderRequest": { "type": "object", "required": ["symbol", "qty", "side", "type"], "properties": { "symbol": { "type": "string" }, "qty": { "type": "number", "minimum": 1 }, "side": { "type": "string", "enum": ["buy", "sell"] }, "type": { "type": "string", "enum": ["market", "limit", "stop", "stop_limit"] }, "timeInForce": { "type": "string", "enum": ["day", "gtc", "ioc", "fok"], "default": "day" }, "limitPrice": { "type": "number" }, "stopPrice": { "type": "number" } } },
+      "Order": { "type": "object", "properties": { "id": { "type": "string" }, "symbol": { "type": "string" }, "qty": { "type": "number" }, "side": { "type": "string" }, "type": { "type": "string" }, "status": { "type": "string" }, "filledQty": { "type": "number" }, "filledAvgPrice": { "type": "number" }, "createdAt": { "type": "string", "format": "date-time" } } },
+      "OrderResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "order": { "$ref": "#/components/schemas/Order" }, "broker": { "type": "string" }, "paperTrading": { "type": "boolean" }, "message": { "type": "string" } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "OrderListResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "orders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "BrokerAccountResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "account": { "type": "object", "properties": { "id": { "type": "string" }, "status": { "type": "string" }, "currency": { "type": "string" }, "buyingPower": { "type": "number" }, "cash": { "type": "number" }, "portfolioValue": { "type": "number" } } }, "brokerConnected": { "type": "boolean" }, "brokerType": { "type": "string" }, "paperTrading": { "type": "boolean" } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "NotificationSettings": { "type": "object", "properties": { "userId": { "type": "string" }, "email": { "type": "string", "format": "email" }, "emailEnabled": { "type": "boolean" }, "severityThreshold": { "type": "string", "enum": ["critical", "high", "medium", "low"] }, "alertTypes": { "type": "array", "items": { "type": "string" } }, "digestFrequency": { "type": "string", "enum": ["immediate", "hourly", "daily"] } } },
+      "NotificationSettingsRequest": { "type": "object", "properties": { "email": { "type": "string", "format": "email" }, "emailEnabled": { "type": "boolean" }, "severityThreshold": { "type": "string", "enum": ["critical", "high", "medium", "low"] }, "alertTypes": { "type": "array", "items": { "type": "string" } }, "digestFrequency": { "type": "string", "enum": ["immediate", "hourly", "daily"] } } },
+      "NotificationSettingsResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "$ref": "#/components/schemas/NotificationSettings" }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "CacheStatsResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "enabled": { "type": "boolean" }, "connected": { "type": "boolean" }, "stats": { "type": "object", "properties": { "hits": { "type": "integer" }, "misses": { "type": "integer" }, "hitRate": { "type": "string" }, "sets": { "type": "integer" }, "deletes": { "type": "integer" }, "errors": { "type": "integer" } } }, "memory": { "type": "object", "properties": { "entries": { "type": "integer" } } } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "CacheInvalidateResponse": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "object", "properties": { "type": { "type": "string" }, "deleted": { "oneOf": [{ "type": "integer" }, { "type": "string" }] } } }, "meta": { "$ref": "#/components/schemas/ResponseMeta" } } },
+      "ErrorReport": { "type": "object", "required": ["eventId", "error"], "properties": { "eventId": { "type": "string" }, "error": { "type": "object", "required": ["name", "message"], "properties": { "name": { "type": "string" }, "message": { "type": "string" }, "stack": { "type": "string" } } }, "componentStack": { "type": "string" }, "url": { "type": "string" }, "userAgent": { "type": "string" }, "timestamp": { "type": "string", "format": "date-time" } } }
+    }
+  }
+};
+
+// YAML representation for those who request it
+const yamlSpec = `openapi: 3.0.3
+info:
+  title: Frontier Alpha API
+  description: AI-Powered Cognitive Factor Intelligence Platform API
+  version: 1.0.5
+  contact:
+    name: Frontier Alpha Support
+    email: support@frontier-alpha.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: /api/v1
+    description: Production API (v1)
+  - url: http://localhost:3000/api/v1
+    description: Local development
+externalDocs:
+  description: Full API Documentation
+  url: /api/docs
+# For full YAML spec, use format=json and convert, or visit /api/docs
+`;
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -15,43 +671,13 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   const format = req.query.format as string ||
     (req.headers.accept?.includes('yaml') ? 'yaml' : 'json');
 
-  try {
-    // Serve YAML if requested
-    if (format === 'yaml') {
-      const yamlPath = join(__dirname, 'openapi.yaml');
-      const yamlContent = readFileSync(yamlPath, 'utf-8');
-      res.setHeader('Content-Type', 'text/yaml');
-      return res.status(200).send(yamlContent);
-    }
-
-    // Default: serve JSON spec
-    const jsonPath = join(__dirname, 'openapi-spec.json');
-    const jsonContent = readFileSync(jsonPath, 'utf-8');
-    const spec = JSON.parse(jsonContent);
-
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(200).json(spec);
-  } catch (error) {
-    // Fallback: minimal inline spec
-    const fallbackSpec = {
-      openapi: '3.0.3',
-      info: {
-        title: 'Frontier Alpha API',
-        version: '1.0.5',
-        description: 'AI-Powered Cognitive Factor Intelligence Platform API. Visit /api/docs for interactive documentation.',
-      },
-      servers: [
-        { url: '/api/v1', description: 'Production API (v1)' },
-        { url: 'http://localhost:3000/api/v1', description: 'Local development' },
-      ],
-      paths: {},
-      externalDocs: {
-        description: 'Full API Documentation',
-        url: '/api/docs',
-      },
-    };
-
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(200).json(fallbackSpec);
+  // Serve YAML if requested
+  if (format === 'yaml') {
+    res.setHeader('Content-Type', 'text/yaml');
+    return res.status(200).send(yamlSpec);
   }
+
+  // Default: serve JSON spec
+  res.setHeader('Content-Type', 'application/json');
+  return res.status(200).json(spec);
 }

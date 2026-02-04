@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/shared/Card';
-import { TrendingUp, TrendingDown, PieChart, BarChart3, Layers, RefreshCw } from 'lucide-react';
+import { TrendingUp, TrendingDown, PieChart, Layers, RefreshCw } from 'lucide-react';
 
 interface BrinsonAttribution {
   totalReturn: number;

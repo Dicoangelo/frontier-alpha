@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { Card } from '@/components/shared/Card';
-import { TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 
 interface DataPoint {
   date: string;
@@ -22,7 +21,6 @@ function generateDataPoints(
   benchmarkReturns: number[],
   days: number
 ): DataPoint[] {
-  const points: DataPoint[] = [];
   const now = new Date();
 
   // Work backwards from current value

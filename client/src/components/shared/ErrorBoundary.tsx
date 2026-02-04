@@ -72,10 +72,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     });
   }
 
-  private handleReload = (): void => {
-    window.location.reload();
-  };
-
   private handleGoHome = (): void => {
     window.location.href = '/';
   };
@@ -137,7 +133,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               </button>
             </div>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <details className="mt-6 text-left">
                 <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700">
                   Technical Details

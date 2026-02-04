@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, AlertCircle, Info, X, ChevronDown, ChevronUp, Shield, TrendingDown, BarChart3, Calendar } from 'lucide-react';
+import { AlertCircle, X, ChevronDown, ChevronUp, Shield, TrendingDown, BarChart3, Calendar } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
 import type { RiskAlert } from '@/types';
 

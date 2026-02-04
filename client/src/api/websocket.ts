@@ -1,6 +1,4 @@
-import type { Quote } from '@/types';
-
-type MessageHandler = (data: any) => void;
+type MessageHandler = (data: unknown) => void;
 
 /**
  * Real-time quote client using Server-Sent Events (SSE)

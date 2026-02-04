@@ -18,7 +18,7 @@ export function Alerts() {
     setIsLoading(true);
     try {
       const response = await api.get('/alerts');
-      const alertsData = response.data || response.alerts || [];
+      const alertsData = response.data?.alerts || response.data || [];
       setAlerts(alertsData);
     } catch (error) {
       console.error('Failed to load alerts:', error);

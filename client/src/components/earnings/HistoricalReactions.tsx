@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/shared/Card';
-import { TrendingUp, TrendingDown, Minus, BarChart3, Target, Zap } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Target, Zap } from 'lucide-react';
 
 interface HistoricalReaction {
   reportDate: string;

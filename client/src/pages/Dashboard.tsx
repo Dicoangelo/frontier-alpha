@@ -7,6 +7,8 @@ import { FactorExposures } from '@/components/factors/FactorExposures';
 import { RiskMetrics } from '@/components/risk/RiskMetrics';
 import { CognitiveInsight } from '@/components/explainer/CognitiveInsight';
 import { EquityCurve } from '@/components/charts/EquityCurve';
+import { SkeletonDashboard } from '@/components/shared/Skeleton';
+import { EmptyPortfolio, DataLoadError } from '@/components/shared/EmptyState';
 
 // Types
 interface Position {
@@ -309,8 +311,11 @@ export function Dashboard() {
     const symbols = portfolio.positions.map((p) => p.symbol);
     wsClient.subscribe(symbols);
 
-    const unsubscribe = wsClient.on('quote', (quote) => {
-      updateQuote(quote);
+    const unsubscribe = wsClient.on('quote', (quote: unknown) => {
+      // Type assertion after validating quote structure
+      if (quote && typeof quote === 'object' && 'symbol' in quote) {
+        updateQuote(quote as import('@/types').Quote);
+      }
     });
 
     return () => {
@@ -355,28 +360,31 @@ export function Dashboard() {
     });
   }, [quotes]);
 
+  // Show skeleton while loading
+  if (isLoading) {
+    return <SkeletonDashboard />;
+  }
+
+  // Show error state with retry
   if (error) {
     return (
-      <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
-        <h2 className="text-lg font-semibold text-red-800">Error Loading Dashboard</h2>
-        <p className="text-red-600 mt-2">{error}</p>
-        <button
-          onClick={loadPortfolioData}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-        >
-          Retry
-        </button>
+      <div className="min-h-[400px] flex items-center justify-center">
+        <DataLoadError onRetry={loadPortfolioData} error={error} />
+      </div>
+    );
+  }
+
+  // Show empty state if no positions
+  if (portfolio.positions.length === 0 && portfolio.id !== 'demo') {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center bg-white rounded-xl shadow-lg">
+        <EmptyPortfolio onAddPosition={() => window.location.href = '/portfolio'} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {isLoading && (
-        <div className="text-center py-4 text-gray-500">
-          Loading portfolio data...
-        </div>
-      )}
+    <div className="space-y-6 animate-fade-in">
 
       <PortfolioOverview portfolio={portfolio} />
 

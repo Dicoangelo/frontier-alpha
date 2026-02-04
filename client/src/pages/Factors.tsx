@@ -65,7 +65,7 @@ export function Factors() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Get portfolio to extract symbols
-  const { data: portfolio, isLoading: portfolioLoading, isError: portfolioError } = useQuery({
+  const { data: portfolio, isLoading: portfolioLoading } = useQuery({
     queryKey: ['portfolio'],
     queryFn: portfolioApi.getPortfolio,
     retry: false,

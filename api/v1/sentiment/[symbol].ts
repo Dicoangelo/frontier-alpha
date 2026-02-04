@@ -18,6 +18,21 @@ interface SentimentScore {
   }>;
 }
 
+// Alpha Vantage API response type
+interface AlphaVantageNewsResponse {
+  feed?: Array<{
+    title: string;
+    source: string;
+    url: string;
+    time_published: string;
+    ticker_sentiment?: Array<{
+      ticker: string;
+      ticker_sentiment_score: string;
+      relevance_score: string;
+    }>;
+  }>;
+}
+
 // Known sentiment biases for demo
 const KNOWN_BIASES: Record<string, number> = {
   NVDA: 0.35,
@@ -76,7 +91,7 @@ async function fetchAlphaVantageSentiment(
     const response = await fetch(url);
     if (!response.ok) return null;
 
-    const data = await response.json();
+    const data: AlphaVantageNewsResponse = await response.json();
 
     if (!data.feed || data.feed.length === 0) return null;
 

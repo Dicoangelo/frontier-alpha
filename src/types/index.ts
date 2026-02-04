@@ -31,7 +31,7 @@ export interface Quote {
   changePercent: number;
 }
 
-export type FactorCategory = 'style' | 'macro' | 'sector' | 'volatility' | 'sentiment';
+export type FactorCategory = 'style' | 'macro' | 'sector' | 'volatility' | 'sentiment' | 'quality';
 
 export interface Factor {
   name: string;

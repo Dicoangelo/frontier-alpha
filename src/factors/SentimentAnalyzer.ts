@@ -50,10 +50,12 @@ interface AlphaVantageNewsItem {
 }
 
 interface AlphaVantageSentimentResponse {
-  items: string;
-  sentiment_score_definition: string;
-  relevance_score_definition: string;
-  feed: AlphaVantageNewsItem[];
+  items?: string;
+  sentiment_score_definition?: string;
+  relevance_score_definition?: string;
+  feed?: AlphaVantageNewsItem[];
+  Note?: string;
+  'Error Message'?: string;
 }
 
 export class SentimentAnalyzer {

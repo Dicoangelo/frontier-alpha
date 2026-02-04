@@ -13,7 +13,7 @@
 import type { Price, Quote, Asset } from '../types/index.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import WebSocket from 'ws';
-import Redis from 'ioredis';
+import Redis, { type Redis as RedisClient } from 'ioredis';
 
 // ============================================================================
 // CONFIGURATION
@@ -76,7 +76,7 @@ export class MarketDataProvider {
   private lastQuotes: Map<string, Quote> = new Map();  // For change calculation
 
   // Redis cache
-  private redis: Redis | null = null;
+  private redis: RedisClient | null = null;
 
   constructor(config: DataProviderConfig = {}) {
     this.config = {
@@ -89,11 +89,11 @@ export class MarketDataProvider {
     const redisUrl = config.redisUrl || process.env.REDIS_URL;
     if (redisUrl) {
       try {
-        this.redis = new Redis(redisUrl, {
+        this.redis = new (Redis as any)(redisUrl, {
           maxRetriesPerRequest: 3,
           lazyConnect: true,
           connectTimeout: 5000,
-        });
+        }) as RedisClient;
         this.redis.on('error', (err) => {
           console.warn('Redis connection error:', err.message);
         });

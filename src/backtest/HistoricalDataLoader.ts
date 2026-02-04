@@ -51,6 +51,21 @@ interface CacheEntry<T> {
   expiresAt: number;
 }
 
+// Polygon API response type
+interface PolygonAggsResponse {
+  status?: string;
+  results?: Array<{
+    t: number;
+    o: number;
+    h: number;
+    l: number;
+    c: number;
+    v: number;
+  }>;
+  Note?: string;
+  'Error Message'?: string;
+}
+
 export class HistoricalDataLoader {
   private polygonApiKey: string;
   private priceCache: Map<string, CacheEntry<OHLCV[]>> = new Map();
@@ -158,14 +173,14 @@ export class HistoricalDataLoader {
         throw new Error(`Polygon API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: PolygonAggsResponse = await response.json();
 
       if (data.status !== 'OK' || !data.results) {
         console.warn(`No price data for ${symbol} from ${startDate} to ${endDate}`);
         return [];
       }
 
-      return data.results.map((bar: any) => ({
+      return data.results.map((bar) => ({
         date: new Date(bar.t).toISOString().split('T')[0],
         open: bar.o,
         high: bar.h,

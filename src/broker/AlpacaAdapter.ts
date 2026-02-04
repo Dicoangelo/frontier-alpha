@@ -13,7 +13,7 @@ import {
   type BrokerPosition,
   type Order,
   type OrderRequest,
-} from './BrokerAdapter';
+} from './BrokerAdapter.js';
 
 const ALPACA_PAPER_URL = 'https://paper-api.alpaca.markets';
 const ALPACA_LIVE_URL = 'https://api.alpaca.markets';

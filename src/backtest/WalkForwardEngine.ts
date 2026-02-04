@@ -13,7 +13,7 @@ import {
   HistoricalDataLoader,
   type BacktestDataSet,
   type OHLCV,
-} from './HistoricalDataLoader';
+} from './HistoricalDataLoader.js';
 
 export interface WalkForwardConfig {
   // Date range

@@ -140,9 +140,10 @@ export class RedisCache {
   private async connectRedis(): Promise<void> {
     try {
       // Dynamic import to avoid issues if ioredis not installed
-      const Redis = (await import('ioredis')).default;
+      const ioredis = await import('ioredis');
+      const Redis = ioredis.default || ioredis;
 
-      this.client = new Redis(this.config.redisUrl!, {
+      this.client = new (Redis as any)(this.config.redisUrl!, {
         maxRetriesPerRequest: 3,
         retryStrategy: (times) => {
           if (times > 3) return null; // Stop retrying

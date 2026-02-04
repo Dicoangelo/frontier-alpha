@@ -38,6 +38,12 @@ interface EmailPayload {
   text?: string;
 }
 
+// Resend API response
+interface ResendResponse {
+  id?: string;
+  error?: string;
+}
+
 // Provider interface
 interface EmailProvider {
   send(payload: EmailPayload): Promise<{ success: boolean; messageId?: string; error?: string }>;
@@ -75,7 +81,7 @@ class ResendProvider implements EmailProvider {
         return { success: false, error: `Resend error: ${error}` };
       }
 
-      const data = await response.json();
+      const data: ResendResponse = await response.json();
       return { success: true, messageId: data.id };
     } catch (error) {
       return { success: false, error: `Resend failed: ${error}` };

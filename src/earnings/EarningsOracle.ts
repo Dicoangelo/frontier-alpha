@@ -52,6 +52,33 @@ interface DailyPrice {
   volume: number;
 }
 
+// Alpha Vantage earnings API response
+interface AlphaVantageEarningsResponse {
+  quarterlyEarnings?: Array<{
+    fiscalDateEnding: string;
+    reportedDate?: string;
+    reportedEPS: string;
+    estimatedEPS: string;
+  }>;
+  Note?: string;
+  'Error Message'?: string;
+}
+
+// Polygon API response type
+interface PolygonAggsResponse {
+  status?: string;
+  results?: Array<{
+    t: number;
+    o: number;
+    h: number;
+    l: number;
+    c: number;
+    v: number;
+  }>;
+  Note?: string;
+  'Error Message'?: string;
+}
+
 export class EarningsOracle {
   private apiKey: string;
   private polygonApiKey: string;
@@ -75,7 +102,7 @@ export class EarningsOracle {
         throw new Error(`Alpha Vantage API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: AlphaVantageEarningsResponse = await response.json();
 
       // Check for rate limit or error
       if (data.Note || data['Error Message']) {
@@ -138,14 +165,14 @@ export class EarningsOracle {
         throw new Error(`Polygon API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: PolygonAggsResponse = await response.json();
 
       if (data.status !== 'OK' || !data.results) {
         console.warn(`No price data for ${symbol}`);
         return [];
       }
 
-      const prices: DailyPrice[] = data.results.map((bar: any) => ({
+      const prices: DailyPrice[] = data.results.map((bar) => ({
         date: new Date(bar.t).toISOString().split('T')[0],
         open: bar.o,
         high: bar.h,

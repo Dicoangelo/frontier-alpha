@@ -22,10 +22,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    // Handle 401 unauthorized - redirect to login
-    if (error.response?.status === 401) {
-      useAuthStore.getState().logout();
-    }
+    // Log API errors but don't auto-logout (let components handle auth errors gracefully)
     console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }

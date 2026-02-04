@@ -2,17 +2,17 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Briefcase,
+  ShoppingCart,
   Sparkles,
   Bell,
-  Settings,
 } from 'lucide-react';
 
 const mobileNavigation = [
   { name: 'Home', icon: LayoutDashboard, href: '/' },
   { name: 'Portfolio', icon: Briefcase, href: '/portfolio' },
+  { name: 'Trade', icon: ShoppingCart, href: '/trade' },
   { name: 'Optimize', icon: Sparkles, href: '/optimize' },
   { name: 'Alerts', icon: Bell, href: '/alerts' },
-  { name: 'Settings', icon: Settings, href: '/settings' },
 ];
 
 export function MobileNav() {

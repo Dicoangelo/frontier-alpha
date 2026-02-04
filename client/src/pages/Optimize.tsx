@@ -5,6 +5,7 @@ import { api } from '@/api/client';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
+import { MonteCarloChart } from '@/components/charts/MonteCarloChart';
 
 type OptimizationObjective = 'max_sharpe' | 'min_volatility' | 'risk_parity' | 'target_volatility';
 
@@ -17,6 +18,21 @@ interface OptimizationConfig {
   };
 }
 
+interface MonteCarloResult {
+  medianReturn: number;
+  var95: number;
+  cvar95: number;
+  probPositive: number;
+  confidenceInterval: {
+    p5: number;
+    p25: number;
+    p50: number;
+    p75: number;
+    p95: number;
+  };
+  simulations?: number[];
+}
+
 interface OptimizationResult {
   weights: Record<string, number>;
   expectedReturn: number;
@@ -27,6 +43,7 @@ interface OptimizationResult {
     exposure: number;
     contribution: number;
   }>;
+  monteCarlo?: MonteCarloResult;
 }
 
 const objectives: { value: OptimizationObjective; label: string; description: string; icon: typeof TrendingUp }[] = [
@@ -239,6 +256,27 @@ export function Optimize() {
               ))}
           </div>
         </Card>
+      )}
+
+      {/* Monte Carlo Simulation Results */}
+      {result && (
+        <MonteCarloChart
+          result={result.monteCarlo || {
+            // Generate Monte Carlo estimate from optimization result if not provided by API
+            medianReturn: result.expectedReturn,
+            var95: -result.expectedVolatility * 1.645,
+            cvar95: -result.expectedVolatility * 2.063,
+            probPositive: 0.5 + (result.expectedReturn / (result.expectedVolatility * 2)) * 0.3,
+            confidenceInterval: {
+              p5: result.expectedReturn - result.expectedVolatility * 1.645,
+              p25: result.expectedReturn - result.expectedVolatility * 0.675,
+              p50: result.expectedReturn,
+              p75: result.expectedReturn + result.expectedVolatility * 0.675,
+              p95: result.expectedReturn + result.expectedVolatility * 1.645,
+            },
+          }}
+          timeHorizon="1 Year"
+        />
       )}
     </div>
   );

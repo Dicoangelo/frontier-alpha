@@ -1,5 +1,6 @@
 import React, { Component, type ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { captureError, addBreadcrumb } from '@/lib/sentry';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -48,10 +49,21 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   private reportError(error: Error, errorInfo: React.ErrorInfo, eventId: string): void {
-    // In production, send to error tracking service
-    // This would be Sentry.captureException or similar
+    // Add breadcrumb for error context
+    addBreadcrumb('Error caught by ErrorBoundary', 'error', 'error', {
+      eventId,
+      componentStack: errorInfo.componentStack?.slice(0, 500),
+    });
 
-    // For now, log to an API endpoint
+    // Report to Sentry
+    captureError(error, {
+      eventId,
+      componentStack: errorInfo.componentStack,
+      errorBoundary: 'ErrorBoundary',
+      url: window.location.href,
+    });
+
+    // Also log to API endpoint as backup
     fetch('/api/v1/errors/report', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -68,7 +80,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         timestamp: new Date().toISOString(),
       }),
     }).catch((err) => {
-      console.error('[ErrorBoundary] Failed to report error:', err);
+      console.error('[ErrorBoundary] Failed to report error to API:', err);
     });
   }
 

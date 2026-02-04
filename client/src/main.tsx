@@ -2,6 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import { initSentry } from './lib/sentry';
+
+// Initialize error tracking
+initSentry();
 
 // Hide initial loader after React mounts
 function hideLoader() {

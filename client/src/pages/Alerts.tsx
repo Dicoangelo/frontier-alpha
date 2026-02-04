@@ -3,8 +3,15 @@ import { Bell, Filter, RefreshCw } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { AlertList } from '@/components/alerts/AlertCard';
+import { FactorDriftAlert } from '@/components/alerts/FactorDriftAlert';
+import { SECFilingAlert } from '@/components/alerts/SECFilingAlert';
 import { api } from '@/api/client';
 import type { RiskAlert } from '@/types';
+
+interface FactorExposure {
+  factor: string;
+  exposure: number;
+}
 
 type SeverityFilter = 'all' | 'critical' | 'high' | 'medium' | 'low';
 
@@ -13,6 +20,8 @@ export function Alerts() {
   const [isLoading, setIsLoading] = useState(true);
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>('all');
   const [showAcknowledged, setShowAcknowledged] = useState(false);
+  const [factorExposures, setFactorExposures] = useState<FactorExposure[]>([]);
+  const [portfolioSymbols, setPortfolioSymbols] = useState<string[]>([]);
 
   const loadAlerts = useCallback(async () => {
     setIsLoading(true);
@@ -29,9 +38,81 @@ export function Alerts() {
     }
   }, []);
 
+  // Load factor exposures from portfolio
+  const loadFactorExposures = useCallback(async () => {
+    try {
+      const portfolioRes = await api.get('/portfolio');
+      const positions = portfolioRes.data?.positions || [];
+      const symbols = positions.map((p: { symbol: string }) => p.symbol);
+
+      // Set portfolio symbols for SEC filing alerts
+      setPortfolioSymbols(symbols.length > 0 ? symbols : ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN']);
+
+      if (symbols.length > 0) {
+        const factorRes = await api.get(`/portfolio/factors/${symbols.join(',')}`);
+        const factorData = factorRes.data || {};
+        // Aggregate factors across positions
+        const factorMap = new Map<string, number>();
+        for (const symbol of symbols) {
+          const symbolFactors = factorData[symbol] || [];
+          for (const f of symbolFactors) {
+            const current = factorMap.get(f.factor) || 0;
+            factorMap.set(f.factor, current + f.exposure / symbols.length);
+          }
+        }
+        setFactorExposures(
+          Array.from(factorMap.entries()).map(([factor, exposure]) => ({
+            factor,
+            exposure,
+          }))
+        );
+      }
+    } catch (error) {
+      console.error('Failed to load factor exposures:', error);
+      // Use demo symbols
+      setPortfolioSymbols(['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN']);
+      // Use demo exposures
+      setFactorExposures([
+        { factor: 'momentum_12m', exposure: 0.85 },
+        { factor: 'value', exposure: -0.28 },
+        { factor: 'low_vol', exposure: -0.42 },
+        { factor: 'roe', exposure: 0.62 },
+        { factor: 'market', exposure: 1.15 },
+      ]);
+    }
+  }, []);
+
   useEffect(() => {
     loadAlerts();
-  }, [loadAlerts]);
+    loadFactorExposures();
+  }, [loadAlerts, loadFactorExposures]);
+
+  // Handle new alerts from factor drift monitor
+  const handleFactorDriftAlerts = (newAlerts: Array<{
+    id: string;
+    type: string;
+    severity: 'critical' | 'high' | 'medium' | 'low';
+    title: string;
+    message: string;
+    timestamp?: string;
+    acknowledged?: boolean;
+  }>) => {
+    setAlerts(prev => {
+      // Filter out old factor drift alerts and add new ones
+      const nonDriftAlerts = prev.filter(a => a.type !== 'factor_drift');
+      // Convert DriftAlert to RiskAlert format
+      const convertedAlerts: RiskAlert[] = newAlerts.map(a => ({
+        id: a.id,
+        type: a.type,
+        severity: a.severity,
+        title: a.title,
+        message: a.message,
+        timestamp: a.timestamp ? new Date(a.timestamp) : new Date(),
+        acknowledged: a.acknowledged ?? false,
+      }));
+      return [...convertedAlerts, ...nonDriftAlerts];
+    });
+  };
 
   const handleAcknowledge = async (id: string) => {
     try {
@@ -166,6 +247,18 @@ export function Alerts() {
           </button>
         )}
       </div>
+
+      {/* Factor Drift Monitor */}
+      <FactorDriftAlert
+        exposures={factorExposures}
+        onAlertGenerated={handleFactorDriftAlerts}
+      />
+
+      {/* SEC Filing Alerts */}
+      <SECFilingAlert
+        symbols={portfolioSymbols}
+        maxAlerts={5}
+      />
 
       {/* Alert List */}
       <Card>

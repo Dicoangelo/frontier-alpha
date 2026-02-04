@@ -16,6 +16,7 @@ const Factors = lazy(() => import('@/pages/Factors').then(m => ({ default: m.Fac
 const Earnings = lazy(() => import('@/pages/Earnings').then(m => ({ default: m.Earnings })));
 const Optimize = lazy(() => import('@/pages/Optimize').then(m => ({ default: m.Optimize })));
 const Alerts = lazy(() => import('@/pages/Alerts').then(m => ({ default: m.Alerts })));
+const Trading = lazy(() => import('@/pages/Trading'));
 const Settings = lazy(() => import('@/pages/Settings').then(m => ({ default: m.Settings })));
 
 const queryClient = new QueryClient({
@@ -154,6 +155,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <Alerts />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/trade"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Trading />
             </Layout>
           </ProtectedRoute>
         }

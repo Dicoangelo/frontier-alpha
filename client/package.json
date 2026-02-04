@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@sentry/browser": "^10.38.0",
+    "@sentry/react": "^10.38.0",
     "@supabase/supabase-js": "^2.94.0",
     "@tanstack/react-query": "^5.90.20",
     "axios": "^1.13.4",

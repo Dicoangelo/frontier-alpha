@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Briefcase,
+  ShoppingCart,
   Sparkles,
   BarChart3,
   Calendar,
@@ -12,6 +13,7 @@ import {
 const navigation = [
   { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
   { name: 'Portfolio', icon: Briefcase, href: '/portfolio' },
+  { name: 'Trade', icon: ShoppingCart, href: '/trade' },
   { name: 'Optimize', icon: Sparkles, href: '/optimize' },
   { name: 'Factors', icon: BarChart3, href: '/factors' },
   { name: 'Earnings', icon: Calendar, href: '/earnings' },

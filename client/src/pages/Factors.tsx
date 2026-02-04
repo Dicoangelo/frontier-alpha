@@ -65,13 +65,17 @@ export function Factors() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Get portfolio to extract symbols
-  const { data: portfolio, isLoading: portfolioLoading } = useQuery({
+  const { data: portfolio, isLoading: portfolioLoading, isError: portfolioError } = useQuery({
     queryKey: ['portfolio'],
     queryFn: portfolioApi.getPortfolio,
+    retry: false,
   });
 
+  // Use portfolio symbols if available, otherwise use demo symbols
+  const DEMO_SYMBOLS = ['NVDA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN'];
   const symbols = useMemo(() => {
-    return portfolio?.positions?.map(p => p.symbol) || [];
+    const portfolioSymbols = portfolio?.positions?.map(p => p.symbol) || [];
+    return portfolioSymbols.length > 0 ? portfolioSymbols : DEMO_SYMBOLS;
   }, [portfolio]);
 
   // Get factors grouped by category

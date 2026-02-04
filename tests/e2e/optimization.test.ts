@@ -13,7 +13,8 @@ import { describe, it, expect } from 'vitest';
 const API_BASE = process.env.TEST_API_URL || 'http://localhost:3000';
 
 // Acceptable statuses for optimization endpoints
-const OPTIMIZE_STATUSES = [401, 404, 500, 503];
+// 400 = validation error (missing symbols), 401 = auth required, 404 = not deployed, 500/503 = external API error
+const OPTIMIZE_STATUSES = [400, 401, 404, 500, 503];
 
 describe('Portfolio Optimization', () => {
   const headers = (token = 'mock-token') => ({

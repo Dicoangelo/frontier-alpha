@@ -104,6 +104,8 @@ export function EquityCurve({
   const [selectedTimeframe, setSelectedTimeframe] = useState(timeframe);
   const [hoveredPoint, setHoveredPoint] = useState<DataPoint | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [animationProgress, setAnimationProgress] = useState(0);
+  const animationRef = useRef<number | null>(null);
 
   const days = TIMEFRAME_DAYS[selectedTimeframe];
 
@@ -141,6 +143,33 @@ export function EquityCurve({
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
+
+  // Animate chart on data change
+  useEffect(() => {
+    setAnimationProgress(0);
+    const startTime = performance.now();
+    const duration = 800; // ms
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setAnimationProgress(eased);
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [selectedTimeframe, portfolioValue]);
 
   // Draw chart
   useEffect(() => {
@@ -196,12 +225,17 @@ export function EquityCurve({
       ctx.fillText(`$${(value / 1000).toFixed(0)}k`, padding.left - 8, y + 4);
     }
 
+    // Calculate how many points to draw based on animation progress
+    const pointsToDraw = Math.floor(data.length * animationProgress);
+    const animatedData = data.slice(0, Math.max(2, pointsToDraw));
+
     // Draw benchmark line (dashed)
     ctx.strokeStyle = '#9ca3af';
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 4]);
+    ctx.globalAlpha = animationProgress;
     ctx.beginPath();
-    data.forEach((point, i) => {
+    animatedData.forEach((point, i) => {
       const x = xScale(i);
       const y = yScale(point.benchmark);
       if (i === 0) ctx.moveTo(x, y);
@@ -209,19 +243,20 @@ export function EquityCurve({
     });
     ctx.stroke();
     ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
 
     // Draw portfolio line with gradient
     const gradient = ctx.createLinearGradient(0, padding.top, 0, dimensions.height - padding.bottom);
-    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+    gradient.addColorStop(0, `rgba(59, 130, 246, ${0.3 * animationProgress})`);
     gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
 
     // Fill area under portfolio line
     ctx.beginPath();
-    ctx.moveTo(xScale(0), yScale(data[0].portfolio));
-    data.forEach((point, i) => {
+    ctx.moveTo(xScale(0), yScale(animatedData[0].portfolio));
+    animatedData.forEach((point, i) => {
       ctx.lineTo(xScale(i), yScale(point.portfolio));
     });
-    ctx.lineTo(xScale(data.length - 1), dimensions.height - padding.bottom);
+    ctx.lineTo(xScale(animatedData.length - 1), dimensions.height - padding.bottom);
     ctx.lineTo(xScale(0), dimensions.height - padding.bottom);
     ctx.closePath();
     ctx.fillStyle = gradient;
@@ -231,13 +266,28 @@ export function EquityCurve({
     ctx.strokeStyle = '#3b82f6';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    data.forEach((point, i) => {
+    animatedData.forEach((point, i) => {
       const x = xScale(i);
       const y = yScale(point.portfolio);
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
     ctx.stroke();
+
+    // Draw animated endpoint dot
+    if (animatedData.length > 0 && animationProgress < 1) {
+      const lastPoint = animatedData[animatedData.length - 1];
+      const lastX = xScale(animatedData.length - 1);
+      const lastY = yScale(lastPoint.portfolio);
+
+      ctx.beginPath();
+      ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#3b82f6';
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
 
     // X-axis labels
     const labelCount = Math.min(6, data.length);
@@ -252,7 +302,7 @@ export function EquityCurve({
       ctx.fillText(label, xScale(i), dimensions.height - 8);
     }
 
-  }, [data, dimensions]);
+  }, [data, dimensions, animationProgress]);
 
   // Mouse handling for hover
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {

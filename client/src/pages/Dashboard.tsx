@@ -9,6 +9,7 @@ import { CognitiveInsight } from '@/components/explainer/CognitiveInsight';
 import { EquityCurve } from '@/components/charts/EquityCurve';
 import { SkeletonDashboard } from '@/components/shared/Skeleton';
 import { EmptyPortfolio, DataLoadError } from '@/components/shared/EmptyState';
+import { PullToRefresh } from '@/components/shared/PullToRefresh';
 
 // Types
 interface Position {
@@ -384,21 +385,23 @@ export function Dashboard() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <PullToRefresh onRefresh={loadPortfolioData} className="min-h-screen">
+      <div className="space-y-6 animate-fade-in">
 
-      <PortfolioOverview portfolio={portfolio} />
+        <PortfolioOverview portfolio={portfolio} />
 
-      <EquityCurve portfolioValue={portfolio.totalValue} />
+        <EquityCurve portfolioValue={portfolio.totalValue} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PositionList positions={portfolio.positions} quotes={quotes} />
-        <FactorExposures factors={factors} insight={insight} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <PositionList positions={portfolio.positions} quotes={quotes} />
+          <FactorExposures factors={factors} insight={insight} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <RiskMetrics metrics={metrics} />
+          <CognitiveInsight symbols={portfolio.positions.map((p) => p.symbol)} factors={factors} />
+        </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RiskMetrics metrics={metrics} />
-        <CognitiveInsight symbols={portfolio.positions.map((p) => p.symbol)} factors={factors} />
-      </div>
-    </div>
+    </PullToRefresh>
   );
 }

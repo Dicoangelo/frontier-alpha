@@ -28,23 +28,50 @@ Unlike black-box quant tools or simplistic robo-advisors, Frontier Alpha:
 | **Earnings Oracle** | Factor-adjusted pre-announcement positioning |
 | **Real-time Data** | WebSocket streaming from Polygon.io with <20ms latency |
 
+## Live API
+
+The production API is deployed on Vercel:
+
+- **API Docs**: [OpenAPI Specification](/api/openapi)
+- **Health Check**: [/api/v1/health](/api/v1/health)
+
 ## Quick Start
 
 ```bash
-# Install dependencies
+# Clone and install
+git clone https://github.com/Dicoangelo/frontier-alpha.git
+cd frontier-alpha
 npm install
 
-# Set environment variables
-export POLYGON_API_KEY=your_polygon_key
-export ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key
+# Copy environment template
+cp .env.example .env
+# Edit .env with your API keys
 
 # Start development server
 npm run dev
 ```
 
-Visit `http://localhost:3000/health` to verify the server is running.
+Visit `http://localhost:3000/api/v1/health` to verify the server is running.
 
 ## API Examples
+
+### Get Real-Time Quote
+
+```bash
+curl http://localhost:3000/api/v1/quotes/AAPL
+```
+
+### Get Sentiment Analysis
+
+```bash
+curl http://localhost:3000/api/v1/sentiment/NVDA
+```
+
+### Get Factor Exposures
+
+```bash
+curl http://localhost:3000/api/v1/portfolio/factors/AAPL,NVDA,MSFT
+```
 
 ### Optimize a Portfolio
 
@@ -60,13 +87,7 @@ curl -X POST http://localhost:3000/api/v1/portfolio/optimize \
   }'
 ```
 
-### Get Factor Exposures
-
-```bash
-curl http://localhost:3000/api/v1/portfolio/factors/AAPL,NVDA,MSFT
-```
-
-### Earnings Impact Forecast
+### Earnings Forecast
 
 ```bash
 curl http://localhost:3000/api/v1/earnings/forecast/NVDA

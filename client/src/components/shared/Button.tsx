@@ -43,9 +43,9 @@ const variants = {
 };
 
 const sizes = {
-  sm: 'px-3 py-1.5 text-sm min-h-[32px]',
-  md: 'px-4 py-2 text-base min-h-[40px]',
-  lg: 'px-6 py-3 text-lg min-h-[48px]',
+  sm: 'px-3 py-2 text-sm min-h-[44px] min-w-[44px]',
+  md: 'px-4 py-2.5 text-base min-h-[44px] min-w-[44px]',
+  lg: 'px-6 py-3 text-lg min-h-[48px] min-w-[48px]',
 };
 
 export function Button({
@@ -102,10 +102,11 @@ export function IconButton({
   className = '',
   ...props
 }: IconButtonProps) {
+  // Minimum 44x44px touch targets for mobile accessibility
   const iconSizes = {
-    sm: 'w-8 h-8',
-    md: 'w-10 h-10',
-    lg: 'w-12 h-12',
+    sm: 'w-11 h-11 min-w-[44px] min-h-[44px]',
+    md: 'w-11 h-11 min-w-[44px] min-h-[44px]',
+    lg: 'w-12 h-12 min-w-[48px] min-h-[48px]',
   };
 
   return (

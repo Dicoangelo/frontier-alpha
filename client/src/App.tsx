@@ -8,6 +8,7 @@ import { Login } from '@/pages/Login';
 import { Spinner } from '@/components/shared/Spinner';
 import { ToastContainer } from '@/components/shared/Toast';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { OnboardingProvider } from '@/components/onboarding';
 
 // Lazy load heavy pages for better initial load performance
 const Dashboard = lazy(() => import('@/pages/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -201,9 +202,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ErrorBoundary>
-          <Suspense fallback={<PageLoader />}>
-            <AppRoutes />
-          </Suspense>
+          <OnboardingProvider>
+            <Suspense fallback={<PageLoader />}>
+              <AppRoutes />
+            </Suspense>
+          </OnboardingProvider>
         </ErrorBoundary>
         <ToastContainer />
       </BrowserRouter>

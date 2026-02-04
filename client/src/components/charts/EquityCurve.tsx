@@ -326,7 +326,7 @@ export function EquityCurve({
   };
 
   return (
-    <Card title="Portfolio Performance">
+    <Card title="Portfolio Performance" className="animate-fade-in-up">
       {/* Header metrics */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-6">

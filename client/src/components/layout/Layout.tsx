@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { MobileNav } from './MobileNav';
@@ -10,6 +11,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
 
   // Close sidebar when pressing Escape
   useEffect(() => {
@@ -76,7 +78,10 @@ export function Layout({ children }: LayoutProps) {
         role="main"
         tabIndex={-1}
       >
-        {children}
+        {/* Page transition wrapper - re-triggers animation on route change */}
+        <div key={location.pathname} className="animate-fade-in">
+          {children}
+        </div>
       </main>
 
       {/* Mobile Bottom Navigation */}

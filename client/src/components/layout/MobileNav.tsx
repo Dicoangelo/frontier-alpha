@@ -31,7 +31,8 @@ export function MobileNav() {
             aria-label={item.name}
             className={({ isActive }) => `
               flex flex-col items-center justify-center
-              min-w-[64px] min-h-[48px] px-3 py-2
+              min-w-[64px] min-h-[56px] px-3 py-2
+              touch-manipulation
               transition-all duration-150 ease-out
               active:scale-95 active:bg-gray-100
               focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset
@@ -46,7 +47,7 @@ export function MobileNav() {
                 <div
                   className={`
                     relative flex items-center justify-center
-                    w-12 h-8 rounded-full
+                    w-12 h-11 min-h-[44px] rounded-full
                     transition-all duration-200
                     ${isActive ? 'bg-blue-100' : ''}
                   `}

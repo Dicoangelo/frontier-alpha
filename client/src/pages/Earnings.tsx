@@ -1,12 +1,15 @@
 import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Calendar, AlertCircle } from 'lucide-react';
 import { portfolioApi } from '@/api/portfolio';
 import { EarningsCalendar } from '@/components/earnings/EarningsCalendar';
 import { EarningsForecast } from '@/components/earnings/EarningsForecast';
+import { SkeletonEarningsPage } from '@/components/shared/Skeleton';
+import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { useUpcomingEarnings, useEarningsForecast, useRefreshForecast } from '@/hooks/useEarnings';
 
 export function Earnings() {
+  const queryClient = useQueryClient();
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [daysAhead, setDaysAhead] = useState(30);
 
@@ -41,14 +44,28 @@ export function Earnings() {
 
   const isLoading = portfolioLoading || earningsLoading;
 
+  // Pull to refresh handler
+  const handleRefresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['portfolio'] }),
+      queryClient.invalidateQueries({ queryKey: ['earnings'] }),
+      selectedSymbol && queryClient.invalidateQueries({ queryKey: ['earnings-forecast', selectedSymbol] }),
+    ]);
+  };
+
+  // Show skeleton while loading
+  if (isLoading) {
+    return <SkeletonEarningsPage />;
+  }
+
   // Calculate stats
   const earningsThisWeek = earnings.filter(e => e.daysUntil <= 7).length;
   const earningsToday = earnings.filter(e => e.daysUntil === 0).length;
 
-  return (
+  const content = (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Earnings Calendar</h1>
           <p className="text-gray-500 mt-1">
@@ -58,7 +75,7 @@ export function Earnings() {
         <select
           value={daysAhead}
           onChange={(e) => setDaysAhead(Number(e.target.value))}
-          className="px-4 py-2 border rounded-lg bg-white text-gray-700"
+          className="px-4 py-2.5 min-h-[44px] border rounded-lg bg-white text-gray-700 text-base"
         >
           <option value={7}>Next 7 days</option>
           <option value={14}>Next 14 days</option>
@@ -146,5 +163,11 @@ export function Earnings() {
         </div>
       )}
     </div>
+  );
+
+  return (
+    <PullToRefresh onRefresh={handleRefresh} className="min-h-full">
+      {content}
+    </PullToRefresh>
   );
 }

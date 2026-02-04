@@ -172,7 +172,7 @@ export function BottomSheet({
             {showCloseButton && (
               <button
                 onClick={handleClose}
-                className="p-2 -mr-2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-2.5 -mr-2 min-w-[44px] min-h-[44px] text-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center touch-manipulation"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />

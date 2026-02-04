@@ -388,18 +388,30 @@ export function Dashboard() {
     <PullToRefresh onRefresh={loadPortfolioData} className="min-h-screen">
       <div className="space-y-6 animate-fade-in">
 
-        <PortfolioOverview portfolio={portfolio} />
+        <div data-tour="portfolio-overview">
+          <PortfolioOverview portfolio={portfolio} />
+        </div>
 
-        <EquityCurve portfolioValue={portfolio.totalValue} />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <PositionList positions={portfolio.positions} quotes={quotes} />
-          <FactorExposures factors={factors} insight={insight} />
+        <div data-tour="equity-curve">
+          <EquityCurve portfolioValue={portfolio.totalValue} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <RiskMetrics metrics={metrics} />
-          <CognitiveInsight symbols={portfolio.positions.map((p) => p.symbol)} factors={factors} />
+          <div data-tour="positions">
+            <PositionList positions={portfolio.positions} quotes={quotes} />
+          </div>
+          <div data-tour="factors">
+            <FactorExposures factors={factors} insight={insight} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div data-tour="risk-metrics">
+            <RiskMetrics metrics={metrics} />
+          </div>
+          <div data-tour="cognitive-insight">
+            <CognitiveInsight symbols={portfolio.positions.map((p) => p.symbol)} factors={factors} />
+          </div>
         </div>
       </div>
     </PullToRefresh>

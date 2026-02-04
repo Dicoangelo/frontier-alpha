@@ -10,7 +10,7 @@ const API_BASE = process.env.TEST_API_URL || 'http://localhost:3000';
 describe('System Health', () => {
   describe('Health Endpoint', () => {
     it('should return healthy status', async () => {
-      const response = await fetch(`${API_BASE}/health`, {
+      const response = await fetch(`${API_BASE}/api/v1/health`, {
         method: 'GET',
       });
 
@@ -22,7 +22,7 @@ describe('System Health', () => {
     });
 
     it('should include version info', async () => {
-      const response = await fetch(`${API_BASE}/health`, {
+      const response = await fetch(`${API_BASE}/api/v1/health`, {
         method: 'GET',
       });
 
@@ -33,7 +33,7 @@ describe('System Health', () => {
 
     it('should respond quickly', async () => {
       const startTime = Date.now();
-      await fetch(`${API_BASE}/health`, { method: 'GET' });
+      await fetch(`${API_BASE}/api/v1/health`, { method: 'GET' });
       const latency = Date.now() - startTime;
 
       expect(latency).toBeLessThan(100);
@@ -107,7 +107,7 @@ describe('System Health', () => {
 
   describe('CORS Headers', () => {
     it('should include CORS headers', async () => {
-      const response = await fetch(`${API_BASE}/health`, {
+      const response = await fetch(`${API_BASE}/api/v1/health`, {
         method: 'GET',
       });
 

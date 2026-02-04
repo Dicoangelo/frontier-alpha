@@ -4,7 +4,7 @@ import { join } from 'path';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    const specPath = join(__dirname, 'openapi.json');
+    const specPath = join(__dirname, 'openapi-spec.json');
     const specContent = readFileSync(specPath, 'utf-8');
     const spec = JSON.parse(specContent);
 

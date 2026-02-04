@@ -1,0 +1,44 @@
+{
+  "name": "Frontier Alpha",
+  "short_name": "Frontier",
+  "description": "AI-Powered Cognitive Factor Intelligence Platform - Institutional-grade portfolio analytics with plain-English explanations.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0284c7",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["finance", "business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "View your portfolio dashboard"
+    },
+    {
+      "name": "Optimize",
+      "url": "/optimize",
+      "description": "Optimize your portfolio"
+    },
+    {
+      "name": "Alerts",
+      "url": "/alerts",
+      "description": "View risk alerts"
+    }
+  ],
+  "prefer_related_applications": false
+}

@@ -6,6 +6,7 @@ import { api } from '@/api/client';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
+import { NotificationSettings } from '@/components/notifications/NotificationSettings';
 
 interface UserSettings {
   display_name: string | null;
@@ -205,20 +206,11 @@ export function Settings() {
         </div>
 
         <div className="space-y-4">
-          <label className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-gray-700">Push Notifications</p>
-              <p className="text-sm text-gray-500">Receive alerts in the app</p>
-            </div>
-            <input
-              type="checkbox"
-              checked={settings.notifications_enabled}
-              onChange={(e) => handleChange('notifications_enabled', e.target.checked)}
-              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-          </label>
+          {/* Push Notification Settings */}
+          <NotificationSettings />
 
-          <label className="flex items-center justify-between">
+          {/* Email Alerts */}
+          <label className="flex items-center justify-between pt-4 border-t border-gray-100">
             <div>
               <p className="font-medium text-gray-700">Email Alerts</p>
               <p className="text-sm text-gray-500">Get critical alerts via email</p>

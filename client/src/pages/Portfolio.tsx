@@ -5,6 +5,7 @@ import { api } from '@/api/client';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
+import { PortfolioExport } from '@/components/portfolio/PortfolioExport';
 
 interface Position {
   id: string;
@@ -114,10 +115,31 @@ export function Portfolio() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Portfolio Management</h1>
-        <Button onClick={() => setShowAddForm(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Position
-        </Button>
+        <div className="flex items-center gap-3">
+          {portfolio?.data && (
+            <PortfolioExport
+              portfolio={{
+                id: portfolio.data.id,
+                name: portfolio.data.name,
+                positions: portfolio.data.positions.map((p) => ({
+                  symbol: p.symbol,
+                  shares: p.shares,
+                  weight: p.weight,
+                  costBasis: p.costBasis,
+                  currentPrice: p.currentPrice,
+                  unrealizedPnL: p.unrealizedPnL,
+                })),
+                cash: portfolio.data.cash,
+                totalValue: portfolio.data.totalValue,
+                currency: 'USD',
+              }}
+            />
+          )}
+          <Button onClick={() => setShowAddForm(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Position
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

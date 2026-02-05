@@ -9,6 +9,7 @@ import {
   Bell,
   Settings,
   HelpCircle,
+  Brain,
 } from 'lucide-react';
 
 const navigation = [
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Factors', icon: BarChart3, href: '/factors' },
   { name: 'Earnings', icon: Calendar, href: '/earnings' },
   { name: 'Alerts', icon: Bell, href: '/alerts' },
+  { name: 'CVRF', icon: Brain, href: '/cvrf' },
   { name: 'Settings', icon: Settings, href: '/settings' },
   { name: 'Help', icon: HelpCircle, href: '/help' },
 ];

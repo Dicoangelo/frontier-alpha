@@ -3,7 +3,7 @@ import {
   LayoutDashboard,
   Briefcase,
   ShoppingCart,
-  Sparkles,
+  Brain,
   Bell,
 } from 'lucide-react';
 
@@ -11,7 +11,7 @@ const mobileNavigation = [
   { name: 'Home', icon: LayoutDashboard, href: '/' },
   { name: 'Portfolio', icon: Briefcase, href: '/portfolio' },
   { name: 'Trade', icon: ShoppingCart, href: '/trade' },
-  { name: 'Optimize', icon: Sparkles, href: '/optimize' },
+  { name: 'CVRF', icon: Brain, href: '/cvrf' },
   { name: 'Alerts', icon: Bell, href: '/alerts' },
 ];
 

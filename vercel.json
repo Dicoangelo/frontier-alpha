@@ -3,7 +3,8 @@
   "outputDirectory": "client/dist",
   "framework": "vite",
   "installCommand": "npm install && cd client && npm install",
-    "rewrites": [
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':!*.md' ':!*.txt' ':!.github' ':!tests' ':!*.test.ts' ':!*.spec.ts' ':!.env.example'",
+  "rewrites": [
     { "source": "/api/:path*", "destination": "/api/:path*" },
     { "source": "/health", "destination": "/api/health" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }

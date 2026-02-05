@@ -2,9 +2,9 @@
  * POST /api/v1/cvrf/episode/start - Start a new CVRF episode
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { cvrfManager } from '../../../../src/cvrf/CVRFManager.js';
+import { createPersistentCVRFManager } from '../../../../src/cvrf/PersistentCVRFManager.js';
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -18,18 +18,29 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const start = Date.now();
-  const episode = cvrfManager.startEpisode();
 
-  return res.status(200).json({
-    success: true,
-    data: {
-      id: episode.id,
-      startDate: episode.startDate,
-      message: 'CVRF episode started. Record decisions and close when complete.',
-    },
-    meta: {
-      timestamp: new Date(),
-      latencyMs: Date.now() - start,
-    },
-  });
+  try {
+    const manager = await createPersistentCVRFManager();
+    const episode = await manager.startEpisode();
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: episode.id,
+        episodeNumber: episode.episodeNumber,
+        startDate: episode.startDate,
+        message: 'CVRF episode started. Record decisions and close when complete.',
+      },
+      meta: {
+        timestamp: new Date(),
+        latencyMs: Date.now() - start,
+        persistent: true,
+      },
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      error: { code: 'CVRF_ERROR', message: error.message },
+    });
+  }
 }

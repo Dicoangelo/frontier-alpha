@@ -2,9 +2,9 @@
  * POST /api/v1/cvrf/decision - Record a trading decision
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { cvrfManager } from '../../../src/cvrf/CVRFManager.js';
+import { createPersistentCVRFManager } from '../../../src/cvrf/PersistentCVRFManager.js';
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -28,7 +28,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const decision = cvrfManager.recordDecision({
+    const manager = await createPersistentCVRFManager();
+    const decision = await manager.recordDecision({
       timestamp: new Date(),
       symbol,
       action,
@@ -45,6 +46,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       meta: {
         timestamp: new Date(),
         latencyMs: Date.now() - start,
+        persistent: true,
       },
     });
   } catch (error: any) {

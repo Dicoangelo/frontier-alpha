@@ -2,7 +2,7 @@
  * POST /api/v1/cvrf/episode/close - Close episode and run CVRF cycle
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { cvrfManager } from '../../../../src/cvrf/CVRFManager.js';
+import { createPersistentCVRFManager } from '../../../../src/cvrf/PersistentCVRFManager.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -18,16 +18,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const start = Date.now();
-  const { runCvrfCycle = true } = req.body || {};
+  const { runCvrfCycle = true, metrics } = req.body || {};
 
   try {
-    const { episode, cvrfResult } = await cvrfManager.closeEpisode(undefined, runCvrfCycle);
+    const manager = await createPersistentCVRFManager();
+    const { episode, cvrfResult } = await manager.closeEpisode(metrics, runCvrfCycle);
 
     return res.status(200).json({
       success: true,
       data: {
         episode: {
           id: episode.id,
+          episodeNumber: episode.episodeNumber,
           startDate: episode.startDate,
           endDate: episode.endDate,
           decisionsCount: episode.decisions.length,
@@ -45,6 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       meta: {
         timestamp: new Date(),
         latencyMs: Date.now() - start,
+        persistent: true,
       },
     });
   } catch (error: any) {

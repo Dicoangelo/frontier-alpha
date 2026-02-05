@@ -28,5 +28,15 @@ export { ConceptExtractor, conceptExtractor } from './ConceptExtractor.js';
 export { BeliefUpdater, beliefUpdater } from './BeliefUpdater.js';
 export { CVRFManager, cvrfManager } from './CVRFManager.js';
 
+// Persistent Manager (Supabase-backed for serverless)
+export {
+  PersistentCVRFManager,
+  getPersistentCVRFManager,
+  createPersistentCVRFManager,
+} from './PersistentCVRFManager.js';
+
+// Persistence Layer
+export * as persistence from './persistence.js';
+
 // Re-export default config
 export { DEFAULT_CVRF_CONFIG } from './types.js';

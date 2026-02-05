@@ -6,7 +6,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cvrfApi } from '@/api/cvrf';
-import type { CVRFDecision } from '@/types/cvrf';
 
 // ============================================================================
 // QUERY KEYS
@@ -87,7 +86,7 @@ export function useCloseEpisode() {
 
   return useMutation({
     mutationFn: cvrfApi.closeEpisode,
-    onSuccess: (data) => {
+    onSuccess: () => {
       // Invalidate all CVRF queries since beliefs may have updated
       queryClient.invalidateQueries({ queryKey: cvrfKeys.all });
     },
@@ -148,8 +147,6 @@ export function useCVRFStats() {
  * Get CVRF risk assessment for current portfolio
  */
 export function useCVRFRiskAssessment() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: cvrfApi.getRiskAssessment,
   });

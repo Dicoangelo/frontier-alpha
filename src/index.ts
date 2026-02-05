@@ -29,6 +29,15 @@ import { authMiddleware, optionalAuthMiddleware } from './middleware/auth.js';
 import { portfolioService } from './services/PortfolioService.js';
 import { supabaseAdmin } from './lib/supabase.js';
 
+// CVRF (Conceptual Verbal Reinforcement Framework)
+import { CVRFManager } from './cvrf/CVRFManager.js';
+import {
+  enhanceExplanationWithCVRF,
+  getCVRFOptimizationConfig,
+  validateOptimizationWithCVRF,
+  getCVRFRiskAssessment,
+} from './cvrf/integration.js';
+
 import type {
   APIResponse,
   Portfolio,
@@ -67,6 +76,7 @@ export class FrontierAlphaServer {
   private explainer: CognitiveExplainer;
   private earningsOracle: EarningsOracle;
   private dataProvider: MarketDataProvider;
+  private cvrfManager: CVRFManager;
   private config: ServerConfig;
 
   // In-memory portfolio state (fallback for unauthenticated requests)
@@ -85,6 +95,7 @@ export class FrontierAlphaServer {
       polygonApiKey: this.config.polygonApiKey,
       alphaVantageApiKey: this.config.alphaVantageApiKey,
     });
+    this.cvrfManager = new CVRFManager();
 
     // Initialize Fastify
     this.app = Fastify({
@@ -759,6 +770,237 @@ export class FrontierAlphaServer {
     );
 
     // ========================================
+    // CVRF (Conceptual Verbal Reinforcement) Endpoints
+    // ========================================
+
+    // Get current CVRF beliefs
+    this.app.get<{ Reply: APIResponse<any> }>(
+      '/api/v1/cvrf/beliefs',
+      async (request, reply) => {
+        const start = Date.now();
+        const beliefs = this.cvrfManager.getCurrentBeliefs();
+
+        return {
+          success: true,
+          data: {
+            ...beliefs,
+            factorWeights: Object.fromEntries(beliefs.factorWeights),
+            factorConfidences: Object.fromEntries(beliefs.factorConfidences),
+          },
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      }
+    );
+
+    // Start new CVRF episode
+    this.app.post<{ Reply: APIResponse<any> }>(
+      '/api/v1/cvrf/episode/start',
+      async (request, reply) => {
+        const start = Date.now();
+        const episode = this.cvrfManager.startEpisode();
+
+        return {
+          success: true,
+          data: {
+            id: episode.id,
+            startDate: episode.startDate,
+            message: 'CVRF episode started. Record decisions and close when complete.',
+          },
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      }
+    );
+
+    // Close CVRF episode and run cycle
+    this.app.post<{
+      Body: { runCvrfCycle?: boolean };
+      Reply: APIResponse<any>;
+    }>(
+      '/api/v1/cvrf/episode/close',
+      async (request, reply) => {
+        const start = Date.now();
+        const { runCvrfCycle = true } = request.body || {};
+
+        try {
+          const { episode, cvrfResult } = await this.cvrfManager.closeEpisode(
+            undefined,
+            runCvrfCycle
+          );
+
+          return {
+            success: true,
+            data: {
+              episode: {
+                id: episode.id,
+                startDate: episode.startDate,
+                endDate: episode.endDate,
+                decisionsCount: episode.decisions.length,
+                portfolioReturn: episode.portfolioReturn,
+                sharpeRatio: episode.sharpeRatio,
+              },
+              cvrfResult: cvrfResult ? {
+                performanceDelta: cvrfResult.episodeComparison.performanceDelta,
+                decisionOverlap: cvrfResult.episodeComparison.decisionOverlap,
+                insightsExtracted: cvrfResult.extractedInsights.length,
+                beliefUpdates: cvrfResult.beliefUpdates.length,
+                newRegime: cvrfResult.newBeliefState.currentRegime,
+              } : null,
+            },
+            meta: {
+              timestamp: new Date(),
+              requestId: request.id,
+              latencyMs: Date.now() - start,
+            },
+          };
+        } catch (error: any) {
+          return reply.status(400).send({
+            success: false,
+            error: { code: 'CVRF_ERROR', message: error.message },
+          });
+        }
+      }
+    );
+
+    // Record trading decision
+    this.app.post<{
+      Body: {
+        symbol: string;
+        action: 'buy' | 'sell' | 'hold' | 'rebalance';
+        weightBefore: number;
+        weightAfter: number;
+        reason: string;
+        confidence: number;
+        factors?: Array<{ factor: string; exposure: number; tStat: number; confidence: number; contribution: number }>;
+      };
+      Reply: APIResponse<any>;
+    }>(
+      '/api/v1/cvrf/decision',
+      async (request, reply) => {
+        const start = Date.now();
+        const { symbol, action, weightBefore, weightAfter, reason, confidence, factors } = request.body;
+
+        try {
+          const decision = this.cvrfManager.recordDecision({
+            timestamp: new Date(),
+            symbol,
+            action,
+            weightBefore,
+            weightAfter,
+            reason,
+            confidence,
+            factors: factors || [],
+          });
+
+          return {
+            success: true,
+            data: decision,
+            meta: {
+              timestamp: new Date(),
+              requestId: request.id,
+              latencyMs: Date.now() - start,
+            },
+          };
+        } catch (error: any) {
+          return reply.status(400).send({
+            success: false,
+            error: { code: 'DECISION_ERROR', message: error.message },
+          });
+        }
+      }
+    );
+
+    // Get CVRF optimization constraints
+    this.app.get<{ Reply: APIResponse<any> }>(
+      '/api/v1/cvrf/constraints',
+      async (request, reply) => {
+        const start = Date.now();
+        const constraints = this.cvrfManager.getOptimizationConstraints();
+
+        return {
+          success: true,
+          data: {
+            ...constraints,
+            factorTargets: Object.fromEntries(constraints.factorTargets),
+          },
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      }
+    );
+
+    // Get CVRF risk assessment
+    this.app.post<{
+      Body: {
+        portfolioValue: number;
+        portfolioReturns: number[];
+        positions: Array<{ symbol: string; weight: number }>;
+      };
+      Reply: APIResponse<any>;
+    }>(
+      '/api/v1/cvrf/risk',
+      async (request, reply) => {
+        const start = Date.now();
+        const { portfolioValue, portfolioReturns, positions } = request.body;
+
+        const assessment = getCVRFRiskAssessment(
+          portfolioValue,
+          portfolioReturns,
+          positions,
+          this.cvrfManager
+        );
+
+        return {
+          success: true,
+          data: assessment,
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      }
+    );
+
+    // Get CVRF cycle history
+    this.app.get<{ Reply: APIResponse<any> }>(
+      '/api/v1/cvrf/history',
+      async (request, reply) => {
+        const start = Date.now();
+        const history = this.cvrfManager.getCycleHistory();
+
+        return {
+          success: true,
+          data: history.map(cycle => ({
+            timestamp: cycle.timestamp,
+            previousEpisodeReturn: cycle.episodeComparison.previousEpisodeReturn,
+            currentEpisodeReturn: cycle.episodeComparison.currentEpisodeReturn,
+            performanceDelta: cycle.episodeComparison.performanceDelta,
+            decisionOverlap: cycle.episodeComparison.decisionOverlap,
+            insightsCount: cycle.extractedInsights.length,
+            beliefUpdatesCount: cycle.beliefUpdates.length,
+            newRegime: cycle.newBeliefState.currentRegime,
+          })),
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      }
+    );
+
+    // ========================================
     // WebSocket for Real-time Quotes
     // ========================================
 
@@ -806,18 +1048,30 @@ export class FrontierAlphaServer {
       console.log(`
 ╔══════════════════════════════════════════════════════════════════╗
 ║  🚀 FRONTIER ALPHA - Cognitive Factor Intelligence Platform       ║
+║  ✨ CVRF (Conceptual Verbal Reinforcement Framework) Enabled      ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  Server running on http://${this.config.host}:${this.config.port}
-║  
-║  API Endpoints:
+║
+║  Portfolio API:
 ║    GET  /api/v1/portfolio
 ║    POST /api/v1/portfolio/optimize
 ║    GET  /api/v1/portfolio/factors/:symbols
 ║    POST /api/v1/portfolio/explain
+║
+║  CVRF (Belief Optimization):
+║    GET  /api/v1/cvrf/beliefs        - Current belief state
+║    POST /api/v1/cvrf/episode/start  - Start trading episode
+║    POST /api/v1/cvrf/episode/close  - Close & run CVRF cycle
+║    POST /api/v1/cvrf/decision       - Record trading decision
+║    GET  /api/v1/cvrf/constraints    - Optimization constraints
+║    POST /api/v1/cvrf/risk           - Dual-level risk assessment
+║    GET  /api/v1/cvrf/history        - CVRF cycle history
+║
+║  Market Data:
 ║    GET  /api/v1/quotes/:symbol
 ║    GET  /api/v1/earnings/upcoming
 ║    GET  /api/v1/earnings/forecast/:symbol
-║  
+║
 ║  WebSocket:
 ║    ws://localhost:${this.config.port}/ws/quotes
 ╚══════════════════════════════════════════════════════════════════╝
@@ -860,3 +1114,17 @@ if (process.argv[1]?.endsWith('index.ts') || process.argv[1]?.endsWith('index.js
 }
 
 export default FrontierAlphaServer;
+
+// ============================================================================
+// CVRF MODULE EXPORTS
+// ============================================================================
+
+export * from './cvrf/index.js';
+export {
+  enhanceExplanationWithCVRF,
+  getCVRFOptimizationConfig,
+  validateOptimizationWithCVRF,
+  getCVRFRiskAssessment,
+  onWalkForwardWindowComplete,
+  runCVRFEnhancedTradingLoop,
+} from './cvrf/integration.js';

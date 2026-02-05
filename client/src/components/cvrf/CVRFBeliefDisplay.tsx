@@ -172,13 +172,19 @@ export function CVRFBeliefDisplay() {
         <div className="mt-4 pt-4 border-t border-gray-100">
           <div className="text-xs text-gray-500 mb-2">Conceptual Priors</div>
           <div className="flex flex-wrap gap-1">
-            {beliefs.conceptualPriors.slice(0, 5).map((prior, idx) => (
+            {beliefs.conceptualPriors.slice(0, 5).map((prior) => (
               <span
-                key={idx}
-                className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
-                title={prior}
+                key={prior.id}
+                className={`px-2 py-0.5 text-xs rounded ${
+                  prior.impactDirection === 'positive'
+                    ? 'bg-green-100 text-green-700'
+                    : prior.impactDirection === 'negative'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+                title={prior.concept}
               >
-                {prior.length > 30 ? prior.slice(0, 30) + '...' : prior}
+                {prior.concept.length > 40 ? prior.concept.slice(0, 40) + '...' : prior.concept}
               </span>
             ))}
             {beliefs.conceptualPriors.length > 5 && (

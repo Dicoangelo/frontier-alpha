@@ -2,6 +2,16 @@
  * CVRF Types for Frontend
  */
 
+export interface CVRFConceptualPrior {
+  id: string;
+  type: string;
+  concept: string;
+  evidence: string[];
+  confidence: number;
+  sourceEpisode: string;
+  impactDirection: 'positive' | 'negative' | 'neutral';
+}
+
 export interface CVRFBeliefState {
   id: string;
   version: number;
@@ -18,7 +28,7 @@ export interface CVRFBeliefState {
   rebalanceThreshold: number;
   currentRegime: 'bull' | 'bear' | 'sideways' | 'volatile' | 'recovery';
   regimeConfidence: number;
-  conceptualPriors: string[];
+  conceptualPriors: CVRFConceptualPrior[];
 }
 
 export interface CVRFEpisode {

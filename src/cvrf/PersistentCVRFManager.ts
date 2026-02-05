@@ -287,9 +287,26 @@ export class PersistentCVRFManager {
     const currReturn = current.portfolioReturn || 0;
     const performanceDelta = currReturn - prevReturn;
 
-    // Determine better episode
-    const betterEpisode = currReturn >= prevReturn ? current : previous;
-    const worseEpisode = currReturn >= prevReturn ? previous : current;
+    // Determine better episode (with safe defaults)
+    const isCurrBetter = currReturn >= prevReturn;
+
+    // Ensure episodes have required properties for ConceptExtractor
+    const enrichEpisode = (ep: Episode) => ({
+      ...ep,
+      factorExposures: ep.factorExposures || [],
+      maxDrawdown: ep.maxDrawdown || 0,
+    });
+
+    const betterEpisode = enrichEpisode(isCurrBetter ? current : previous);
+    const worseEpisode = enrichEpisode(isCurrBetter ? previous : current);
+
+    // Categorize trades as profitable or losing based on simple heuristics
+    const profitableTrades = betterEpisode.decisions.filter(d =>
+      d.action === 'buy' || (d.action === 'hold' && d.confidence > 0.5)
+    );
+    const losingTrades = worseEpisode.decisions.filter(d =>
+      d.action === 'sell' || (d.action === 'hold' && d.confidence <= 0.5)
+    );
 
     return {
       previousEpisodeId: previous.id,
@@ -302,6 +319,8 @@ export class PersistentCVRFManager {
       divergentDecisions: [],
       betterEpisode,
       worseEpisode,
+      profitableTrades,
+      losingTrades,
     };
   }
 

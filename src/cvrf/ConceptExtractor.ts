@@ -168,8 +168,8 @@ export class ConceptExtractor {
 
     // Calculate factor adjustments
     const factorAdjustments = this.calculateFactorAdjustments(
-      comparison.betterEpisode.factorExposures,
-      comparison.worseEpisode.factorExposures
+      comparison.betterEpisode.factorExposures || [],
+      comparison.worseEpisode.factorExposures || []
     );
 
     // Generate risk guidance
@@ -196,9 +196,17 @@ export class ConceptExtractor {
     const insights: ConceptualInsight[] = [];
     const { betterEpisode, worseEpisode, performanceDelta } = comparison;
 
+    // Guard: factorExposures may not be populated
+    const betterFactors = betterEpisode.factorExposures || [];
+    const worseFactors = worseEpisode.factorExposures || [];
+
+    if (betterFactors.length === 0) {
+      return insights; // No factor data available
+    }
+
     // Compare factor exposures between episodes
-    for (const betterFactor of betterEpisode.factorExposures) {
-      const worseFactor = worseEpisode.factorExposures.find(
+    for (const betterFactor of betterFactors) {
+      const worseFactor = worseFactors.find(
         f => f.factor === betterFactor.factor
       );
 
@@ -335,18 +343,20 @@ export class ConceptExtractor {
     const insights: ConceptualInsight[] = [];
     const { betterEpisode, worseEpisode, performanceDelta } = comparison;
 
-    // Compare drawdowns
-    const drawdownDiff = worseEpisode.maxDrawdown - betterEpisode.maxDrawdown;
+    // Compare drawdowns (with safe defaults)
+    const betterDrawdown = betterEpisode.maxDrawdown || 0;
+    const worseDrawdown = worseEpisode.maxDrawdown || 0;
+    const drawdownDiff = worseDrawdown - betterDrawdown;
 
     if (drawdownDiff > 0.02) { // 2% difference is significant
       insights.push({
         id: `insight_risk_${++this.insightCounter}`,
         type: 'risk',
         concept: INSIGHT_TEMPLATES.risk.positive
-          .replace('{drawdown}', (betterEpisode.maxDrawdown * 100).toFixed(1)),
+          .replace('{drawdown}', (betterDrawdown * 100).toFixed(1)),
         evidence: [
-          `Better episode max drawdown: ${(betterEpisode.maxDrawdown * 100).toFixed(1)}%`,
-          `Worse episode max drawdown: ${(worseEpisode.maxDrawdown * 100).toFixed(1)}%`,
+          `Better episode max drawdown: ${(betterDrawdown * 100).toFixed(1)}%`,
+          `Worse episode max drawdown: ${(worseDrawdown * 100).toFixed(1)}%`,
           `Risk management saved: ${(drawdownDiff * 100).toFixed(1)}%`,
         ],
         confidence: Math.min(0.95, 0.6 + drawdownDiff * 5),
@@ -355,12 +365,12 @@ export class ConceptExtractor {
       });
     }
 
-    if (worseEpisode.maxDrawdown > 0.10) { // >10% drawdown is concerning
+    if (worseDrawdown > 0.10) { // >10% drawdown is concerning
       insights.push({
         id: `insight_risk_${++this.insightCounter}`,
         type: 'risk',
         concept: INSIGHT_TEMPLATES.risk.negative
-          .replace('{drawdown}', (worseEpisode.maxDrawdown * 100).toFixed(1)),
+          .replace('{drawdown}', (worseDrawdown * 100).toFixed(1)),
         evidence: [
           `Drawdown exceeded 10% threshold`,
           `Consider tighter stop-losses or position sizing`,
@@ -445,8 +455,8 @@ export class ConceptExtractor {
     const { betterEpisode, worseEpisode, performanceDelta } = comparison;
 
     // Detect regime from factor exposures
-    const betterRegime = this.detectRegime(betterEpisode.factorExposures);
-    const worseRegime = this.detectRegime(worseEpisode.factorExposures);
+    const betterRegime = this.detectRegime(betterEpisode.factorExposures || []);
+    const worseRegime = this.detectRegime(worseEpisode.factorExposures || []);
 
     if (betterRegime !== worseRegime) {
       insights.push({
@@ -564,11 +574,13 @@ export class ConceptExtractor {
     insights: ConceptualInsight[]
   ): string {
     const riskInsights = insights.filter(i => i.type === 'risk');
-    const drawdownDiff = comparison.worseEpisode.maxDrawdown - comparison.betterEpisode.maxDrawdown;
+    const betterDrawdown = comparison.betterEpisode.maxDrawdown || 0;
+    const worseDrawdown = comparison.worseEpisode.maxDrawdown || 0;
+    const drawdownDiff = worseDrawdown - betterDrawdown;
 
     if (drawdownDiff > 0.05) {
-      return `Tighten risk controls. Better episode limited drawdown to ${(comparison.betterEpisode.maxDrawdown * 100).toFixed(1)}%.`;
-    } else if (comparison.betterEpisode.maxDrawdown > 0.10) {
+      return `Tighten risk controls. Better episode limited drawdown to ${(betterDrawdown * 100).toFixed(1)}%.`;
+    } else if (betterDrawdown > 0.10) {
       return `Both episodes showed elevated risk. Consider reducing overall exposure.`;
     }
 

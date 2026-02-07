@@ -112,8 +112,8 @@ class QuoteStreamClient {
     // Initial poll
     poll();
 
-    // Poll every 2 seconds
-    this.pollingInterval = setInterval(poll, 2000);
+    // Poll every 10 seconds
+    this.pollingInterval = setInterval(poll, 10000);
   }
 
   /**
@@ -125,9 +125,11 @@ class QuoteStreamClient {
 
     this.subscribedSymbols = [...new Set([...this.subscribedSymbols, ...symbols])];
 
-    // Reconnect with new symbols
+    // Reconnect with new symbols if already connected, or connect if not yet connected
     if (this.isConnected) {
       this.disconnect();
+      this.connect();
+    } else {
       this.connect();
     }
   }
@@ -196,7 +198,7 @@ class QuoteStreamClient {
     this.disconnect();
     setTimeout(() => {
       this.connect();
-    }, 100);
+    }, 5000);
   }
 
   /**

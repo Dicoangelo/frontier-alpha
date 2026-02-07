@@ -81,7 +81,7 @@ export class MarketDataProvider {
   constructor(config: DataProviderConfig = {}) {
     this.config = {
       cacheTTLSeconds: 60,
-      allowMockFallback: process.env.NODE_ENV === 'development',
+      allowMockFallback: process.env.NODE_ENV !== 'production',
       ...config,
     };
 

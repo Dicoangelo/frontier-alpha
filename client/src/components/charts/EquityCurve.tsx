@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Card } from '@/components/shared/Card';
 
 interface DataPoint {
@@ -109,21 +109,25 @@ export function EquityCurve({
 
   const days = TIMEFRAME_DAYS[selectedTimeframe];
 
-  // Generate data
-  const data = portfolioReturns.length > 0 && benchmarkReturns.length > 0
-    ? generateDataPoints(portfolioValue, portfolioReturns, benchmarkReturns, days)
-    : generateMockData(portfolioValue, days);
+  // Generate data — memoized to prevent regeneration on every render
+  const data = useMemo(() => {
+    return portfolioReturns.length > 0 && benchmarkReturns.length > 0
+      ? generateDataPoints(portfolioValue, portfolioReturns, benchmarkReturns, days)
+      : generateMockData(portfolioValue, days);
+  }, [portfolioValue, portfolioReturns, benchmarkReturns, days]);
 
   // Calculate metrics
-  const startValue = data[0]?.portfolio || portfolioValue;
-  const endValue = data[data.length - 1]?.portfolio || portfolioValue;
-  const totalReturn = ((endValue - startValue) / startValue) * 100;
+  const { totalReturn, alpha } = useMemo(() => {
+    const startValue = data[0]?.portfolio || portfolioValue;
+    const endValue = data[data.length - 1]?.portfolio || portfolioValue;
+    const tr = ((endValue - startValue) / startValue) * 100;
 
-  const benchmarkStart = data[0]?.benchmark || portfolioValue;
-  const benchmarkEnd = data[data.length - 1]?.benchmark || portfolioValue;
-  const benchmarkReturn = ((benchmarkEnd - benchmarkStart) / benchmarkStart) * 100;
+    const benchmarkStart = data[0]?.benchmark || portfolioValue;
+    const benchmarkEnd = data[data.length - 1]?.benchmark || portfolioValue;
+    const benchmarkReturn = ((benchmarkEnd - benchmarkStart) / benchmarkStart) * 100;
 
-  const alpha = totalReturn - benchmarkReturn;
+    return { totalReturn: tr, alpha: tr - benchmarkReturn };
+  }, [data, portfolioValue]);
 
   // Resize observer
   useEffect(() => {

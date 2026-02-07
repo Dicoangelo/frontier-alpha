@@ -417,6 +417,41 @@ export class FrontierAlphaServer {
     // Quote Endpoints
     // ========================================
 
+    // Batch quote stream — must be registered before :symbol to avoid route conflict
+    this.app.get<{
+      Querystring: { symbols: string; sse?: string };
+    }>(
+      '/api/v1/quotes/stream',
+      async (request, reply) => {
+        const symbolsParam = request.query.symbols;
+        if (!symbolsParam) {
+          return reply.status(400).send({ error: 'symbols parameter required' });
+        }
+
+        const symbols = symbolsParam.split(',').map((s: string) => s.trim().toUpperCase()).filter(Boolean);
+        const quotes: Quote[] = [];
+
+        for (const symbol of symbols) {
+          try {
+            const quote = await this.dataProvider.getQuote(symbol);
+            if (quote) quotes.push(quote);
+          } catch {
+            // Skip symbols that fail
+          }
+        }
+
+        return reply.send({
+          success: true,
+          data: quotes,
+          meta: {
+            timestamp: new Date().toISOString(),
+            source: 'fastify',
+            count: quotes.length,
+          },
+        });
+      }
+    );
+
     this.app.get<{
       Params: { symbol: string };
       Reply: APIResponse<Quote>;

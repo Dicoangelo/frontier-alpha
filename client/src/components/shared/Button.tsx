@@ -13,32 +13,32 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants = {
   primary: `
-    bg-gradient-to-r from-blue-600 to-purple-600 text-white
-    hover:from-blue-700 hover:to-purple-700
-    active:from-blue-800 active:to-purple-800
+    bg-gradient-to-r from-brand-magenta via-brand-amethyst to-brand-cyan text-white
+    hover:opacity-90
+    active:opacity-80
     shadow-md hover:shadow-lg active:shadow-sm
-    focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+    focus:ring-2 focus:ring-brand-amethyst focus:ring-offset-2 dark:focus:ring-offset-surface-dark
   `,
   secondary: `
-    bg-gray-100 text-gray-800
-    hover:bg-gray-200 active:bg-gray-300
-    focus:ring-2 focus:ring-gray-400 focus:ring-offset-2
+    bg-theme-tertiary text-theme
+    hover:opacity-80 active:opacity-70
+    focus:ring-2 focus:ring-brand-amethyst/40 focus:ring-offset-2 dark:focus:ring-offset-surface-dark
   `,
   danger: `
-    bg-red-600 text-white
-    hover:bg-red-700 active:bg-red-800
+    bg-red-600 text-white dark:bg-red-500
+    hover:bg-red-700 active:bg-red-800 dark:hover:bg-red-600
     shadow-md hover:shadow-lg active:shadow-sm
-    focus:ring-2 focus:ring-red-500 focus:ring-offset-2
+    focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-surface-dark
   `,
   ghost: `
-    bg-transparent text-gray-600
-    hover:bg-gray-100 active:bg-gray-200
-    focus:ring-2 focus:ring-gray-400 focus:ring-offset-2
+    bg-transparent text-theme-secondary
+    hover:bg-theme-tertiary active:opacity-70
+    focus:ring-2 focus:ring-brand-amethyst/40 focus:ring-offset-2 dark:focus:ring-offset-surface-dark
   `,
   outline: `
-    bg-white text-gray-700 border border-gray-300
-    hover:bg-gray-50 hover:border-gray-400 active:bg-gray-100
-    focus:ring-2 focus:ring-gray-400 focus:ring-offset-2
+    bg-theme-secondary text-theme border border-theme
+    hover:bg-theme-tertiary hover:border-brand-amethyst/30 active:opacity-80
+    focus:ring-2 focus:ring-brand-amethyst/40 focus:ring-offset-2 dark:focus:ring-offset-surface-dark
   `,
 };
 

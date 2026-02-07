@@ -4,9 +4,24 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
+        // Metaventions AI Brand Palette
+        brand: {
+          amethyst: '#7B2CFF',
+          cyan: '#18E6FF',
+          magenta: '#FF3DF2',
+          gold: '#D7B26D',
+          teal: '#00FFC6',
+          holo: '#5AA7FF',
+        },
+        surface: {
+          light: '#F5F7FA',
+          dark: '#0B1020',
+          deep: '#05070D',
+        },
         frontier: {
           50: '#f0f9ff',
           100: '#e0f2fe',
@@ -25,6 +40,7 @@ export default {
         'scale-in': 'scale-in 0.2s ease-out',
         'bounce-in': 'bounce-in 0.5s ease-out',
         'pulse-subtle': 'pulse-subtle 2s infinite',
+        'glow': 'glow 2s ease-in-out infinite alternate',
       },
       keyframes: {
         shimmer: {
@@ -60,6 +76,10 @@ export default {
         'pulse-subtle': {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.7' },
+        },
+        'glow': {
+          '0%': { boxShadow: '0 0 5px rgba(123, 44, 255, 0.3), 0 0 10px rgba(24, 230, 255, 0.1)' },
+          '100%': { boxShadow: '0 0 10px rgba(123, 44, 255, 0.5), 0 0 20px rgba(24, 230, 255, 0.2)' },
         },
       },
       transitionProperty: {

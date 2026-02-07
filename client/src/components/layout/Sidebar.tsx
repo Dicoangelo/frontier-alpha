@@ -31,7 +31,7 @@ interface SidebarProps {
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   return (
-    <aside className="fixed left-0 top-16 bottom-0 w-64 bg-white border-r overflow-y-auto">
+    <aside className="fixed left-0 top-16 bottom-0 w-64 glass-slab overflow-y-auto">
       <nav className="p-4 space-y-1">
         {navigation.map((item) => (
           <NavLink
@@ -40,23 +40,23 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             end={item.href === '/'}
             onClick={onNavigate}
             className={({ isActive }) => `
-              flex items-center gap-3 px-4 py-3 rounded-lg transition
+              flex items-center gap-3 px-4 py-3 rounded-sm transition-all click-feedback
               ${isActive
-                ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 font-medium'
-                : 'text-gray-600 hover:bg-gray-50'
+                ? 'gradient-brand-subtle text-accent font-medium'
+                : 'text-theme-secondary hover:bg-theme-tertiary'
               }
             `}
           >
             <item.icon className="w-5 h-5" />
-            {item.name}
+            <span className="text-sm">{item.name}</span>
           </NavLink>
         ))}
       </nav>
 
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-white">
-        <div className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-          <p className="text-xs text-blue-800 font-medium">DQ Score: 0.88</p>
-          <p className="text-xs text-gray-500 mt-1">Powered by 80+ factors</p>
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-theme">
+        <div className="p-3 gradient-brand-subtle rounded-sm">
+          <p className="text-[10px] text-accent font-bold mono tracking-[0.3em] uppercase">DQ Score: 0.88</p>
+          <p className="text-[10px] text-theme-muted mono mt-1">Powered by 80+ factors</p>
         </div>
       </div>
     </aside>

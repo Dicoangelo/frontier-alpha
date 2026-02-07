@@ -40,7 +40,7 @@ export function Layout({ children }: LayoutProps) {
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-theme grid-bg transition-colors">
       {/* Skip to main content link for keyboard users */}
       <SkipToMain />
 
@@ -60,12 +60,12 @@ export function Layout({ children }: LayoutProps) {
           aria-label="Navigation menu"
         >
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
+            className="fixed inset-0 bg-black/60 dark:bg-black/70 backdrop-blur-sm animate-fade-in"
             onClick={() => setSidebarOpen(false)}
             aria-hidden="true"
           />
           <aside
-            className="fixed left-0 top-0 bottom-0 w-64 bg-white z-50 shadow-2xl animate-slide-in-left"
+            className="fixed left-0 top-0 bottom-0 w-64 glass-slab-floating z-50 shadow-2xl animate-slide-in-left"
             aria-label="Mobile navigation"
           >
             <Sidebar onNavigate={() => setSidebarOpen(false)} />

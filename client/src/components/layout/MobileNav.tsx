@@ -18,7 +18,7 @@ const mobileNavigation = [
 export function MobileNav() {
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-lg z-30"
+      className="lg:hidden fixed bottom-0 left-0 right-0 glass-slab-floating z-30"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0)' }}
       aria-label="Mobile navigation"
     >
@@ -34,11 +34,11 @@ export function MobileNav() {
               min-w-[64px] min-h-[56px] px-3 py-2
               touch-manipulation
               transition-all duration-150 ease-out
-              active:scale-95 active:bg-gray-100
-              focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset
+              active:scale-95 click-feedback
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7B2CFF] focus-visible:ring-inset
               ${isActive
-                ? 'text-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-accent'
+                : 'text-theme-muted hover:text-theme-secondary'
               }
             `}
           >
@@ -47,17 +47,17 @@ export function MobileNav() {
                 <div
                   className={`
                     relative flex items-center justify-center
-                    w-12 h-11 min-h-[44px] rounded-full
+                    w-12 h-11 min-h-[44px] rounded-sm
                     transition-all duration-200
-                    ${isActive ? 'bg-blue-100' : ''}
+                    ${isActive ? 'bg-accent-light' : ''}
                   `}
                 >
                   <item.icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''} transition-transform`} />
                   {isActive && (
-                    <span className="absolute -bottom-1 w-1 h-1 rounded-full bg-blue-600" />
+                    <span className="absolute -bottom-1 w-4 h-[2px] gradient-brand rounded-full" />
                   )}
                 </div>
-                <span className={`text-[10px] mt-0.5 font-medium ${isActive ? 'text-blue-600' : ''}`}>
+                <span className={`text-[9px] mt-0.5 mono tracking-[0.15em] uppercase ${isActive ? 'text-accent' : ''}`}>
                   {item.name}
                 </span>
               </>

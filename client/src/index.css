@@ -1,7 +1,277 @@
 @import "tailwindcss";
 
+/* ============================================================
+   METAVENTIONS AI DESIGN SYSTEM — Frontier Alpha
+   Baseline: github.com/Dicoangelo/Metaventions-AI-Landing
+   ============================================================ */
+
 @layer base {
+  :root {
+    --color-bg: #F8FAFC;
+    --color-bg-secondary: rgba(255, 255, 255, 0.85);
+    --color-bg-tertiary: rgba(0, 0, 0, 0.03);
+    --color-text: #0B1020;
+    --color-text-secondary: rgba(0, 0, 0, 0.6);
+    --color-text-muted: rgba(0, 0, 0, 0.4);
+    --color-border: rgba(11, 16, 32, 0.1);
+    --color-border-light: rgba(11, 16, 32, 0.05);
+    --color-accent: #7B2CFF;
+    --color-accent-hover: #6920e0;
+    --color-accent-light: rgba(123, 44, 255, 0.08);
+    --color-accent-secondary: #18E6FF;
+    --color-success: #10b981;
+    --color-danger: #ef4444;
+    --color-warning: #f59e0b;
+    --color-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  .dark {
+    --color-bg: #05070D;
+    --color-bg-secondary: rgba(11, 16, 32, 0.85);
+    --color-bg-tertiary: rgba(255, 255, 255, 0.03);
+    --color-text: #E6EDF5;
+    --color-text-secondary: rgba(255, 255, 255, 0.6);
+    --color-text-muted: rgba(255, 255, 255, 0.4);
+    --color-border: rgba(255, 255, 255, 0.1);
+    --color-border-light: rgba(255, 255, 255, 0.05);
+    --color-accent: #7B2CFF;
+    --color-accent-hover: #9454ff;
+    --color-accent-light: rgba(123, 44, 255, 0.15);
+    --color-accent-secondary: #18E6FF;
+    --color-success: #34d399;
+    --color-danger: #f87171;
+    --color-warning: #fbbf24;
+    --color-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply antialiased transition-colors duration-300;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  /* Scrollbar theming */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-text-muted);
+    border-radius: 3px;
+  }
+}
+
+@layer components {
+  /* ── Glass Morphism (from Metaventions Landing) ── */
+
+  .glass-slab {
+    background: var(--color-bg-secondary);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--color-card-shadow);
+    transition: background 0.5s ease, border 0.5s ease, box-shadow 0.3s ease;
+  }
+
+  .glass-slab-floating {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+  }
+  .dark .glass-slab-floating {
+    background: rgba(11, 16, 32, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .glass-liquid-subtle {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
+    backdrop-filter: blur(25px) saturate(160%);
+    border: 0.5px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+  }
+  .dark .glass-liquid-subtle {
+    background: linear-gradient(135deg, rgba(11, 16, 32, 0.8), rgba(11, 16, 32, 0.4));
+    border: 0.5px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .glass-modal {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 1);
+    box-shadow: 0 30px 120px rgba(0, 0, 0, 0.08);
+  }
+  .dark .glass-modal {
+    background: rgba(5, 7, 13, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 30px 120px rgba(0, 0, 0, 0.4);
+  }
+
+  .glass-gold {
+    background: linear-gradient(135deg, rgba(215, 178, 109, 0.25), rgba(215, 178, 109, 0.08));
+    backdrop-filter: blur(45px) saturate(200%);
+    border: 1px solid rgba(215, 178, 109, 0.5);
+    box-shadow: 0 0 100px rgba(215, 178, 109, 0.2), inset 0 0 40px rgba(255, 255, 255, 0.1);
+  }
+  .dark .glass-gold {
+    background: linear-gradient(135deg, rgba(215, 178, 109, 0.15), rgba(215, 178, 109, 0.04));
+    border: 1px solid rgba(215, 178, 109, 0.4);
+    box-shadow: 0 0 120px rgba(215, 178, 109, 0.15);
+  }
+
+  /* ── Sovereign Spectrum Border ── */
+  .border-sovereign {
+    border: 1px solid transparent;
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(to right, #FF3DF2, #7B2CFF, #18E6FF) border-box;
+  }
+  .dark .border-sovereign {
+    background: linear-gradient(#05070D, #05070D) padding-box,
+                linear-gradient(to right, #FF3DF2, #7B2CFF, #18E6FF) border-box;
+  }
+
+  /* ── Monospace Label ── */
+  .mono {
+    font-family: var(--font-mono);
+  }
+
+  /* ── Navigation Link Underline ── */
+  .nav-link {
+    position: relative;
+    padding-bottom: 8px;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(to right, #FF3DF2, #7B2CFF, #18E6FF);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  /* ── Click Feedback ── */
+  .click-feedback {
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .click-feedback:active {
+    transform: scale(0.96);
+  }
+
+  /* ── Grid Background Pattern ── */
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(11, 16, 32, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(11, 16, 32, 0.02) 1px, transparent 1px);
+    background-size: 80px 80px;
+  }
+  .dark .grid-bg {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  }
+
+  /* ── Skeleton Shimmer ── */
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.05) 75%);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite linear;
+  }
+  .dark .skeleton-shimmer {
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+    background-size: 1000px 100%;
+  }
+}
+
+@layer utilities {
+  /* ── Theme Utilities ── */
+  .bg-theme { background-color: var(--color-bg); }
+  .bg-theme-secondary { background-color: var(--color-bg-secondary); }
+  .bg-theme-tertiary { background-color: var(--color-bg-tertiary); }
+  .text-theme { color: var(--color-text); }
+  .text-theme-secondary { color: var(--color-text-secondary); }
+  .text-theme-muted { color: var(--color-text-muted); }
+  .border-theme { border-color: var(--color-border); }
+  .border-theme-light { border-color: var(--color-border-light); }
+  .shadow-theme { box-shadow: var(--color-card-shadow); }
+  .bg-accent { background-color: var(--color-accent); }
+  .bg-accent-light { background-color: var(--color-accent-light); }
+  .text-accent { color: var(--color-accent); }
+
+  /* ── Gradient Utilities ── */
+
+  /* Sovereign Spectrum: THE signature gradient (magenta → amethyst → cyan) */
+  .gradient-brand {
+    background: linear-gradient(to right, #FF3DF2, #7B2CFF, #18E6FF);
+  }
+  .gradient-brand-135 {
+    background: linear-gradient(135deg, #FF3DF2, #7B2CFF, #18E6FF);
+  }
+  .gradient-brand-subtle {
+    background: linear-gradient(135deg, rgba(123, 44, 255, 0.08), rgba(24, 230, 255, 0.04));
+  }
+  .dark .gradient-brand-subtle {
+    background: linear-gradient(135deg, rgba(123, 44, 255, 0.15), rgba(24, 230, 255, 0.08));
+  }
+
+  /* Gold Spectrum */
+  .gradient-gold {
+    background: linear-gradient(to right, #D7B26D, #F9D976, #B38728);
+  }
+
+  /* Compute Halo */
+  .gradient-halo {
+    background: linear-gradient(to right, #00FFC6, #18E6FF, #5AA7FF);
+  }
+
+  /* Text Gradients */
+  .text-gradient-brand {
+    background: linear-gradient(to right, #FF3DF2, #7B2CFF, #18E6FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-gold {
+    background: linear-gradient(to right, #D7B26D, #F9D976, #B38728);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-halo {
+    background: linear-gradient(to right, #00FFC6, #18E6FF, #5AA7FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Sovereign Spectrum Top Bar ── */
+  .sovereign-bar {
+    height: 3px;
+    background: linear-gradient(to right, #FF3DF2, #7B2CFF, #18E6FF);
+  }
+
+  /* ── Reveal Animation ── */
+  .reveal-hidden {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 1.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+                transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

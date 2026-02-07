@@ -128,8 +128,8 @@ export class RedisCache {
 
     this.memoryCache = new InMemoryCache();
 
-    // Connect to Redis if URL provided
-    if (this.config.enabled && this.config.redisUrl) {
+    // Connect to Redis if URL provided and not local dev without Redis
+    if (this.config.enabled && this.config.redisUrl && process.env.NODE_ENV === 'production') {
       this.connectRedis();
     }
   }

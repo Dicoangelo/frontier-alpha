@@ -5,11 +5,11 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch --env-file .env src/index.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run client:dev\"",
     "build": "tsc && npm run client:build",
     "build:server": "esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=dist/index.js --format=esm --packages=external",
-    "start": "node dist/index.js",
+    "start": "node --env-file .env dist/index.js",
     "test": "vitest",
     "test:unit": "vitest run src/**/*.test.ts",
     "test:e2e": "vitest run tests/e2e",

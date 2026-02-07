@@ -1,42 +1,43 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
 
-    <!-- Preconnect to external resources for faster loading -->
+    <!-- Google Fonts: Inter + JetBrains Mono (Metaventions AI typography) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet" />
 
     <!-- Critical resource hints -->
     <link rel="preload" href="/src/main.tsx" as="script" crossorigin />
 
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/png" href="/metaventions-logo.png" />
     <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/icons/icon.svg" />
+    <link rel="apple-touch-icon" href="/metaventions-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0284c7" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0c4a6e" media="(prefers-color-scheme: dark)" />
-    <meta name="description" content="Frontier Alpha - AI-Powered Cognitive Factor Intelligence Platform. Institutional-grade portfolio analytics with plain-English explanations." />
+    <meta name="theme-color" content="#05070D" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#F8FAFC" media="(prefers-color-scheme: light)" />
+    <meta name="description" content="Frontier Alpha by Metaventions AI — Cognitive Factor Intelligence Platform. Institutional-grade portfolio analytics with plain-English explanations." />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Frontier Alpha" />
 
     <!-- Open Graph / Social sharing -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Frontier Alpha | Cognitive Factor Intelligence" />
-    <meta property="og:description" content="AI-Powered portfolio analytics with plain-English explanations." />
-    <meta property="og:image" content="/icons/icon.svg" />
+    <meta property="og:title" content="Frontier Alpha | Metaventions AI" />
+    <meta property="og:description" content="AI-Powered cognitive factor intelligence with plain-English explanations." />
+    <meta property="og:image" content="/metaventions-logo.png" />
 
-    <title>Frontier Alpha | Cognitive Factor Intelligence</title>
+    <title>Frontier Alpha | Metaventions AI</title>
     <style>
       /* Critical CSS for reduced layout shift */
       html { -webkit-text-size-adjust: 100%; }
-      body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+      body { margin: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
       #root { min-height: 100vh; }
 
       /* Focus visible styles (global) */
       :focus-visible {
-        outline: 2px solid #0284c7;
+        outline: 2px solid #7B2CFF;
         outline-offset: 2px;
       }
 
@@ -70,7 +71,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        background: #05070D;
         z-index: 9999;
         transition: opacity 0.3s ease-out;
       }
@@ -81,16 +82,19 @@
       .app-loader-spinner {
         width: 48px;
         height: 48px;
-        border: 3px solid #e0f2fe;
-        border-top-color: #0284c7;
+        border: 3px solid rgba(123, 44, 255, 0.2);
+        border-top-color: #7B2CFF;
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
       }
       .app-loader-text {
         margin-top: 16px;
-        font-size: 14px;
-        color: #64748b;
+        font-size: 11px;
+        color: rgba(255,255,255,0.4);
         font-weight: 500;
+        font-family: 'JetBrains Mono', monospace;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
       }
       @keyframes spin {
         to { transform: rotate(360deg); }

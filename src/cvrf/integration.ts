@@ -333,15 +333,3 @@ export async function runCVRFEnhancedTradingLoop(
   };
 }
 
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-export {
-  enhanceExplanationWithCVRF,
-  getCVRFOptimizationConfig,
-  validateOptimizationWithCVRF,
-  onWalkForwardWindowComplete,
-  getCVRFRiskAssessment,
-  runCVRFEnhancedTradingLoop,
-};

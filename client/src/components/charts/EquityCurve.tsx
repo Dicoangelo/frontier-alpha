@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Card } from '@/components/shared/Card';
+import { useThemeStore } from '@/stores/themeStore';
 
 interface DataPoint {
   date: string;
@@ -12,6 +13,15 @@ interface EquityCurveProps {
   portfolioReturns?: number[];
   benchmarkReturns?: number[];
   timeframe?: '1W' | '1M' | '3M' | '6M' | '1Y' | 'YTD' | 'ALL';
+}
+
+// Seeded pseudo-random for deterministic mock data
+function seededRandom(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 16807 + 0) % 2147483647;
+    return s / 2147483647;
+  };
 }
 
 // Generate historical data points from returns
@@ -51,12 +61,13 @@ function generateDataPoints(
   return tempPoints;
 }
 
-// Generate mock data for demo
+// Generate mock data for demo — deterministic per timeframe
 function generateMockData(currentValue: number, days: number): DataPoint[] {
+  const rand = seededRandom(days * 7919 + 42);
   const points: DataPoint[] = [];
   const now = new Date();
 
-  let portfolioValue = currentValue * 0.85; // Start lower
+  let portfolioValue = currentValue * 0.85;
   let benchmarkValue = currentValue * 0.88;
 
   for (let i = days; i >= 0; i--) {
@@ -69,9 +80,9 @@ function generateMockData(currentValue: number, days: number): DataPoint[] {
       benchmark: benchmarkValue,
     });
 
-    // Random walk with slight upward bias
-    portfolioValue *= 1 + (Math.random() - 0.45) * 0.015;
-    benchmarkValue *= 1 + (Math.random() - 0.47) * 0.012;
+    // Deterministic walk with slight upward bias
+    portfolioValue *= 1 + (rand() - 0.45) * 0.015;
+    benchmarkValue *= 1 + (rand() - 0.47) * 0.012;
   }
 
   // Adjust to match current value
@@ -81,6 +92,20 @@ function generateMockData(currentValue: number, days: number): DataPoint[] {
     portfolio: p.portfolio * scale,
     benchmark: p.benchmark * scale * 0.95,
   }));
+}
+
+// Theme-aware canvas colors
+function getChartColors(isDark: boolean) {
+  return {
+    grid: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e5e7eb',
+    label: isDark ? 'rgba(255, 255, 255, 0.5)' : '#6b7280',
+    benchmark: isDark ? 'rgba(255, 255, 255, 0.35)' : '#9ca3af',
+    line: isDark ? '#60a5fa' : '#3b82f6',
+    gradientTop: isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.3)',
+    gradientBottom: isDark ? 'rgba(96, 165, 250, 0)' : 'rgba(59, 130, 246, 0)',
+    dot: isDark ? '#60a5fa' : '#3b82f6',
+    dotStroke: isDark ? '#0F1219' : '#ffffff',
+  };
 }
 
 const TIMEFRAME_DAYS: Record<string, number> = {
@@ -106,15 +131,24 @@ export function EquityCurve({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [animationProgress, setAnimationProgress] = useState(0);
   const animationRef = useRef<number | null>(null);
+  const isDark = useThemeStore((s) => s.resolved === 'dark');
 
   const days = TIMEFRAME_DAYS[selectedTimeframe];
 
-  // Generate data — memoized to prevent regeneration on every render
+  // Stable reference to portfolioValue — only update when it changes significantly (>1%)
+  const stableValue = useRef(portfolioValue);
+  if (Math.abs(portfolioValue - stableValue.current) / stableValue.current > 0.01) {
+    stableValue.current = portfolioValue;
+  }
+
+  // Generate data — memoized, only changes on timeframe or significant value shift
   const data = useMemo(() => {
+    const val = stableValue.current;
     return portfolioReturns.length > 0 && benchmarkReturns.length > 0
-      ? generateDataPoints(portfolioValue, portfolioReturns, benchmarkReturns, days)
-      : generateMockData(portfolioValue, days);
-  }, [portfolioValue, portfolioReturns, benchmarkReturns, days]);
+      ? generateDataPoints(val, portfolioReturns, benchmarkReturns, days)
+      : generateMockData(val, days);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stableValue.current, portfolioReturns, benchmarkReturns, days]);
 
   // Calculate metrics
   const { totalReturn, alpha } = useMemo(() => {
@@ -148,16 +182,15 @@ export function EquityCurve({
     return () => observer.disconnect();
   }, []);
 
-  // Animate chart on data change
+  // Animate chart on timeframe change only (not on value ticks)
   useEffect(() => {
     setAnimationProgress(0);
     const startTime = performance.now();
-    const duration = 800; // ms
+    const duration = 800;
 
     const animate = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
       setAnimationProgress(eased);
 
@@ -173,7 +206,7 @@ export function EquityCurve({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [selectedTimeframe, portfolioValue]);
+  }, [selectedTimeframe]);
 
   // Draw chart
   useEffect(() => {
@@ -182,6 +215,8 @@ export function EquityCurve({
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    const colors = getChartColors(isDark);
 
     // Set canvas size
     const dpr = window.devicePixelRatio || 1;
@@ -209,7 +244,7 @@ export function EquityCurve({
     const yScale = (v: number) => padding.top + chartHeight - ((v - minValue) / (maxValue - minValue)) * chartHeight;
 
     // Draw grid
-    ctx.strokeStyle = '#e5e7eb';
+    ctx.strokeStyle = colors.grid;
     ctx.lineWidth = 1;
 
     // Horizontal grid lines
@@ -223,7 +258,7 @@ export function EquityCurve({
 
       // Y-axis labels
       const value = maxValue - (i / yTicks) * (maxValue - minValue);
-      ctx.fillStyle = '#6b7280';
+      ctx.fillStyle = colors.label;
       ctx.font = '11px system-ui';
       ctx.textAlign = 'right';
       ctx.fillText(`$${(value / 1000).toFixed(0)}k`, padding.left - 8, y + 4);
@@ -234,7 +269,7 @@ export function EquityCurve({
     const animatedData = data.slice(0, Math.max(2, pointsToDraw));
 
     // Draw benchmark line (dashed)
-    ctx.strokeStyle = '#9ca3af';
+    ctx.strokeStyle = colors.benchmark;
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 4]);
     ctx.globalAlpha = animationProgress;
@@ -251,8 +286,8 @@ export function EquityCurve({
 
     // Draw portfolio line with gradient
     const gradient = ctx.createLinearGradient(0, padding.top, 0, dimensions.height - padding.bottom);
-    gradient.addColorStop(0, `rgba(59, 130, 246, ${0.3 * animationProgress})`);
-    gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+    gradient.addColorStop(0, colors.gradientTop);
+    gradient.addColorStop(1, colors.gradientBottom);
 
     // Fill area under portfolio line
     ctx.beginPath();
@@ -267,7 +302,7 @@ export function EquityCurve({
     ctx.fill();
 
     // Draw portfolio line
-    ctx.strokeStyle = '#3b82f6';
+    ctx.strokeStyle = colors.line;
     ctx.lineWidth = 2;
     ctx.beginPath();
     animatedData.forEach((point, i) => {
@@ -286,9 +321,9 @@ export function EquityCurve({
 
       ctx.beginPath();
       ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#3b82f6';
+      ctx.fillStyle = colors.dot;
       ctx.fill();
-      ctx.strokeStyle = '#ffffff';
+      ctx.strokeStyle = colors.dotStroke;
       ctx.lineWidth = 2;
       ctx.stroke();
     }
@@ -296,7 +331,7 @@ export function EquityCurve({
     // X-axis labels
     const labelCount = Math.min(6, data.length);
     const step = Math.floor(data.length / labelCount);
-    ctx.fillStyle = '#6b7280';
+    ctx.fillStyle = colors.label;
     ctx.font = '11px system-ui';
     ctx.textAlign = 'center';
 
@@ -306,7 +341,7 @@ export function EquityCurve({
       ctx.fillText(label, xScale(i), dimensions.height - 8);
     }
 
-  }, [data, dimensions, animationProgress]);
+  }, [data, dimensions, animationProgress, isDark]);
 
   // Mouse handling for hover
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -335,21 +370,21 @@ export function EquityCurve({
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-6">
           <div>
-            <p className="text-sm text-gray-500">Total Return</p>
-            <p className={`text-xl font-bold ${totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <p className="text-sm text-[var(--color-text-muted)]">Total Return</p>
+            <p className={`text-xl font-bold ${totalReturn >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(2)}%
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">vs S&P 500</p>
-            <p className={`text-xl font-bold ${alpha >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <p className="text-sm text-[var(--color-text-muted)]">vs S&P 500</p>
+            <p className={`text-xl font-bold ${alpha >= 0 ? 'text-green-500' : 'text-red-500'}`}>
               {alpha >= 0 ? '+' : ''}{alpha.toFixed(2)}%
             </p>
           </div>
           {hoveredPoint && (
-            <div className="border-l pl-4 border-gray-200">
-              <p className="text-sm text-gray-500">{new Date(hoveredPoint.date).toLocaleDateString()}</p>
-              <p className="text-lg font-semibold text-gray-900">
+            <div className="border-l pl-4 border-[var(--color-border)]">
+              <p className="text-sm text-[var(--color-text-muted)]">{new Date(hoveredPoint.date).toLocaleDateString()}</p>
+              <p className="text-lg font-semibold text-[var(--color-text)]">
                 ${hoveredPoint.portfolio.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </p>
             </div>
@@ -357,15 +392,15 @@ export function EquityCurve({
         </div>
 
         {/* Timeframe selector */}
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex gap-1 bg-[var(--color-bg-tertiary)] rounded-lg p-1">
           {(['1W', '1M', '3M', '6M', '1Y', 'YTD'] as const).map((tf) => (
             <button
               key={tf}
               onClick={() => setSelectedTimeframe(tf)}
               className={`px-3 py-1 text-xs rounded-md transition-colors ${
                 selectedTimeframe === tf
-                  ? 'bg-white shadow text-gray-900'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
               }`}
             >
               {tf}
@@ -387,12 +422,12 @@ export function EquityCurve({
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 bg-blue-500" />
-          <span className="text-gray-600">Portfolio</span>
+          <div className="w-4 h-0.5 bg-blue-500 dark:bg-blue-400" />
+          <span className="text-[var(--color-text-secondary)]">Portfolio</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 bg-gray-400 border-dashed border-t-2 border-gray-400" style={{ borderStyle: 'dashed' }} />
-          <span className="text-gray-600">S&P 500</span>
+          <div className="w-4 h-0.5 border-dashed border-t-2 border-[var(--color-text-muted)]" />
+          <span className="text-[var(--color-text-secondary)]">S&P 500</span>
         </div>
       </div>
     </Card>

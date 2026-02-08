@@ -218,7 +218,7 @@ function PageLoader() {
     <div className="min-h-[400px] flex items-center justify-center">
       <div className="text-center">
         <Spinner size="lg" />
-        <p className="mt-4 text-gray-500 animate-pulse">Loading...</p>
+        <p className="mt-4 text-[var(--color-text-muted)] animate-pulse">Loading...</p>
       </div>
     </div>
   );

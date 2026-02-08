@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Card } from '@/components/shared/Card';
 import { TrendingUp, TrendingDown, Target, AlertTriangle } from 'lucide-react';
+import { useThemeStore } from '@/stores/themeStore';
 
 interface MonteCarloResult {
   medianReturn: number;
@@ -30,6 +31,7 @@ export function MonteCarloChart({
 }: MonteCarloChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 200 });
+  const isDark = useThemeStore((s) => s.resolved === 'dark');
 
   // Generate histogram data from simulations or confidence interval
   const generateHistogramData = () => {
@@ -145,10 +147,16 @@ export function MonteCarloChart({
       ctx.fillRect(x, y, barWidth, barHeight);
     });
 
+    // Theme-aware colors
+    const zeroColor = isDark ? 'rgba(255, 255, 255, 0.5)' : '#374151';
+    const varColor = isDark ? '#f87171' : '#dc2626';
+    const medianColor = isDark ? '#60a5fa' : '#3b82f6';
+    const labelColor = isDark ? 'rgba(255, 255, 255, 0.5)' : '#6b7280';
+
     // Draw zero line
     const zeroX = padding.left + ((0 - minVal) / (maxVal - minVal)) * chartWidth;
     if (zeroX > padding.left && zeroX < dimensions.width - padding.right) {
-      ctx.strokeStyle = '#374151';
+      ctx.strokeStyle = zeroColor;
       ctx.lineWidth = 2;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
@@ -157,7 +165,7 @@ export function MonteCarloChart({
       ctx.stroke();
       ctx.setLineDash([]);
 
-      ctx.fillStyle = '#374151';
+      ctx.fillStyle = zeroColor;
       ctx.font = 'bold 11px system-ui';
       ctx.textAlign = 'center';
       ctx.fillText('0%', zeroX, padding.top + chartHeight + 20);
@@ -166,14 +174,14 @@ export function MonteCarloChart({
     // Draw VaR line
     const { p5 } = result.confidenceInterval;
     const varX = padding.left + ((p5 - minVal) / (maxVal - minVal)) * chartWidth;
-    ctx.strokeStyle = '#dc2626';
+    ctx.strokeStyle = varColor;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(varX, padding.top);
     ctx.lineTo(varX, padding.top + chartHeight);
     ctx.stroke();
 
-    ctx.fillStyle = '#dc2626';
+    ctx.fillStyle = varColor;
     ctx.font = '10px system-ui';
     ctx.textAlign = 'center';
     ctx.fillText(`VaR ${(p5 * 100).toFixed(1)}%`, varX, padding.top - 5);
@@ -181,18 +189,18 @@ export function MonteCarloChart({
     // Draw median line
     const { p50 } = result.confidenceInterval;
     const medianX = padding.left + ((p50 - minVal) / (maxVal - minVal)) * chartWidth;
-    ctx.strokeStyle = '#3b82f6';
+    ctx.strokeStyle = medianColor;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(medianX, padding.top);
     ctx.lineTo(medianX, padding.top + chartHeight);
     ctx.stroke();
 
-    ctx.fillStyle = '#3b82f6';
+    ctx.fillStyle = medianColor;
     ctx.fillText(`Median ${(p50 * 100).toFixed(1)}%`, medianX, padding.top - 5);
 
     // X-axis labels
-    ctx.fillStyle = '#6b7280';
+    ctx.fillStyle = labelColor;
     ctx.font = '11px system-ui';
     ctx.textAlign = 'center';
 
@@ -210,59 +218,59 @@ export function MonteCarloChart({
     ctx.fillText('Frequency', 0, 0);
     ctx.restore();
 
-  }, [result, dimensions]);
+  }, [result, dimensions, isDark]);
 
   const isPositive = result.medianReturn > 0;
 
   return (
     <Card className={`p-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Monte Carlo Simulation</h3>
-        <span className="text-sm text-gray-500">10,000 scenarios • {timeHorizon}</span>
+        <h3 className="text-lg font-semibold text-[var(--color-text)]">Monte Carlo Simulation</h3>
+        <span className="text-sm text-[var(--color-text-muted)]">10,000 scenarios • {timeHorizon}</span>
       </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="p-3 bg-gray-50 rounded-lg">
+        <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
           <div className="flex items-center gap-2 mb-1">
             <Target className="w-4 h-4 text-blue-500" />
-            <span className="text-xs text-gray-500">Median Return</span>
+            <span className="text-xs text-[var(--color-text-muted)]">Median Return</span>
           </div>
-          <p className={`text-lg font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          <p className={`text-lg font-bold ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
             {isPositive ? '+' : ''}{(result.medianReturn * 100).toFixed(1)}%
           </p>
         </div>
 
-        <div className="p-3 bg-gray-50 rounded-lg">
+        <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
           <div className="flex items-center gap-2 mb-1">
             {result.probPositive >= 0.5 ? (
               <TrendingUp className="w-4 h-4 text-green-500" />
             ) : (
               <TrendingDown className="w-4 h-4 text-red-500" />
             )}
-            <span className="text-xs text-gray-500">Prob. Positive</span>
+            <span className="text-xs text-[var(--color-text-muted)]">Prob. Positive</span>
           </div>
-          <p className={`text-lg font-bold ${result.probPositive >= 0.5 ? 'text-green-600' : 'text-red-600'}`}>
+          <p className={`text-lg font-bold ${result.probPositive >= 0.5 ? 'text-green-500' : 'text-red-500'}`}>
             {(result.probPositive * 100).toFixed(0)}%
           </p>
         </div>
 
-        <div className="p-3 bg-gray-50 rounded-lg">
+        <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
           <div className="flex items-center gap-2 mb-1">
             <AlertTriangle className="w-4 h-4 text-amber-500" />
-            <span className="text-xs text-gray-500">VaR (95%)</span>
+            <span className="text-xs text-[var(--color-text-muted)]">VaR (95%)</span>
           </div>
-          <p className="text-lg font-bold text-red-600">
+          <p className="text-lg font-bold text-red-500">
             {(result.var95 * 100).toFixed(1)}%
           </p>
         </div>
 
-        <div className="p-3 bg-gray-50 rounded-lg">
+        <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
           <div className="flex items-center gap-2 mb-1">
             <AlertTriangle className="w-4 h-4 text-red-500" />
-            <span className="text-xs text-gray-500">CVaR (95%)</span>
+            <span className="text-xs text-[var(--color-text-muted)]">CVaR (95%)</span>
           </div>
-          <p className="text-lg font-bold text-red-600">
+          <p className="text-lg font-bold text-red-500">
             {(result.cvar95 * 100).toFixed(1)}%
           </p>
         </div>
@@ -274,12 +282,12 @@ export function MonteCarloChart({
       </div>
 
       {/* Confidence Intervals */}
-      <div className="mt-4 pt-4 border-t border-gray-100">
-        <p className="text-sm font-medium text-gray-700 mb-2">Confidence Intervals</p>
+      <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+        <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">Confidence Intervals</p>
         <div className="flex items-center gap-2">
           <div className="flex-1 h-8 relative">
             {/* Background track */}
-            <div className="absolute inset-y-2 inset-x-0 bg-gray-100 rounded-full" />
+            <div className="absolute inset-y-2 inset-x-0 bg-[var(--color-bg-tertiary)] rounded-full" />
 
             {/* 90% interval (5th to 95th percentile) */}
             <div
@@ -308,14 +316,14 @@ export function MonteCarloChart({
             />
           </div>
         </div>
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <div className="flex justify-between text-xs text-[var(--color-text-muted)] mt-1">
           <span>{(result.confidenceInterval.p5 * 100).toFixed(1)}%</span>
           <span>{(result.confidenceInterval.p25 * 100).toFixed(1)}%</span>
-          <span className="font-medium text-blue-600">{(result.confidenceInterval.p50 * 100).toFixed(1)}%</span>
+          <span className="font-medium text-blue-500">{(result.confidenceInterval.p50 * 100).toFixed(1)}%</span>
           <span>{(result.confidenceInterval.p75 * 100).toFixed(1)}%</span>
           <span>{(result.confidenceInterval.p95 * 100).toFixed(1)}%</span>
         </div>
-        <div className="flex justify-between text-xs text-gray-400 mt-0.5">
+        <div className="flex justify-between text-xs text-[var(--color-text-muted)] mt-0.5">
           <span>5th</span>
           <span>25th</span>
           <span>Median</span>

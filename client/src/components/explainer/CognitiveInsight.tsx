@@ -212,10 +212,10 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
   };
 
   const insightTypeStyles = {
-    risk: 'border-l-amber-500 bg-amber-50',
-    opportunity: 'border-l-green-500 bg-green-50',
-    action: 'border-l-blue-500 bg-blue-50',
-    factor: 'border-l-purple-500 bg-purple-50',
+    risk: 'border-l-amber-500 bg-amber-500/10',
+    opportunity: 'border-l-green-500 bg-green-500/10',
+    action: 'border-l-blue-500 bg-blue-500/10',
+    factor: 'border-l-purple-500 bg-purple-500/10',
   };
 
   return (
@@ -229,8 +229,8 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
       }
     >
       {insights.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          <Sparkles className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+        <div className="text-center py-8 text-[var(--color-text-muted)]">
+          <Sparkles className="w-12 h-12 mx-auto mb-3 text-[var(--color-text-muted)] opacity-50" />
           <p>Add positions to receive AI-powered analysis of your portfolio.</p>
           <p className="text-sm mt-2">
             Our cognitive engine analyzes 80+ factors to provide actionable insights.
@@ -247,21 +247,21 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
                 <div className="flex-shrink-0 mt-0.5">{insight.icon}</div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <h4 className="font-medium text-gray-900">{insight.title}</h4>
+                    <h4 className="font-medium text-[var(--color-text)]">{insight.title}</h4>
                     {insight.confidence && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-[var(--color-text-muted)]">
                         {(insight.confidence * 100).toFixed(0)}% confidence
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-700">{insight.content}</p>
+                  <p className="text-sm text-[var(--color-text-secondary)]">{insight.content}</p>
                 </div>
               </div>
             </div>
           ))}
 
           {lastUpdated && (
-            <p className="text-xs text-gray-400 text-right">
+            <p className="text-xs text-[var(--color-text-muted)] text-right">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </p>
           )}

@@ -42,20 +42,20 @@ interface FactorExposuresProps {
 function NetExposureIndicator({ value }: { value: number }) {
   if (Math.abs(value) < 0.1) {
     return (
-      <span className="flex items-center gap-1 text-gray-500">
+      <span className="flex items-center gap-1 text-[var(--color-text-muted)]">
         <Minus className="w-3 h-3" /> Neutral
       </span>
     );
   }
   if (value > 0) {
     return (
-      <span className="flex items-center gap-1 text-green-600">
+      <span className="flex items-center gap-1 text-green-500">
         <TrendingUp className="w-3 h-3" /> +{value.toFixed(2)}
       </span>
     );
   }
   return (
-    <span className="flex items-center gap-1 text-red-600">
+    <span className="flex items-center gap-1 text-red-500">
       <TrendingDown className="w-3 h-3" /> {value.toFixed(2)}
     </span>
   );
@@ -103,11 +103,11 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
     <Card
       title="Factor Exposures"
       action={
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+        <div className="flex gap-1 bg-[var(--color-bg-tertiary)] rounded-lg p-0.5">
           <button
             onClick={() => setViewMode('grouped')}
             className={`px-3 py-1 text-xs rounded-md transition-colors ${
-              viewMode === 'grouped' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'
+              viewMode === 'grouped' ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
             }`}
           >
             Grouped
@@ -115,7 +115,7 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
           <button
             onClick={() => setViewMode('flat')}
             className={`px-3 py-1 text-xs rounded-md transition-colors ${
-              viewMode === 'flat' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-900'
+              viewMode === 'flat' ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
             }`}
           >
             By Impact
@@ -124,12 +124,12 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
       }
     >
       {factors.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-[var(--color-text-muted)]">
           <p>No factor exposures calculated yet.</p>
           <p className="text-sm mt-2">Add positions to see factor analysis.</p>
           <Link
             to="/help#what-are-factors"
-            className="inline-flex items-center gap-1 mt-4 text-sm text-blue-600 hover:text-blue-700"
+            className="inline-flex items-center gap-1 mt-4 text-sm text-blue-500 hover:text-blue-400"
           >
             <HelpCircle className="w-4 h-4" />
             Learn about factors
@@ -145,27 +145,27 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
             const netExposure = categoryNetExposure[category];
 
             return (
-              <div key={category} className="border border-gray-200 rounded-lg overflow-hidden">
+              <div key={category} className="border border-[var(--color-border)] rounded-lg overflow-hidden">
                 <button
                   onClick={() => toggleCategory(category)}
-                  className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  className="w-full flex items-center justify-between p-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="font-medium text-gray-900">{category}</span>
-                    <span className="text-xs text-gray-500">({categoryFactors.length})</span>
+                    <span className="font-medium text-[var(--color-text)]">{category}</span>
+                    <span className="text-xs text-[var(--color-text-muted)]">({categoryFactors.length})</span>
                   </div>
                   <div className="flex items-center gap-4">
                     <NetExposureIndicator value={netExposure} />
                     {isExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-gray-400" />
+                      <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
                     ) : (
-                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                      <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
                     )}
                   </div>
                 </button>
 
                 {isExpanded && (
-                  <div className="p-3 space-y-4 bg-white">
+                  <div className="p-3 space-y-4 bg-[var(--color-bg)]">
                     {categoryFactors.map((factor) => (
                       <FactorBar key={factor.factor} factor={factor} showCategory={false} />
                     ))}
@@ -181,7 +181,7 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
             <FactorBar key={factor.factor} factor={factor} />
           ))}
           {sortedFactors.length > 10 && (
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-xs text-[var(--color-text-muted)] text-center">
               Showing top 10 of {sortedFactors.length} factors by impact
             </p>
           )}
@@ -189,14 +189,14 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
       )}
 
       {insight && (
-        <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+        <div className="mt-6 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-blue-600 text-lg">🧠</span>
+            <div className="flex-shrink-0 w-8 h-8 bg-blue-500/10 rounded-full flex items-center justify-center">
+              <span className="text-lg">🧠</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-blue-900 mb-1">AI Insight</p>
-              <p className="text-sm text-blue-800">{insight}</p>
+              <p className="text-sm font-medium text-[var(--color-text)] mb-1">AI Insight</p>
+              <p className="text-sm text-[var(--color-text-secondary)]">{insight}</p>
             </div>
           </div>
         </div>

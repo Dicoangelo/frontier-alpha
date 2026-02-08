@@ -62,14 +62,14 @@ function MetricCard({
   helpKey?: string;
 }) {
   return (
-    <div className="p-4 bg-gray-50 rounded-lg">
+    <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <p className="text-sm text-gray-500">{label}</p>
+        <p className="text-sm text-[var(--color-text-muted)]">{label}</p>
         {helpKey && <HelpTooltip metricKey={helpKey} size="sm" />}
       </div>
       <div className="flex items-center justify-between">
-        <p className="text-xl font-bold text-gray-800">{value}</p>
+        <p className="text-xl font-bold text-[var(--color-text)]">{value}</p>
         <Badge variant={badge.variant}>{badge.text}</Badge>
       </div>
     </div>

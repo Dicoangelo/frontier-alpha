@@ -53,11 +53,11 @@ export function WelcomeModal({ isOpen, onClose, onStartTour, onTryDemo }: Welcom
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-scale-in">
+      <div className="relative bg-[var(--color-bg)] rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-scale-in">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors z-10"
+          className="absolute top-4 right-4 p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors z-10"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
@@ -66,7 +66,7 @@ export function WelcomeModal({ isOpen, onClose, onStartTour, onTryDemo }: Welcom
         {/* Header with gradient */}
         <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 px-8 py-10 text-white">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-[var(--color-bg)]/20 rounded-xl flex items-center justify-center">
               <TrendingUp className="w-6 h-6" />
             </div>
             <span className="text-lg font-semibold">Frontier Alpha</span>
@@ -81,19 +81,19 @@ export function WelcomeModal({ isOpen, onClose, onStartTour, onTryDemo }: Welcom
 
         {/* Features */}
         <div className="p-6">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-4">
             What you'll get
           </h2>
           <div className="grid grid-cols-2 gap-4 mb-6">
             {features.map((feature, index) => (
               <div
                 key={feature.title}
-                className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors animate-fade-in-up"
+                className="p-4 bg-[var(--color-bg-tertiary)] rounded-xl hover:bg-[var(--color-bg-secondary)] transition-colors animate-fade-in-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <feature.icon className="w-6 h-6 text-blue-600 mb-2" />
-                <h3 className="font-semibold text-gray-900 text-sm">{feature.title}</h3>
-                <p className="text-xs text-gray-500 mt-1">{feature.description}</p>
+                <h3 className="font-semibold text-[var(--color-text)] text-sm">{feature.title}</h3>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -116,7 +116,7 @@ export function WelcomeModal({ isOpen, onClose, onStartTour, onTryDemo }: Welcom
             </Button>
             <button
               onClick={onClose}
-              className="w-full text-sm text-gray-500 hover:text-gray-700 py-2"
+              className="w-full text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] py-2"
             >
               Skip for now
             </button>

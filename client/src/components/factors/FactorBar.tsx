@@ -50,7 +50,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   Size: 'bg-indigo-100 text-indigo-700 border-indigo-200',
   Macro: 'bg-red-100 text-red-700 border-red-200',
   Sector: 'bg-cyan-100 text-cyan-700 border-cyan-200',
-  Other: 'bg-gray-100 text-gray-700 border-gray-200',
+  Other: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)]',
 };
 
 const BAR_COLORS: Record<string, { positive: string; negative: string }> = {
@@ -61,7 +61,7 @@ const BAR_COLORS: Record<string, { positive: string; negative: string }> = {
   Size: { positive: 'bg-indigo-500', negative: 'bg-indigo-400' },
   Macro: { positive: 'bg-red-500', negative: 'bg-red-400' },
   Sector: { positive: 'bg-cyan-500', negative: 'bg-cyan-400' },
-  Other: { positive: 'bg-gray-500', negative: 'bg-gray-400' },
+  Other: { positive: 'bg-gray-500', negative: 'bg-[var(--color-text-muted)]' },
 };
 
 interface FactorBarProps {
@@ -82,7 +82,7 @@ export function FactorBar({ factor, showCategory = true }: FactorBarProps) {
   // Signal strength indicator
   const signalStrength = Math.abs(factor.tStat);
   const signalLabel = signalStrength >= 2 ? 'Strong' : signalStrength >= 1 ? 'Moderate' : 'Weak';
-  const signalColor = signalStrength >= 2 ? 'text-green-600' : signalStrength >= 1 ? 'text-yellow-600' : 'text-gray-500';
+  const signalColor = signalStrength >= 2 ? 'text-green-600' : signalStrength >= 1 ? 'text-yellow-600' : 'text-[var(--color-text-muted)]';
 
   return (
     <div className="space-y-1.5">
@@ -93,14 +93,14 @@ export function FactorBar({ factor, showCategory = true }: FactorBarProps) {
               {info.category}
             </span>
           )}
-          <span className="text-sm font-medium text-gray-700 capitalize">
+          <span className="text-sm font-medium text-[var(--color-text-secondary)] capitalize">
             {factor.factor.replace(/_/g, ' ')}
           </span>
           <div className="relative">
             <button
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             >
               <Info className="w-3.5 h-3.5" />
             </button>
@@ -120,17 +120,17 @@ export function FactorBar({ factor, showCategory = true }: FactorBarProps) {
         </div>
       </div>
 
-      <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
+      <div className="relative h-3 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
         {/* Background grid */}
         <div className="absolute inset-0 flex">
-          <div className="w-1/4 border-r border-gray-200" />
-          <div className="w-1/4 border-r border-gray-300" />
-          <div className="w-1/4 border-r border-gray-200" />
+          <div className="w-1/4 border-r border-[var(--color-border)]" />
+          <div className="w-1/4 border-r border-[var(--color-border)]" />
+          <div className="w-1/4 border-r border-[var(--color-border)]" />
           <div className="w-1/4" />
         </div>
 
         {/* Center line */}
-        <div className="absolute top-0 left-1/2 w-0.5 h-full bg-gray-400 z-10" />
+        <div className="absolute top-0 left-1/2 w-0.5 h-full bg-[var(--color-text-muted)] z-10" />
 
         {/* Bar */}
         <div
@@ -144,7 +144,7 @@ export function FactorBar({ factor, showCategory = true }: FactorBarProps) {
         />
       </div>
 
-      <div className="flex justify-between text-xs text-gray-500">
+      <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
         <span>
           t-stat: <span className={factor.tStat >= 2 ? 'text-green-600 font-medium' : ''}>
             {factor.tStat.toFixed(2)}

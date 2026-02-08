@@ -193,7 +193,7 @@ export function FeatureTour({ isActive, onComplete, onSkip }: FeatureTourProps) 
 
       {/* Tooltip */}
       <div
-        className="fixed z-50 w-80 bg-white rounded-xl shadow-2xl animate-scale-in"
+        className="fixed z-50 w-80 bg-[var(--color-bg)] rounded-xl shadow-2xl animate-scale-in"
         style={{
           top: tooltipPosition.top,
           left: tooltipPosition.left,
@@ -202,7 +202,7 @@ export function FeatureTour({ isActive, onComplete, onSkip }: FeatureTourProps) 
         {/* Skip button */}
         <button
           onClick={onSkip}
-          className="absolute top-3 right-3 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute top-3 right-3 p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
           aria-label="Skip tour"
         >
           <X className="w-4 h-4" />
@@ -217,17 +217,17 @@ export function FeatureTour({ isActive, onComplete, onSkip }: FeatureTourProps) 
                 className={`h-1.5 rounded-full transition-all ${
                   index <= currentStep
                     ? 'w-6 bg-blue-600'
-                    : 'w-1.5 bg-gray-200'
+                    : 'w-1.5 bg-[var(--color-border)]'
                 }`}
               />
             ))}
           </div>
 
           {/* Content */}
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-lg font-semibold text-[var(--color-text)] mb-2">
             {step.title}
           </h3>
-          <p className="text-gray-600 text-sm mb-4">
+          <p className="text-[var(--color-text-secondary)] text-sm mb-4">
             {step.content}
           </p>
 
@@ -236,13 +236,13 @@ export function FeatureTour({ isActive, onComplete, onSkip }: FeatureTourProps) 
             <button
               onClick={handlePrev}
               disabled={currentStep === 0}
-              className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-4 h-4" />
               Back
             </button>
 
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-[var(--color-text-muted)]">
               {currentStep + 1} of {tourSteps.length}
             </span>
 

@@ -106,23 +106,23 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
       // Default error UI
       return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="min-h-screen bg-[var(--color-bg-tertiary)] flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-[var(--color-bg)] rounded-xl shadow-lg p-8 text-center">
+            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertTriangle className="w-8 h-8 text-red-500" />
             </div>
 
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-[var(--color-text)] mb-2">
               Something went wrong
             </h1>
 
-            <p className="text-gray-600 mb-6">
+            <p className="text-[var(--color-text-secondary)] mb-6">
               We apologize for the inconvenience. Our team has been notified and
               is working to fix the issue.
             </p>
 
             {this.state.eventId && (
-              <p className="text-xs text-gray-400 mb-6 font-mono">
+              <p className="text-xs text-[var(--color-text-muted)] mb-6 font-mono">
                 Error ID: {this.state.eventId}
               </p>
             )}
@@ -138,7 +138,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
               <button
                 onClick={this.handleGoHome}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
               >
                 <Home className="w-4 h-4" />
                 Go to Dashboard
@@ -147,20 +147,20 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
             {import.meta.env.DEV && this.state.error && (
               <details className="mt-6 text-left">
-                <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700">
+                <summary className="text-sm text-[var(--color-text-muted)] cursor-pointer hover:text-[var(--color-text-secondary)]">
                   Technical Details
                 </summary>
-                <div className="mt-2 p-3 bg-gray-100 rounded text-xs font-mono overflow-auto max-h-48">
+                <div className="mt-2 p-3 bg-[var(--color-bg-secondary)] rounded text-xs font-mono overflow-auto max-h-48">
                   <p className="text-red-600 font-semibold">
                     {this.state.error.name}: {this.state.error.message}
                   </p>
                   {this.state.error.stack && (
-                    <pre className="mt-2 text-gray-600 whitespace-pre-wrap">
+                    <pre className="mt-2 text-[var(--color-text-secondary)] whitespace-pre-wrap">
                       {this.state.error.stack}
                     </pre>
                   )}
                   {this.state.errorInfo?.componentStack && (
-                    <pre className="mt-2 text-gray-500 whitespace-pre-wrap">
+                    <pre className="mt-2 text-[var(--color-text-muted)] whitespace-pre-wrap">
                       Component Stack:
                       {this.state.errorInfo.componentStack}
                     </pre>
@@ -201,7 +201,7 @@ export function SectionErrorBoundary({ children, sectionName }: SectionErrorBoun
   return (
     <ErrorBoundary
       fallback={
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+        <div className="bg-red-500/10 border border-red-200 rounded-lg p-6 text-center">
           <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-3" />
           <p className="text-red-700 font-medium">
             Failed to load {sectionName || 'this section'}

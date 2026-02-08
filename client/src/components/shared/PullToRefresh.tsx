@@ -110,7 +110,7 @@ export function PullToRefresh({
       >
         <div
           className={`
-            w-10 h-10 rounded-full bg-white shadow-lg
+            w-10 h-10 rounded-full bg-[var(--color-bg)] shadow-lg
             flex items-center justify-center
             transition-transform duration-200
             ${isRefreshing ? 'animate-spin' : ''}
@@ -121,7 +121,7 @@ export function PullToRefresh({
         >
           <RefreshCw
             className={`w-5 h-5 ${
-              progress >= 1 ? 'text-blue-600' : 'text-gray-400'
+              progress >= 1 ? 'text-blue-600' : 'text-[var(--color-text-muted)]'
             }`}
           />
         </div>

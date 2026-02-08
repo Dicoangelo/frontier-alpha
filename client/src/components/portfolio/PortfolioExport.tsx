@@ -129,10 +129,10 @@ export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExport
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
           {/* Dropdown */}
-          <div className="absolute right-0 mt-2 w-64 rounded-lg border border-gray-200 bg-white shadow-lg z-50">
-            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-              <h3 className="font-medium text-gray-900">Export Portfolio</h3>
-              <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-500">
+          <div className="absolute right-0 mt-2 w-64 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] shadow-lg z-50">
+            <div className="flex items-center justify-between border-b border-[var(--color-border-light)] px-4 py-3">
+              <h3 className="font-medium text-[var(--color-text)]">Export Portfolio</h3>
+              <button onClick={() => setIsOpen(false)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-muted)]">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -140,27 +140,27 @@ export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExport
             <div className="p-2">
               <button
                 onClick={exportAsCSV}
-                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-gray-50"
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--color-bg-tertiary)]"
               >
                 <FileText className="h-5 w-5 text-green-600" />
                 <div>
-                  <p className="font-medium text-gray-700">Download CSV</p>
-                  <p className="text-xs text-gray-500">Spreadsheet format</p>
+                  <p className="font-medium text-[var(--color-text-secondary)]">Download CSV</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">Spreadsheet format</p>
                 </div>
               </button>
 
               <button
                 onClick={exportAsJSON}
-                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-gray-50"
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--color-bg-tertiary)]"
               >
                 <FileJson className="h-5 w-5 text-blue-600" />
                 <div>
-                  <p className="font-medium text-gray-700">Download JSON</p>
-                  <p className="text-xs text-gray-500">Developer format</p>
+                  <p className="font-medium text-[var(--color-text-secondary)]">Download JSON</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">Developer format</p>
                 </div>
               </button>
 
-              <div className="my-2 border-t border-gray-100" />
+              <div className="my-2 border-t border-[var(--color-border-light)]" />
 
               <button
                 onClick={() => {
@@ -171,38 +171,38 @@ export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExport
                     setShowShareModal(true);
                   }
                 }}
-                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-gray-50"
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--color-bg-tertiary)]"
               >
                 <Link2 className="h-5 w-5 text-purple-600" />
                 <div>
-                  <p className="font-medium text-gray-700">Create Share Link</p>
-                  <p className="text-xs text-gray-500">Generate secure share URL</p>
+                  <p className="font-medium text-[var(--color-text-secondary)]">Create Share Link</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">Generate secure share URL</p>
                 </div>
               </button>
 
               <button
                 onClick={shareViaWebShare}
-                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-gray-50"
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--color-bg-tertiary)]"
               >
                 <Share2 className="h-5 w-5 text-blue-600" />
                 <div>
-                  <p className="font-medium text-gray-700">Quick Share</p>
-                  <p className="text-xs text-gray-500">Use device share menu</p>
+                  <p className="font-medium text-[var(--color-text-secondary)]">Quick Share</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">Use device share menu</p>
                 </div>
               </button>
 
               <button
                 onClick={copyShareLink}
-                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-gray-50"
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--color-bg-tertiary)]"
               >
                 {copied ? (
                   <Check className="h-5 w-5 text-green-600" />
                 ) : (
-                  <Copy className="h-5 w-5 text-gray-400" />
+                  <Copy className="h-5 w-5 text-[var(--color-text-muted)]" />
                 )}
                 <div>
-                  <p className="font-medium text-gray-700">{copied ? 'Copied!' : 'Copy Page URL'}</p>
-                  <p className="text-xs text-gray-500">Copy current page link</p>
+                  <p className="font-medium text-[var(--color-text-secondary)]">{copied ? 'Copied!' : 'Copy Page URL'}</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">Copy current page link</p>
                 </div>
               </button>
             </div>

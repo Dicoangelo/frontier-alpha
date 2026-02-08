@@ -37,7 +37,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="email" className="block text-sm font-medium text-[var(--color-text-secondary)]">
           Email
         </label>
         <input
@@ -46,13 +46,13 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-4 py-3 border border-[var(--color-border)] rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder="you@example.com"
         />
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="password" className="block text-sm font-medium text-[var(--color-text-secondary)]">
           Password
         </label>
         <input
@@ -62,14 +62,14 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
-          className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-4 py-3 border border-[var(--color-border)] rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder="••••••••"
         />
-        <p className="mt-1 text-xs text-gray-500">Must be at least 6 characters</p>
+        <p className="mt-1 text-xs text-[var(--color-text-muted)]">Must be at least 6 characters</p>
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-[var(--color-text-secondary)]">
           Confirm Password
         </label>
         <input
@@ -78,7 +78,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
-          className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-4 py-3 border border-[var(--color-border)] rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           placeholder="••••••••"
         />
       </div>
@@ -86,8 +86,8 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
       {displayError && (
         <div className={`p-3 rounded-lg border ${
           displayError.includes('check your email')
-            ? 'bg-green-50 border-green-200'
-            : 'bg-red-50 border-red-200'
+            ? 'bg-green-500/10 border-green-200'
+            : 'bg-red-500/10 border-red-200'
         }`}>
           <p className={`text-sm ${
             displayError.includes('check your email')
@@ -103,7 +103,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         {loading ? <Spinner className="w-5 h-5" /> : 'Create Account'}
       </Button>
 
-      <p className="text-center text-sm text-gray-600">
+      <p className="text-center text-sm text-[var(--color-text-secondary)]">
         Already have an account?{' '}
         <button
           type="button"

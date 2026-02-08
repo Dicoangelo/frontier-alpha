@@ -21,28 +21,28 @@ const icons = {
 
 const colors = {
   success: {
-    bg: 'bg-green-50',
+    bg: 'bg-green-500/10',
     border: 'border-green-200',
     icon: 'text-green-500',
     title: 'text-green-800',
     message: 'text-green-600',
   },
   error: {
-    bg: 'bg-red-50',
+    bg: 'bg-red-500/10',
     border: 'border-red-200',
     icon: 'text-red-500',
     title: 'text-red-800',
     message: 'text-red-600',
   },
   info: {
-    bg: 'bg-blue-50',
+    bg: 'bg-blue-500/10',
     border: 'border-blue-200',
     icon: 'text-blue-500',
     title: 'text-blue-800',
     message: 'text-blue-600',
   },
   warning: {
-    bg: 'bg-amber-50',
+    bg: 'bg-amber-500/10',
     border: 'border-amber-200',
     icon: 'text-amber-500',
     title: 'text-amber-800',

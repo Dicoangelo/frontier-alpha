@@ -123,7 +123,7 @@ export function HelpTooltip({
         onClick={() => setIsOpen(!isOpen)}
         onMouseEnter={() => setIsOpen(true)}
         onMouseLeave={() => setIsOpen(false)}
-        className="text-gray-400 hover:text-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-full p-0.5"
+        className="text-[var(--color-text-muted)] hover:text-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-full p-0.5"
         aria-label={`Help: ${title}`}
         aria-expanded={isOpen}
         type="button"
@@ -137,7 +137,7 @@ export function HelpTooltip({
           className={`
             absolute z-50 ${positionClasses[actualPosition]}
             w-72 max-w-[calc(100vw-2rem)]
-            bg-white rounded-lg shadow-xl border border-gray-200
+            bg-[var(--color-bg)] rounded-lg shadow-xl border border-[var(--color-border)]
             animate-fade-in
           `}
           role="tooltip"
@@ -150,20 +150,20 @@ export function HelpTooltip({
 
           <div className="p-4">
             <div className="flex items-start justify-between gap-2 mb-2">
-              <h4 className="font-semibold text-gray-900 text-sm">{title}</h4>
+              <h4 className="font-semibold text-[var(--color-text)] text-sm">{title}</h4>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-gray-600 -mt-1 -mr-1 p-1"
+                className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] -mt-1 -mr-1 p-1"
                 aria-label="Close tooltip"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-sm text-gray-600 leading-relaxed">{content}</p>
+            <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{content}</p>
 
             {formula && (
-              <div className="mt-3 p-2 bg-gray-50 rounded text-xs font-mono text-gray-700">
+              <div className="mt-3 p-2 bg-[var(--color-bg-tertiary)] rounded text-xs font-mono text-[var(--color-text-secondary)]">
                 {formula}
               </div>
             )}
@@ -189,7 +189,7 @@ export function InlineHelp({ children, tip, className = '' }: InlineHelpProps) {
 
   return (
     <span
-      className={`relative cursor-help border-b border-dotted border-gray-400 ${className}`}
+      className={`relative cursor-help border-b border-dotted border-[var(--color-border)] ${className}`}
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
     >
@@ -220,7 +220,7 @@ export function HelpBadge({ text, className = '' }: HelpBadgeProps) {
     <span className={`relative inline-block ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-gray-500 bg-gray-100 rounded-full hover:bg-gray-200 hover:text-gray-700 transition-colors"
+        className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] rounded-full hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors"
         aria-label="Show help"
       >
         ?
@@ -231,7 +231,7 @@ export function HelpBadge({ text, className = '' }: HelpBadgeProps) {
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute z-50 bottom-full left-0 mb-2 p-3 bg-white rounded-lg shadow-xl border text-sm text-gray-600 w-64 animate-fade-in">
+          <div className="absolute z-50 bottom-full left-0 mb-2 p-3 bg-[var(--color-bg)] rounded-lg shadow-xl border text-sm text-[var(--color-text-secondary)] w-64 animate-fade-in">
             {text}
           </div>
         </>

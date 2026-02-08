@@ -36,14 +36,14 @@ export function EmptyState({
   return (
     <div className={`flex flex-col items-center justify-center py-12 px-4 text-center ${className}`}>
       {icon && (
-        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 animate-fade-in">
+        <div className="w-16 h-16 rounded-full bg-[var(--color-bg-secondary)] flex items-center justify-center mb-4 animate-fade-in">
           {icon}
         </div>
       )}
-      <h3 className="text-lg font-semibold text-gray-900 mb-2 animate-fade-in-up">
+      <h3 className="text-lg font-semibold text-[var(--color-text)] mb-2 animate-fade-in-up">
         {title}
       </h3>
-      <p className="text-gray-500 max-w-sm mb-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+      <p className="text-[var(--color-text-muted)] max-w-sm mb-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
         {description}
       </p>
       {(action || secondaryAction) && (
@@ -76,7 +76,7 @@ export function EmptyState({
 export function EmptyPortfolio({ onAddPosition }: { onAddPosition: () => void }) {
   return (
     <EmptyState
-      icon={<TrendingUp className="w-8 h-8 text-gray-400" />}
+      icon={<TrendingUp className="w-8 h-8 text-[var(--color-text-muted)]" />}
       title="No positions yet"
       description="Start building your portfolio by adding your first position. Track performance, analyze factors, and get AI-powered insights."
       action={{
@@ -94,7 +94,7 @@ export function EmptyPortfolio({ onAddPosition }: { onAddPosition: () => void })
 export function EmptyAlerts() {
   return (
     <EmptyState
-      icon={<AlertCircle className="w-8 h-8 text-gray-400" />}
+      icon={<AlertCircle className="w-8 h-8 text-[var(--color-text-muted)]" />}
       title="No alerts"
       description="You're all caught up! Risk alerts will appear here when your portfolio needs attention."
     />
@@ -104,7 +104,7 @@ export function EmptyAlerts() {
 export function EmptySearchResults({ query, onClear }: { query: string; onClear: () => void }) {
   return (
     <EmptyState
-      icon={<Search className="w-8 h-8 text-gray-400" />}
+      icon={<Search className="w-8 h-8 text-[var(--color-text-muted)]" />}
       title="No results found"
       description={`We couldn't find anything matching "${query}". Try adjusting your search terms.`}
       action={{
@@ -119,7 +119,7 @@ export function EmptySearchResults({ query, onClear }: { query: string; onClear:
 export function EmptyEarnings() {
   return (
     <EmptyState
-      icon={<FileText className="w-8 h-8 text-gray-400" />}
+      icon={<FileText className="w-8 h-8 text-[var(--color-text-muted)]" />}
       title="No upcoming earnings"
       description="None of your portfolio holdings have earnings announcements scheduled in the next 30 days."
     />
@@ -157,7 +157,7 @@ export function DataLoadError({ onRetry, error }: { onRetry: () => void; error?:
 export function NoFactorData() {
   return (
     <EmptyState
-      icon={<TrendingUp className="w-8 h-8 text-gray-400" />}
+      icon={<TrendingUp className="w-8 h-8 text-[var(--color-text-muted)]" />}
       title="Factor analysis unavailable"
       description="Add positions to your portfolio to see factor exposures and risk analysis."
     />

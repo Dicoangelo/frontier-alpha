@@ -134,7 +134,7 @@ export function BottomSheet({
         ref={sheetRef}
         className={`
           absolute bottom-0 left-0 right-0
-          bg-white rounded-t-2xl shadow-2xl
+          bg-[var(--color-bg)] rounded-t-2xl shadow-2xl
           flex flex-col
           transition-transform duration-300 ease-out
           ${heightClasses[height]}
@@ -154,17 +154,17 @@ export function BottomSheet({
             data-sheet-handle
             className="flex-shrink-0 py-3 cursor-grab active:cursor-grabbing"
           >
-            <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto" />
+            <div className="w-10 h-1 bg-[var(--color-border)] rounded-full mx-auto" />
           </div>
         )}
 
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex-shrink-0 flex items-center justify-between px-6 pb-4 border-b border-gray-100">
+          <div className="flex-shrink-0 flex items-center justify-between px-6 pb-4 border-b border-[var(--color-border-light)]">
             {title && (
               <h2
                 id="sheet-title"
-                className="text-lg font-semibold text-gray-900"
+                className="text-lg font-semibold text-[var(--color-text)]"
               >
                 {title}
               </h2>
@@ -172,7 +172,7 @@ export function BottomSheet({
             {showCloseButton && (
               <button
                 onClick={handleClose}
-                className="p-2.5 -mr-2 min-w-[44px] min-h-[44px] text-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center touch-manipulation"
+                className="p-2.5 -mr-2 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors flex items-center justify-center touch-manipulation"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />

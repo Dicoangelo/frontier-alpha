@@ -31,9 +31,9 @@ export function HelpButton({
         onClick={onClick}
         className={`
           flex items-center gap-2 px-3 py-2
-          text-gray-600 hover:text-blue-600
-          bg-gray-50 hover:bg-blue-50
-          border border-gray-200 hover:border-blue-200
+          text-[var(--color-text-secondary)] hover:text-blue-600
+          bg-[var(--color-bg-tertiary)] hover:bg-blue-50
+          border border-[var(--color-border)] hover:border-blue-200
           rounded-lg transition-all duration-150
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
           ${className}
@@ -52,9 +52,9 @@ export function HelpButton({
       className={`
         ${sizeClasses[size]}
         flex items-center justify-center
-        text-gray-500 hover:text-blue-600
-        bg-white hover:bg-blue-50
-        border border-gray-200 hover:border-blue-300
+        text-[var(--color-text-muted)] hover:text-blue-600
+        bg-[var(--color-bg)] hover:bg-blue-50
+        border border-[var(--color-border)] hover:border-blue-300
         rounded-full shadow-sm hover:shadow
         transition-all duration-150
         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
@@ -111,9 +111,9 @@ export function FloatingHelpButton({
  */
 export function HelpKeyboardHint() {
   return (
-    <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 bg-gray-100 rounded text-xs text-gray-500">
+    <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 bg-[var(--color-bg-secondary)] rounded text-xs text-[var(--color-text-muted)]">
       <span>Press</span>
-      <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-gray-700 font-mono">?</kbd>
+      <kbd className="px-1.5 py-0.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded text-[var(--color-text-secondary)] font-mono">?</kbd>
       <span>for help</span>
     </div>
   );

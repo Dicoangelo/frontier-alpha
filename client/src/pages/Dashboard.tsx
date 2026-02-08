@@ -378,7 +378,7 @@ export function Dashboard() {
   // Show empty state if no positions
   if (portfolio.positions.length === 0 && portfolio.id !== 'demo') {
     return (
-      <div className="min-h-[400px] flex items-center justify-center bg-white rounded-xl shadow-lg">
+      <div className="min-h-[400px] flex items-center justify-center bg-[var(--color-bg)] rounded-xl shadow-lg">
         <EmptyPortfolio onAddPosition={() => window.location.href = '/portfolio'} />
       </div>
     );

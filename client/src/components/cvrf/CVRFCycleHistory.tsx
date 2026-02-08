@@ -27,11 +27,11 @@ function CycleCard({ cycle, index }: CycleCardProps) {
   };
 
   return (
-    <div className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+    <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors">
       <div className="flex items-start justify-between mb-3">
         <div>
-          <div className="text-sm font-medium text-gray-900">Cycle #{index + 1}</div>
-          <div className="text-xs text-gray-500">{formatDate(cycle.timestamp)}</div>
+          <div className="text-sm font-medium text-[var(--color-text)]">Cycle #{index + 1}</div>
+          <div className="text-xs text-[var(--color-text-muted)]">{formatDate(cycle.timestamp)}</div>
         </div>
         <div className={`flex items-center gap-1 ${deltaColor}`}>
           <DeltaIcon className="w-4 h-4" />
@@ -43,28 +43,28 @@ function CycleCard({ cycle, index }: CycleCardProps) {
       </div>
 
       {/* Episode Comparison */}
-      <div className="flex items-center gap-2 text-xs text-gray-600 mb-3">
-        <span className="px-2 py-1 bg-white rounded">
+      <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)] mb-3">
+        <span className="px-2 py-1 bg-[var(--color-bg)] rounded">
           {(cycle.previousEpisodeReturn * 100).toFixed(2)}%
         </span>
         <ArrowRight className="w-3 h-3" />
-        <span className="px-2 py-1 bg-white rounded">
+        <span className="px-2 py-1 bg-[var(--color-bg)] rounded">
           {(cycle.currentEpisodeReturn * 100).toFixed(2)}%
         </span>
       </div>
 
       {/* Metrics */}
       <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="p-2 bg-white rounded">
-          <div className="text-xs text-gray-500">τ (Overlap)</div>
-          <div className="font-bold text-gray-900">{cycle.decisionOverlap.toFixed(2)}</div>
+        <div className="p-2 bg-[var(--color-bg)] rounded">
+          <div className="text-xs text-[var(--color-text-muted)]">τ (Overlap)</div>
+          <div className="font-bold text-[var(--color-text)]">{cycle.decisionOverlap.toFixed(2)}</div>
         </div>
-        <div className="p-2 bg-white rounded">
-          <div className="text-xs text-gray-500">Insights</div>
+        <div className="p-2 bg-[var(--color-bg)] rounded">
+          <div className="text-xs text-[var(--color-text-muted)]">Insights</div>
           <div className="font-bold text-indigo-600">{cycle.insightsCount}</div>
         </div>
-        <div className="p-2 bg-white rounded">
-          <div className="text-xs text-gray-500">Updates</div>
+        <div className="p-2 bg-[var(--color-bg)] rounded">
+          <div className="text-xs text-[var(--color-text-muted)]">Updates</div>
           <div className="font-bold text-purple-600">{cycle.beliefUpdatesCount}</div>
         </div>
       </div>
@@ -72,7 +72,7 @@ function CycleCard({ cycle, index }: CycleCardProps) {
       {/* Regime Change */}
       {cycle.newRegime && (
         <div className="mt-3 flex items-center gap-2 text-xs">
-          <span className="text-gray-500">New Regime:</span>
+          <span className="text-[var(--color-text-muted)]">New Regime:</span>
           <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full capitalize">
             {cycle.newRegime}
           </span>
@@ -87,11 +87,11 @@ export function CVRFCycleHistory() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
-        <div className="h-6 bg-gray-200 rounded w-1/3 mb-4" />
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6 animate-pulse">
+        <div className="h-6 bg-[var(--color-border)] rounded w-1/3 mb-4" />
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-gray-100 rounded-lg" />
+            <div key={i} className="h-32 bg-[var(--color-bg-secondary)] rounded-lg" />
           ))}
         </div>
       </div>
@@ -100,7 +100,7 @@ export function CVRFCycleHistory() {
 
   if (isError) {
     return (
-      <div className="bg-white rounded-xl border border-red-200 p-6">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-red-200 p-6">
         <div className="text-red-500 text-sm">Failed to load cycle history</div>
       </div>
     );
@@ -114,13 +114,13 @@ export function CVRFCycleHistory() {
       : 0;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
           <History className="w-5 h-5 text-indigo-500" />
           CVRF Cycles
         </h3>
-        <span className="text-xs text-gray-500">{cycles.length} cycles</span>
+        <span className="text-xs text-[var(--color-text-muted)]">{cycles.length} cycles</span>
       </div>
 
       {/* Summary Stats */}
@@ -149,9 +149,9 @@ export function CVRFCycleHistory() {
       {/* Cycle List */}
       {cycles.length === 0 ? (
         <div className="text-center py-8">
-          <History className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <div className="text-gray-500 text-sm">No CVRF cycles yet</div>
-          <div className="text-gray-400 text-xs mt-1">
+          <History className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-3" />
+          <div className="text-[var(--color-text-muted)] text-sm">No CVRF cycles yet</div>
+          <div className="text-[var(--color-text-muted)] text-xs mt-1">
             Close an episode with CVRF enabled to see cycles
           </div>
         </div>

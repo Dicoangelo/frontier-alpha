@@ -70,9 +70,9 @@ interface ImpliedVolatilityProps {
 }
 
 const signalColors: Record<string, string> = {
-  high_iv: 'text-orange-600 bg-orange-50',
-  low_iv: 'text-green-600 bg-green-50',
-  neutral: 'text-gray-600 bg-gray-50',
+  high_iv: 'text-orange-600 bg-orange-500/10',
+  low_iv: 'text-green-600 bg-green-500/10',
+  neutral: 'text-[var(--color-text-secondary)] bg-[var(--color-bg-tertiary)]',
 };
 
 const signalIcons: Record<string, typeof TrendingUp> = {
@@ -82,9 +82,9 @@ const signalIcons: Record<string, typeof TrendingUp> = {
 };
 
 const termStructureColors: Record<string, string> = {
-  contango: 'text-blue-600 bg-blue-50',
-  backwardation: 'text-amber-600 bg-amber-50',
-  flat: 'text-gray-600 bg-gray-50',
+  contango: 'text-blue-600 bg-blue-500/10',
+  backwardation: 'text-amber-600 bg-amber-500/10',
+  flat: 'text-[var(--color-text-secondary)] bg-[var(--color-bg-tertiary)]',
 };
 
 function IVRankBar({ rank }: { rank: number }) {
@@ -95,7 +95,7 @@ function IVRankBar({ rank }: { rank: number }) {
   };
 
   return (
-    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+    <div className="w-full h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
       <div
         className={`h-full ${getColor(rank)} transition-all`}
         style={{ width: `${rank}%` }}
@@ -139,13 +139,13 @@ function IVGauge({ value, label, max = 100 }: { value: number; label: string; ma
       </svg>
       {/* Needle */}
       <div
-        className="absolute bottom-0 left-1/2 w-0.5 h-8 bg-gray-800 origin-bottom rounded-full"
+        className="absolute bottom-0 left-1/2 w-0.5 h-8 bg-[var(--color-text)] origin-bottom rounded-full"
         style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }}
       />
       {/* Value display */}
       <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-center">
-        <p className="text-lg font-bold text-gray-900">{Math.round(value)}</p>
-        <p className="text-xs text-gray-500">{label}</p>
+        <p className="text-lg font-bold text-[var(--color-text)]">{Math.round(value)}</p>
+        <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
       </div>
     </div>
   );
@@ -161,11 +161,11 @@ function IVvsHVBar({ iv, hv }: { iv: number; hv: number }) {
 
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-xs text-gray-500">
+      <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
         <span>HV30: {hv}%</span>
         <span>IV: {iv}%</span>
       </div>
-      <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+      <div className="relative h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
         <div
           className="absolute h-full bg-gray-400"
           style={{ width: `${Math.min(hv / 100 * 100, 100)}%` }}
@@ -175,7 +175,7 @@ function IVvsHVBar({ iv, hv }: { iv: number; hv: number }) {
           style={{ width: `${Math.min(iv / 100 * 100, 100)}%` }}
         />
       </div>
-      <p className="text-xs text-center text-gray-600">
+      <p className="text-xs text-center text-[var(--color-text-secondary)]">
         IV/HV: {ratio.toFixed(2)}x ({premium}{premiumPercent}%)
       </p>
     </div>
@@ -213,7 +213,7 @@ export function ImpliedVolatility({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <Activity className="w-5 h-5 text-purple-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Implied Volatility</h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text)]">Implied Volatility</h3>
         </div>
         <Button
           variant="ghost"
@@ -231,21 +231,21 @@ export function ImpliedVolatility({
       {portfolioIV && (
         <div className="space-y-4 mb-6">
           {/* IV Gauge and Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
             <div className="flex flex-col items-center justify-center py-2">
               <IVGauge value={portfolioIV.averageIVRank} label="IV Rank" />
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <div className="text-center p-2 bg-white rounded">
-                <p className="text-xs text-gray-500">Avg IV</p>
-                <p className="text-lg font-bold text-gray-900">{portfolioIV.averageIV}%</p>
+              <div className="text-center p-2 bg-[var(--color-bg)] rounded">
+                <p className="text-xs text-[var(--color-text-muted)]">Avg IV</p>
+                <p className="text-lg font-bold text-[var(--color-text)]">{portfolioIV.averageIV}%</p>
               </div>
-              <div className="text-center p-2 bg-white rounded">
-                <p className="text-xs text-gray-500">Avg HV</p>
-                <p className="text-lg font-bold text-gray-900">{portfolioIV.averageHV}%</p>
+              <div className="text-center p-2 bg-[var(--color-bg)] rounded">
+                <p className="text-xs text-[var(--color-text-muted)]">Avg HV</p>
+                <p className="text-lg font-bold text-[var(--color-text)]">{portfolioIV.averageHV}%</p>
               </div>
-              <div className="text-center p-2 bg-white rounded col-span-2">
-                <p className="text-xs text-gray-500">IV/HV Ratio</p>
+              <div className="text-center p-2 bg-[var(--color-bg)] rounded col-span-2">
+                <p className="text-xs text-[var(--color-text-muted)]">IV/HV Ratio</p>
                 <p className={`text-lg font-bold ${
                   portfolioIV.averageIVvsHV >= 1.2 ? 'text-orange-600' :
                   portfolioIV.averageIVvsHV <= 0.9 ? 'text-green-600' : 'text-blue-600'
@@ -258,7 +258,7 @@ export function ImpliedVolatility({
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-orange-500" />
-                  <span className="text-sm text-gray-600">High IV:</span>
+                  <span className="text-sm text-[var(--color-text-secondary)]">High IV:</span>
                   <span className="text-sm font-medium">
                     {portfolioIV.highIVPositions.length > 0
                       ? portfolioIV.highIVPositions.slice(0, 3).join(', ')
@@ -267,7 +267,7 @@ export function ImpliedVolatility({
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-green-500" />
-                  <span className="text-sm text-gray-600">Low IV:</span>
+                  <span className="text-sm text-[var(--color-text-secondary)]">Low IV:</span>
                   <span className="text-sm font-medium">
                     {portfolioIV.lowIVPositions.length > 0
                       ? portfolioIV.lowIVPositions.slice(0, 3).join(', ')
@@ -277,7 +277,7 @@ export function ImpliedVolatility({
                 {portfolioIV.backwardationPositions.length > 0 && (
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-amber-500" />
-                    <span className="text-sm text-gray-600">Backwardation:</span>
+                    <span className="text-sm text-[var(--color-text-secondary)]">Backwardation:</span>
                     <span className="text-sm font-medium">
                       {portfolioIV.backwardationPositions.slice(0, 3).join(', ')}
                     </span>
@@ -291,14 +291,14 @@ export function ImpliedVolatility({
           {portfolioIV.insights && (
             <div className={`p-3 rounded-lg border ${
               portfolioIV.insights.overallSignal === 'high_iv'
-                ? 'bg-orange-50 border-orange-200'
+                ? 'bg-orange-500/10 border-orange-500/20'
                 : portfolioIV.insights.overallSignal === 'low_iv'
-                ? 'bg-green-50 border-green-200'
-                : 'bg-blue-50 border-blue-200'
+                ? 'bg-green-500/10 border-green-500/20'
+                : 'bg-blue-500/10 border-blue-500/20'
             }`}>
               <div className="flex items-start gap-2">
-                <Info className="w-4 h-4 mt-0.5 text-gray-600" />
-                <p className="text-sm text-gray-700">{portfolioIV.insights.recommendation}</p>
+                <Info className="w-4 h-4 mt-0.5 text-[var(--color-text-secondary)]" />
+                <p className="text-sm text-[var(--color-text-secondary)]">{portfolioIV.insights.recommendation}</p>
               </div>
             </div>
           )}
@@ -307,7 +307,7 @@ export function ImpliedVolatility({
 
       {/* Loading state */}
       {isLoading && (
-        <div className="py-8 text-center text-gray-500">
+        <div className="py-8 text-center text-[var(--color-text-muted)]">
           <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin" />
           <p>Loading IV data...</p>
         </div>
@@ -317,7 +317,7 @@ export function ImpliedVolatility({
       {error && (
         <div className="py-6 text-center">
           <AlertCircle className="w-8 h-8 mx-auto mb-2 text-amber-500" />
-          <p className="text-gray-600">Failed to load IV data</p>
+          <p className="text-[var(--color-text-secondary)]">Failed to load IV data</p>
           <Button
             variant="secondary"
             size="sm"
@@ -331,8 +331,8 @@ export function ImpliedVolatility({
 
       {/* Empty state */}
       {!isLoading && !error && ivList.length === 0 && (
-        <div className="py-8 text-center text-gray-500">
-          <Activity className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+        <div className="py-8 text-center text-[var(--color-text-muted)]">
+          <Activity className="w-8 h-8 mx-auto mb-2 text-[var(--color-text-muted)]" />
           <p>No IV data available</p>
           <p className="text-sm mt-1">Add symbols to see implied volatility</p>
         </div>
@@ -346,13 +346,13 @@ export function ImpliedVolatility({
             return (
               <div
                 key={iv.symbol}
-                className="p-4 border border-gray-100 rounded-lg hover:border-gray-200 transition-colors"
+                className="p-4 border border-[var(--color-border-light)] rounded-lg hover:border-[var(--color-border)] transition-colors"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <span className="font-semibold text-gray-900">{iv.symbol}</span>
+                    <span className="font-semibold text-[var(--color-text)]">{iv.symbol}</span>
                     {iv.currentPrice > 0 && (
-                      <span className="text-sm text-gray-500">${iv.currentPrice}</span>
+                      <span className="text-sm text-[var(--color-text-muted)]">${iv.currentPrice}</span>
                     )}
                     <span
                       className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -374,13 +374,13 @@ export function ImpliedVolatility({
                   </div>
                   <div className="text-right">
                     <span className="text-2xl font-bold text-purple-600">{iv.atmIV}%</span>
-                    <p className="text-xs text-gray-500">ATM IV</p>
+                    <p className="text-xs text-[var(--color-text-muted)]">ATM IV</p>
                   </div>
                 </div>
 
                 {/* IV Rank Bar */}
                 <div className="mb-3">
-                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <div className="flex justify-between text-xs text-[var(--color-text-muted)] mb-1">
                     <span>IV Rank</span>
                     <span>{iv.ivRank}/100</span>
                   </div>
@@ -394,29 +394,29 @@ export function ImpliedVolatility({
 
                 {/* Expected Moves */}
                 <div className="grid grid-cols-3 gap-2 mb-3">
-                  <div className="text-center p-2 bg-gray-50 rounded">
-                    <p className="text-xs text-gray-500">Weekly</p>
+                  <div className="text-center p-2 bg-[var(--color-bg-tertiary)] rounded">
+                    <p className="text-xs text-[var(--color-text-muted)]">Weekly</p>
                     <p className="font-semibold">±{iv.expectedMove.weekly}%</p>
                     {showDollars && iv.expectedMoveInDollars && (
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-[var(--color-text-muted)]">
                         ±${iv.expectedMoveInDollars.weekly}
                       </p>
                     )}
                   </div>
-                  <div className="text-center p-2 bg-gray-50 rounded">
-                    <p className="text-xs text-gray-500">Monthly</p>
+                  <div className="text-center p-2 bg-[var(--color-bg-tertiary)] rounded">
+                    <p className="text-xs text-[var(--color-text-muted)]">Monthly</p>
                     <p className="font-semibold">±{iv.expectedMove.monthly}%</p>
                     {showDollars && iv.expectedMoveInDollars && (
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-[var(--color-text-muted)]">
                         ±${iv.expectedMoveInDollars.monthly}
                       </p>
                     )}
                   </div>
-                  <div className="text-center p-2 bg-gray-50 rounded">
-                    <p className="text-xs text-gray-500">Quarterly</p>
+                  <div className="text-center p-2 bg-[var(--color-bg-tertiary)] rounded">
+                    <p className="text-xs text-[var(--color-text-muted)]">Quarterly</p>
                     <p className="font-semibold">±{iv.expectedMove.quarterly}%</p>
                     {showDollars && iv.expectedMoveInDollars && (
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-[var(--color-text-muted)]">
                         ±${iv.expectedMoveInDollars.quarterly}
                       </p>
                     )}
@@ -449,26 +449,26 @@ export function ImpliedVolatility({
 
                 {/* Term Structure */}
                 <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
-                  <div className="text-center p-1.5 bg-gray-50 rounded">
-                    <p className="text-gray-500">IV30</p>
+                  <div className="text-center p-1.5 bg-[var(--color-bg-tertiary)] rounded">
+                    <p className="text-[var(--color-text-muted)]">IV30</p>
                     <p className="font-medium">{iv.iv30}%</p>
                   </div>
-                  <div className="text-center p-1.5 bg-gray-50 rounded">
-                    <p className="text-gray-500">IV60</p>
+                  <div className="text-center p-1.5 bg-[var(--color-bg-tertiary)] rounded">
+                    <p className="text-[var(--color-text-muted)]">IV60</p>
                     <p className="font-medium">{iv.iv60}%</p>
                   </div>
-                  <div className="text-center p-1.5 bg-gray-50 rounded">
-                    <p className="text-gray-500">IV90</p>
+                  <div className="text-center p-1.5 bg-[var(--color-bg-tertiary)] rounded">
+                    <p className="text-[var(--color-text-muted)]">IV90</p>
                     <p className="font-medium">{iv.iv90}%</p>
                   </div>
                 </div>
 
                 {/* Additional metrics */}
-                <div className="flex items-center justify-between text-sm text-gray-600">
+                <div className="flex items-center justify-between text-sm text-[var(--color-text-secondary)]">
                   <span>P/C Ratio: {iv.putCallRatio}</span>
                   <span>Skew: {iv.skew > 0 ? '+' : ''}{iv.skew}%</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded ${
-                    iv.dataSource === 'options' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                    iv.dataSource === 'options' ? 'bg-green-500/10 text-green-600' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
                   }`}>
                     {iv.dataSource === 'options' ? 'Live Options' : 'Historical'}
                   </span>
@@ -476,7 +476,7 @@ export function ImpliedVolatility({
 
                 {/* Recommendation */}
                 {iv.recommendation && (
-                  <p className="text-xs text-gray-500 mt-2 italic">{iv.recommendation}</p>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-2 italic">{iv.recommendation}</p>
                 )}
               </div>
             );
@@ -486,7 +486,7 @@ export function ImpliedVolatility({
 
       {/* Footer */}
       {symbols.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+        <div className="mt-4 pt-3 border-t border-[var(--color-border-light)] text-xs text-[var(--color-text-muted)]">
           <p>
             IV Rank shows where current IV stands vs 52-week range. High IV (&gt;70) suggests
             expensive options, low IV (&lt;30) suggests cheap options.
@@ -513,12 +513,12 @@ export function ImpliedVolatilityCompact({
 
   if (isLoading) {
     return (
-      <div className={`p-4 bg-gray-50 rounded-lg ${className}`}>
+      <div className={`p-4 bg-[var(--color-bg-tertiary)] rounded-lg ${className}`}>
         <div className="animate-pulse flex items-center gap-3">
-          <div className="w-8 h-8 bg-gray-200 rounded" />
+          <div className="w-8 h-8 bg-[var(--color-border)] rounded" />
           <div className="flex-1">
-            <div className="h-4 bg-gray-200 rounded w-24 mb-1" />
-            <div className="h-3 bg-gray-200 rounded w-16" />
+            <div className="h-4 bg-[var(--color-border)] rounded w-24 mb-1" />
+            <div className="h-3 bg-[var(--color-border)] rounded w-16" />
           </div>
         </div>
       </div>
@@ -528,9 +528,9 @@ export function ImpliedVolatilityCompact({
   if (!portfolioIV) return null;
 
   const signalColor = portfolioIV.insights?.overallSignal === 'high_iv'
-    ? 'bg-orange-50 border-orange-200'
+    ? 'bg-orange-500/10 border-orange-500/20'
     : portfolioIV.insights?.overallSignal === 'low_iv'
-    ? 'bg-green-50 border-green-200'
+    ? 'bg-green-500/10 border-green-500/20'
     : 'bg-purple-50 border-purple-200';
 
   return (
@@ -539,15 +539,15 @@ export function ImpliedVolatilityCompact({
         <div className="flex items-center gap-3">
           <Activity className="w-5 h-5 text-purple-600" />
           <div>
-            <p className="text-sm font-medium text-gray-700">Portfolio IV</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-sm font-medium text-[var(--color-text-secondary)]">Portfolio IV</p>
+            <p className="text-xs text-[var(--color-text-muted)]">
               Rank: {portfolioIV.averageIVRank} | IV/HV: {portfolioIV.averageIVvsHV}x
             </p>
           </div>
         </div>
         <div className="text-right">
           <p className="text-2xl font-bold text-purple-600">{portfolioIV.averageIV}%</p>
-          <p className="text-xs text-gray-500">HV: {portfolioIV.averageHV}%</p>
+          <p className="text-xs text-[var(--color-text-muted)]">HV: {portfolioIV.averageHV}%</p>
         </div>
       </div>
     </div>
@@ -579,17 +579,17 @@ export function EarningsIV({
 
   if (isLoading) {
     return (
-      <div className={`p-4 bg-gray-50 rounded-lg animate-pulse ${className}`}>
-        <div className="h-6 bg-gray-200 rounded w-3/4 mb-2" />
-        <div className="h-4 bg-gray-200 rounded w-1/2" />
+      <div className={`p-4 bg-[var(--color-bg-tertiary)] rounded-lg animate-pulse ${className}`}>
+        <div className="h-6 bg-[var(--color-border)] rounded w-3/4 mb-2" />
+        <div className="h-4 bg-[var(--color-border)] rounded w-1/2" />
       </div>
     );
   }
 
   if (!ivData) {
     return (
-      <div className={`p-4 bg-gray-50 rounded-lg ${className}`}>
-        <p className="text-sm text-gray-500">IV data not available for {symbol}</p>
+      <div className={`p-4 bg-[var(--color-bg-tertiary)] rounded-lg ${className}`}>
+        <p className="text-sm text-[var(--color-text-muted)]">IV data not available for {symbol}</p>
       </div>
     );
   }
@@ -605,38 +605,38 @@ export function EarningsIV({
 
   return (
     <div className={`p-4 rounded-lg border ${
-      isPremiumExpensive ? 'bg-orange-50 border-orange-200' :
-      isPremiumCheap ? 'bg-green-50 border-green-200' :
-      'bg-blue-50 border-blue-200'
+      isPremiumExpensive ? 'bg-orange-500/10 border-orange-500/20' :
+      isPremiumCheap ? 'bg-green-500/10 border-green-500/20' :
+      'bg-blue-500/10 border-blue-500/20'
     } ${className}`}>
       <div className="flex items-center gap-2 mb-3">
         <BarChart3 className="w-5 h-5 text-purple-600" />
-        <h4 className="font-medium text-gray-900">Options-Implied Move</h4>
+        <h4 className="font-medium text-[var(--color-text)]">Options-Implied Move</h4>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-3">
         <div>
-          <p className="text-xs text-gray-500">Options Pricing</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Options Pricing</p>
           <p className="text-xl font-bold text-purple-600">±{optionsMove.toFixed(1)}%</p>
           {ivData.straddlePrice && ivData.currentPrice > 0 && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-[var(--color-text-muted)]">
               ${ivData.straddlePrice} straddle
             </p>
           )}
         </div>
         <div>
-          <p className="text-xs text-gray-500">Historical Avg</p>
-          <p className="text-xl font-bold text-gray-600">±{historicalMovePercent.toFixed(1)}%</p>
-          <p className="text-xs text-gray-500">past 8 quarters</p>
+          <p className="text-xs text-[var(--color-text-muted)]">Historical Avg</p>
+          <p className="text-xl font-bold text-[var(--color-text-secondary)]">±{historicalMovePercent.toFixed(1)}%</p>
+          <p className="text-xs text-[var(--color-text-muted)]">past 8 quarters</p>
         </div>
       </div>
 
       <div className="flex items-center gap-2 mb-2">
-        <ArrowRight className="w-4 h-4 text-gray-400" />
+        <ArrowRight className="w-4 h-4 text-[var(--color-text-muted)]" />
         <span className={`text-sm font-medium ${
-          isPremiumExpensive ? 'text-orange-700' :
-          isPremiumCheap ? 'text-green-700' :
-          'text-blue-700'
+          isPremiumExpensive ? 'text-orange-600' :
+          isPremiumCheap ? 'text-green-600' :
+          'text-blue-500'
         }`}>
           {isPremiumExpensive
             ? `Options are pricing ${Math.abs(ivPremium).toFixed(1)}% MORE volatility than historical`
@@ -646,7 +646,7 @@ export function EarningsIV({
         </span>
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-gray-600">
+      <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
         <span>IV Rank: {ivData.ivRank}</span>
         <span>|</span>
         <span>P/C: {ivData.putCallRatio}</span>
@@ -656,9 +656,9 @@ export function EarningsIV({
 
       {/* Recommendation */}
       <div className={`mt-3 p-2 rounded ${
-        isPremiumExpensive ? 'bg-orange-100' :
-        isPremiumCheap ? 'bg-green-100' :
-        'bg-blue-100'
+        isPremiumExpensive ? 'bg-orange-500/10' :
+        isPremiumCheap ? 'bg-green-500/10' :
+        'bg-blue-500/10'
       }`}>
         <p className="text-xs font-medium">
           {isPremiumExpensive

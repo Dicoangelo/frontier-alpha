@@ -132,7 +132,7 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
 
       {/* Panel */}
       <div
-        className="absolute right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl animate-slide-in-right flex flex-col"
+        className="absolute right-0 top-0 bottom-0 w-full max-w-lg bg-[var(--color-bg)] shadow-2xl animate-slide-in-right flex flex-col"
         role="dialog"
         aria-modal="true"
         aria-label="Help panel"
@@ -143,20 +143,20 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
             {selectedTopic ? (
               <button
                 onClick={goBack}
-                className="p-1 -ml-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                className="p-1 -ml-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded"
               >
                 <ChevronRight className="w-5 h-5 rotate-180" />
               </button>
             ) : (
               <BookOpen className="w-6 h-6 text-blue-600" />
             )}
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-[var(--color-text)]">
               {selectedTopic ? selectedTopic.title : 'Help Center'}
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+            className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-lg"
             aria-label="Close help panel"
           >
             <X className="w-5 h-5" />
@@ -167,19 +167,19 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
         {!selectedTopic && (
           <div className="p-4 border-b">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
               <input
                 type="text"
                 placeholder="Search help topics..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2.5 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 aria-label="Search help"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -213,12 +213,12 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
         </div>
 
         {/* Footer */}
-        <div className="border-t p-4 bg-gray-50">
+        <div className="border-t p-4 bg-[var(--color-bg-tertiary)]">
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               to="/help"
               onClick={onClose}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] transition"
             >
               <BookOpen className="w-4 h-4" />
               Full Help Guide
@@ -256,36 +256,36 @@ function SectionList({ sections, expandedSections, onToggleSection, onSelectTopi
           <div key={section.id} className="border rounded-lg overflow-hidden">
             <button
               onClick={() => onToggleSection(section.id)}
-              className="w-full flex items-center gap-3 p-4 bg-white hover:bg-gray-50 transition text-left"
+              className="w-full flex items-center gap-3 p-4 bg-[var(--color-bg)] hover:bg-[var(--color-bg-tertiary)] transition text-left"
               aria-expanded={isExpanded}
             >
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
                 <Icon className="w-5 h-5 text-blue-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-gray-900">{section.title}</h3>
-                <p className="text-sm text-gray-500 truncate">{section.description}</p>
+                <h3 className="font-medium text-[var(--color-text)]">{section.title}</h3>
+                <p className="text-sm text-[var(--color-text-muted)] truncate">{section.description}</p>
               </div>
               {isExpanded ? (
-                <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)] flex-shrink-0" />
               ) : (
-                <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] flex-shrink-0" />
               )}
             </button>
 
             {isExpanded && (
-              <div className="border-t bg-gray-50">
+              <div className="border-t bg-[var(--color-bg-tertiary)]">
                 {section.topics.map((topic) => (
                   <button
                     key={topic.id}
                     onClick={() => onSelectTopic(topic)}
-                    className="w-full flex items-center gap-3 p-3 pl-6 hover:bg-gray-100 transition text-left border-b last:border-b-0"
+                    className="w-full flex items-center gap-3 p-3 pl-6 hover:bg-[var(--color-bg-secondary)] transition text-left border-b last:border-b-0"
                   >
                     <div className="flex-1">
-                      <p className="font-medium text-gray-800">{topic.title}</p>
-                      <p className="text-sm text-gray-500">{topic.summary}</p>
+                      <p className="font-medium text-[var(--color-text)]">{topic.title}</p>
+                      <p className="text-sm text-[var(--color-text-muted)]">{topic.summary}</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0" />
                   </button>
                 ))}
               </div>
@@ -296,7 +296,7 @@ function SectionList({ sections, expandedSections, onToggleSection, onSelectTopi
 
       {/* Quick Links */}
       <div className="pt-4 mt-4 border-t">
-        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">Quick Links</h3>
+        <h3 className="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-3">Quick Links</h3>
         <div className="grid grid-cols-2 gap-2">
           <QuickLink to="/help#faq" label="FAQ" />
           <QuickLink to="/help#factors" label="Factor Guide" />
@@ -312,10 +312,10 @@ function QuickLink({ to, label }: { to: string; label: string }) {
   return (
     <Link
       to={to}
-      className="flex items-center justify-between px-3 py-2 bg-white border rounded-lg text-sm text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition"
+      className="flex items-center justify-between px-3 py-2 bg-[var(--color-bg)] border rounded-lg text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-border)] transition"
     >
       {label}
-      <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
+      <ExternalLink className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
     </Link>
   );
 }
@@ -332,9 +332,9 @@ function SearchResults({ query, results, hasResults, onSelectTopic }: SearchResu
   if (!hasResults) {
     return (
       <div className="p-8 text-center">
-        <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No results found</h3>
-        <p className="text-gray-500 mb-4">
+        <Search className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-[var(--color-text)] mb-2">No results found</h3>
+        <p className="text-[var(--color-text-muted)] mb-4">
           We could not find anything matching "{query}"
         </p>
         <Link
@@ -351,7 +351,7 @@ function SearchResults({ query, results, hasResults, onSelectTopic }: SearchResu
     <div className="p-4 space-y-6">
       {results.topics.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
             Topics ({results.topics.length})
           </h3>
           <div className="space-y-2">
@@ -359,13 +359,13 @@ function SearchResults({ query, results, hasResults, onSelectTopic }: SearchResu
               <button
                 key={topic.id}
                 onClick={() => onSelectTopic(topic)}
-                className="w-full flex items-center gap-3 p-3 bg-white border rounded-lg hover:bg-gray-50 hover:border-blue-300 transition text-left"
+                className="w-full flex items-center gap-3 p-3 bg-[var(--color-bg)] border rounded-lg hover:bg-[var(--color-bg-tertiary)] hover:border-blue-300 transition text-left"
               >
                 <div className="flex-1">
-                  <p className="font-medium text-gray-800">{topic.title}</p>
-                  <p className="text-sm text-gray-500">{topic.summary}</p>
+                  <p className="font-medium text-[var(--color-text)]">{topic.title}</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">{topic.summary}</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0" />
               </button>
             ))}
           </div>
@@ -374,17 +374,17 @@ function SearchResults({ query, results, hasResults, onSelectTopic }: SearchResu
 
       {results.faqs.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
             FAQ ({results.faqs.length})
           </h3>
           <div className="space-y-2">
             {results.faqs.map((faq, index) => (
               <div
                 key={index}
-                className="p-4 bg-white border rounded-lg"
+                className="p-4 bg-[var(--color-bg)] border rounded-lg"
               >
-                <p className="font-medium text-gray-800 mb-2">{faq.question}</p>
-                <p className="text-sm text-gray-600">{faq.answer}</p>
+                <p className="font-medium text-[var(--color-text)] mb-2">{faq.question}</p>
+                <p className="text-sm text-[var(--color-text-secondary)]">{faq.answer}</p>
               </div>
             ))}
           </div>
@@ -411,7 +411,7 @@ function TopicDetail({ topic, onSelectTopic }: TopicDetailProps) {
     const flushList = () => {
       if (currentList.length > 0) {
         elements.push(
-          <ul key={`list-${listKey++}`} className="list-disc list-inside space-y-1 mb-4 text-gray-600">
+          <ul key={`list-${listKey++}`} className="list-disc list-inside space-y-1 mb-4 text-[var(--color-text-secondary)]">
             {currentList.map((item, i) => (
               <li key={i}>{item}</li>
             ))}
@@ -427,21 +427,21 @@ function TopicDetail({ topic, onSelectTopic }: TopicDetailProps) {
       if (trimmed.startsWith('## ')) {
         flushList();
         elements.push(
-          <h2 key={`h2-${index}`} className="text-xl font-bold text-gray-900 mt-6 mb-3 first:mt-0">
+          <h2 key={`h2-${index}`} className="text-xl font-bold text-[var(--color-text)] mt-6 mb-3 first:mt-0">
             {trimmed.slice(3)}
           </h2>
         );
       } else if (trimmed.startsWith('### ')) {
         flushList();
         elements.push(
-          <h3 key={`h3-${index}`} className="text-lg font-semibold text-gray-800 mt-5 mb-2">
+          <h3 key={`h3-${index}`} className="text-lg font-semibold text-[var(--color-text)] mt-5 mb-2">
             {trimmed.slice(4)}
           </h3>
         );
       } else if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
         flushList();
         elements.push(
-          <p key={`bold-${index}`} className="font-semibold text-gray-800 mt-4 mb-2">
+          <p key={`bold-${index}`} className="font-semibold text-[var(--color-text)] mt-4 mb-2">
             {trimmed.slice(2, -2)}
           </p>
         );
@@ -449,7 +449,7 @@ function TopicDetail({ topic, onSelectTopic }: TopicDetailProps) {
         currentList.push(trimmed.slice(2));
       } else if (trimmed.startsWith('---')) {
         flushList();
-        elements.push(<hr key={`hr-${index}`} className="my-6 border-gray-200" />);
+        elements.push(<hr key={`hr-${index}`} className="my-6 border-[var(--color-border)]" />);
       } else if (trimmed) {
         flushList();
         // Handle inline bold
@@ -457,7 +457,7 @@ function TopicDetail({ topic, onSelectTopic }: TopicDetailProps) {
         elements.push(
           <p
             key={`p-${index}`}
-            className="text-gray-600 mb-3 leading-relaxed"
+            className="text-[var(--color-text-secondary)] mb-3 leading-relaxed"
             dangerouslySetInnerHTML={{ __html: processed }}
           />
         );
@@ -477,7 +477,7 @@ function TopicDetail({ topic, onSelectTopic }: TopicDetailProps) {
       {/* Related Topics */}
       {topic.relatedTopics && topic.relatedTopics.length > 0 && (
         <div className="mt-8 pt-6 border-t">
-          <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
             Related Topics
           </h3>
           <div className="space-y-2">
@@ -489,13 +489,13 @@ function TopicDetail({ topic, onSelectTopic }: TopicDetailProps) {
                 <button
                   key={topicId}
                   onClick={() => onSelectTopic(result.topic)}
-                  className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-left"
+                  className="w-full flex items-center gap-3 p-3 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-[var(--color-bg-secondary)] transition text-left"
                 >
                   <div className="flex-1">
-                    <p className="font-medium text-gray-800">{result.topic.title}</p>
-                    <p className="text-sm text-gray-500">{result.topic.summary}</p>
+                    <p className="font-medium text-[var(--color-text)]">{result.topic.title}</p>
+                    <p className="text-sm text-[var(--color-text-muted)]">{result.topic.summary}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0" />
                 </button>
               );
             })}

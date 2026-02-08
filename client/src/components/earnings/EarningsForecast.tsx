@@ -27,7 +27,7 @@ export function EarningsForecast({
   if (!symbol) {
     return (
       <Card title="Earnings Forecast">
-        <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+        <div className="flex flex-col items-center justify-center h-64 text-[var(--color-text-muted)]">
           <BarChart3 className="w-12 h-12 mb-4 opacity-50" />
           <p>Select an earnings event</p>
           <p className="text-sm mt-1">Click on an upcoming event to see the forecast</p>
@@ -49,7 +49,7 @@ export function EarningsForecast({
   if (!forecast) {
     return (
       <Card title={`${symbol} Forecast`}>
-        <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+        <div className="flex flex-col items-center justify-center h-64 text-[var(--color-text-muted)]">
           <p>No forecast available</p>
           {onRefresh && (
             <Button onClick={onRefresh} className="mt-4" disabled={isRefreshing}>
@@ -88,19 +88,19 @@ export function EarningsForecast({
     >
       <div className="space-y-6">
         {/* Expected Move - Historical */}
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
           <div>
             <div className="flex items-center gap-1">
-              <p className="text-sm text-gray-500">Historical Expected Move</p>
+              <p className="text-sm text-[var(--color-text-muted)]">Historical Expected Move</p>
               <HelpTooltip metricKey="expectedMove" size="sm" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-2xl font-bold text-[var(--color-text)]">
               ±{(forecast.expectedMove * 100).toFixed(1)}%
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-500">Past 8 Quarters Avg</p>
-            <p className="text-lg font-medium text-gray-600">
+            <p className="text-sm text-[var(--color-text-muted)]">Past 8 Quarters Avg</p>
+            <p className="text-lg font-medium text-[var(--color-text-secondary)]">
               {forecast.historicalAvgMove
                 ? `±${(forecast.historicalAvgMove * 100).toFixed(1)}%`
                 : 'N/A'}
@@ -118,22 +118,22 @@ export function EarningsForecast({
         {/* Direction & Confidence */}
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 border rounded-lg">
-            <p className="text-sm text-gray-500 mb-2">Expected Direction</p>
+            <p className="text-sm text-[var(--color-text-muted)] mb-2">Expected Direction</p>
             <div className={`flex items-center gap-2 ${getDirectionColor(forecast.expectedDirection)}`}>
               <DirectionIcon className="w-5 h-5" />
               <span className="font-semibold capitalize">{forecast.expectedDirection}</span>
             </div>
           </div>
           <div className="p-4 border rounded-lg">
-            <p className="text-sm text-gray-500 mb-2">Confidence</p>
+            <p className="text-sm text-[var(--color-text-muted)] mb-2">Confidence</p>
             <div className="flex items-center gap-2">
-              <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
                 <div
                   className="h-full bg-blue-500 rounded-full"
                   style={{ width: `${forecast.confidence * 100}%` }}
                 />
               </div>
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-[var(--color-text)]">
                 {(forecast.confidence * 100).toFixed(0)}%
               </span>
             </div>
@@ -142,7 +142,7 @@ export function EarningsForecast({
 
         {/* Recommendation */}
         <div className="p-4 border rounded-lg">
-          <p className="text-sm text-gray-500 mb-2">Recommendation</p>
+          <p className="text-sm text-[var(--color-text-muted)] mb-2">Recommendation</p>
           <Badge className={recommendationBadge.color}>
             {recommendationBadge.label}
           </Badge>
@@ -152,11 +152,11 @@ export function EarningsForecast({
         {forecast.beatRate !== undefined && (
           <div className="p-4 border rounded-lg">
             <div className="flex items-center gap-1 mb-2">
-              <p className="text-sm text-gray-500">Historical Beat Rate</p>
+              <p className="text-sm text-[var(--color-text-muted)]">Historical Beat Rate</p>
               <HelpTooltip metricKey="beatRate" size="sm" />
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-3 bg-[var(--color-border)] rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full ${
                     forecast.beatRate > 60 ? 'bg-green-500' :
@@ -176,26 +176,26 @@ export function EarningsForecast({
         )}
 
         {/* AI Explanation */}
-        <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-          <p className="text-sm font-medium text-blue-800 mb-2">AI Analysis</p>
-          <p className="text-sm text-blue-700">{forecast.explanation}</p>
+        <div className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
+          <p className="text-sm font-medium text-blue-400 mb-2">AI Analysis</p>
+          <p className="text-sm text-blue-500">{forecast.explanation}</p>
         </div>
 
         {/* Factor Analysis (if available) */}
         {forecast.factors && (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">Factor Analysis</p>
+            <p className="text-sm font-medium text-[var(--color-text-secondary)]">Factor Analysis</p>
             <div className="grid gap-2 text-sm">
-              <div className="flex justify-between p-2 bg-gray-50 rounded">
-                <span className="text-gray-500">Historical Pattern</span>
-                <span className="text-gray-700">{forecast.factors.historicalPattern}</span>
+              <div className="flex justify-between p-2 bg-[var(--color-bg-tertiary)] rounded">
+                <span className="text-[var(--color-text-muted)]">Historical Pattern</span>
+                <span className="text-[var(--color-text-secondary)]">{forecast.factors.historicalPattern}</span>
               </div>
-              <div className="flex justify-between p-2 bg-gray-50 rounded">
-                <span className="text-gray-500">Recent Trend</span>
-                <span className="text-gray-700">{forecast.factors.recentTrend}</span>
+              <div className="flex justify-between p-2 bg-[var(--color-bg-tertiary)] rounded">
+                <span className="text-[var(--color-text-muted)]">Recent Trend</span>
+                <span className="text-[var(--color-text-secondary)]">{forecast.factors.recentTrend}</span>
               </div>
-              <div className="flex justify-between p-2 bg-gray-50 rounded">
-                <span className="text-gray-500">Risk Assessment</span>
+              <div className="flex justify-between p-2 bg-[var(--color-bg-tertiary)] rounded">
+                <span className="text-[var(--color-text-muted)]">Risk Assessment</span>
                 <span className={`font-medium ${
                   forecast.factors.riskAssessment.includes('HIGH') ? 'text-red-600' :
                   forecast.factors.riskAssessment.includes('LOW') ? 'text-green-600' : 'text-yellow-600'
@@ -208,7 +208,7 @@ export function EarningsForecast({
         )}
 
         {/* Report Date */}
-        <div className="text-center text-sm text-gray-500">
+        <div className="text-center text-sm text-[var(--color-text-muted)]">
           Report Date: {new Date(forecast.reportDate).toLocaleDateString('en-US', {
             weekday: 'long',
             month: 'long',
@@ -221,7 +221,7 @@ export function EarningsForecast({
         <div className="text-center">
           <Link
             to="/help#earnings-forecasts"
-            className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+            className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-500"
           >
             <HelpCircle className="w-4 h-4" />
             How forecasts work

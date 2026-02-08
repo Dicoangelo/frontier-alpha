@@ -86,10 +86,10 @@ const formatFactorName = (factor: string): string => {
 };
 
 const severityColors: Record<string, string> = {
-  critical: 'text-red-600 bg-red-50 border-red-200',
-  high: 'text-orange-600 bg-orange-50 border-orange-200',
-  medium: 'text-amber-600 bg-amber-50 border-amber-200',
-  low: 'text-blue-600 bg-blue-50 border-blue-200',
+  critical: 'text-red-600 bg-red-500/10 border-red-500/20',
+  high: 'text-orange-600 bg-orange-500/10 border-orange-500/20',
+  medium: 'text-amber-600 bg-amber-500/10 border-amber-500/20',
+  low: 'text-blue-600 bg-blue-500/10 border-blue-500/20',
 };
 
 const healthColors: Record<string, string> = {
@@ -164,7 +164,7 @@ export function FactorDriftAlert({
     <Card className={`p-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-semibold text-gray-900">Factor Drift Monitor</h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text)]">Factor Drift Monitor</h3>
           {summary && (
             <span
               className={`text-sm font-medium ${healthColors[summary.overallHealth]}`}
@@ -210,8 +210,8 @@ export function FactorDriftAlert({
 
       {/* Strategy selector */}
       {showSettings && (
-        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-          <p className="text-sm font-medium text-gray-700 mb-2">Target Strategy</p>
+        <div className="mb-4 p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
+          <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">Target Strategy</p>
           <div className="flex flex-wrap gap-2">
             {Object.entries(STRATEGY_PRESETS).map(([key, label]) => (
               <button
@@ -220,7 +220,7 @@ export function FactorDriftAlert({
                 className={`px-3 py-1.5 text-sm rounded-lg transition ${
                   selectedStrategy === key
                     ? 'bg-blue-500 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)]'
                 }`}
               >
                 {label}
@@ -235,11 +235,11 @@ export function FactorDriftAlert({
         <div className="space-y-3 mb-4">
           {drifts.map((drift) => (
             <div key={drift.factor} className="flex items-center gap-3">
-              <span className="w-24 text-sm font-medium text-gray-700 truncate">
+              <span className="w-24 text-sm font-medium text-[var(--color-text-secondary)] truncate">
                 {formatFactorName(drift.factor)}
               </span>
               <div className="flex-1 relative">
-                <div className="h-6 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-6 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                   {/* Target indicator */}
                   <div
                     className="absolute top-0 bottom-0 w-0.5 bg-gray-400 z-10"
@@ -271,7 +271,7 @@ export function FactorDriftAlert({
                 >
                   {drift.current.toFixed(2)}
                 </span>
-                <span className="text-xs text-gray-400 ml-1">
+                <span className="text-xs text-[var(--color-text-muted)] ml-1">
                   ({drift.target.toFixed(2)})
                 </span>
               </div>
@@ -290,7 +290,7 @@ export function FactorDriftAlert({
       {/* Alerts */}
       {alerts.length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-700">Active Alerts</p>
+          <p className="text-sm font-medium text-[var(--color-text-secondary)]">Active Alerts</p>
           {alerts.map((alert) => (
             <div
               key={alert.id}
@@ -323,14 +323,14 @@ export function FactorDriftAlert({
 
       {/* Empty state */}
       {exposures.length === 0 && (
-        <p className="text-gray-500 text-sm text-center py-4">
+        <p className="text-[var(--color-text-muted)] text-sm text-center py-4">
           Add positions to monitor factor drift
         </p>
       )}
 
       {/* Summary footer */}
       {summary && summary.totalFactorsTracked > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+        <div className="mt-4 pt-4 border-t border-[var(--color-border-light)] flex items-center justify-between text-xs text-[var(--color-text-muted)]">
           <span>
             Tracking {summary.totalFactorsTracked} factors •{' '}
             {summary.factorsWithinTolerance} within tolerance

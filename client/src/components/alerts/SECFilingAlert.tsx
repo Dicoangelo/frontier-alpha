@@ -74,10 +74,10 @@ type SeverityFilter = 'all' | 'critical' | 'high' | 'medium' | 'low';
 // ============================================================================
 
 const severityColors: Record<string, string> = {
-  critical: 'bg-red-100 text-red-800 border-red-200',
-  high: 'bg-orange-100 text-orange-800 border-orange-200',
-  medium: 'bg-amber-100 text-amber-800 border-amber-200',
-  low: 'bg-blue-100 text-blue-800 border-blue-200',
+  critical: 'bg-red-500/10 text-red-400 border-red-500/20',
+  high: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
+  medium: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+  low: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
 };
 
 const severityDotColors: Record<string, string> = {
@@ -112,17 +112,17 @@ const filingTypeIcons: Record<string, string> = {
 };
 
 const filingTypeBadgeColors: Record<string, string> = {
-  '8-K': 'bg-purple-100 text-purple-700',
-  '10-K': 'bg-green-100 text-green-700',
-  '10-Q': 'bg-blue-100 text-blue-700',
+  '8-K': 'bg-purple-500/10 text-purple-700',
+  '10-K': 'bg-green-500/10 text-green-600',
+  '10-Q': 'bg-blue-500/10 text-blue-500',
   '4': 'bg-indigo-100 text-indigo-700',
-  'SC 13D': 'bg-red-100 text-red-700',
+  'SC 13D': 'bg-red-500/10 text-red-400',
   'SC 13G': 'bg-pink-100 text-pink-700',
-  '13F-HR': 'bg-gray-100 text-gray-700',
+  '13F-HR': 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]',
   'DEF 14A': 'bg-teal-100 text-teal-700',
   'S-1': 'bg-emerald-100 text-emerald-700',
-  'NT 10-K': 'bg-red-200 text-red-800',
-  'NT 10-Q': 'bg-orange-200 text-orange-800',
+  'NT 10-K': 'bg-red-200 text-red-400',
+  'NT 10-Q': 'bg-orange-200 text-orange-500',
 };
 
 const filingTypeLabels: Record<string, string> = {
@@ -219,7 +219,7 @@ function getBaseFilingType(type: string): string {
 function FilingTypeBadge({ type }: { type: string }) {
   const baseType = getBaseFilingType(type);
   const icon = filingTypeIcons[type] || filingTypeIcons[baseType] || type.slice(0, 3).toUpperCase();
-  const colorClass = filingTypeBadgeColors[baseType] || 'bg-gray-100 text-gray-700';
+  const colorClass = filingTypeBadgeColors[baseType] || 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]';
   const isAmended = type.endsWith('/A');
 
   return (
@@ -276,7 +276,7 @@ function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardPr
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-gray-900 truncate">
+              <span className="font-semibold text-[var(--color-text)] truncate">
                 {alert.filing.symbol || alert.filing.companyName}
               </span>
               {isRecent && (
@@ -296,7 +296,7 @@ function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardPr
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-gray-600 flex-shrink-0">
+        <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] flex-shrink-0">
           <Clock className="w-3.5 h-3.5" />
           <span className="whitespace-nowrap">{formatTimeSince(alert.timestamp)}</span>
           {expanded ? (
@@ -321,12 +321,12 @@ function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardPr
           </div>
 
           {alert.filing.accessionNumber && (
-            <div className="text-xs text-gray-600">
+            <div className="text-xs text-[var(--color-text-secondary)]">
               Accession: {alert.filing.accessionNumber}
             </div>
           )}
 
-          <div className="p-2 bg-white/50 rounded text-sm">
+          <div className="p-2 bg-[var(--color-bg)]/50 rounded text-sm">
             <TrendingUp className="w-4 h-4 inline mr-2" />
             <span className="font-medium">Suggested Action: </span>
             {alert.suggestedAction}
@@ -349,7 +349,7 @@ function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardPr
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] text-sm font-medium rounded-lg hover:bg-[var(--color-border)] transition-colors"
               >
                 All Documents
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -468,9 +468,9 @@ export function SECFilingAlert({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <FileText className="w-5 h-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-900">SEC Filings</h3>
+          <h3 className="text-lg font-semibold text-[var(--color-text)]">SEC Filings</h3>
           {summary.total > 0 && (
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-[var(--color-text-muted)]">
               {summary.total} filing{summary.total !== 1 ? 's' : ''} (last 30 days)
             </span>
           )}
@@ -495,7 +495,7 @@ export function SECFilingAlert({
             <Badge variant="warning">{summary.high} High</Badge>
           )}
           {summary.medium > 0 && (
-            <span className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
+            <span className="px-2 py-1 text-xs font-medium bg-amber-500/10 text-amber-600 rounded-full">
               {summary.medium} Medium
             </span>
           )}
@@ -507,10 +507,10 @@ export function SECFilingAlert({
 
       {/* Filters */}
       {showFilters && allAlerts.length > 0 && (
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+        <div className="mb-4 p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
           <div className="flex items-center gap-2 mb-2">
-            <Filter className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Filter by type:</span>
+            <Filter className="w-4 h-4 text-[var(--color-text-muted)]" />
+            <span className="text-sm font-medium text-[var(--color-text-secondary)]">Filter by type:</span>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -518,7 +518,7 @@ export function SECFilingAlert({
               className={`px-2 py-1 text-xs rounded-full transition-colors ${
                 filterType === 'all'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-100'
+                  : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
               }`}
             >
               All ({allAlerts.length})
@@ -531,7 +531,7 @@ export function SECFilingAlert({
                   className={`px-2 py-1 text-xs rounded-full transition-colors ${
                     filterType === type
                       ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
+                      : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
                   }`}
                 >
                   {type} ({typeCounts[type]})
@@ -546,7 +546,7 @@ export function SECFilingAlert({
                 className={`px-2 py-1 text-xs rounded-full transition-colors ${
                   filterType === 'other'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                    : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
                 }`}
               >
                 Other
@@ -558,7 +558,7 @@ export function SECFilingAlert({
 
       {/* Loading state */}
       {isLoading && (
-        <div className="py-8 text-center text-gray-500">
+        <div className="py-8 text-center text-[var(--color-text-muted)]">
           <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin" />
           <p>Loading SEC filings...</p>
         </div>
@@ -568,7 +568,7 @@ export function SECFilingAlert({
       {error && (
         <div className="py-6 text-center">
           <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-amber-500" />
-          <p className="text-gray-600">Failed to load SEC filings</p>
+          <p className="text-[var(--color-text-secondary)]">Failed to load SEC filings</p>
           <Button
             variant="secondary"
             size="sm"
@@ -582,8 +582,8 @@ export function SECFilingAlert({
 
       {/* Empty state */}
       {!isLoading && !error && filteredAlerts.length === 0 && (
-        <div className="py-8 text-center text-gray-500">
-          <FileText className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+        <div className="py-8 text-center text-[var(--color-text-muted)]">
+          <FileText className="w-8 h-8 mx-auto mb-2 text-[var(--color-text-muted)]" />
           {filterType !== 'all' || filterSeverity !== 'all' ? (
             <>
               <p>No filings match the current filters</p>
@@ -629,7 +629,7 @@ export function SECFilingAlert({
       {filteredAlerts.length > maxAlerts && (
         <button
           onClick={() => setShowAllFilings(!showAllFilings)}
-          className="w-full mt-3 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+          className="w-full mt-3 py-2 text-sm text-blue-600 hover:text-blue-500 font-medium transition-colors"
         >
           {showAllFilings
             ? 'Show less'
@@ -639,7 +639,7 @@ export function SECFilingAlert({
 
       {/* Footer */}
       {symbols.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500 flex items-center justify-between">
+        <div className="mt-4 pt-3 border-t border-[var(--color-border-light)] text-xs text-[var(--color-text-muted)] flex items-center justify-between">
           <span>
             Monitoring: {symbols.slice(0, 5).join(', ')}
             {symbols.length > 5 && ` +${symbols.length - 5} more`}

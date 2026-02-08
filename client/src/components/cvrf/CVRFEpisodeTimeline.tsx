@@ -37,24 +37,24 @@ function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
   return (
     <div
       className={`rounded-lg border ${
-        isActive ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200 bg-white'
+        isActive ? 'border-indigo-300 bg-indigo-50' : 'border-[var(--color-border)] bg-[var(--color-bg)]'
       } overflow-hidden`}
     >
       {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        className="w-full p-4 flex items-center justify-between hover:bg-[var(--color-bg-tertiary)] transition-colors"
       >
         <div className="flex items-center gap-3">
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              isActive ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-600'
+              isActive ? 'bg-indigo-500 text-white' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
             }`}
           >
             {isActive ? <Play className="w-4 h-4" /> : <Square className="w-4 h-4" />}
           </div>
           <div className="text-left">
-            <div className="font-medium text-gray-900">
+            <div className="font-medium text-[var(--color-text)]">
               Episode {episode.episodeNumber}
               {isActive && (
                 <span className="ml-2 text-xs bg-indigo-500 text-white px-2 py-0.5 rounded-full">
@@ -62,7 +62,7 @@ function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
                 </span>
               )}
             </div>
-            <div className="text-xs text-gray-500 flex items-center gap-1">
+            <div className="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {formatDate(episode.startDate)}
               {duration && ` • ${duration}s`}
@@ -79,23 +79,23 @@ function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
               </span>
             </div>
           )}
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-[var(--color-text-muted)]">
             {episode.decisionsCount} decisions
           </div>
           {expanded ? (
-            <ChevronUp className="w-4 h-4 text-gray-400" />
+            <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
           )}
         </div>
       </button>
 
       {/* Expanded Details */}
       {expanded && (
-        <div className="px-4 pb-4 border-t border-gray-100">
+        <div className="px-4 pb-4 border-t border-[var(--color-border-light)]">
           <div className="pt-3 grid grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-xs text-gray-500">Return</div>
+              <div className="text-xs text-[var(--color-text-muted)]">Return</div>
               <div className={`font-bold ${returnColor}`}>
                 {episode.portfolioReturn !== undefined
                   ? `${(episode.portfolioReturn * 100).toFixed(2)}%`
@@ -103,13 +103,13 @@ function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
               </div>
             </div>
             <div>
-              <div className="text-xs text-gray-500">Sharpe</div>
-              <div className="font-bold text-gray-900">
+              <div className="text-xs text-[var(--color-text-muted)]">Sharpe</div>
+              <div className="font-bold text-[var(--color-text)]">
                 {episode.sharpeRatio?.toFixed(2) || '—'}
               </div>
             </div>
             <div>
-              <div className="text-xs text-gray-500">Max DD</div>
+              <div className="text-xs text-[var(--color-text-muted)]">Max DD</div>
               <div className="font-bold text-red-600">
                 {episode.maxDrawdown !== undefined
                   ? `${(episode.maxDrawdown * 100).toFixed(2)}%`
@@ -136,12 +136,12 @@ export function CVRFEpisodeTimeline() {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 animate-pulse">
+          <div key={i} className="bg-[var(--color-bg)] rounded-lg border border-[var(--color-border)] p-4 animate-pulse">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gray-200 rounded-full" />
+              <div className="w-8 h-8 bg-[var(--color-border)] rounded-full" />
               <div className="space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-24" />
-                <div className="h-3 bg-gray-200 rounded w-32" />
+                <div className="h-4 bg-[var(--color-border)] rounded w-24" />
+                <div className="h-3 bg-[var(--color-border)] rounded w-32" />
               </div>
             </div>
           </div>
@@ -152,7 +152,7 @@ export function CVRFEpisodeTimeline() {
 
   if (isError || !data) {
     return (
-      <div className="text-red-500 text-sm p-4 bg-red-50 rounded-lg">
+      <div className="text-red-500 text-sm p-4 bg-red-500/10 rounded-lg">
         Failed to load episodes
       </div>
     );
@@ -163,14 +163,14 @@ export function CVRFEpisodeTimeline() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-gray-900">Episode Timeline</h3>
-        <span className="text-xs text-gray-500">{data.totalEpisodes} total</span>
+        <h3 className="font-semibold text-[var(--color-text)]">Episode Timeline</h3>
+        <span className="text-xs text-[var(--color-text-muted)]">{data.totalEpisodes} total</span>
       </div>
 
       {!hasEpisodes ? (
-        <div className="text-center p-8 bg-gray-50 rounded-lg">
-          <div className="text-gray-400 mb-2">No episodes yet</div>
-          <div className="text-sm text-gray-500">
+        <div className="text-center p-8 bg-[var(--color-bg-tertiary)] rounded-lg">
+          <div className="text-[var(--color-text-muted)] mb-2">No episodes yet</div>
+          <div className="text-sm text-[var(--color-text-muted)]">
             Start a new episode to begin tracking decisions
           </div>
         </div>

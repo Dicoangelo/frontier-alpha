@@ -210,7 +210,7 @@ export function TradeExecutor({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Wallet className="w-5 h-5 text-blue-600" />
-            <h3 className="font-semibold text-gray-900">Account</h3>
+            <h3 className="font-semibold text-[var(--color-text)]">Account</h3>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant={brokerConnected ? 'success' : 'warning'}>
@@ -226,33 +226,33 @@ export function TradeExecutor({
         </div>
 
         {accountLoading ? (
-          <div className="flex items-center gap-2 text-gray-500">
+          <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
             <RefreshCw className="w-4 h-4 animate-spin" />
             Loading account...
           </div>
         ) : account ? (
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <p className="text-xs text-gray-500">Buying Power</p>
+              <p className="text-xs text-[var(--color-text-muted)]">Buying Power</p>
               <p className="text-lg font-semibold text-green-600">
                 ${account.buyingPower.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Cash</p>
-              <p className="text-lg font-semibold text-gray-900">
+              <p className="text-xs text-[var(--color-text-muted)]">Cash</p>
+              <p className="text-lg font-semibold text-[var(--color-text)]">
                 ${account.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Portfolio Value</p>
-              <p className="text-lg font-semibold text-gray-900">
+              <p className="text-xs text-[var(--color-text-muted)]">Portfolio Value</p>
+              <p className="text-lg font-semibold text-[var(--color-text)]">
                 ${account.portfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
             </div>
           </div>
         ) : (
-          <p className="text-gray-500">Account info unavailable</p>
+          <p className="text-[var(--color-text-muted)]">Account info unavailable</p>
         )}
       </Card>
 
@@ -260,28 +260,28 @@ export function TradeExecutor({
       <Card className="p-4">
         <div className="flex items-center gap-2 mb-4">
           <ShoppingCart className="w-5 h-5 text-purple-600" />
-          <h3 className="font-semibold text-gray-900">Place Order</h3>
+          <h3 className="font-semibold text-[var(--color-text)]">Place Order</h3>
         </div>
 
         <form id="order-form" onSubmit={handleSubmit} className="space-y-4">
           {/* Symbol with Quote */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Symbol</label>
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Symbol</label>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value.toUpperCase())}
                 placeholder="AAPL"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="flex-1 px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
               {quote && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-sm">
-                  <span className="text-gray-500">Bid:</span>
+                <div className="flex items-center gap-2 px-3 py-2 bg-[var(--color-bg-tertiary)] rounded-lg text-sm">
+                  <span className="text-[var(--color-text-muted)]">Bid:</span>
                   <span className="font-medium">${quote.bid.toFixed(2)}</span>
-                  <span className="text-gray-400">|</span>
-                  <span className="text-gray-500">Ask:</span>
+                  <span className="text-[var(--color-text-muted)]">|</span>
+                  <span className="text-[var(--color-text-muted)]">Ask:</span>
                   <span className="font-medium">${quote.ask.toFixed(2)}</span>
                 </div>
               )}
@@ -290,7 +290,7 @@ export function TradeExecutor({
 
           {/* Side Toggle */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Side</label>
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Side</label>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -298,7 +298,7 @@ export function TradeExecutor({
                 className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
                   side === 'buy'
                     ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
                 }`}
               >
                 <TrendingUp className="w-4 h-4" />
@@ -310,7 +310,7 @@ export function TradeExecutor({
                 className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
                   side === 'sell'
                     ? 'bg-red-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
                 }`}
               >
                 <TrendingDown className="w-4 h-4" />
@@ -321,17 +321,17 @@ export function TradeExecutor({
 
           {/* Quantity */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Quantity</label>
             <input
               type="number"
               value={qty}
               onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
               min="1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             />
             {estimatedCost > 0 && (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-[var(--color-text-muted)] mt-1">
                 Estimated {side === 'buy' ? 'cost' : 'proceeds'}: ${estimatedCost.toFixed(2)}
               </p>
             )}
@@ -340,11 +340,11 @@ export function TradeExecutor({
           {/* Order Type */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Order Type</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Order Type</label>
               <select
                 value={orderType}
                 onChange={(e) => setOrderType(e.target.value as typeof orderType)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {orderTypeOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -355,11 +355,11 @@ export function TradeExecutor({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Time in Force</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Time in Force</label>
               <select
                 value={timeInForce}
                 onChange={(e) => setTimeInForce(e.target.value as typeof timeInForce)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {timeInForceOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -373,16 +373,16 @@ export function TradeExecutor({
           {/* Limit Price */}
           {needsLimitPrice && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Limit Price</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Limit Price</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
                 <input
                   type="number"
                   value={limitPrice || ''}
                   onChange={(e) => setLimitPrice(parseFloat(e.target.value) || undefined)}
                   step="0.01"
                   placeholder="0.00"
-                  className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-7 pr-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required={needsLimitPrice}
                 />
               </div>
@@ -392,16 +392,16 @@ export function TradeExecutor({
           {/* Stop Price */}
           {needsStopPrice && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Stop Price</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Stop Price</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
                 <input
                   type="number"
                   value={stopPrice || ''}
                   onChange={(e) => setStopPrice(parseFloat(e.target.value) || undefined)}
                   step="0.01"
                   placeholder="0.00"
-                  className="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-7 pr-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required={needsStopPrice}
                 />
               </div>
@@ -415,15 +415,15 @@ export function TradeExecutor({
                 type="checkbox"
                 checked={extendedHours}
                 onChange={(e) => setExtendedHours(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="w-4 h-4 rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
               />
-              <span className="text-sm text-gray-700">Extended hours trading</span>
+              <span className="text-sm text-[var(--color-text-secondary)]">Extended hours trading</span>
             </label>
           )}
 
           {/* Error Display */}
           {submitOrder.isError && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg">
+            <div className="flex items-center gap-2 p-3 bg-red-500/10 text-red-400 rounded-lg">
               <AlertCircle className="w-4 h-4" />
               <span className="text-sm">
                 {(submitOrder.error as any)?.response?.data?.error || 'Order submission failed'}
@@ -433,7 +433,7 @@ export function TradeExecutor({
 
           {/* Success Display */}
           {submitSuccess && (
-            <div className="flex items-center gap-2 p-3 bg-green-50 text-green-700 rounded-lg">
+            <div className="flex items-center gap-2 p-3 bg-green-500/10 text-green-600 rounded-lg">
               <CheckCircle className="w-4 h-4" />
               <span className="text-sm">Order submitted successfully!</span>
             </div>
@@ -463,7 +463,7 @@ export function TradeExecutor({
           </div>
 
           {!brokerConnected && (
-            <p className="text-xs text-center text-gray-500">
+            <p className="text-xs text-center text-[var(--color-text-muted)]">
               Demo mode - configure ALPACA_API_KEY for real trading
             </p>
           )}
@@ -475,59 +475,59 @@ export function TradeExecutor({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Order Preview</h3>
+              <h3 className="text-lg font-semibold text-[var(--color-text)]">Order Preview</h3>
               <button
                 onClick={() => setShowPreview(false)}
-                className="p-1 hover:bg-gray-100 rounded"
+                className="p-1 hover:bg-[var(--color-bg-secondary)] rounded"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-[var(--color-text-muted)]" />
               </button>
             </div>
 
             <div className="space-y-4">
               {/* Order Summary */}
-              <div className="p-4 bg-gray-50 rounded-lg space-y-2">
+              <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Symbol</span>
+                  <span className="text-[var(--color-text-secondary)]">Symbol</span>
                   <span className="font-semibold">{preview.symbol}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Side</span>
+                  <span className="text-[var(--color-text-secondary)]">Side</span>
                   <Badge variant={preview.side === 'buy' ? 'success' : 'danger'}>
                     {preview.side.toUpperCase()}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Quantity</span>
+                  <span className="text-[var(--color-text-secondary)]">Quantity</span>
                   <span className="font-semibold">{preview.qty}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Order Type</span>
+                  <span className="text-[var(--color-text-secondary)]">Order Type</span>
                   <span className="font-semibold capitalize">{preview.type}</span>
                 </div>
               </div>
 
               {/* Price Details */}
-              <div className="p-4 border border-gray-200 rounded-lg space-y-2">
+              <div className="p-4 border border-[var(--color-border)] rounded-lg space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Current Price</span>
+                  <span className="text-[var(--color-text-secondary)]">Current Price</span>
                   <span>${preview.currentPrice.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Estimated Price</span>
+                  <span className="text-[var(--color-text-secondary)]">Estimated Price</span>
                   <span>${preview.estimatedPrice.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Estimated Cost</span>
+                  <span className="text-[var(--color-text-secondary)]">Estimated Cost</span>
                   <span>${preview.estimatedCost.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Fees</span>
+                  <span className="text-[var(--color-text-secondary)]">Fees</span>
                   <span>${preview.estimatedFees.toFixed(2)}</span>
                 </div>
                 {preview.slippageEstimate > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Est. Slippage</span>
+                    <span className="text-[var(--color-text-secondary)]">Est. Slippage</span>
                     <span className="text-yellow-600">${preview.slippageEstimate.toFixed(2)}</span>
                   </div>
                 )}
@@ -545,7 +545,7 @@ export function TradeExecutor({
                   preview.marketImpact === 'medium' ? 'text-yellow-500' :
                   'text-green-500'
                 }`} />
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-[var(--color-text-secondary)]">
                   Market Impact: <span className="font-medium capitalize">{preview.marketImpact}</span>
                 </span>
               </div>
@@ -554,9 +554,9 @@ export function TradeExecutor({
               {validation && (
                 <>
                   {validation.errors.length > 0 && (
-                    <div className="p-3 bg-red-50 rounded-lg">
+                    <div className="p-3 bg-red-500/10 rounded-lg">
                       {validation.errors.map((error, i) => (
-                        <div key={i} className="flex items-start gap-2 text-red-700 text-sm">
+                        <div key={i} className="flex items-start gap-2 text-red-400 text-sm">
                           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                           <span>{error}</span>
                         </div>
@@ -565,7 +565,7 @@ export function TradeExecutor({
                   )}
 
                   {validation.warnings.length > 0 && (
-                    <div className="p-3 bg-yellow-50 rounded-lg space-y-1">
+                    <div className="p-3 bg-yellow-500/10 rounded-lg space-y-1">
                       {validation.warnings.map((warning, i) => (
                         <div key={i} className="flex items-start gap-2 text-yellow-700 text-sm">
                           <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -606,7 +606,7 @@ export function TradeExecutor({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Activity className="w-5 h-5 text-orange-600" />
-            <h3 className="font-semibold text-gray-900">Orders</h3>
+            <h3 className="font-semibold text-[var(--color-text)]">Orders</h3>
           </div>
           <Button
             variant="ghost"
@@ -619,13 +619,13 @@ export function TradeExecutor({
         </div>
 
         {ordersLoading && orders.length === 0 ? (
-          <div className="py-8 text-center text-gray-500">
+          <div className="py-8 text-center text-[var(--color-text-muted)]">
             <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin" />
             <p>Loading orders...</p>
           </div>
         ) : orders.length === 0 ? (
-          <div className="py-8 text-center text-gray-500">
-            <ShoppingCart className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+          <div className="py-8 text-center text-[var(--color-text-muted)]">
+            <ShoppingCart className="w-8 h-8 mx-auto mb-2 text-[var(--color-text-muted)]" />
             <p>No orders yet</p>
             <p className="text-sm">Place an order above to get started</p>
           </div>
@@ -634,12 +634,12 @@ export function TradeExecutor({
             {orders.slice(0, 10).map((order) => (
               <div
                 key={order.id}
-                className="p-3 border border-gray-100 rounded-lg flex items-center justify-between"
+                className="p-3 border border-[var(--color-border-light)] rounded-lg flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      order.side === 'buy' ? 'bg-green-100' : 'bg-red-100'
+                      order.side === 'buy' ? 'bg-green-500/10' : 'bg-red-500/10'
                     }`}
                   >
                     {order.side === 'buy' ? (
@@ -650,19 +650,19 @@ export function TradeExecutor({
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-900">{order.symbol}</span>
+                      <span className="font-semibold text-[var(--color-text)]">{order.symbol}</span>
                       <Badge variant={statusColors[order.status] || 'neutral'}>
                         {order.status}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-[var(--color-text-muted)]">
                       {order.qty} shares @ {order.type === 'market' ? 'Market' : `$${order.limitPrice || order.filledAvgPrice || '-'}`}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {order.filledQty > 0 && order.filledAvgPrice && (
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-[var(--color-text-secondary)]">
                       ${(order.filledQty * order.filledAvgPrice).toFixed(2)}
                     </span>
                   )}
@@ -722,14 +722,14 @@ export function TradeExecutorCompact({
   const estimatedCost = quote ? qty * (side === 'buy' ? quote.ask : quote.bid) : 0;
 
   return (
-    <div className={`p-4 bg-gray-50 rounded-lg ${className}`}>
+    <div className={`p-4 bg-[var(--color-bg-tertiary)] rounded-lg ${className}`}>
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <DollarSign className="w-5 h-5 text-blue-600" />
-          <span className="font-semibold text-gray-900">{symbol}</span>
+          <span className="font-semibold text-[var(--color-text)]">{symbol}</span>
         </div>
         {quote && (
-          <span className="text-sm text-gray-600">${quote.last.toFixed(2)}</span>
+          <span className="text-sm text-[var(--color-text-secondary)]">${quote.last.toFixed(2)}</span>
         )}
       </div>
       <div className="flex items-center gap-2">
@@ -738,7 +738,7 @@ export function TradeExecutorCompact({
           value={qty}
           onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
           min="1"
-          className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
+          className="w-20 px-2 py-1 border border-[var(--color-border)] rounded text-center"
         />
         <Button
           variant="primary"
@@ -766,7 +766,7 @@ export function TradeExecutorCompact({
         </Button>
       </div>
       {estimatedCost > 0 && (
-        <p className="text-xs text-gray-500 mt-2 text-center">
+        <p className="text-xs text-[var(--color-text-muted)] mt-2 text-center">
           Est. {side === 'buy' ? 'cost' : 'proceeds'}: ${estimatedCost.toFixed(2)}
         </p>
       )}

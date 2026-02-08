@@ -31,7 +31,7 @@ export function EarningsCalendar({
   if (earnings.length === 0) {
     return (
       <Card title="Upcoming Earnings">
-        <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+        <div className="flex flex-col items-center justify-center h-64 text-[var(--color-text-muted)]">
           <Calendar className="w-12 h-12 mb-4 opacity-50" />
           <p>No upcoming earnings in your portfolio</p>
           <p className="text-sm mt-1">Add positions to track their earnings</p>
@@ -51,21 +51,21 @@ export function EarningsCalendar({
             onClick={() => onSelect(earning.symbol)}
             className={`w-full p-4 rounded-lg border transition-all text-left ${
               selectedSymbol === earning.symbol
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                ? 'border-blue-500 bg-blue-500/10'
+                : 'border-[var(--color-border)] hover:border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-gray-900">{earning.symbol}</span>
+                  <span className="font-semibold text-[var(--color-text)]">{earning.symbol}</span>
                   <Badge variant={earning.daysUntil <= 7 ? 'warning' : 'default'}>
                     {earning.daysUntil === 0 ? 'Today' :
                      earning.daysUntil === 1 ? 'Tomorrow' :
                      `In ${earning.daysUntil} days`}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                <div className="flex items-center gap-4 mt-2 text-sm text-[var(--color-text-muted)]">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
                     {new Date(earning.reportDate).toLocaleDateString('en-US', {
@@ -79,14 +79,14 @@ export function EarningsCalendar({
                   </span>
                 </div>
                 {earning.fiscalQuarter && (
-                  <span className="text-xs text-gray-400 mt-1 block">
+                  <span className="text-xs text-[var(--color-text-muted)] mt-1 block">
                     {earning.fiscalQuarter}
                   </span>
                 )}
               </div>
               <div className="flex flex-col items-end">
                 {earning.expectedMove !== undefined && (
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-[var(--color-text-secondary)]">
                     ±{(earning.expectedMove * 100).toFixed(1)}%
                   </span>
                 )}

@@ -19,9 +19,9 @@ const ALERT_CONFIG: Record<string, {
 }> = {
   drawdown: {
     icon: <TrendingDown className="w-5 h-5 text-red-600" />,
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
-    iconBg: 'bg-red-100',
+    bgColor: 'bg-red-500/10',
+    borderColor: 'border-red-500/20',
+    iconBg: 'bg-red-500/10',
     actions: [
       { label: 'Reduce Risk', action: 'reduce_risk', variant: 'danger' },
       { label: 'Add Hedge', action: 'add_hedge', variant: 'secondary' },
@@ -29,9 +29,9 @@ const ALERT_CONFIG: Record<string, {
   },
   volatility_spike: {
     icon: <BarChart3 className="w-5 h-5 text-orange-600" />,
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-orange-200',
-    iconBg: 'bg-orange-100',
+    bgColor: 'bg-orange-500/10',
+    borderColor: 'border-orange-500/20',
+    iconBg: 'bg-orange-500/10',
     actions: [
       { label: 'Review Positions', action: 'review', variant: 'primary' },
       { label: 'Set Stops', action: 'set_stops', variant: 'secondary' },
@@ -39,9 +39,9 @@ const ALERT_CONFIG: Record<string, {
   },
   concentration: {
     icon: <Shield className="w-5 h-5 text-amber-600" />,
-    bgColor: 'bg-amber-50',
-    borderColor: 'border-amber-200',
-    iconBg: 'bg-amber-100',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/20',
+    iconBg: 'bg-amber-500/10',
     actions: [
       { label: 'Rebalance', action: 'rebalance', variant: 'primary' },
       { label: 'View Details', action: 'details', variant: 'secondary' },
@@ -49,9 +49,9 @@ const ALERT_CONFIG: Record<string, {
   },
   earnings: {
     icon: <Calendar className="w-5 h-5 text-blue-600" />,
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    iconBg: 'bg-blue-100',
+    bgColor: 'bg-blue-500/10',
+    borderColor: 'border-blue-500/20',
+    iconBg: 'bg-blue-500/10',
     actions: [
       { label: 'View Forecast', action: 'view_forecast', variant: 'primary' },
       { label: 'Trim Position', action: 'trim', variant: 'secondary' },
@@ -59,9 +59,9 @@ const ALERT_CONFIG: Record<string, {
   },
   factor_drift: {
     icon: <BarChart3 className="w-5 h-5 text-purple-600" />,
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-200',
-    iconBg: 'bg-purple-100',
+    bgColor: 'bg-purple-500/10',
+    borderColor: 'border-purple-500/20',
+    iconBg: 'bg-purple-500/10',
     actions: [
       { label: 'Adjust Factors', action: 'adjust_factors', variant: 'primary' },
       { label: 'Ignore', action: 'ignore', variant: 'secondary' },
@@ -70,20 +70,20 @@ const ALERT_CONFIG: Record<string, {
 };
 
 const SEVERITY_CONFIG: Record<string, { label: string; color: string; indicator: string }> = {
-  critical: { label: 'Critical', color: 'text-red-700 bg-red-100', indicator: '🔴' },
-  high: { label: 'High', color: 'text-orange-700 bg-orange-100', indicator: '🟠' },
-  medium: { label: 'Medium', color: 'text-yellow-700 bg-yellow-100', indicator: '🟡' },
-  low: { label: 'Low', color: 'text-blue-700 bg-blue-100', indicator: '🔵' },
+  critical: { label: 'Critical', color: 'text-red-400 bg-red-500/10', indicator: '🔴' },
+  high: { label: 'High', color: 'text-orange-500 bg-orange-500/10', indicator: '🟠' },
+  medium: { label: 'Medium', color: 'text-yellow-500 bg-yellow-500/10', indicator: '🟡' },
+  low: { label: 'Low', color: 'text-blue-500 bg-blue-500/10', indicator: '🔵' },
 };
 
 export function AlertCard({ alert, onAcknowledge, onAction }: AlertCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const config = ALERT_CONFIG[alert.type] || {
-    icon: <AlertCircle className="w-5 h-5 text-gray-600" />,
-    bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-200',
-    iconBg: 'bg-gray-100',
+    icon: <AlertCircle className="w-5 h-5 text-[var(--color-text-secondary)]" />,
+    bgColor: 'bg-[var(--color-bg-tertiary)]',
+    borderColor: 'border-[var(--color-border)]',
+    iconBg: 'bg-[var(--color-bg-secondary)]',
     actions: [{ label: 'Dismiss', action: 'dismiss', variant: 'secondary' as const }],
   };
 
@@ -117,7 +117,7 @@ export function AlertCard({ alert, onAcknowledge, onAction }: AlertCardProps) {
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2 mb-1">
-              <h4 className="font-semibold text-gray-900 truncate">{alert.title}</h4>
+              <h4 className="font-semibold text-[var(--color-text)] truncate">{alert.title}</h4>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${severity.color}`}>
                   {severity.indicator} {severity.label}
@@ -125,7 +125,7 @@ export function AlertCard({ alert, onAcknowledge, onAction }: AlertCardProps) {
                 {!alert.acknowledged && onAcknowledge && (
                   <button
                     onClick={() => onAcknowledge(alert.id)}
-                    className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-colors"
+                    className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] rounded transition-colors"
                     title="Dismiss"
                   >
                     <X className="w-4 h-4" />
@@ -134,15 +134,15 @@ export function AlertCard({ alert, onAcknowledge, onAction }: AlertCardProps) {
               </div>
             </div>
 
-            <p className="text-sm text-gray-600 line-clamp-2">{alert.message}</p>
+            <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2">{alert.message}</p>
 
             <div className="flex items-center justify-between mt-2">
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-[var(--color-text-muted)]">
                 {formatTimestamp(alert.timestamp)}
               </span>
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
               >
                 {isExpanded ? (
                   <>
@@ -161,7 +161,7 @@ export function AlertCard({ alert, onAcknowledge, onAction }: AlertCardProps) {
 
       {/* Expanded content with actions */}
       {isExpanded && (
-        <div className="px-4 pb-4 pt-2 border-t border-gray-200/50">
+        <div className="px-4 pb-4 pt-2 border-t border-[var(--color-border)]/50">
           <div className="flex flex-wrap gap-2">
             {config.actions.map((action) => (
               <Button
@@ -208,8 +208,8 @@ export function AlertList({ alerts, onAcknowledge, onAction, maxVisible = 5 }: A
 
   if (unacknowledged.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <Shield className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+      <div className="text-center py-8 text-[var(--color-text-muted)]">
+        <Shield className="w-12 h-12 mx-auto mb-3 text-[var(--color-text-muted)]" />
         <p>No active alerts</p>
         <p className="text-sm mt-1">Your portfolio looks good!</p>
       </div>
@@ -230,7 +230,7 @@ export function AlertList({ alerts, onAcknowledge, onAction, maxVisible = 5 }: A
       {unacknowledged.length > maxVisible && (
         <button
           onClick={() => setShowAll(!showAll)}
-          className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          className="w-full py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
         >
           {showAll
             ? 'Show less'

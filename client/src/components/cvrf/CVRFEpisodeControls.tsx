@@ -30,10 +30,10 @@ interface RecordDecisionModalProps {
 }
 
 const ACTION_OPTIONS = [
-  { value: 'buy', label: 'Buy', icon: TrendingUp, color: 'text-green-600 bg-green-50 border-green-200' },
-  { value: 'sell', label: 'Sell', icon: TrendingDown, color: 'text-red-600 bg-red-50 border-red-200' },
-  { value: 'hold', label: 'Hold', icon: Minus, color: 'text-gray-600 bg-gray-50 border-gray-200' },
-  { value: 'rebalance', label: 'Rebalance', icon: RotateCcw, color: 'text-blue-600 bg-blue-50 border-blue-200' },
+  { value: 'buy', label: 'Buy', icon: TrendingUp, color: 'text-green-600 bg-green-500/10 border-green-500/20' },
+  { value: 'sell', label: 'Sell', icon: TrendingDown, color: 'text-red-600 bg-red-500/10 border-red-500/20' },
+  { value: 'hold', label: 'Hold', icon: Minus, color: 'text-[var(--color-text-secondary)] bg-[var(--color-bg-tertiary)] border-[var(--color-border)]' },
+  { value: 'rebalance', label: 'Rebalance', icon: RotateCcw, color: 'text-blue-600 bg-blue-500/10 border-blue-500/20' },
 ] as const;
 
 function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModalProps) {
@@ -103,15 +103,15 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-[var(--color-bg)] rounded-xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2">
           <PlusCircle className="w-5 h-5 text-indigo-500" />
           Record Trading Decision
         </h3>
 
         {/* Symbol */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
             Symbol <span className="text-red-500">*</span>
           </label>
           <input
@@ -119,13 +119,13 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
             placeholder="e.g., AAPL, NVDA, TSLA"
             value={symbol}
             onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+            className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
           />
         </div>
 
         {/* Action */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
             Action <span className="text-red-500">*</span>
           </label>
           <div className="grid grid-cols-4 gap-2">
@@ -140,7 +140,7 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
                   className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
                     isSelected
                       ? opt.color + ' border-current'
-                      : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
+                      : 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-border)]'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -154,7 +154,7 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
         {/* Weights */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
               Weight Before (%)
             </label>
             <input
@@ -165,11 +165,11 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
               placeholder="e.g., 5.0"
               value={weightBefore}
               onChange={(e) => setWeightBefore(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
               Weight After (%)
             </label>
             <input
@@ -180,14 +180,14 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
               placeholder="e.g., 10.0"
               value={weightAfter}
               onChange={(e) => setWeightAfter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
         </div>
 
         {/* Confidence Slider */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
             Confidence: <span className="text-indigo-600 font-bold">{confidence}%</span>
           </label>
           <input
@@ -197,9 +197,9 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
             step="5"
             value={confidence}
             onChange={(e) => setConfidence(e.target.value)}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+            className="w-full h-2 bg-[var(--color-border)] rounded-lg appearance-none cursor-pointer accent-indigo-600"
           />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <div className="flex justify-between text-xs text-[var(--color-text-muted)] mt-1">
             <span>Low</span>
             <span>Medium</span>
             <span>High</span>
@@ -208,7 +208,7 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
 
         {/* Reason */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
             Reason <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -216,13 +216,13 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+            className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
           />
         </div>
 
         {/* Error */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm flex items-center gap-2">
+          <div className="mb-4 p-3 bg-red-500/10 text-red-400 rounded-lg text-sm flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
             {error}
           </div>
@@ -233,7 +233,7 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
           <button
             onClick={handleClose}
             disabled={recordDecision.isPending}
-            className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg text-sm font-medium hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50"
           >
             Cancel
           </button>
@@ -295,43 +295,43 @@ function CloseEpisodeModal({ isOpen, onClose, onConfirm, isClosing }: CloseEpiso
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Close Episode</h3>
+      <div className="bg-[var(--color-bg)] rounded-xl p-6 w-full max-w-md shadow-xl">
+        <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Close Episode</h3>
 
         {/* Performance Metrics */}
         <div className="space-y-3 mb-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Portfolio Return (%)</label>
+            <label className="block text-sm text-[var(--color-text-secondary)] mb-1">Portfolio Return (%)</label>
             <input
               type="number"
               step="0.01"
               placeholder="e.g., 2.5"
               value={portfolioReturn}
               onChange={(e) => setPortfolioReturn(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Sharpe Ratio</label>
+              <label className="block text-sm text-[var(--color-text-secondary)] mb-1">Sharpe Ratio</label>
               <input
                 type="number"
                 step="0.01"
                 placeholder="e.g., 1.5"
                 value={sharpeRatio}
                 onChange={(e) => setSharpeRatio(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">Max Drawdown (%)</label>
+              <label className="block text-sm text-[var(--color-text-secondary)] mb-1">Max Drawdown (%)</label>
               <input
                 type="number"
                 step="0.01"
                 placeholder="e.g., -5.0"
                 value={maxDrawdown}
                 onChange={(e) => setMaxDrawdown(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
           </div>
@@ -346,7 +346,7 @@ function CloseEpisodeModal({ isOpen, onClose, onConfirm, isClosing }: CloseEpiso
             onChange={(e) => setRunCycle(e.target.checked)}
             className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
           />
-          <label htmlFor="runCycle" className="text-sm text-gray-700">
+          <label htmlFor="runCycle" className="text-sm text-[var(--color-text-secondary)]">
             Run CVRF cycle to update beliefs
           </label>
         </div>
@@ -356,7 +356,7 @@ function CloseEpisodeModal({ isOpen, onClose, onConfirm, isClosing }: CloseEpiso
           <button
             onClick={onClose}
             disabled={isClosing}
-            className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+            className="flex-1 px-4 py-2 border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg text-sm font-medium hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50"
           >
             Cancel
           </button>
@@ -436,14 +436,14 @@ export function CVRFEpisodeControls() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-4 animate-pulse">
-        <div className="h-10 bg-gray-200 rounded-lg" />
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-4 animate-pulse">
+        <div className="h-10 bg-[var(--color-border)] rounded-lg" />
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
+    <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-4">
       {/* Status Bar */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -452,13 +452,13 @@ export function CVRFEpisodeControls() {
               hasActiveEpisode ? 'bg-green-500 animate-pulse' : 'bg-gray-300'
             }`}
           />
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-[var(--color-text-secondary)]">
             {hasActiveEpisode
               ? `Episode ${activeEpisode?.episodeNumber} active`
               : 'No active episode'}
           </span>
         </div>
-        <span className="text-xs text-gray-400">{totalEpisodes} total episodes</span>
+        <span className="text-xs text-[var(--color-text-muted)]">{totalEpisodes} total episodes</span>
       </div>
 
       {/* Action Buttons */}
@@ -526,8 +526,8 @@ export function CVRFEpisodeControls() {
         <div
           className={`mt-3 p-3 rounded-lg flex items-center gap-2 text-sm ${
             result.type === 'success'
-              ? 'bg-green-50 text-green-700'
-              : 'bg-red-50 text-red-700'
+              ? 'bg-green-500/10 text-green-600'
+              : 'bg-red-500/10 text-red-400'
           }`}
         >
           {result.type === 'success' ? (

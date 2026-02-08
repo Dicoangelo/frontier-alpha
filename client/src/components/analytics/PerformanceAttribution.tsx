@@ -132,7 +132,7 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
       action={
         <button
           onClick={fetchAttribution}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+          className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-lg"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
@@ -141,15 +141,15 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
       <div className="space-y-6">
         {/* Period Selector */}
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+          <div className="flex gap-1 bg-[var(--color-bg-secondary)] rounded-lg p-1">
             {PERIODS.map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
                 className={`px-3 py-1 text-sm rounded-md transition-colors ${
                   period === p
-                    ? 'bg-white shadow text-gray-900'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]'
+                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
                 }`}
               >
                 {p}
@@ -157,13 +157,13 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
             ))}
           </div>
 
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+          <div className="flex gap-1 bg-[var(--color-bg-secondary)] rounded-lg p-1">
             <button
               onClick={() => setView('brinson')}
               className={`px-3 py-1 text-sm rounded-md transition-colors flex items-center gap-1 ${
                 view === 'brinson'
-                  ? 'bg-white shadow text-gray-900'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
               }`}
             >
               <PieChart className="w-3 h-3" />
@@ -173,8 +173,8 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
               onClick={() => setView('factor')}
               className={`px-3 py-1 text-sm rounded-md transition-colors flex items-center gap-1 ${
                 view === 'factor'
-                  ? 'bg-white shadow text-gray-900'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]'
+                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
               }`}
             >
               <Layers className="w-3 h-3" />
@@ -185,19 +185,19 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-xs text-gray-500 mb-1">Portfolio Return</p>
+          <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4">
+            <p className="text-xs text-[var(--color-text-muted)] mb-1">Portfolio Return</p>
             <p className={`text-xl font-bold ${data.brinson.totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {formatPercent(data.brinson.totalReturn)}
             </p>
           </div>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-xs text-gray-500 mb-1">Benchmark Return</p>
+          <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4">
+            <p className="text-xs text-[var(--color-text-muted)] mb-1">Benchmark Return</p>
             <p className={`text-xl font-bold ${data.brinson.benchmarkReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {formatPercent(data.brinson.benchmarkReturn)}
             </p>
           </div>
-          <div className="bg-blue-50 rounded-lg p-4">
+          <div className="bg-blue-500/10 rounded-lg p-4">
             <p className="text-xs text-blue-600 mb-1">Active Return</p>
             <p className={`text-xl font-bold ${data.brinson.activeReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {formatPercent(data.brinson.activeReturn)}
@@ -217,35 +217,35 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
             {/* Effects Summary */}
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 border rounded-lg">
-                <p className="text-sm text-gray-500 mb-1">Allocation Effect</p>
+                <p className="text-sm text-[var(--color-text-muted)] mb-1">Allocation Effect</p>
                 <p className={`text-lg font-bold ${data.brinson.allocationEffect >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formatBps(data.brinson.allocationEffect)}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">Sector weight decisions</p>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">Sector weight decisions</p>
               </div>
               <div className="p-4 border rounded-lg">
-                <p className="text-sm text-gray-500 mb-1">Selection Effect</p>
+                <p className="text-sm text-[var(--color-text-muted)] mb-1">Selection Effect</p>
                 <p className={`text-lg font-bold ${data.brinson.selectionEffect >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formatBps(data.brinson.selectionEffect)}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">Stock picking within sectors</p>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">Stock picking within sectors</p>
               </div>
               <div className="p-4 border rounded-lg">
-                <p className="text-sm text-gray-500 mb-1">Interaction Effect</p>
+                <p className="text-sm text-[var(--color-text-muted)] mb-1">Interaction Effect</p>
                 <p className={`text-lg font-bold ${data.brinson.interactionEffect >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formatBps(data.brinson.interactionEffect)}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">Combined decisions</p>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">Combined decisions</p>
               </div>
             </div>
 
             {/* Sector Breakdown */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Sector Breakdown</h4>
+              <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">Sector Breakdown</h4>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-gray-500 border-b">
+                    <tr className="text-left text-[var(--color-text-muted)] border-b">
                       <th className="pb-2 font-medium">Sector</th>
                       <th className="pb-2 font-medium text-right">Allocation</th>
                       <th className="pb-2 font-medium text-right">Selection</th>
@@ -255,8 +255,8 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
                   </thead>
                   <tbody>
                     {data.brinson.sectorBreakdown.slice(0, 6).map((sector) => (
-                      <tr key={sector.sector} className="border-b border-gray-100">
-                        <td className="py-2 font-medium text-gray-900">{sector.sector}</td>
+                      <tr key={sector.sector} className="border-b border-[var(--color-border-light)]">
+                        <td className="py-2 font-medium text-[var(--color-text)]">{sector.sector}</td>
                         <td className={`py-2 text-right ${sector.allocation >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {formatBps(sector.allocation)}
                         </td>
@@ -284,24 +284,24 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
             {/* Factor Return Breakdown */}
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 border rounded-lg">
-                <p className="text-sm text-gray-500 mb-1">Factor Return</p>
+                <p className="text-sm text-[var(--color-text-muted)] mb-1">Factor Return</p>
                 <p className={`text-lg font-bold ${data.factor.factorReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formatPercent(data.factor.factorReturn)}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">From systematic exposures</p>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">From systematic exposures</p>
               </div>
               <div className="p-4 border rounded-lg">
-                <p className="text-sm text-gray-500 mb-1">Specific Return</p>
+                <p className="text-sm text-[var(--color-text-muted)] mb-1">Specific Return</p>
                 <p className={`text-lg font-bold ${data.factor.specificReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {formatPercent(data.factor.specificReturn)}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">Idiosyncratic / stock-specific</p>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">Idiosyncratic / stock-specific</p>
               </div>
             </div>
 
             {/* Factor Contributions */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Factor Contributions</h4>
+              <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">Factor Contributions</h4>
               <div className="space-y-3">
                 {data.factor.factors.map((factor) => {
                   const maxContribution = Math.max(...data.factor.factors.map((f) => Math.abs(f.contribution)));
@@ -311,18 +311,18 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
                   return (
                     <div key={factor.factor} className="space-y-1">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-700 capitalize">{factor.factor.replace('_', ' ')}</span>
+                        <span className="text-[var(--color-text-secondary)] capitalize">{factor.factor.replace('_', ' ')}</span>
                         <span className={isPositive ? 'text-green-600' : 'text-red-600'}>
                           {formatBps(factor.contribution)}
                         </span>
                       </div>
-                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full ${isPositive ? 'bg-green-500' : 'bg-red-500'}`}
                           style={{ width: `${barWidth}%` }}
                         />
                       </div>
-                      <div className="flex justify-between text-xs text-gray-400">
+                      <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
                         <span>Exposure: {factor.exposure.toFixed(2)}</span>
                         <span>Factor Return: {formatPercent(factor.factorReturn)}</span>
                       </div>
@@ -337,37 +337,37 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
         {/* Top Contributors & Detractors */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+            <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-green-500" />
               Top Contributors
             </h4>
             <div className="space-y-2">
               {data.topContributors.map((c) => (
-                <div key={c.symbol} className="flex justify-between items-center p-2 bg-green-50 rounded">
-                  <span className="font-medium text-gray-900">{c.symbol}</span>
+                <div key={c.symbol} className="flex justify-between items-center p-2 bg-green-500/10 rounded">
+                  <span className="font-medium text-[var(--color-text)]">{c.symbol}</span>
                   <span className="text-green-600">{formatBps(c.contribution)}</span>
                 </div>
               ))}
               {data.topContributors.length === 0 && (
-                <p className="text-sm text-gray-500">No positive contributors</p>
+                <p className="text-sm text-[var(--color-text-muted)]">No positive contributors</p>
               )}
             </div>
           </div>
 
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+            <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3 flex items-center gap-2">
               <TrendingDown className="w-4 h-4 text-red-500" />
               Top Detractors
             </h4>
             <div className="space-y-2">
               {data.topDetractors.map((c) => (
-                <div key={c.symbol} className="flex justify-between items-center p-2 bg-red-50 rounded">
-                  <span className="font-medium text-gray-900">{c.symbol}</span>
+                <div key={c.symbol} className="flex justify-between items-center p-2 bg-red-500/10 rounded">
+                  <span className="font-medium text-[var(--color-text)]">{c.symbol}</span>
                   <span className="text-red-600">{formatBps(c.contribution)}</span>
                 </div>
               ))}
               {data.topDetractors.length === 0 && (
-                <p className="text-sm text-gray-500">No negative detractors</p>
+                <p className="text-sm text-[var(--color-text-muted)]">No negative detractors</p>
               )}
             </div>
           </div>

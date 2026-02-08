@@ -16,11 +16,11 @@ interface Alert {
 }
 
 const severityConfig = {
-  critical: { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50' },
-  high: { icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-50' },
-  medium: { icon: AlertCircle, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-  low: { icon: Info, color: 'text-blue-600', bg: 'bg-blue-50' },
-  info: { icon: Info, color: 'text-gray-600', bg: 'bg-gray-50' },
+  critical: { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-500/10' },
+  high: { icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-500/10' },
+  medium: { icon: AlertCircle, color: 'text-yellow-600', bg: 'bg-yellow-500/10' },
+  low: { icon: Info, color: 'text-blue-600', bg: 'bg-blue-500/10' },
+  info: { icon: Info, color: 'text-[var(--color-text-secondary)]', bg: 'bg-[var(--color-bg-tertiary)]' },
 };
 
 export function AlertDropdown() {
@@ -68,7 +68,7 @@ export function AlertDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+        className="relative p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-lg"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
@@ -79,12 +79,12 @@ export function AlertDropdown() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-lg border z-50">
+        <div className="absolute right-0 mt-2 w-96 bg-[var(--color-bg)] rounded-xl shadow-lg border z-50">
           <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="font-semibold text-gray-900">Alerts</h3>
+            <h3 className="font-semibold text-[var(--color-text)]">Alerts</h3>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1 text-gray-400 hover:text-gray-600 rounded"
+              className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] rounded"
             >
               <X className="w-4 h-4" />
             </button>
@@ -94,8 +94,8 @@ export function AlertDropdown() {
             {alerts.length === 0 ? (
               <div className="p-8 text-center">
                 <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
-                <p className="text-gray-500">No alerts</p>
-                <p className="text-sm text-gray-400">You're all caught up!</p>
+                <p className="text-[var(--color-text-muted)]">No alerts</p>
+                <p className="text-sm text-[var(--color-text-muted)]">You're all caught up!</p>
               </div>
             ) : (
               alerts.slice(0, 20).map((alert) => {
@@ -115,7 +115,7 @@ export function AlertDropdown() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="font-medium text-gray-900 text-sm truncate">
+                          <p className="font-medium text-[var(--color-text)] text-sm truncate">
                             {alert.title}
                           </p>
                           {!alert.acknowledged_at && (
@@ -127,10 +127,10 @@ export function AlertDropdown() {
                             </button>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                        <p className="text-sm text-[var(--color-text-muted)] mt-1 line-clamp-2">
                           {alert.message}
                         </p>
-                        <p className="text-xs text-gray-400 mt-2">
+                        <p className="text-xs text-[var(--color-text-muted)] mt-2">
                           {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
                         </p>
                       </div>

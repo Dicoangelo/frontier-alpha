@@ -203,7 +203,7 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
               {formatPercent(data.brinson.activeReturn)}
             </p>
           </div>
-          <div className="bg-purple-50 rounded-lg p-4">
+          <div className="bg-purple-500/10 rounded-lg p-4">
             <p className="text-xs text-purple-600 mb-1">Specific Return</p>
             <p className={`text-xl font-bold ${data.factor.specificReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {formatPercent(data.factor.specificReturn)}

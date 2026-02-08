@@ -26,7 +26,7 @@ export function CVRFStatsCard() {
 
   if (isError || !stats) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-red-200 p-6">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-red-500/20 p-6">
         <div className="text-red-500 text-sm">Failed to load CVRF stats</div>
       </div>
     );
@@ -104,7 +104,7 @@ export function CVRFStatsCard() {
           {Object.entries(stats.factors.weights).map(([factor, weight]) => (
             <span
               key={factor}
-              className="px-2 py-1 bg-indigo-50 text-indigo-700 text-xs rounded-full"
+              className="px-2 py-1 bg-indigo-500/10 text-indigo-700 text-xs rounded-full"
             >
               {factor}: {weight}
             </span>

@@ -413,7 +413,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                           <button
                             onClick={() => revokeShareMutation.mutate(share.id)}
                             disabled={revokeShareMutation.isPending}
-                            className="p-2 text-[var(--color-text-muted)] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-[var(--color-text-muted)] hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors"
                             title="Revoke share"
                           >
                             <Trash2 className="w-4 h-4" />

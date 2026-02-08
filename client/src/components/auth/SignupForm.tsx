@@ -86,8 +86,8 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
       {displayError && (
         <div className={`p-3 rounded-lg border ${
           displayError.includes('check your email')
-            ? 'bg-green-500/10 border-green-200'
-            : 'bg-red-500/10 border-red-200'
+            ? 'bg-green-500/10 border-green-500/20'
+            : 'bg-red-500/10 border-red-500/20'
         }`}>
           <p className={`text-sm ${
             displayError.includes('check your email')

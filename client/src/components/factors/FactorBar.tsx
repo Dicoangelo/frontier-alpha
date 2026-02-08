@@ -43,13 +43,13 @@ const FACTOR_INFO: Record<string, { category: string; color: string; description
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Momentum: 'bg-blue-100 text-blue-700 border-blue-200',
-  Quality: 'bg-green-100 text-green-700 border-green-200',
-  Value: 'bg-purple-100 text-purple-700 border-purple-200',
-  Volatility: 'bg-orange-100 text-orange-700 border-orange-200',
-  Size: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-  Macro: 'bg-red-100 text-red-700 border-red-200',
-  Sector: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+  Momentum: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+  Quality: 'bg-green-500/10 text-green-500 border-green-500/20',
+  Value: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+  Volatility: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
+  Size: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
+  Macro: 'bg-red-500/10 text-red-500 border-red-500/20',
+  Sector: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
   Other: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)]',
 };
 

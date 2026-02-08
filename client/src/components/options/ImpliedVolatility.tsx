@@ -425,7 +425,7 @@ export function ImpliedVolatility({
 
                 {/* Earnings Expected Move (if available) */}
                 {iv.expectedMove.earnings !== undefined && (
-                  <div className="mb-3 p-2 bg-purple-50 rounded-lg border border-purple-200">
+                  <div className="mb-3 p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <BarChart3 className="w-4 h-4 text-purple-600" />
@@ -531,7 +531,7 @@ export function ImpliedVolatilityCompact({
     ? 'bg-orange-500/10 border-orange-500/20'
     : portfolioIV.insights?.overallSignal === 'low_iv'
     ? 'bg-green-500/10 border-green-500/20'
-    : 'bg-purple-50 border-purple-200';
+    : 'bg-purple-500/10 border-purple-500/20';
 
   return (
     <div className={`p-4 rounded-lg border ${signalColor} ${className}`}>

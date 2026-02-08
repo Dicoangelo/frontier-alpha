@@ -338,7 +338,7 @@ function CloseEpisodeModal({ isOpen, onClose, onConfirm, isClosing }: CloseEpiso
         </div>
 
         {/* Run CVRF Cycle Toggle */}
-        <div className="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg mb-4">
+        <div className="flex items-center gap-3 p-3 bg-indigo-500/10 rounded-lg mb-4">
           <input
             type="checkbox"
             id="runCycle"
@@ -504,7 +504,7 @@ export function CVRFEpisodeControls() {
 
       {/* Active Episode Info */}
       {hasActiveEpisode && activeEpisode && (
-        <div className="mt-3 p-3 bg-indigo-50 rounded-lg text-sm">
+        <div className="mt-3 p-3 bg-indigo-500/10 rounded-lg text-sm">
           <div className="flex items-center justify-between text-indigo-700">
             <span>Decisions recorded:</span>
             <span className="font-bold">{activeEpisode.decisionsCount}</span>

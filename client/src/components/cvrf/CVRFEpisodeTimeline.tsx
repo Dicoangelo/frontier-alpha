@@ -37,7 +37,7 @@ function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
   return (
     <div
       className={`rounded-lg border ${
-        isActive ? 'border-indigo-300 bg-indigo-50' : 'border-[var(--color-border)] bg-[var(--color-bg)]'
+        isActive ? 'border-indigo-500/30 bg-indigo-500/10' : 'border-[var(--color-border)] bg-[var(--color-bg)]'
       } overflow-hidden`}
     >
       {/* Header */}

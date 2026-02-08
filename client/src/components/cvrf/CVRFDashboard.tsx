@@ -44,7 +44,7 @@ export function CVRFDashboard() {
 
       {/* Error Banner */}
       {isError && (
-        <div className="bg-red-500/10 border-b border-red-200 px-6 py-3">
+        <div className="bg-red-500/10 border-b border-red-500/20 px-6 py-3">
           <div className="max-w-7xl mx-auto flex items-center gap-2 text-red-700">
             <AlertTriangle className="w-4 h-4" />
             <span className="text-sm">

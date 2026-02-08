@@ -83,7 +83,7 @@ export function CVRFBeliefDisplay() {
 
   if (isError || !beliefs) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-red-200 p-6">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-red-500/20 p-6">
         <div className="text-red-500 text-sm">Failed to load belief state</div>
       </div>
     );

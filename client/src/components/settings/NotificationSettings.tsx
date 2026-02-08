@@ -163,14 +163,14 @@ export function NotificationSettings() {
       <div className="space-y-6">
         {/* Status Messages */}
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
+          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
             {error}
           </div>
         )}
 
         {success && (
-          <div className="p-3 bg-green-500/10 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
+          <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm flex items-center gap-2">
             <Check className="w-4 h-4" />
             Settings saved successfully!
           </div>

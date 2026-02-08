@@ -32,8 +32,8 @@ export function HelpButton({
         className={`
           flex items-center gap-2 px-3 py-2
           text-[var(--color-text-secondary)] hover:text-blue-600
-          bg-[var(--color-bg-tertiary)] hover:bg-blue-50
-          border border-[var(--color-border)] hover:border-blue-200
+          bg-[var(--color-bg-tertiary)] hover:bg-blue-500/10
+          border border-[var(--color-border)] hover:border-blue-500/20
           rounded-lg transition-all duration-150
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
           ${className}
@@ -53,7 +53,7 @@ export function HelpButton({
         ${sizeClasses[size]}
         flex items-center justify-center
         text-[var(--color-text-muted)] hover:text-blue-600
-        bg-[var(--color-bg)] hover:bg-blue-50
+        bg-[var(--color-bg)] hover:bg-blue-500/10
         border border-[var(--color-border)] hover:border-blue-300
         rounded-full shadow-sm hover:shadow
         transition-all duration-150

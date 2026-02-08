@@ -49,7 +49,7 @@ export function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#05070D] flex flex-col grid-bg">
+    <div className="min-h-screen bg-[#0F1219] flex flex-col grid-bg">
       {/* Sovereign spectrum top bar */}
       <div className="sovereign-bar fixed top-0 left-0 right-0 z-50" />
 

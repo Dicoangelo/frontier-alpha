@@ -20,7 +20,7 @@ export default {
         surface: {
           light: '#F5F7FA',
           dark: '#0B1020',
-          deep: '#05070D',
+          deep: '#0F1219',
         },
         frontier: {
           50: '#f0f9ff',

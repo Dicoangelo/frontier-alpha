@@ -6,7 +6,7 @@ export function Login() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
 
   return (
-    <div className="min-h-screen bg-[#05070D] grid-bg flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0F1219] grid-bg flex items-center justify-center p-4">
       {/* Sovereign spectrum top bar */}
       <div className="sovereign-bar fixed top-0 left-0 right-0 z-50" />
 

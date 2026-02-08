@@ -76,7 +76,7 @@ export function Settings() {
   return (
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+        <h1 className="text-2xl font-bold text-[var(--color-text)]">Settings</h1>
         {hasChanges && (
           <Button onClick={handleSave} disabled={updateMutation.isPending}>
             {updateMutation.isPending ? <Spinner className="w-4 h-4" /> : <Save className="w-4 h-4 mr-2" />}
@@ -87,29 +87,29 @@ export function Settings() {
 
       <Card className="p-6">
         <div className="flex items-center gap-3 mb-6">
-          <User className="w-5 h-5 text-gray-400" />
+          <User className="w-5 h-5 text-[var(--color-text-muted)]" />
           <h2 className="text-lg font-semibold">Profile</h2>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Email</label>
             <input
               type="email"
               value={user?.email || ''}
               disabled
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-500"
+              className="w-full px-3 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)]"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Display Name</label>
             <input
               type="text"
               value={settings.display_name || ''}
               onChange={(e) => handleChange('display_name', e.target.value)}
               placeholder="Your name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -117,13 +117,13 @@ export function Settings() {
 
       <Card className="p-6">
         <div className="flex items-center gap-3 mb-6">
-          <Shield className="w-5 h-5 text-gray-400" />
+          <Shield className="w-5 h-5 text-[var(--color-text-muted)]" />
           <h2 className="text-lg font-semibold">Risk Preferences</h2>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Risk Tolerance</label>
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">Risk Tolerance</label>
             <div className="flex gap-3">
               {(['conservative', 'moderate', 'aggressive'] as const).map((level) => (
                 <button
@@ -131,8 +131,8 @@ export function Settings() {
                   onClick={() => handleChange('risk_tolerance', level)}
                   className={`flex-1 py-3 px-4 rounded-lg border-2 capitalize transition ${
                     settings.risk_tolerance === level
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-blue-500 bg-blue-500/10 text-blue-700'
+                      : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                   }`}
                 >
                   {level}
@@ -143,7 +143,7 @@ export function Settings() {
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                 Max Position Size
               </label>
               <div className="relative">
@@ -154,14 +154,14 @@ export function Settings() {
                   step="5"
                   value={settings.max_position_pct}
                   onChange={(e) => handleChange('max_position_pct', parseFloat(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg pr-8"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg pr-8"
                 />
-                <span className="absolute right-3 top-2 text-gray-400">%</span>
+                <span className="absolute right-3 top-2 text-[var(--color-text-muted)]">%</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                 Stop Loss
               </label>
               <div className="relative">
@@ -172,14 +172,14 @@ export function Settings() {
                   step="1"
                   value={settings.stop_loss_pct}
                   onChange={(e) => handleChange('stop_loss_pct', parseFloat(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg pr-8"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg pr-8"
                 />
-                <span className="absolute right-3 top-2 text-gray-400">%</span>
+                <span className="absolute right-3 top-2 text-[var(--color-text-muted)]">%</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                 Take Profit
               </label>
               <div className="relative">
@@ -190,9 +190,9 @@ export function Settings() {
                   step="5"
                   value={settings.take_profit_pct}
                   onChange={(e) => handleChange('take_profit_pct', parseFloat(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg pr-8"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg pr-8"
                 />
-                <span className="absolute right-3 top-2 text-gray-400">%</span>
+                <span className="absolute right-3 top-2 text-[var(--color-text-muted)]">%</span>
               </div>
             </div>
           </div>
@@ -201,7 +201,7 @@ export function Settings() {
 
       <Card className="p-6">
         <div className="flex items-center gap-3 mb-6">
-          <Bell className="w-5 h-5 text-gray-400" />
+          <Bell className="w-5 h-5 text-[var(--color-text-muted)]" />
           <h2 className="text-lg font-semibold">Notifications</h2>
         </div>
 
@@ -210,31 +210,31 @@ export function Settings() {
           <NotificationSettings />
 
           {/* Email Alerts */}
-          <label className="flex items-center justify-between pt-4 border-t border-gray-100">
+          <label className="flex items-center justify-between pt-4 border-t border-[var(--color-border-light)]">
             <div>
-              <p className="font-medium text-gray-700">Email Alerts</p>
-              <p className="text-sm text-gray-500">Get critical alerts via email</p>
+              <p className="font-medium text-[var(--color-text-secondary)]">Email Alerts</p>
+              <p className="text-sm text-[var(--color-text-muted)]">Get critical alerts via email</p>
             </div>
             <input
               type="checkbox"
               checked={settings.email_alerts}
               onChange={(e) => handleChange('email_alerts', e.target.checked)}
-              className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="w-5 h-5 rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
             />
           </label>
         </div>
       </Card>
 
-      <Card className="p-6 border-red-200">
+      <Card className="p-6 border-red-500/20">
         <div className="flex items-center gap-3 mb-6">
           <AlertTriangle className="w-5 h-5 text-red-500" />
-          <h2 className="text-lg font-semibold text-red-700">Danger Zone</h2>
+          <h2 className="text-lg font-semibold text-red-400">Danger Zone</h2>
         </div>
 
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-medium text-gray-700">Sign Out</p>
-            <p className="text-sm text-gray-500">Sign out of your account on this device</p>
+            <p className="font-medium text-[var(--color-text-secondary)]">Sign Out</p>
+            <p className="text-sm text-[var(--color-text-muted)]">Sign out of your account on this device</p>
           </div>
           <Button variant="danger" onClick={handleLogout}>
             <LogOut className="w-4 h-4 mr-2" />

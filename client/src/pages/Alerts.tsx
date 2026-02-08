@@ -173,10 +173,10 @@ export function Alerts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Bell className="w-6 h-6 text-gray-700" />
-          <h1 className="text-2xl font-bold text-gray-900">Alerts</h1>
+          <Bell className="w-6 h-6 text-[var(--color-text-secondary)]" />
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Alerts</h1>
           {Object.values(severityCounts).reduce((a, b) => a + b, 0) > 0 && (
-            <span className="px-2 py-1 text-sm font-medium bg-red-100 text-red-700 rounded-full">
+            <span className="px-2 py-1 text-sm font-medium bg-red-500/10 text-red-400 rounded-full">
               {Object.values(severityCounts).reduce((a, b) => a + b, 0)} active
             </span>
           )}
@@ -193,7 +193,7 @@ export function Alerts() {
           label="Critical"
           count={severityCounts.critical || 0}
           indicator="🔴"
-          color="bg-red-50 border-red-200"
+          color="bg-red-500/10 border-red-500/20"
           onClick={() => setSeverityFilter(severityFilter === 'critical' ? 'all' : 'critical')}
           active={severityFilter === 'critical'}
         />
@@ -201,7 +201,7 @@ export function Alerts() {
           label="High"
           count={severityCounts.high || 0}
           indicator="🟠"
-          color="bg-orange-50 border-orange-200"
+          color="bg-orange-500/10 border-orange-500/20"
           onClick={() => setSeverityFilter(severityFilter === 'high' ? 'all' : 'high')}
           active={severityFilter === 'high'}
         />
@@ -209,7 +209,7 @@ export function Alerts() {
           label="Medium"
           count={severityCounts.medium || 0}
           indicator="🟡"
-          color="bg-yellow-50 border-yellow-200"
+          color="bg-yellow-500/10 border-yellow-500/20"
           onClick={() => setSeverityFilter(severityFilter === 'medium' ? 'all' : 'medium')}
           active={severityFilter === 'medium'}
         />
@@ -217,7 +217,7 @@ export function Alerts() {
           label="Low"
           count={severityCounts.low || 0}
           indicator="🔵"
-          color="bg-blue-50 border-blue-200"
+          color="bg-blue-500/10 border-blue-500/20"
           onClick={() => setSeverityFilter(severityFilter === 'low' ? 'all' : 'low')}
           active={severityFilter === 'low'}
         />
@@ -226,15 +226,15 @@ export function Alerts() {
       {/* Filters */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-500" />
-          <span className="text-sm text-gray-600">Filter:</span>
+          <Filter className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <span className="text-sm text-[var(--color-text-secondary)]">Filter:</span>
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={showAcknowledged}
             onChange={(e) => setShowAcknowledged(e.target.checked)}
-            className="rounded border-gray-300"
+            className="rounded border-[var(--color-border)]"
           />
           Show acknowledged
         </label>
@@ -297,9 +297,9 @@ function SummaryCard({
     >
       <div className="flex items-center justify-between mb-2">
         <span className="text-lg">{indicator}</span>
-        <span className="text-2xl font-bold text-gray-900">{count}</span>
+        <span className="text-2xl font-bold text-[var(--color-text)]">{count}</span>
       </div>
-      <p className="text-sm text-gray-600 text-left">{label}</p>
+      <p className="text-sm text-[var(--color-text-secondary)] text-left">{label}</p>
     </button>
   );
 }

@@ -144,18 +144,18 @@ export function Portfolio() {
   const AddPositionForm = ({ onCancel }: { onCancel: () => void }) => (
     <form onSubmit={handleAdd} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Symbol</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Symbol</label>
         <input
           type="text"
           value={formData.symbol}
           onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
           required
-          className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
+          className="w-full px-3 py-3 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
           placeholder="AAPL"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Shares</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Shares</label>
         <input
           type="number"
           step="0.000001"
@@ -163,12 +163,12 @@ export function Portfolio() {
           value={formData.shares}
           onChange={(e) => setFormData({ ...formData, shares: e.target.value })}
           required
-          className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
+          className="w-full px-3 py-3 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
           placeholder="100"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Avg Cost</label>
+        <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Avg Cost</label>
         <input
           type="number"
           step="0.01"
@@ -176,7 +176,7 @@ export function Portfolio() {
           value={formData.avgCost}
           onChange={(e) => setFormData({ ...formData, avgCost: e.target.value })}
           required
-          className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
+          className="w-full px-3 py-3 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
           placeholder="150.00"
         />
       </div>
@@ -199,7 +199,7 @@ export function Portfolio() {
   const content = (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">Portfolio Management</h1>
+        <h1 className="text-2xl font-bold text-[var(--color-text)]">Portfolio Management</h1>
         <div className="flex items-center gap-3">
           {portfolio?.data && (
             <>
@@ -239,18 +239,18 @@ export function Portfolio() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4">
-          <p className="text-sm text-gray-500">Total Value</p>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-sm text-[var(--color-text-muted)]">Total Value</p>
+          <p className="text-2xl font-bold text-[var(--color-text)]">
             ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-gray-500">Positions</p>
-          <p className="text-2xl font-bold text-gray-900">{positions.length}</p>
+          <p className="text-sm text-[var(--color-text-muted)]">Positions</p>
+          <p className="text-2xl font-bold text-[var(--color-text)]">{positions.length}</p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-gray-500">Cash Balance</p>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-sm text-[var(--color-text-muted)]">Cash Balance</p>
+          <p className="text-2xl font-bold text-[var(--color-text)]">
             ${cashBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </p>
         </Card>
@@ -262,37 +262,37 @@ export function Portfolio() {
           <h2 className="text-lg font-semibold mb-4">Add New Position</h2>
           <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Symbol</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Symbol</label>
               <input
                 type="text"
                 value={formData.symbol}
                 onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
                 required
-                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="AAPL"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Shares</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Shares</label>
               <input
                 type="number"
                 step="0.000001"
                 value={formData.shares}
                 onChange={(e) => setFormData({ ...formData, shares: e.target.value })}
                 required
-                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="100"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Avg Cost</label>
+              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Avg Cost</label>
               <input
                 type="number"
                 step="0.01"
                 value={formData.avgCost}
                 onChange={(e) => setFormData({ ...formData, avgCost: e.target.value })}
                 required
-                className="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="150.00"
               />
             </div>
@@ -320,12 +320,12 @@ export function Portfolio() {
           <table className="w-full min-w-[600px]">
             <thead>
               <tr className="border-b">
-                <th className="text-left py-3 px-4 font-medium text-gray-600">Symbol</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">Shares</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600 hidden sm:table-cell">Avg Cost</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600 hidden sm:table-cell">Current</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">P&L</th>
-                <th className="text-right py-3 px-4 font-medium text-gray-600">Actions</th>
+                <th className="text-left py-3 px-4 font-medium text-[var(--color-text-secondary)]">Symbol</th>
+                <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Shares</th>
+                <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)] hidden sm:table-cell">Avg Cost</th>
+                <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)] hidden sm:table-cell">Current</th>
+                <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">P&L</th>
+                <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -337,7 +337,7 @@ export function Portfolio() {
                 </tr>
               ) : (
                 positions.map((position) => (
-                  <tr key={position.id} className="border-b hover:bg-gray-50">
+                  <tr key={position.id} className="border-b hover:bg-[var(--color-bg-tertiary)]">
                     {editingId === position.id ? (
                       <>
                         <td className="py-3 px-4 font-medium">{position.symbol}</td>
@@ -367,7 +367,7 @@ export function Portfolio() {
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={handleUpdate}
-                              className="p-2.5 min-w-[44px] min-h-[44px] text-green-600 hover:bg-green-50 rounded-lg flex items-center justify-center touch-manipulation"
+                              className="p-2.5 min-w-[44px] min-h-[44px] text-green-600 hover:bg-green-500/10 rounded-lg flex items-center justify-center touch-manipulation"
                               aria-label="Save changes"
                             >
                               <Check className="w-5 h-5" />
@@ -377,7 +377,7 @@ export function Portfolio() {
                                 setEditingId(null);
                                 setFormData({ symbol: '', shares: '', avgCost: '' });
                               }}
-                              className="p-2.5 min-w-[44px] min-h-[44px] text-gray-500 hover:bg-gray-100 rounded-lg flex items-center justify-center touch-manipulation"
+                              className="p-2.5 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] rounded-lg flex items-center justify-center touch-manipulation"
                               aria-label="Cancel editing"
                             >
                               <X className="w-5 h-5" />
@@ -403,14 +403,14 @@ export function Portfolio() {
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => startEdit(position)}
-                              className="p-2.5 min-w-[44px] min-h-[44px] text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg flex items-center justify-center touch-manipulation"
+                              className="p-2.5 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:text-blue-600 hover:bg-blue-500/10 rounded-lg flex items-center justify-center touch-manipulation"
                               aria-label={`Edit ${position.symbol}`}
                             >
                               <Edit2 className="w-5 h-5" />
                             </button>
                             <button
                               onClick={() => deletePositionMutation.mutate(position.id)}
-                              className="p-2.5 min-w-[44px] min-h-[44px] text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg flex items-center justify-center touch-manipulation"
+                              className="p-2.5 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:text-red-600 hover:bg-red-500/10 rounded-lg flex items-center justify-center touch-manipulation"
                               aria-label={`Delete ${position.symbol}`}
                             >
                               <Trash2 className="w-5 h-5" />

@@ -67,15 +67,15 @@ export function Earnings() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Earnings Calendar</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Earnings Calendar</h1>
+          <p className="text-[var(--color-text-muted)] mt-1">
             Track upcoming earnings and their expected impact on your portfolio
           </p>
         </div>
         <select
           value={daysAhead}
           onChange={(e) => setDaysAhead(Number(e.target.value))}
-          className="px-4 py-2.5 min-h-[44px] border rounded-lg bg-white text-gray-700 text-base"
+          className="px-4 py-2.5 min-h-[44px] border rounded-lg bg-[var(--color-bg)] text-[var(--color-text-secondary)] text-base"
         >
           <option value={7}>Next 7 days</option>
           <option value={14}>Next 14 days</option>
@@ -87,37 +87,37 @@ export function Earnings() {
 
       {/* Stats Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border">
-          <p className="text-sm text-gray-500">Total Upcoming</p>
-          <p className="text-2xl font-bold text-gray-900">{earnings.length}</p>
+        <div className="bg-[var(--color-bg)] p-4 rounded-lg border">
+          <p className="text-sm text-[var(--color-text-muted)]">Total Upcoming</p>
+          <p className="text-2xl font-bold text-[var(--color-text)]">{earnings.length}</p>
         </div>
-        <div className={`p-4 rounded-lg border ${earningsToday > 0 ? 'bg-red-50 border-red-200' : 'bg-white'}`}>
-          <p className="text-sm text-gray-500">Reporting Today</p>
-          <p className={`text-2xl font-bold ${earningsToday > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+        <div className={`p-4 rounded-lg border ${earningsToday > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-[var(--color-bg)]'}`}>
+          <p className="text-sm text-[var(--color-text-muted)]">Reporting Today</p>
+          <p className={`text-2xl font-bold ${earningsToday > 0 ? 'text-red-600' : 'text-[var(--color-text)]'}`}>
             {earningsToday}
           </p>
         </div>
-        <div className={`p-4 rounded-lg border ${earningsThisWeek > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-white'}`}>
-          <p className="text-sm text-gray-500">This Week</p>
-          <p className={`text-2xl font-bold ${earningsThisWeek > 0 ? 'text-yellow-600' : 'text-gray-900'}`}>
+        <div className={`p-4 rounded-lg border ${earningsThisWeek > 0 ? 'bg-yellow-500/10 border-yellow-500/20' : 'bg-[var(--color-bg)]'}`}>
+          <p className="text-sm text-[var(--color-text-muted)]">This Week</p>
+          <p className={`text-2xl font-bold ${earningsThisWeek > 0 ? 'text-yellow-600' : 'text-[var(--color-text)]'}`}>
             {earningsThisWeek}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-lg border">
-          <p className="text-sm text-gray-500">Positions Tracked</p>
-          <p className="text-2xl font-bold text-gray-900">{symbols.length}</p>
+        <div className="bg-[var(--color-bg)] p-4 rounded-lg border">
+          <p className="text-sm text-[var(--color-text-muted)]">Positions Tracked</p>
+          <p className="text-2xl font-bold text-[var(--color-text)]">{symbols.length}</p>
         </div>
       </div>
 
       {/* Alert for imminent earnings */}
       {earningsToday > 0 && (
-        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
           <div>
-            <p className="font-medium text-red-800">
+            <p className="font-medium text-red-400">
               {earningsToday} position{earningsToday > 1 ? 's' : ''} reporting today
             </p>
-            <p className="text-sm text-red-600">
+            <p className="text-sm text-red-400">
               Review forecasts and consider adjusting positions before market close
             </p>
           </div>
@@ -126,10 +126,10 @@ export function Earnings() {
 
       {/* Empty State */}
       {!isLoading && symbols.length === 0 && (
-        <div className="bg-white p-12 rounded-lg border text-center">
-          <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No positions to track</h3>
-          <p className="text-gray-500">
+        <div className="bg-[var(--color-bg)] p-12 rounded-lg border text-center">
+          <Calendar className="w-12 h-12 mx-auto mb-4 text-[var(--color-text-muted)]" />
+          <h3 className="text-lg font-medium text-[var(--color-text)] mb-2">No positions to track</h3>
+          <p className="text-[var(--color-text-muted)]">
             Add positions to your portfolio to see their upcoming earnings
           </p>
         </div>
@@ -156,8 +156,8 @@ export function Earnings() {
 
       {/* No upcoming earnings message */}
       {!isLoading && symbols.length > 0 && earnings.length === 0 && (
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <p className="text-blue-800">
+        <div className="bg-blue-500/10 p-4 rounded-lg border border-blue-500/20">
+          <p className="text-blue-400">
             None of your {symbols.length} positions have earnings scheduled in the next {daysAhead} days.
           </p>
         </div>

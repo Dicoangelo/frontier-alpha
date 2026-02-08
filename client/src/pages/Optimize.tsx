@@ -92,8 +92,8 @@ export function Optimize() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Portfolio Optimization</h1>
-          <p className="text-gray-500 mt-1">Multi-factor optimization with cognitive insights</p>
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Portfolio Optimization</h1>
+          <p className="text-[var(--color-text-muted)] mt-1">Multi-factor optimization with cognitive insights</p>
         </div>
       </div>
 
@@ -108,15 +108,15 @@ export function Optimize() {
                   onClick={() => setSelectedObjective(obj.value)}
                   className={`p-4 rounded-lg border-2 text-left transition ${
                     selectedObjective === obj.value
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-blue-500 bg-blue-500/10'
+                      : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                   }`}
                 >
                   <obj.icon className={`w-5 h-5 mb-2 ${
-                    selectedObjective === obj.value ? 'text-blue-600' : 'text-gray-400'
+                    selectedObjective === obj.value ? 'text-blue-600' : 'text-[var(--color-text-muted)]'
                   }`} />
-                  <p className="font-medium text-gray-900">{obj.label}</p>
-                  <p className="text-sm text-gray-500">{obj.description}</p>
+                  <p className="font-medium text-[var(--color-text)]">{obj.label}</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">{obj.description}</p>
                 </button>
               ))}
             </div>
@@ -126,7 +126,7 @@ export function Optimize() {
             <h2 className="text-lg font-semibold mb-4">Constraints</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                   Max Position Weight
                 </label>
                 <input
@@ -136,13 +136,13 @@ export function Optimize() {
                   max="1"
                   value={maxWeight}
                   onChange={(e) => setMaxWeight(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                 />
-                <p className="text-xs text-gray-500 mt-1">Max {(parseFloat(maxWeight) * 100).toFixed(0)}% in any position</p>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">Max {(parseFloat(maxWeight) * 100).toFixed(0)}% in any position</p>
               </div>
               {selectedObjective === 'target_volatility' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                     Target Volatility
                   </label>
                   <input
@@ -152,9 +152,9 @@ export function Optimize() {
                     max="0.5"
                     value={targetVol}
                     onChange={(e) => setTargetVol(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Target {(parseFloat(targetVol) * 100).toFixed(0)}% annualized</p>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-1">Target {(parseFloat(targetVol) * 100).toFixed(0)}% annualized</p>
                 </div>
               )}
             </div>
@@ -187,7 +187,7 @@ export function Optimize() {
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">Current Holdings</h2>
             {symbols.length === 0 ? (
-              <p className="text-gray-500 text-sm">No positions in portfolio</p>
+              <p className="text-[var(--color-text-muted)] text-sm">No positions in portfolio</p>
             ) : (
               <div className="space-y-2">
                 {symbols.map((symbol: string) => (
@@ -210,46 +210,46 @@ export function Optimize() {
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">Optimization Results</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-500">Expected Return</p>
+            <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
+              <p className="text-sm text-[var(--color-text-muted)]">Expected Return</p>
               <p className="text-xl font-bold text-green-600">
                 {(result.expectedReturn * 100).toFixed(1)}%
               </p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-500">Expected Volatility</p>
+            <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
+              <p className="text-sm text-[var(--color-text-muted)]">Expected Volatility</p>
               <p className="text-xl font-bold text-amber-600">
                 {(result.expectedVolatility * 100).toFixed(1)}%
               </p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-500">Sharpe Ratio</p>
+            <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
+              <p className="text-sm text-[var(--color-text-muted)]">Sharpe Ratio</p>
               <p className="text-xl font-bold text-blue-600">
                 {result.sharpeRatio.toFixed(2)}
               </p>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-500">Positions</p>
-              <p className="text-xl font-bold text-gray-900">
+            <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
+              <p className="text-sm text-[var(--color-text-muted)]">Positions</p>
+              <p className="text-xl font-bold text-[var(--color-text)]">
                 {Object.keys(result.weights).length}
               </p>
             </div>
           </div>
 
-          <h3 className="font-medium text-gray-700 mb-3">Optimal Weights</h3>
+          <h3 className="font-medium text-[var(--color-text-secondary)] mb-3">Optimal Weights</h3>
           <div className="space-y-2">
             {Object.entries(result.weights)
               .sort(([, a], [, b]) => b - a)
               .map(([symbol, weight]) => (
                 <div key={symbol} className="flex items-center gap-3">
                   <span className="w-16 font-medium">{symbol}</span>
-                  <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="flex-1 h-6 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
                       style={{ width: `${weight * 100}%` }}
                     />
                   </div>
-                  <span className="w-16 text-right text-gray-600">
+                  <span className="w-16 text-right text-[var(--color-text-secondary)]">
                     {(weight * 100).toFixed(1)}%
                   </span>
                 </div>

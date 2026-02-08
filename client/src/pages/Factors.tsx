@@ -35,12 +35,12 @@ function FactorCategoryCard({ category, factors }: FactorCategoryCardProps) {
   return (
     <Card>
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-blue-100 rounded-lg">
+        <div className="p-2 bg-blue-500/10 rounded-lg">
           <Icon className="w-5 h-5 text-blue-600" />
         </div>
         <div>
-          <h3 className="font-semibold text-gray-900">{FACTOR_CATEGORY_LABELS[category]}</h3>
-          <p className="text-sm text-gray-500">{FACTOR_CATEGORY_DESCRIPTIONS[category]}</p>
+          <h3 className="font-semibold text-[var(--color-text)]">{FACTOR_CATEGORY_LABELS[category]}</h3>
+          <p className="text-sm text-[var(--color-text-muted)]">{FACTOR_CATEGORY_DESCRIPTIONS[category]}</p>
         </div>
       </div>
       <div className="space-y-3">
@@ -106,8 +106,8 @@ export function Factors() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Factor Analysis</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-[var(--color-text)]">Factor Analysis</h1>
+          <p className="text-[var(--color-text-muted)] mt-1">
             Deep-dive into your portfolio's factor exposures
           </p>
         </div>
@@ -122,21 +122,21 @@ export function Factors() {
 
       {/* Stats Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border">
-          <p className="text-sm text-gray-500">Total Factors</p>
-          <p className="text-2xl font-bold text-gray-900">{totalFactors}</p>
+        <div className="bg-[var(--color-bg)] p-4 rounded-lg border">
+          <p className="text-sm text-[var(--color-text-muted)]">Total Factors</p>
+          <p className="text-2xl font-bold text-[var(--color-text)]">{totalFactors}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border">
-          <p className="text-sm text-gray-500">Significant (|t| &gt; 1.96)</p>
+        <div className="bg-[var(--color-bg)] p-4 rounded-lg border">
+          <p className="text-sm text-[var(--color-text-muted)]">Significant (|t| &gt; 1.96)</p>
           <p className="text-2xl font-bold text-blue-600">{significantFactors}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border">
-          <p className="text-sm text-gray-500">Positions Analyzed</p>
-          <p className="text-2xl font-bold text-gray-900">{symbols.length}</p>
+        <div className="bg-[var(--color-bg)] p-4 rounded-lg border">
+          <p className="text-sm text-[var(--color-text-muted)]">Positions Analyzed</p>
+          <p className="text-2xl font-bold text-[var(--color-text)]">{symbols.length}</p>
         </div>
-        <div className="bg-white p-4 rounded-lg border">
-          <p className="text-sm text-gray-500">Last Updated</p>
-          <p className="text-sm font-medium text-gray-900">
+        <div className="bg-[var(--color-bg)] p-4 rounded-lg border">
+          <p className="text-sm text-[var(--color-text-muted)]">Last Updated</p>
+          <p className="text-sm font-medium text-[var(--color-text)]">
             {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'Never'}
           </p>
         </div>
@@ -178,7 +178,7 @@ export function Factors() {
       {/* Empty State */}
       {!isLoading && symbols.length === 0 && (
         <Card>
-          <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+          <div className="flex flex-col items-center justify-center h-64 text-[var(--color-text-muted)]">
             <Layers className="w-12 h-12 mb-4 opacity-50" />
             <p>No positions in your portfolio</p>
             <p className="text-sm mt-1">Add positions to analyze their factor exposures</p>
@@ -201,9 +201,9 @@ export function Factors() {
 
       {/* AI Insight */}
       {insight && (
-        <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-          <p className="text-sm font-medium text-blue-800 mb-2">AI Insight</p>
-          <p className="text-sm text-blue-700">{insight}</p>
+        <div className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
+          <p className="text-sm font-medium text-blue-400 mb-2">AI Insight</p>
+          <p className="text-sm text-blue-500">{insight}</p>
         </div>
       )}
     </div>

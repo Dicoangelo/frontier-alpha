@@ -80,10 +80,10 @@ export function SharedPortfolio() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="mt-4 text-gray-500">Loading shared portfolio...</p>
+          <p className="mt-4 text-[var(--color-text-muted)]">Loading shared portfolio...</p>
         </div>
       </div>
     );
@@ -95,10 +95,10 @@ export function SharedPortfolio() {
     const isNotFound = errorMessage.toLowerCase().includes('not found') || errorMessage.toLowerCase().includes('revoked');
 
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-4">
         <Card className="max-w-md w-full p-8 text-center">
           <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center ${
-            isExpired ? 'bg-yellow-100' : 'bg-red-100'
+            isExpired ? 'bg-yellow-500/10' : 'bg-red-500/10'
           }`}>
             {isExpired ? (
               <Clock className="w-8 h-8 text-yellow-600" />
@@ -106,10 +106,10 @@ export function SharedPortfolio() {
               <AlertTriangle className="w-8 h-8 text-red-600" />
             )}
           </div>
-          <h1 className="mt-6 text-xl font-semibold text-gray-900">
+          <h1 className="mt-6 text-xl font-semibold text-[var(--color-text)]">
             {isExpired ? 'Share Link Expired' : isNotFound ? 'Share Link Not Found' : 'Unable to Load Portfolio'}
           </h1>
-          <p className="mt-2 text-gray-500">
+          <p className="mt-2 text-[var(--color-text-muted)]">
             {isExpired
               ? 'This share link has expired. Please ask the owner for a new link.'
               : isNotFound
@@ -135,10 +135,10 @@ export function SharedPortfolio() {
 
   if (!portfolio) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
         <Card className="max-w-md w-full p-8 text-center">
-          <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto" />
-          <h1 className="mt-4 text-lg font-medium text-gray-900">No Data Available</h1>
+          <AlertTriangle className="w-12 h-12 text-[var(--color-text-muted)] mx-auto" />
+          <h1 className="mt-4 text-lg font-medium text-[var(--color-text)]">No Data Available</h1>
         </Card>
       </div>
     );
@@ -148,7 +148,7 @@ export function SharedPortfolio() {
   const pnlPercent = totalPnL / (portfolio.totalValue - totalPnL) * 100;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Shared Portfolio Banner */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
         <div className="max-w-6xl mx-auto px-4 py-4">
@@ -180,10 +180,10 @@ export function SharedPortfolio() {
 
       {/* Owner Badge */}
       <div className="max-w-6xl mx-auto px-4 -mt-3">
-        <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-200">
-          <Lock className="w-4 h-4 text-gray-400" />
-          <span className="text-sm text-gray-600">
-            Shared by <span className="font-medium text-gray-900">{portfolio.ownerName}</span>
+        <div className="inline-flex items-center gap-2 bg-[var(--color-bg)] px-4 py-2 rounded-full shadow-sm border border-[var(--color-border)]">
+          <Lock className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <span className="text-sm text-[var(--color-text-secondary)]">
+            Shared by <span className="font-medium text-[var(--color-text)]">{portfolio.ownerName}</span>
           </span>
         </div>
       </div>
@@ -193,12 +193,12 @@ export function SharedPortfolio() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-lg">
+              <div className="p-3 bg-blue-500/10 rounded-lg">
                 <DollarSign className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Total Value</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-[var(--color-text-muted)]">Total Value</p>
+                <p className="text-2xl font-bold text-[var(--color-text)]">
                   ${portfolio.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </p>
               </div>
@@ -207,7 +207,7 @@ export function SharedPortfolio() {
 
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-lg ${totalPnL >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+              <div className={`p-3 rounded-lg ${totalPnL >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
                 {totalPnL >= 0 ? (
                   <TrendingUp className="w-6 h-6 text-green-600" />
                 ) : (
@@ -215,7 +215,7 @@ export function SharedPortfolio() {
                 )}
               </div>
               <div>
-                <p className="text-sm text-gray-500">Unrealized P&L</p>
+                <p className="text-sm text-[var(--color-text-muted)]">Unrealized P&L</p>
                 <p className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {totalPnL >= 0 ? '+' : ''}${totalPnL.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </p>
@@ -225,7 +225,7 @@ export function SharedPortfolio() {
 
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-lg ${pnlPercent >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+              <div className={`p-3 rounded-lg ${pnlPercent >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
                 {pnlPercent >= 0 ? (
                   <TrendingUp className="w-6 h-6 text-green-600" />
                 ) : (
@@ -233,7 +233,7 @@ export function SharedPortfolio() {
                 )}
               </div>
               <div>
-                <p className="text-sm text-gray-500">Return</p>
+                <p className="text-sm text-[var(--color-text-muted)]">Return</p>
                 <p className={`text-2xl font-bold ${pnlPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {pnlPercent >= 0 ? '+' : ''}{pnlPercent.toFixed(2)}%
                 </p>
@@ -243,12 +243,12 @@ export function SharedPortfolio() {
 
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-purple-100 rounded-lg">
+              <div className="p-3 bg-purple-500/10 rounded-lg">
                 <PieChart className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Positions</p>
-                <p className="text-2xl font-bold text-gray-900">{portfolio.positions.length}</p>
+                <p className="text-sm text-[var(--color-text-muted)]">Positions</p>
+                <p className="text-2xl font-bold text-[var(--color-text)]">{portfolio.positions.length}</p>
               </div>
             </div>
           </Card>
@@ -256,47 +256,47 @@ export function SharedPortfolio() {
 
         {/* Positions Table */}
         <Card>
-          <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">Holdings</h2>
+          <div className="px-6 py-4 border-b border-[var(--color-border-light)]">
+            <h2 className="text-lg font-semibold text-[var(--color-text)]">Holdings</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left py-3 px-6 font-medium text-gray-600">Symbol</th>
-                  <th className="text-right py-3 px-6 font-medium text-gray-600">Shares</th>
-                  <th className="text-right py-3 px-6 font-medium text-gray-600">Weight</th>
-                  <th className="text-right py-3 px-6 font-medium text-gray-600">Price</th>
-                  <th className="text-right py-3 px-6 font-medium text-gray-600">Value</th>
-                  <th className="text-right py-3 px-6 font-medium text-gray-600">P&L</th>
+                <tr className="border-b bg-[var(--color-bg-tertiary)]">
+                  <th className="text-left py-3 px-6 font-medium text-[var(--color-text-secondary)]">Symbol</th>
+                  <th className="text-right py-3 px-6 font-medium text-[var(--color-text-secondary)]">Shares</th>
+                  <th className="text-right py-3 px-6 font-medium text-[var(--color-text-secondary)]">Weight</th>
+                  <th className="text-right py-3 px-6 font-medium text-[var(--color-text-secondary)]">Price</th>
+                  <th className="text-right py-3 px-6 font-medium text-[var(--color-text-secondary)]">Value</th>
+                  <th className="text-right py-3 px-6 font-medium text-[var(--color-text-secondary)]">P&L</th>
                 </tr>
               </thead>
               <tbody>
                 {portfolio.positions.map((position) => (
-                  <tr key={position.id} className="border-b hover:bg-gray-50">
+                  <tr key={position.id} className="border-b hover:bg-[var(--color-bg-tertiary)]">
                     <td className="py-4 px-6">
-                      <span className="font-semibold text-gray-900">{position.symbol}</span>
+                      <span className="font-semibold text-[var(--color-text)]">{position.symbol}</span>
                     </td>
-                    <td className="py-4 px-6 text-right text-gray-600">
+                    <td className="py-4 px-6 text-right text-[var(--color-text-secondary)]">
                       {position.shares.toFixed(2)}
                     </td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                        <div className="w-16 bg-[var(--color-border)] rounded-full h-2">
                           <div
                             className="bg-blue-600 h-2 rounded-full"
                             style={{ width: `${Math.min(position.weight * 100, 100)}%` }}
                           />
                         </div>
-                        <span className="text-sm text-gray-600 w-12 text-right">
+                        <span className="text-sm text-[var(--color-text-secondary)] w-12 text-right">
                           {(position.weight * 100).toFixed(1)}%
                         </span>
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-right text-gray-600">
+                    <td className="py-4 px-6 text-right text-[var(--color-text-secondary)]">
                       ${position.currentPrice.toFixed(2)}
                     </td>
-                    <td className="py-4 px-6 text-right font-medium text-gray-900">
+                    <td className="py-4 px-6 text-right font-medium text-[var(--color-text)]">
                       ${(position.shares * position.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
                     <td className={`py-4 px-6 text-right font-medium ${
@@ -308,29 +308,29 @@ export function SharedPortfolio() {
                   </tr>
                 ))}
                 {/* Cash row */}
-                <tr className="border-b bg-gray-50">
+                <tr className="border-b bg-[var(--color-bg-tertiary)]">
                   <td className="py-4 px-6">
-                    <span className="font-semibold text-gray-600">Cash</span>
+                    <span className="font-semibold text-[var(--color-text-secondary)]">Cash</span>
                   </td>
-                  <td className="py-4 px-6 text-right text-gray-400">-</td>
+                  <td className="py-4 px-6 text-right text-[var(--color-text-muted)]">-</td>
                   <td className="py-4 px-6 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
+                      <div className="w-16 bg-[var(--color-border)] rounded-full h-2">
                         <div
                           className="bg-gray-400 h-2 rounded-full"
                           style={{ width: `${Math.min((portfolio.cash / portfolio.totalValue) * 100, 100)}%` }}
                         />
                       </div>
-                      <span className="text-sm text-gray-600 w-12 text-right">
+                      <span className="text-sm text-[var(--color-text-secondary)] w-12 text-right">
                         {((portfolio.cash / portfolio.totalValue) * 100).toFixed(1)}%
                       </span>
                     </div>
                   </td>
-                  <td className="py-4 px-6 text-right text-gray-400">-</td>
-                  <td className="py-4 px-6 text-right font-medium text-gray-900">
+                  <td className="py-4 px-6 text-right text-[var(--color-text-muted)]">-</td>
+                  <td className="py-4 px-6 text-right font-medium text-[var(--color-text)]">
                     ${portfolio.cash.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="py-4 px-6 text-right text-gray-400">-</td>
+                  <td className="py-4 px-6 text-right text-[var(--color-text-muted)]">-</td>
                 </tr>
               </tbody>
             </table>
@@ -340,18 +340,18 @@ export function SharedPortfolio() {
         {/* Factor Exposures (if available) */}
         {factorExposures.length > 0 && (
           <Card>
-            <div className="px-6 py-4 border-b border-gray-100">
+            <div className="px-6 py-4 border-b border-[var(--color-border-light)]">
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-gray-400" />
-                <h2 className="text-lg font-semibold text-gray-900">Factor Exposures</h2>
+                <BarChart3 className="w-5 h-5 text-[var(--color-text-muted)]" />
+                <h2 className="text-lg font-semibold text-[var(--color-text)]">Factor Exposures</h2>
               </div>
             </div>
             <div className="p-6">
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {factorExposures.slice(0, 8).map((factor) => (
-                  <div key={factor.factor} className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">{factor.category}</p>
-                    <p className="font-medium text-gray-900">{factor.factor}</p>
+                  <div key={factor.factor} className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
+                    <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wide">{factor.category}</p>
+                    <p className="font-medium text-[var(--color-text)]">{factor.factor}</p>
                     <p className={`text-lg font-bold ${factor.exposure >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {factor.exposure >= 0 ? '+' : ''}{factor.exposure.toFixed(3)}
                     </p>
@@ -363,14 +363,14 @@ export function SharedPortfolio() {
         )}
 
         {/* Footer */}
-        <div className="text-center text-sm text-gray-500 py-8">
+        <div className="text-center text-sm text-[var(--color-text-muted)] py-8">
           <p>
             Powered by{' '}
             <Link to="/landing" className="text-blue-600 hover:text-blue-700 font-medium">
               Frontier Alpha
             </Link>
           </p>
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             This is a read-only view of a shared portfolio. Data may be delayed.
           </p>
         </div>

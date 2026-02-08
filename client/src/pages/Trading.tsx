@@ -50,23 +50,23 @@ export default function Trading() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--color-bg)]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Trade</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-[var(--color-text)]">Trade</h1>
+          <p className="text-[var(--color-text-secondary)] mt-1">
             Execute orders and manage your positions
           </p>
         </div>
 
         {/* Connection Status Banner */}
         {!brokerConnected ? (
-          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+          <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="font-medium text-amber-900">No Broker Connected</p>
-              <p className="text-sm text-amber-700 mt-1">
+              <p className="font-medium text-amber-500">No Broker Connected</p>
+              <p className="text-sm text-amber-600 mt-1">
                 Connect your Alpaca account to start trading, or use demo mode to practice.
               </p>
               <div className="flex gap-2 mt-3">
@@ -90,16 +90,16 @@ export default function Trading() {
             </div>
           </div>
         ) : paperTrading ? (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
+          <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-start gap-3">
             <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <p className="font-medium text-blue-900">Paper Trading Mode</p>
+                <p className="font-medium text-blue-400">Paper Trading Mode</p>
                 <Badge variant="info">
                   {brokerType === 'alpaca' ? 'Alpaca Paper' : 'Demo'}
                 </Badge>
               </div>
-              <p className="text-sm text-blue-700 mt-1">
+              <p className="text-sm text-blue-600 mt-1">
                 All trades are simulated with virtual money. No real funds will be used.
               </p>
             </div>
@@ -112,14 +112,14 @@ export default function Trading() {
             </Button>
           </div>
         ) : (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+          <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg flex items-start gap-3">
             <Shield className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <p className="font-medium text-green-900">Live Trading</p>
+                <p className="font-medium text-green-400">Live Trading</p>
                 <Badge variant="success">Alpaca Live</Badge>
               </div>
-              <p className="text-sm text-green-700 mt-1">
+              <p className="text-sm text-green-600 mt-1">
                 You are connected to live trading. Real funds will be used for trades.
               </p>
             </div>
@@ -151,7 +151,7 @@ export default function Trading() {
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-4">
                 <Clock className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-semibold text-gray-900">Market Status</h3>
+                <h3 className="font-semibold text-[var(--color-text)]">Market Status</h3>
               </div>
               <MarketStatusDisplay clock={marketClock} />
             </Card>
@@ -161,7 +161,7 @@ export default function Trading() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-purple-600" />
-                  <h3 className="font-semibold text-gray-900">Positions</h3>
+                  <h3 className="font-semibold text-[var(--color-text)]">Positions</h3>
                 </div>
                 <Button
                   variant="ghost"
@@ -174,13 +174,13 @@ export default function Trading() {
               </div>
 
               {positionsLoading ? (
-                <div className="py-6 text-center text-gray-500">
+                <div className="py-6 text-center text-[var(--color-text-muted)]">
                   <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin" />
                   <p className="text-sm">Loading positions...</p>
                 </div>
               ) : positions.length === 0 ? (
-                <div className="py-6 text-center text-gray-500">
-                  <Activity className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                <div className="py-6 text-center text-[var(--color-text-muted)]">
+                  <Activity className="w-8 h-8 mx-auto mb-2 text-[var(--color-text-muted)]" />
                   <p>No positions</p>
                   <p className="text-sm">Place trades to build your portfolio</p>
                 </div>
@@ -192,14 +192,14 @@ export default function Trading() {
                       onClick={() => setSelectedSymbol(position.symbol)}
                       className={`w-full p-3 rounded-lg border transition-all text-left ${
                         selectedSymbol === position.symbol
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'
+                          ? 'border-blue-500 bg-blue-500/10'
+                          : 'border-[var(--color-border-light)] hover:border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-gray-900">
+                            <span className="font-semibold text-[var(--color-text)]">
                               {position.symbol}
                             </span>
                             {position.side === 'long' ? (
@@ -208,12 +208,12 @@ export default function Trading() {
                               <TrendingDown className="w-3 h-3 text-red-500" />
                             )}
                           </div>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-[var(--color-text-muted)]">
                             {position.qty} shares @ ${position.avgEntryPrice.toFixed(2)}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-[var(--color-text)]">
                             ${position.currentPrice.toFixed(2)}
                           </p>
                           <p
@@ -238,9 +238,9 @@ export default function Trading() {
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-4">
                 <AlertTriangle className="w-5 h-5 text-amber-600" />
-                <h3 className="font-semibold text-gray-900">Trading Tips</h3>
+                <h3 className="font-semibold text-[var(--color-text)]">Trading Tips</h3>
               </div>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-[var(--color-text-secondary)]">
                 <li className="flex items-start gap-2">
                   <span className="text-blue-500 mt-1">*</span>
                   Use limit orders for better price control
@@ -283,7 +283,7 @@ export default function Trading() {
 // Market status display component
 function MarketStatusDisplay({ clock }: { clock?: { isOpen: boolean; nextOpen: string; nextClose: string } }) {
   if (!clock) {
-    return <p className="text-gray-500 text-sm">Loading market status...</p>;
+    return <p className="text-[var(--color-text-muted)] text-sm">Loading market status...</p>;
   }
 
   const nextOpen = clock.nextOpen ? new Date(clock.nextOpen) : null;
@@ -297,13 +297,13 @@ function MarketStatusDisplay({ clock }: { clock?: { isOpen: boolean; nextOpen: s
             clock.isOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'
           }`}
         />
-        <span className="font-medium text-gray-900">
+        <span className="font-medium text-[var(--color-text)]">
           Market {clock.isOpen ? 'Open' : 'Closed'}
         </span>
       </div>
 
       {!clock.isOpen && nextOpen && (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-[var(--color-text-secondary)]">
           Opens: {nextOpen.toLocaleString('en-US', {
             weekday: 'short',
             hour: 'numeric',
@@ -314,7 +314,7 @@ function MarketStatusDisplay({ clock }: { clock?: { isOpen: boolean; nextOpen: s
       )}
 
       {clock.isOpen && nextClose && (
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-[var(--color-text-secondary)]">
           Closes: {nextClose.toLocaleString('en-US', {
             hour: 'numeric',
             minute: '2-digit',
@@ -323,7 +323,7 @@ function MarketStatusDisplay({ clock }: { clock?: { isOpen: boolean; nextOpen: s
         </p>
       )}
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-[var(--color-text-muted)]">
         Extended hours trading may be available
       </p>
     </div>
@@ -374,26 +374,26 @@ function ConnectionSettingsModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-lg p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Broker Connection</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
-            <span className="text-2xl text-gray-400">&times;</span>
+          <h2 className="text-xl font-semibold text-[var(--color-text)]">Broker Connection</h2>
+          <button onClick={onClose} className="p-1 hover:bg-[var(--color-bg-secondary)] rounded">
+            <span className="text-2xl text-[var(--color-text-muted)]">&times;</span>
           </button>
         </div>
 
         {/* Current Status */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+        <div className="mb-6 p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             {isConnected ? (
               <Link2 className="w-5 h-5 text-green-600" />
             ) : (
-              <Unlink className="w-5 h-5 text-gray-400" />
+              <Unlink className="w-5 h-5 text-[var(--color-text-muted)]" />
             )}
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-[var(--color-text)]">
               {isConnected ? 'Connected' : 'Not Connected'}
             </span>
           </div>
           {isConnected && (
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-[var(--color-text-secondary)]">
               Broker: <span className="font-medium capitalize">{currentBroker}</span>
               {isPaperTrading && <Badge variant="info" className="ml-2">Paper</Badge>}
             </p>
@@ -402,8 +402,8 @@ function ConnectionSettingsModal({
 
         {/* Alpaca Connection Form */}
         <div className="space-y-4 mb-6">
-          <h3 className="font-medium text-gray-900">Connect Alpaca Account</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="font-medium text-[var(--color-text)]">Connect Alpaca Account</h3>
+          <p className="text-sm text-[var(--color-text-secondary)]">
             Get your API keys from{' '}
             <a
               href="https://app.alpaca.markets/paper/dashboard/overview"
@@ -416,7 +416,7 @@ function ConnectionSettingsModal({
           </p>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
               API Key
             </label>
             <input
@@ -424,12 +424,12 @@ function ConnectionSettingsModal({
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="PK..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
               API Secret
             </label>
             <input
@@ -437,7 +437,7 @@ function ConnectionSettingsModal({
               value={apiSecret}
               onChange={(e) => setApiSecret(e.target.value)}
               placeholder="Your secret key"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -446,19 +446,19 @@ function ConnectionSettingsModal({
               type="checkbox"
               checked={paperTrading}
               onChange={(e) => setPaperTrading(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-blue-600"
+              className="w-4 h-4 rounded border-[var(--color-border)] text-blue-600"
             />
-            <span className="text-sm text-gray-700">Paper trading (recommended)</span>
+            <span className="text-sm text-[var(--color-text-secondary)]">Paper trading (recommended)</span>
           </label>
 
           {!paperTrading && (
-            <div className="p-3 bg-red-50 rounded-lg text-sm text-red-700">
+            <div className="p-3 bg-red-500/10 rounded-lg text-sm text-red-400">
               <strong>Warning:</strong> Live trading uses real money. Only disable paper trading if you understand the risks.
             </div>
           )}
 
           {connectBroker.isError && (
-            <div className="p-3 bg-red-50 rounded-lg text-sm text-red-700">
+            <div className="p-3 bg-red-500/10 rounded-lg text-sm text-red-400">
               {(connectBroker.error as any)?.response?.data?.error || 'Connection failed. Check your credentials.'}
             </div>
           )}
@@ -478,7 +478,7 @@ function ConnectionSettingsModal({
 
         {/* Demo Mode */}
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-3">
+          <p className="text-sm text-[var(--color-text-secondary)] mb-3">
             Or try the platform without a broker account
           </p>
           <Button

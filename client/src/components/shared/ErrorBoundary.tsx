@@ -1,6 +1,6 @@
 import React, { Component, type ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-import { captureError, addBreadcrumb } from '@/lib/sentry';
+import { captureError, addApiBreadcrumb } from '@/lib/sentry';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -50,10 +50,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   private reportError(error: Error, errorInfo: React.ErrorInfo, eventId: string): void {
     // Add breadcrumb for error context
-    addBreadcrumb('Error caught by ErrorBoundary', 'error', 'error', {
-      eventId,
-      componentStack: errorInfo.componentStack?.slice(0, 500),
-    });
+    addApiBreadcrumb('error-boundary', 'ERROR', 500, 0);
 
     // Report to Sentry
     captureError(error, {

@@ -153,7 +153,7 @@ export function MetaPromptCard() {
         <div className="mb-4">
           <div className="text-xs text-[var(--color-text-muted)] font-medium mb-2">Key Learnings</div>
           <div className="space-y-1.5">
-            {metaPrompt.keyLearnings.slice(0, expanded ? undefined : 3).map((learning, idx) => (
+            {metaPrompt.keyLearnings.slice(0, expanded ? undefined : 3).map((learning: string, idx: number) => (
               <div key={idx} className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
                 <CheckCircle2 className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
                 <span>{learning}</span>
@@ -187,9 +187,9 @@ export function MetaPromptCard() {
           </div>
           <div className="flex flex-wrap gap-2">
             {Object.entries(metaPrompt.factorAdjustments)
-              .sort(([, a], [, b]) => Math.abs(b) - Math.abs(a))
+              .sort(([, a], [, b]) => Math.abs(b as number) - Math.abs(a as number))
               .map(([factor, adjustment]) => (
-                <FactorAdjustmentBadge key={factor} factor={factor} adjustment={adjustment} />
+                <FactorAdjustmentBadge key={factor} factor={factor} adjustment={adjustment as number} />
               ))}
           </div>
         </div>

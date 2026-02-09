@@ -82,6 +82,8 @@ tags:
     description: Trade execution (paper trading)
   - name: Settings
     description: User settings and preferences
+  - name: API Keys
+    description: API key management for programmatic access
   - name: Cache
     description: Cache management (admin)
   - name: Errors
@@ -1079,6 +1081,103 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
 
+  /api-keys:
+    get:
+      tags:
+        - API Keys
+      summary: List API keys
+      description: Returns all API keys for the authenticated user with usage stats
+      operationId: listApiKeys
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyListResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - API Keys
+      summary: Create API key
+      description: |
+        Create a new API key. The full key is returned ONLY in this response
+        and cannot be retrieved again. Store it securely.
+      operationId: createApiKey
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApiKeyRequest'
+      responses:
+        '200':
+          description: API key created (includes the raw key -- save it now)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateApiKeyResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api-keys/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: API key ID
+        schema:
+          type: string
+          format: uuid
+
+    delete:
+      tags:
+        - API Keys
+      summary: Revoke API key
+      description: Permanently revoke an API key. It will no longer authenticate requests.
+      operationId: revokeApiKey
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: API key revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteResponse'
+        '404':
+          description: API key not found or already revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /errors/report:
     post:
       tags:
@@ -1113,6 +1212,18 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: JWT access token from /auth/login
+    apiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        API key for programmatic access. Create keys in Settings > API Keys.
+        Keys use the `fa_` prefix. Can also be passed as `Authorization: Bearer fa_...`.
+    apiKeyBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+      description: API key passed as Bearer token (must start with `fa_`)
 
   schemas:
     # Common response schemas
@@ -2399,6 +2510,108 @@ components:
               oneOf:
                 - type: integer
                 - type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    # API Key schemas
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Trading Bot
+        permissions:
+          type: object
+          properties:
+            read:
+              type: boolean
+            write:
+              type: boolean
+        rate_limit:
+          type: integer
+          description: Maximum requests per minute
+          example: 1000
+        created_at:
+          type: string
+          format: date-time
+        last_used_at:
+          type: string
+          format: date-time
+          nullable: true
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        usage_count:
+          type: integer
+          description: Total number of requests made with this key
+
+    ApiKeyListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiKey'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    CreateApiKeyRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: Trading Bot
+          minLength: 1
+          maxLength: 100
+        permissions:
+          type: object
+          properties:
+            read:
+              type: boolean
+              default: true
+            write:
+              type: boolean
+              default: false
+        rate_limit:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          default: 1000
+
+    CreateApiKeyResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            key:
+              type: string
+              description: |
+                The full API key. This is the ONLY time it will be returned.
+                Store it securely -- it cannot be retrieved again.
+              example: fa_a1b2c3d4e5f6...
+            permissions:
+              type: object
+            rate_limit:
+              type: integer
+            created_at:
+              type: string
+              format: date-time
         meta:
           $ref: '#/components/schemas/ResponseMeta'
 

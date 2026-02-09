@@ -22,6 +22,7 @@ const Trading = lazy(() => import('@/pages/Trading'));
 const Settings = lazy(() => import('@/pages/Settings').then(m => ({ default: m.Settings })));
 const Help = lazy(() => import('@/pages/Help').then(m => ({ default: m.Help })));
 const CVRF = lazy(() => import('@/pages/CVRF').then(m => ({ default: m.CVRF })));
+const Backtest = lazy(() => import('@/pages/Backtest').then(m => ({ default: m.Backtest })));
 const SharedPortfolio = lazy(() => import('@/pages/SharedPortfolio'));
 
 const queryClient = new QueryClient({
@@ -199,6 +200,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <CVRF />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/backtest"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Backtest />
+            </Layout>
           </ProtectedRoute>
         }
       />

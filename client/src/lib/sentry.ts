@@ -1,183 +1,234 @@
-import * as Sentry from '@sentry/react';
-
 /**
- * Sentry Error Tracking Configuration
+ * Sentry Error Tracking for Frontier Alpha (Browser)
  *
- * Initialize Sentry for production error monitoring with:
- * - Automatic error capturing
- * - Performance monitoring
- * - Session replay (optional)
- * - Custom context enrichment
+ * Lazy-loaded: the @sentry/react package is imported dynamically and only
+ * in production, so the module works even if the package is not yet installed.
+ *
+ * Exports:
+ *   initSentry()     - Initialize Sentry (call once at app startup)
+ *   captureError()   - Capture an error with optional context
+ *   setUser()        - Set / clear user context
+ *   addApiBreadcrumb() - Record an API call breadcrumb
+ *
+ * The module is environment-aware:
+ *   - In development it logs to the console and does NOT load Sentry.
+ *   - In production (with a configured DSN) it loads @sentry/react at runtime.
  */
 
-const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
+// ---------------------------------------------------------------------------
+// Types (mirror the parts of the Sentry API we use)
+// ---------------------------------------------------------------------------
+
+interface SentryLike {
+  init: (options: Record<string, unknown>) => void;
+  setUser: (user: { id: string; email?: string } | null) => void;
+  captureException: (error: unknown) => void;
+  addBreadcrumb: (breadcrumb: Record<string, unknown>) => void;
+  withScope: (callback: (scope: ScopeLike) => void) => void;
+  browserTracingIntegration: () => unknown;
+  replayIntegration: (opts?: Record<string, unknown>) => unknown;
+  ErrorBoundary?: unknown;
+  startInactiveSpan?: (opts: Record<string, unknown>) => unknown;
+}
+
+interface ScopeLike {
+  setExtras: (extras: Record<string, unknown>) => void;
+  setTag: (key: string, value: string) => void;
+}
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+
 const IS_PRODUCTION = import.meta.env.PROD;
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
 
-export function initSentry() {
-  if (!SENTRY_DSN) {
-    if (IS_PRODUCTION) {
-      console.warn('[Sentry] No DSN configured - error tracking disabled');
+let sentryModule: SentryLike | null = null;
+let initPromise: Promise<void> | null = null;
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
+/**
+ * Initialize Sentry. Safe to call multiple times; only the first call has
+ * effect.  In development (or when no DSN is configured) this is a no-op.
+ */
+export function initSentry(): Promise<void> {
+  if (initPromise) return initPromise;
+
+  initPromise = (async () => {
+    // Skip in development or when DSN is missing
+    if (!IS_PRODUCTION || !SENTRY_DSN) {
+      if (IS_PRODUCTION && !SENTRY_DSN) {
+        console.warn('[Sentry] No DSN configured - error tracking disabled');
+      }
+      return;
     }
-    return;
-  }
 
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    environment: IS_PRODUCTION ? 'production' : 'development',
-    release: `frontier-alpha@${import.meta.env.VITE_APP_VERSION || '1.0.0'}`,
+    try {
+      // Dynamic import so the app bundles fine even when @sentry/react
+      // is not installed.
+      const Sentry = (await import('@sentry/react')) as unknown as SentryLike;
+      sentryModule = Sentry;
 
-    // Performance monitoring
-    tracesSampleRate: IS_PRODUCTION ? 0.1 : 1.0, // 10% in prod, 100% in dev
-    tracePropagationTargets: ['localhost', /^https:\/\/frontier-alpha\.vercel\.app/],
+      const integrations: unknown[] = [];
 
-    // Session replay for debugging
-    replaysSessionSampleRate: 0.1, // 10% of sessions
-    replaysOnErrorSampleRate: 1.0, // 100% of sessions with errors
-
-    // Integrations
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
-    ],
-
-    // Before sending, filter sensitive data
-    beforeSend(event, hint) {
-      // Don't send events in development unless testing Sentry
-      if (!IS_PRODUCTION && !import.meta.env.VITE_SENTRY_DEBUG) {
-        console.log('[Sentry] Would send event:', event);
-        return null;
+      if (typeof Sentry.browserTracingIntegration === 'function') {
+        integrations.push(Sentry.browserTracingIntegration());
+      }
+      if (typeof Sentry.replayIntegration === 'function') {
+        integrations.push(
+          Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }),
+        );
       }
 
-      // Filter out sensitive headers
-      if (event.request?.headers) {
-        delete event.request.headers['authorization'];
-        delete event.request.headers['cookie'];
-      }
+      Sentry.init({
+        dsn: SENTRY_DSN,
+        environment: 'production',
+        release: `frontier-alpha@${import.meta.env.VITE_APP_VERSION || '1.0.0'}`,
 
-      // Don't send events for network errors (usually temporary)
-      const error = hint.originalException;
-      if (error && typeof error === 'object' && 'message' in error) {
-        const message = String(error.message);
-        if (
-          message.includes('Network Error') ||
-          message.includes('Failed to fetch') ||
-          message.includes('Load failed')
-        ) {
-          return null;
-        }
-      }
+        // Performance
+        tracesSampleRate: 0.1,
+        tracePropagationTargets: ['localhost', /^https:\/\/frontier-alpha\.vercel\.app/],
 
-      return event;
-    },
+        // Session replay
+        replaysSessionSampleRate: 0.1,
+        replaysOnErrorSampleRate: 1.0,
 
-    // Custom tags for filtering
-    initialScope: {
-      tags: {
-        app: 'frontier-alpha',
-        platform: 'web',
-      },
-    },
-  });
+        integrations,
 
-  console.log('[Sentry] Initialized for', IS_PRODUCTION ? 'production' : 'development');
+        // Scrub sensitive headers before sending
+        beforeSend(event: Record<string, any>, hint: Record<string, any>) {
+          if (event.request?.headers) {
+            delete event.request.headers['authorization'];
+            delete event.request.headers['cookie'];
+          }
+
+          // Drop transient network errors
+          const originalError = hint?.originalException;
+          if (originalError && typeof originalError === 'object' && 'message' in originalError) {
+            const message = String((originalError as { message: string }).message);
+            if (
+              message.includes('Network Error') ||
+              message.includes('Failed to fetch') ||
+              message.includes('Load failed')
+            ) {
+              return null;
+            }
+          }
+
+          return event;
+        },
+
+        initialScope: {
+          tags: { app: 'frontier-alpha', platform: 'web' },
+        },
+      });
+
+      console.log('[Sentry] Initialized for production');
+    } catch (err) {
+      // @sentry/react is not installed — gracefully degrade
+      console.warn('[Sentry] @sentry/react not available, error tracking disabled', err);
+    }
+  })();
+
+  return initPromise;
 }
 
 /**
- * Set user context for error tracking
- */
-export function setSentryUser(user: { id: string; email?: string } | null) {
-  if (user) {
-    Sentry.setUser({
-      id: user.id,
-      email: user.email,
-    });
-  } else {
-    Sentry.setUser(null);
-  }
-}
-
-/**
- * Add breadcrumb for user actions
- */
-export function addBreadcrumb(
-  message: string,
-  category: string = 'user',
-  level: Sentry.SeverityLevel = 'info',
-  data?: Record<string, unknown>
-) {
-  Sentry.addBreadcrumb({
-    message,
-    category,
-    level,
-    data,
-    timestamp: Date.now() / 1000,
-  });
-}
-
-/**
- * Capture custom error with context
+ * Capture an error with optional structured context.
+ * In development, logs to the console.
  */
 export function captureError(
   error: Error,
-  context?: Record<string, unknown>
-) {
-  Sentry.withScope((scope) => {
-    if (context) {
-      scope.setExtras(context);
-    }
-    Sentry.captureException(error);
-  });
+  context?: Record<string, unknown>,
+): void {
+  if (sentryModule) {
+    sentryModule.withScope((scope) => {
+      if (context) {
+        scope.setExtras(context);
+      }
+      sentryModule!.captureException(error);
+    });
+  } else {
+    console.error('[Sentry:dev] captureError', error, context);
+  }
 }
 
 /**
- * Capture custom message
+ * Set or clear the current user context for error attribution.
+ * Pass `null` to clear.
  */
-export function captureMessage(
-  message: string,
-  level: Sentry.SeverityLevel = 'info',
-  context?: Record<string, unknown>
-) {
-  Sentry.withScope((scope) => {
-    if (context) {
-      scope.setExtras(context);
-    }
-    Sentry.captureMessage(message, level);
-  });
+export function setUser(user: { id: string; email?: string } | null): void {
+  if (sentryModule) {
+    sentryModule.setUser(user);
+  }
 }
 
 /**
- * Start a performance transaction
+ * Add a breadcrumb for an API call. Useful for tracing what happened before
+ * an error.
  */
-export function startTransaction(name: string, op: string) {
-  return Sentry.startInactiveSpan({ name, op });
+export function addApiBreadcrumb(
+  endpoint: string,
+  method: string,
+  status: number,
+  durationMs: number,
+): void {
+  const breadcrumb = {
+    message: `${method} ${endpoint} ${status}`,
+    category: 'api',
+    level: status >= 400 ? 'error' : 'info',
+    data: { endpoint, method, status, durationMs },
+    timestamp: Date.now() / 1000,
+  };
+
+  if (sentryModule) {
+    sentryModule.addBreadcrumb(breadcrumb);
+  } else if (!IS_PRODUCTION) {
+    console.debug('[Sentry:dev] breadcrumb', breadcrumb);
+  }
 }
 
 /**
- * Tag for specific portfolio context
+ * Helper: Sentry ErrorBoundary component (only available after init resolves
+ * and @sentry/react is loaded). Returns `null` when Sentry is not available
+ * so the caller can provide a fallback.
  */
-export function setPortfolioContext(portfolioId: string, totalValue: number) {
-  Sentry.setTag('portfolio_id', portfolioId);
-  Sentry.setContext('portfolio', {
-    id: portfolioId,
-    totalValue,
-    timestamp: new Date().toISOString(),
-  });
+export function getErrorBoundary(): unknown {
+  return sentryModule?.ErrorBoundary ?? null;
 }
 
 /**
- * Track API call performance
+ * Start an inactive performance span (only when Sentry is loaded).
  */
-export function trackApiCall(endpoint: string, duration: number, success: boolean) {
-  addBreadcrumb(`API ${success ? 'success' : 'error'}: ${endpoint}`, 'api', success ? 'info' : 'error', {
-    endpoint,
-    duration,
-    success,
-  });
+export function startTransaction(name: string, op: string): unknown {
+  if (sentryModule?.startInactiveSpan) {
+    return sentryModule.startInactiveSpan({ name, op });
+  }
+  return null;
 }
 
-// Re-export ErrorBoundary for use in components
-export const ErrorBoundary = Sentry.ErrorBoundary;
-export { Sentry };
+/**
+ * Track an API call (breadcrumb + optional perf span).
+ */
+export function trackApiCall(endpoint: string, duration: number, success: boolean): void {
+  addApiBreadcrumb(endpoint, 'GET', success ? 200 : 500, duration);
+}
+
+/**
+ * Set portfolio context for error grouping.
+ */
+export function setPortfolioContext(portfolioId: string, totalValue: number): void {
+  if (sentryModule) {
+    sentryModule.withScope((scope) => {
+      scope.setTag('portfolio_id', portfolioId);
+      scope.setExtras({
+        portfolio_id: portfolioId,
+        portfolio_total_value: totalValue,
+        portfolio_context_ts: new Date().toISOString(),
+      });
+    });
+  }
+}

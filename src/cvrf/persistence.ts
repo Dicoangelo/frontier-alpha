@@ -301,10 +301,10 @@ export async function saveCycleResult(
       user_id: userId,
       cycle_number: cycleNumber,
       timestamp: result.timestamp.toISOString(),
-      previous_episode_id: result.episodeComparison.previousEpisodeId,
-      current_episode_id: result.episodeComparison.currentEpisodeId,
-      previous_episode_return: result.episodeComparison.previousEpisodeReturn,
-      current_episode_return: result.episodeComparison.currentEpisodeReturn,
+      previous_episode_id: result.episodeComparison.worseEpisode.id,
+      current_episode_id: result.episodeComparison.betterEpisode.id,
+      previous_episode_return: result.episodeComparison.worseEpisode.portfolioReturn ?? 0,
+      current_episode_return: result.episodeComparison.betterEpisode.portfolioReturn ?? 0,
       performance_delta: result.episodeComparison.performanceDelta,
       decision_overlap: result.episodeComparison.decisionOverlap,
       extracted_insights: result.extractedInsights,
@@ -363,6 +363,7 @@ function dbToEpisode(db: DBEpisode, decisions: DBDecision[]): Episode {
     sharpeRatio: db.sharpe_ratio || undefined,
     maxDrawdown: db.max_drawdown || undefined,
     volatility: db.volatility || undefined,
+    factorExposures: [],
   };
 }
 
@@ -406,16 +407,27 @@ function dbToBelief(db: DBBelief): BeliefState {
 function dbToCycleResult(db: any): CVRFCycleResult {
   const newBeliefState = db.new_belief_state || {};
   return {
+    cycleId: db.id || `cycle_${db.cycle_number || 0}`,
     timestamp: new Date(db.timestamp),
     episodeComparison: {
-      previousEpisodeId: db.previous_episode_id,
-      currentEpisodeId: db.current_episode_id,
-      previousEpisodeReturn: db.previous_episode_return,
-      currentEpisodeReturn: db.current_episode_return,
+      betterEpisode: {
+        id: db.current_episode_id,
+        startDate: new Date(),
+        decisions: [],
+        factorExposures: [],
+        portfolioReturn: db.current_episode_return,
+      },
+      worseEpisode: {
+        id: db.previous_episode_id,
+        startDate: new Date(),
+        decisions: [],
+        factorExposures: [],
+        portfolioReturn: db.previous_episode_return,
+      },
       performanceDelta: db.performance_delta,
       decisionOverlap: db.decision_overlap,
-      sharedSymbols: [],
-      divergentDecisions: [],
+      profitableTrades: [],
+      losingTrades: [],
     },
     extractedInsights: db.extracted_insights || [],
     metaPrompt: db.meta_prompt || {

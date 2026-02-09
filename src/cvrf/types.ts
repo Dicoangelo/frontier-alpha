@@ -28,6 +28,8 @@ export interface TradingDecision {
   factors: FactorExposure[];
   sentiment?: SentimentScore;
   confidence: number;
+  outcomeReturn?: number;
+  outcomeAttribution?: Record<string, unknown>;
 }
 
 /**
@@ -35,12 +37,14 @@ export interface TradingDecision {
  */
 export interface Episode {
   id: string;
+  episodeNumber?: number;
   startDate: Date;
-  endDate: Date;
+  endDate?: Date;
   decisions: TradingDecision[];
-  portfolioReturn: number;
-  sharpeRatio: number;
-  maxDrawdown: number;
+  portfolioReturn?: number;
+  sharpeRatio?: number;
+  maxDrawdown?: number;
+  volatility?: number;
   factorExposures: FactorExposure[];
   optimizationResult?: OptimizationResult;
 }

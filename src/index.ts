@@ -28,6 +28,7 @@ import { MarketDataProvider } from './data/MarketDataProvider.js';
 import { authMiddleware, optionalAuthMiddleware, hashApiKey } from './middleware/auth.js';
 import { rateLimiterMiddleware } from './middleware/rateLimiter.js';
 import { portfolioService } from './services/PortfolioService.js';
+import { ExplanationService, type ExplanationRequest, type ExplanationType } from './services/ExplanationService.js';
 import { supabaseAdmin } from './lib/supabase.js';
 import { logger } from './observability/logger.js';
 import { metrics, recordRequest } from './observability/metrics.js';
@@ -78,6 +79,7 @@ export class FrontierAlphaServer {
   private factorEngine: FactorEngine;
   private optimizer: PortfolioOptimizer;
   private explainer: CognitiveExplainer;
+  private explanationService: ExplanationService;
   private earningsOracle: EarningsOracle;
   private dataProvider: MarketDataProvider;
   private cvrfManager: CVRFManager;
@@ -94,6 +96,7 @@ export class FrontierAlphaServer {
     this.factorEngine = new FactorEngine();
     this.optimizer = new PortfolioOptimizer(this.factorEngine);
     this.explainer = new CognitiveExplainer();
+    this.explanationService = new ExplanationService(this.explainer);
     this.earningsOracle = new EarningsOracle();
     this.dataProvider = new MarketDataProvider({
       polygonApiKey: this.config.polygonApiKey,
@@ -669,6 +672,61 @@ export class FrontierAlphaServer {
               timestamp: new Date(),
               requestId: request.id,
               latencyMs: Date.now() - start,
+            },
+          };
+        } catch (error: any) {
+          return reply.status(500).send({
+            success: false,
+            error: { code: 'EXPLAIN_ERROR', message: error.message },
+          });
+        }
+      }
+    );
+
+    // ========================================
+    // General Explanation Endpoint (LLM + Template)
+    // ========================================
+
+    const VALID_EXPLANATION_TYPES: ExplanationType[] = [
+      'portfolio_move', 'rebalance', 'earnings', 'risk_alert', 'factor_shift',
+    ];
+
+    this.app.post<{
+      Body: ExplanationRequest;
+      Reply: APIResponse<any>;
+    }>(
+      '/api/v1/explain',
+      async (request, reply) => {
+        const start = Date.now();
+
+        try {
+          const { type, symbol, context } = request.body;
+
+          if (!type || !VALID_EXPLANATION_TYPES.includes(type)) {
+            return reply.status(400).send({
+              success: false,
+              error: {
+                code: 'INVALID_TYPE',
+                message: `Invalid explanation type. Must be one of: ${VALID_EXPLANATION_TYPES.join(', ')}`,
+              },
+            });
+          }
+
+          const result = await this.explanationService.generate({
+            type,
+            symbol,
+            context,
+          });
+
+          return {
+            success: true,
+            data: result,
+            meta: {
+              timestamp: new Date(),
+              requestId: request.id,
+              latencyMs: Date.now() - start,
+              source: result.sources.includes('ai_model') ? 'llm' : 'template',
+              llmEnabled: this.explanationService.isLLMEnabled,
             },
           };
         } catch (error: any) {

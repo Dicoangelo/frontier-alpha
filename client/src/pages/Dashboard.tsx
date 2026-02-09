@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { wsClient } from '@/api/websocket';
-import { useQuotesStore } from '@/stores/quotesStore';
+import { useQuotes } from '@/hooks/useQuotes';
 import { PortfolioOverview } from '@/components/portfolio/PortfolioOverview';
 import { PositionList } from '@/components/portfolio/PositionList';
 import { FactorExposures } from '@/components/factors/FactorExposures';
@@ -254,15 +253,16 @@ function getDemoFactors(): FactorExposure[] {
 }
 
 export function Dashboard() {
-  const quotes = useQuotesStore((state) => state.quotes);
-  const updateQuote = useQuotesStore((state) => state.updateQuote);
-
   const [portfolio, setPortfolio] = useState<Portfolio>(EMPTY_PORTFOLIO);
   const [factors, setFactors] = useState<FactorExposure[]>(EMPTY_FACTORS);
   const [metrics, setMetrics] = useState<RiskMetricsData>(EMPTY_METRICS);
   const [insight, setInsight] = useState<string>('Loading portfolio data...');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Real-time quote streaming via useQuotes hook
+  const symbols = portfolio.positions.map(p => p.symbol);
+  const { quotes, isConnected, lastUpdate } = useQuotes(symbols);
 
   // Fetch portfolio data
   const loadPortfolioData = useCallback(async () => {
@@ -302,28 +302,6 @@ export function Dashboard() {
   useEffect(() => {
     loadPortfolioData();
   }, [loadPortfolioData]);
-
-  // Connect WebSocket and subscribe to quotes
-  useEffect(() => {
-    if (portfolio.positions.length === 0) return;
-
-    wsClient.connect();
-
-    const symbols = portfolio.positions.map((p) => p.symbol);
-    wsClient.subscribe(symbols);
-
-    const unsubscribe = wsClient.on('quote', (quote: unknown) => {
-      // Type assertion after validating quote structure
-      if (quote && typeof quote === 'object' && 'symbol' in quote) {
-        updateQuote(quote as import('@/types').Quote);
-      }
-    });
-
-    return () => {
-      unsubscribe();
-      wsClient.disconnect();
-    };
-  }, [portfolio.positions, updateQuote]);
 
   // Update position prices when quotes change
   useEffect(() => {
@@ -387,6 +365,17 @@ export function Dashboard() {
   return (
     <PullToRefresh onRefresh={loadPortfolioData} className="min-h-screen">
       <div className="space-y-6 animate-fade-in">
+
+        {/* Live data status bar */}
+        <div className="flex items-center justify-between text-xs text-[var(--color-text-secondary)] px-1">
+          <div className="flex items-center gap-2">
+            <span className={`inline-block w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+            <span>{isConnected ? 'Live' : 'Disconnected'}</span>
+          </div>
+          {lastUpdate && (
+            <span>Updated {lastUpdate.toLocaleTimeString()}</span>
+          )}
+        </div>
 
         <div data-tour="portfolio-overview">
           <PortfolioOverview portfolio={portfolio} />

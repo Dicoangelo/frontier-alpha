@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Save, LogOut, User, Bell, Shield, AlertTriangle } from 'lucide-react';
+import { Save, LogOut, User, Bell, Shield, AlertTriangle, Key } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { api } from '@/api/client';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
 import { NotificationSettings } from '@/components/notifications/NotificationSettings';
+import { APIKeys } from '@/components/settings/APIKeys';
 
 interface UserSettings {
   display_name: string | null;
@@ -223,6 +224,14 @@ export function Settings() {
             />
           </label>
         </div>
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <Key className="w-5 h-5 text-[var(--color-text-muted)]" />
+          <h2 className="text-lg font-semibold">API Keys</h2>
+        </div>
+        <APIKeys />
       </Card>
 
       <Card className="p-6 border-red-500/20">

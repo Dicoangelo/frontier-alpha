@@ -25,9 +25,13 @@ import { PortfolioOptimizer } from './optimizer/PortfolioOptimizer.js';
 import { CognitiveExplainer } from './core/CognitiveExplainer.js';
 import { EarningsOracle } from './core/EarningsOracle.js';
 import { MarketDataProvider } from './data/MarketDataProvider.js';
-import { authMiddleware, optionalAuthMiddleware } from './middleware/auth.js';
+import { authMiddleware, optionalAuthMiddleware, hashApiKey } from './middleware/auth.js';
+import { rateLimiterMiddleware } from './middleware/rateLimiter.js';
 import { portfolioService } from './services/PortfolioService.js';
 import { supabaseAdmin } from './lib/supabase.js';
+import { logger } from './observability/logger.js';
+import { metrics, recordRequest } from './observability/metrics.js';
+import { randomBytes } from 'crypto';
 
 // CVRF (Conceptual Verbal Reinforcement Framework)
 import { CVRFManager } from './cvrf/CVRFManager.js';
@@ -110,16 +114,77 @@ export class FrontierAlphaServer {
     await this.app.register(cors, {
       origin: true,
     });
-    
+
     await this.app.register(websocket);
+
+    // --- Request logging & metrics -------------------------------------------
+
+    // Attach a request-scoped logger with requestId
+    this.app.addHook('onRequest', async (request, _reply) => {
+      (request as any).__startTime = process.hrtime.bigint();
+      (request as any).__reqLogger = logger.child({ requestId: request.id });
+      (request as any).__reqLogger.info('incoming request', {
+        method: request.method,
+        url: request.url,
+      });
+      metrics.incGauge('active_connections');
+    });
+
+    this.app.addHook('onResponse', async (request, reply) => {
+      metrics.decGauge('active_connections');
+      const startNs = (request as any).__startTime as bigint | undefined;
+      const durationMs = startNs
+        ? Number(process.hrtime.bigint() - startNs) / 1e6
+        : 0;
+      const durationSec = durationMs / 1000;
+
+      const route = request.routeOptions?.url ?? request.url;
+      recordRequest(request.method, route, reply.statusCode, durationSec);
+
+      const reqLogger = (request as any).__reqLogger ?? logger;
+      reqLogger.info('request completed', {
+        method: request.method,
+        url: request.url,
+        status: reply.statusCode,
+        durationMs: Math.round(durationMs * 100) / 100,
+      });
+    });
+
+    this.app.addHook('onError', async (request, _reply, error) => {
+      const reqLogger = (request as any).__reqLogger ?? logger;
+      reqLogger.error('request error', {
+        method: request.method,
+        url: request.url,
+        error: { name: error.name, message: error.message, stack: error.stack },
+      });
+    });
   }
 
   private setupRoutes() {
+    // ========================================
+    // Global Rate Limiter (applied to all /api/* routes)
+    // ========================================
+    this.app.addHook('onRequest', async (request, reply) => {
+      // Skip rate limiting for health check and websocket
+      if (request.url === '/health' || request.url.startsWith('/ws/')) {
+        return;
+      }
+      await rateLimiterMiddleware(request, reply);
+    });
+
     // ========================================
     // Health Check
     // ========================================
     this.app.get('/health', async () => {
       return { status: 'ok', timestamp: new Date().toISOString(), version: '1.0.3-debug' };
+    });
+
+    // ========================================
+    // Prometheus Metrics
+    // ========================================
+    this.app.get('/api/v1/metrics', async (_request, reply) => {
+      reply.type('text/plain; version=0.0.4; charset=utf-8');
+      return metrics.toPrometheus();
     });
 
     // ========================================
@@ -1018,14 +1083,183 @@ export class FrontierAlphaServer {
           success: true,
           data: history.map(cycle => ({
             timestamp: cycle.timestamp,
-            previousEpisodeReturn: cycle.episodeComparison.previousEpisodeReturn,
-            currentEpisodeReturn: cycle.episodeComparison.currentEpisodeReturn,
+            betterEpisodeReturn: cycle.episodeComparison.betterEpisode.portfolioReturn,
+            worseEpisodeReturn: cycle.episodeComparison.worseEpisode.portfolioReturn,
             performanceDelta: cycle.episodeComparison.performanceDelta,
             decisionOverlap: cycle.episodeComparison.decisionOverlap,
             insightsCount: cycle.extractedInsights.length,
             beliefUpdatesCount: cycle.beliefUpdates.length,
             newRegime: cycle.newBeliefState.currentRegime,
           })),
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      }
+    );
+
+    // ========================================
+    // API Key Management Endpoints (Protected)
+    // ========================================
+
+    // List user's API keys
+    this.app.get<{ Reply: APIResponse<any[]> }>(
+      '/api/v1/api-keys',
+      { preHandler: authMiddleware },
+      async (request, reply) => {
+        const start = Date.now();
+
+        if (!request.user) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+          });
+        }
+
+        const { data, error } = await supabaseAdmin
+          .from('frontier_api_keys')
+          .select('id, name, permissions, rate_limit, created_at, last_used_at, revoked_at')
+          .eq('user_id', request.user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          return reply.status(500).send({
+            success: false,
+            error: { code: 'FETCH_ERROR', message: error.message },
+          });
+        }
+
+        // Fetch usage stats per key
+        const keysWithStats = await Promise.all(
+          (data || []).map(async (key) => {
+            const { count } = await supabaseAdmin
+              .from('frontier_api_key_usage')
+              .select('*', { count: 'exact', head: true })
+              .eq('api_key_id', key.id);
+
+            return {
+              ...key,
+              usage_count: count || 0,
+            };
+          })
+        );
+
+        return {
+          success: true,
+          data: keysWithStats,
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      }
+    );
+
+    // Create new API key
+    this.app.post<{
+      Body: { name: string; permissions?: Record<string, boolean>; rate_limit?: number };
+      Reply: APIResponse<any>;
+    }>(
+      '/api/v1/api-keys',
+      { preHandler: authMiddleware },
+      async (request, reply) => {
+        const start = Date.now();
+
+        if (!request.user) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+          });
+        }
+
+        const { name, permissions, rate_limit } = request.body;
+
+        if (!name || name.trim().length === 0) {
+          return reply.status(400).send({
+            success: false,
+            error: { code: 'VALIDATION_ERROR', message: 'Key name is required' },
+          });
+        }
+
+        // Generate a unique API key with fa_ prefix
+        const rawKey = `fa_${randomBytes(32).toString('hex')}`;
+        const keyHash = hashApiKey(rawKey);
+
+        const { data, error } = await supabaseAdmin
+          .from('frontier_api_keys')
+          .insert({
+            user_id: request.user.id,
+            key_hash: keyHash,
+            name: name.trim(),
+            permissions: permissions || { read: true, write: false },
+            rate_limit: rate_limit || 1000,
+          })
+          .select('id, name, permissions, rate_limit, created_at')
+          .single();
+
+        if (error) {
+          return reply.status(500).send({
+            success: false,
+            error: { code: 'CREATE_ERROR', message: error.message },
+          });
+        }
+
+        return {
+          success: true,
+          data: {
+            ...data,
+            // Return the raw key ONLY on creation -- it will never be shown again
+            key: rawKey,
+          },
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      }
+    );
+
+    // Revoke an API key
+    this.app.delete<{
+      Params: { id: string };
+      Reply: APIResponse<{ revoked: boolean }>;
+    }>(
+      '/api/v1/api-keys/:id',
+      { preHandler: authMiddleware },
+      async (request, reply) => {
+        const start = Date.now();
+        const { id } = request.params;
+
+        if (!request.user) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+          });
+        }
+
+        const { data, error } = await supabaseAdmin
+          .from('frontier_api_keys')
+          .update({ revoked_at: new Date().toISOString() })
+          .eq('id', id)
+          .eq('user_id', request.user.id)
+          .is('revoked_at', null)
+          .select()
+          .single();
+
+        if (error || !data) {
+          return reply.status(404).send({
+            success: false,
+            error: { code: 'NOT_FOUND', message: 'API key not found or already revoked' },
+          });
+        }
+
+        return {
+          success: true,
+          data: { revoked: true },
           meta: {
             timestamp: new Date(),
             requestId: request.id,
@@ -1080,10 +1314,17 @@ export class FrontierAlphaServer {
         host: this.config.host,
       });
       
+      logger.info('Frontier Alpha server started', {
+        host: this.config.host,
+        port: this.config.port,
+        environment: process.env.NODE_ENV || 'development',
+        version: '1.0.3-debug',
+      });
+
       console.log(`
 ╔══════════════════════════════════════════════════════════════════╗
-║  🚀 FRONTIER ALPHA - Cognitive Factor Intelligence Platform       ║
-║  ✨ CVRF (Conceptual Verbal Reinforcement Framework) Enabled      ║
+║  FRONTIER ALPHA - Cognitive Factor Intelligence Platform          ║
+║  CVRF (Conceptual Verbal Reinforcement Framework) Enabled         ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║  Server running on http://${this.config.host}:${this.config.port}
 ║
@@ -1092,6 +1333,9 @@ export class FrontierAlphaServer {
 ║    POST /api/v1/portfolio/optimize
 ║    GET  /api/v1/portfolio/factors/:symbols
 ║    POST /api/v1/portfolio/explain
+║
+║  Observability:
+║    GET  /api/v1/metrics             - Prometheus metrics
 ║
 ║  CVRF (Belief Optimization):
 ║    GET  /api/v1/cvrf/beliefs        - Current belief state
@@ -1112,7 +1356,7 @@ export class FrontierAlphaServer {
 ╚══════════════════════════════════════════════════════════════════╝
       `);
     } catch (err) {
-      this.app.log.error(err);
+      logger.error('Failed to start server', { error: err });
       process.exit(1);
     }
   }
@@ -1137,7 +1381,7 @@ export async function main() {
 
   // Graceful shutdown
   process.on('SIGINT', async () => {
-    console.log('\nShutting down...');
+    logger.info('Shutting down (SIGINT received)');
     await server.stop();
     process.exit(0);
   });

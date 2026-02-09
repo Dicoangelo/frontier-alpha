@@ -1,10 +1,16 @@
 /**
- * AlertDelivery - Email notification service for risk alerts
+ * AlertDelivery - Multi-channel notification service for risk alerts
  *
- * Supports multiple providers:
+ * Channels:
+ * - Email (Resend, SendGrid, or console for dev)
+ * - Push notifications (Web Push via PushService)
+ *
+ * Supports multiple email providers:
  * - Resend (recommended for simplicity)
  * - SendGrid (enterprise alternative)
  */
+
+import { getPushService, type PushNotificationPayload } from './PushService.js';
 
 export interface AlertPayload {
   id: string;
@@ -26,6 +32,7 @@ export interface UserNotificationSettings {
   userId: string;
   email: string;
   emailEnabled: boolean;
+  pushEnabled?: boolean;
   severityThreshold: 'critical' | 'high' | 'medium' | 'low';
   alertTypes: string[];
   digestFrequency: 'immediate' | 'hourly' | 'daily';
@@ -172,18 +179,13 @@ export class AlertDelivery {
   }
 
   /**
-   * Send a single alert notification
+   * Send a single alert notification via all enabled channels (email + push).
    */
   async sendAlert(
     alert: AlertPayload,
     settings: UserNotificationSettings
-  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-    // Check if user wants this alert
-    if (!settings.emailEnabled) {
-      return { success: true, messageId: 'skipped-disabled' };
-    }
-
-    // Check severity threshold
+  ): Promise<{ success: boolean; messageId?: string; error?: string; pushResults?: Array<{ success: boolean; error?: string }> }> {
+    // Check severity threshold (applies to all channels)
     const severityOrder = ['low', 'medium', 'high', 'critical'];
     const alertSeverityIndex = severityOrder.indexOf(alert.severity);
     const thresholdIndex = severityOrder.indexOf(settings.severityThreshold);
@@ -191,44 +193,171 @@ export class AlertDelivery {
       return { success: true, messageId: 'skipped-below-threshold' };
     }
 
-    // Check alert type filter
+    // Check alert type filter (applies to all channels)
     if (settings.alertTypes.length > 0 && !settings.alertTypes.includes(alert.type)) {
       return { success: true, messageId: 'skipped-type-filtered' };
     }
 
-    const subject = this.formatSubject(alert);
-    const html = this.formatHtmlEmail(alert);
-    const text = this.formatTextEmail(alert);
+    // --- Email delivery ---
+    let emailResult: { success: boolean; messageId?: string; error?: string } = {
+      success: true,
+      messageId: 'skipped-disabled',
+    };
 
-    return this.provider.send({
-      to: settings.email,
-      subject,
-      html,
-      text,
-    });
+    if (settings.emailEnabled) {
+      const subject = this.formatSubject(alert);
+      const html = this.formatHtmlEmail(alert);
+      const text = this.formatTextEmail(alert);
+
+      emailResult = await this.provider.send({
+        to: settings.email,
+        subject,
+        html,
+        text,
+      });
+    }
+
+    // --- Push notification delivery ---
+    let pushResults: Array<{ success: boolean; error?: string }> | undefined;
+
+    if (settings.pushEnabled !== false) {
+      pushResults = await this.sendPushForAlert(alert, settings.userId);
+    }
+
+    return {
+      ...emailResult,
+      pushResults,
+    };
   }
 
   /**
-   * Send a digest of multiple alerts
+   * Send a digest of multiple alerts via all enabled channels (email + push).
    */
   async sendDigest(
     alerts: AlertPayload[],
     settings: UserNotificationSettings
-  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-    if (!settings.emailEnabled || alerts.length === 0) {
+  ): Promise<{ success: boolean; messageId?: string; error?: string; pushResults?: Array<{ success: boolean; error?: string }> }> {
+    if (alerts.length === 0) {
       return { success: true, messageId: 'skipped' };
     }
 
-    const subject = `Frontier Alpha: ${alerts.length} Alert${alerts.length > 1 ? 's' : ''} Summary`;
-    const html = this.formatDigestHtml(alerts);
-    const text = this.formatDigestText(alerts);
+    // --- Email digest ---
+    let emailResult: { success: boolean; messageId?: string; error?: string } = {
+      success: true,
+      messageId: 'skipped-disabled',
+    };
 
-    return this.provider.send({
-      to: settings.email,
-      subject,
-      html,
-      text,
-    });
+    if (settings.emailEnabled) {
+      const subject = `Frontier Alpha: ${alerts.length} Alert${alerts.length > 1 ? 's' : ''} Summary`;
+      const html = this.formatDigestHtml(alerts);
+      const text = this.formatDigestText(alerts);
+
+      emailResult = await this.provider.send({
+        to: settings.email,
+        subject,
+        html,
+        text,
+      });
+    }
+
+    // --- Push digest notification ---
+    let pushResults: Array<{ success: boolean; error?: string }> | undefined;
+
+    if (settings.pushEnabled !== false) {
+      try {
+        const pushService = getPushService();
+        if (pushService.hasSubscriptions(settings.userId)) {
+          const criticalCount = alerts.filter((a) => a.severity === 'critical').length;
+          const highCount = alerts.filter((a) => a.severity === 'high').length;
+
+          let body = `${alerts.length} alert${alerts.length > 1 ? 's' : ''} require your attention.`;
+          if (criticalCount > 0) {
+            body = `${criticalCount} critical, ${highCount} high priority. ${body}`;
+          }
+
+          const results = await pushService.broadcastToUser(settings.userId, {
+            title: `Frontier Alpha: Alert Digest`,
+            body,
+            tag: `digest-${Date.now()}`,
+            data: { url: '/alerts', type: 'digest' },
+            actions: [
+              { action: 'view', title: 'View All' },
+              { action: 'dismiss', title: 'Dismiss' },
+            ],
+          });
+
+          pushResults = results.map((r) => ({
+            success: r.success,
+            error: r.error,
+          }));
+        }
+      } catch (error) {
+        console.error('[AlertDelivery] Push digest notification failed:', error);
+        pushResults = [
+          {
+            success: false,
+            error: error instanceof Error ? error.message : 'Push delivery failed',
+          },
+        ];
+      }
+    }
+
+    return {
+      ...emailResult,
+      pushResults,
+    };
+  }
+
+  /**
+   * Send a push notification for an alert via PushService.
+   * Fails gracefully if push is unavailable or user has no subscriptions.
+   */
+  private async sendPushForAlert(
+    alert: AlertPayload,
+    userId: string
+  ): Promise<Array<{ success: boolean; error?: string }>> {
+    try {
+      const pushService = getPushService();
+
+      if (!pushService.hasSubscriptions(userId)) {
+        return [{ success: true, error: 'no-push-subscriptions' }];
+      }
+
+      const severityLabel: Record<string, string> = {
+        critical: 'CRITICAL',
+        high: 'HIGH',
+        medium: 'MEDIUM',
+        low: 'LOW',
+      };
+
+      const payload: PushNotificationPayload = {
+        title: `${severityLabel[alert.severity] || 'ALERT'}: ${alert.title}`,
+        body: alert.message,
+        tag: `alert-${alert.type}-${alert.symbol || alert.id}`,
+        data: {
+          url: alert.symbol ? `/portfolio?highlight=${alert.symbol}` : '/alerts',
+          type: alert.type,
+        },
+        actions: [
+          { action: 'view', title: 'View Details' },
+          { action: 'dismiss', title: 'Dismiss' },
+        ],
+      };
+
+      const results = await pushService.broadcastToUser(userId, payload);
+      return results.map((r) => ({
+        success: r.success,
+        error: r.error,
+      }));
+    } catch (error) {
+      console.error('[AlertDelivery] Push notification failed:', error);
+      return [
+        {
+          success: false,
+          error: error instanceof Error ? error.message : 'Push delivery failed',
+        },
+      ];
+    }
   }
 
   private formatSubject(alert: AlertPayload): string {

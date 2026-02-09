@@ -1,40 +1,39 @@
 /**
  * Vitest Test Setup
- * Global configuration for E2E tests
+ * Global configuration for E2E tests with MSW (Mock Service Worker)
  */
 
-import { beforeAll, afterAll } from 'vitest';
+import { beforeAll, afterAll, afterEach } from 'vitest';
+import { setupServer } from 'msw/node';
+import { handlers } from './setup/msw-handlers.js';
 
-// Environment validation
+// ============================================================================
+// MSW Server
+// ============================================================================
+
+export const server = setupServer(...handlers);
+
 beforeAll(() => {
-  const requiredEnvVars = ['TEST_API_URL'];
-  const missing = requiredEnvVars.filter((v) => !process.env[v]);
-
-  if (missing.length > 0 && process.env.CI) {
-    console.warn(`Missing environment variables: ${missing.join(', ')}`);
-    console.warn('Using default localhost URL');
-  }
+  server.listen({ onUnhandledRequest: 'warn' });
 });
 
-// Cleanup
+afterEach(() => {
+  server.resetHandlers();
+});
+
 afterAll(() => {
-  // Any global cleanup
+  server.close();
 });
 
+// ============================================================================
 // Global test utilities
+// ============================================================================
+
 export const API_BASE = process.env.TEST_API_URL || 'http://localhost:3000';
 
 export async function getAuthToken(): Promise<string> {
-  const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      email: process.env.TEST_USER_EMAIL || 'test@example.com',
-      password: process.env.TEST_USER_PASSWORD || 'TestPassword123!',
-    }),
-  });
-  const data = await response.json();
-  return data.data?.accessToken || 'mock-token';
+  // In mock mode, return a token that MSW recognizes as valid
+  return 'mock-valid-token';
 }
 
 export function authHeaders(token: string) {

@@ -23,3 +23,9 @@ export type {
   OptimizationObjective,
   StrategyConfig,
 } from './WalkForwardEngine.js';
+
+export { BacktestRunner, backtestRunner } from './BacktestRunner.js';
+export type {
+  BacktestRunConfig,
+  BacktestRunResult,
+} from './BacktestRunner.js';

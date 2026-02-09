@@ -85,9 +85,9 @@ export class MarketDataProvider {
       ...config,
     };
 
-    // Initialize Redis connection only in production
+    // Initialize Redis connection (dev + production, with graceful fallback)
     const redisUrl = config.redisUrl || process.env.REDIS_URL;
-    if (redisUrl && process.env.NODE_ENV === 'production') {
+    if (redisUrl) {
       try {
         this.redis = new (Redis as any)(redisUrl, {
           maxRetriesPerRequest: 3,

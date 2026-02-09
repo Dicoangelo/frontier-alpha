@@ -8,7 +8,6 @@
 import { useMemo } from 'react';
 import { Flame } from 'lucide-react';
 import { useCVRFHistory } from '@/hooks/useCVRF';
-import type { CVRFCycleResult } from '@/types/cvrf';
 
 interface HeatmapCell {
   episode: number;
@@ -82,10 +81,9 @@ export function FactorWeightHeatmap() {
       // In a full implementation, this would use the actual factor weight snapshots
       // from the belief-history endpoint
       const deltaSign = cycle.performanceDelta >= 0 ? 1 : -1;
-      const overlap = cycle.decisionOverlap;
-
       // Generate factor cells from the cycle's insight count as a proxy
       const insightWeight = Math.min(cycle.insightsCount / 10, 1);
+      void insightWeight; // used in cell generation below
 
       // Common factors to show
       const defaultFactors = [

@@ -10,10 +10,6 @@ import { GitCompare, TrendingUp, TrendingDown, ArrowRight, X } from 'lucide-reac
 import { useCVRFEpisodes } from '@/hooks/useCVRF';
 import type { CVRFEpisode } from '@/types/cvrf';
 
-interface EpisodeComparison {
-  episodeA: CVRFEpisode;
-  episodeB: CVRFEpisode;
-}
 
 interface MetricComparisonProps {
   label: string;

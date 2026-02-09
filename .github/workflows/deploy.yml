@@ -1,8 +1,8 @@
 name: Deploy
 
 on:
-  push:
-    branches: [main]
+  # Manual trigger only — avoids burning Vercel build minutes on every push
+  # To deploy: GitHub → Actions → Deploy → Run workflow
   workflow_dispatch:
 
 # Required GitHub Secrets:

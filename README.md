@@ -1,199 +1,315 @@
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:1a1a2e,50:0d47a1,100:00d9ff&height=200&section=header&text=Frontier%20Alpha&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=Cognitive%20Factor%20Intelligence%20Platform&descSize=20&descAlignY=55" />
-</p>
+<img src="https://capsule-render.vercel.app/api?type=waving&height=300&color=0:0d1117,50:0d47a1,100:00d9ff&text=FRONTIER%20ALPHA&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=35&desc=Cognitive%20Factor%20Intelligence%20Platform&descSize=18&descAlignY=55&descAlign=50" width="100%" alt="Frontier Alpha"/>
 
-<p align="center">
-  <strong>AI-powered portfolio optimization with explainable recommendations and self-improving belief systems</strong>
-</p>
+<div align="center">
 
-<p align="center">
-  <em>"Let the invention be hidden in your vision"</em>
-</p>
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=600&size=22&duration=3000&pause=1000&color=00D9FF&center=true&vCenter=true&multiline=false&repeat=true&width=700&height=40&lines=80%2B+Factors+%E2%80%A2+Self-Improving+Beliefs+%E2%80%A2+Explainable+AI" alt="Typing SVG" />
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Tests-205-00d9ff?style=for-the-badge" alt="Tests" />
-  <img src="https://img.shields.io/badge/Lines-62,000+-0d47a1?style=for-the-badge" alt="Lines" />
-  <img src="https://img.shields.io/badge/Files-242+-1a1a2e?style=for-the-badge" alt="Files" />
-  <img src="https://img.shields.io/badge/Endpoints-29+-00d9ff?style=for-the-badge" alt="Endpoints" />
-  <img src="https://img.shields.io/badge/Version-1.0.4-0d47a1?style=for-the-badge" alt="Version" />
-  <img src="https://img.shields.io/badge/Status-Production-success?style=for-the-badge" alt="Status" />
-</p>
+<br/>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React" />
-  <img src="https://img.shields.io/badge/TypeScript-5.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Fastify-4.x-000000?style=for-the-badge&logo=fastify&logoColor=white" alt="Fastify" />
-  <img src="https://img.shields.io/badge/Vite-7.x-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
-  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
-  <img src="https://img.shields.io/badge/Polygon.io-Market_Data-7C3AED?style=for-the-badge" alt="Polygon.io" />
-</p>
+[![Metaventions AI](https://img.shields.io/badge/Metaventions_AI-Architected_Intelligence-00d9ff?style=for-the-badge&labelColor=0d1117)](https://metaventionsai.com)
+[![Author](https://img.shields.io/badge/Dicoangelo-Ecosystem-00d9ff?style=for-the-badge&logo=github&labelColor=0d1117)](https://github.com/Dicoangelo)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-frontier--alpha-00d9ff?style=for-the-badge&labelColor=0d1117)](https://frontier-alpha.metaventionsai.com)
+[![License](https://img.shields.io/badge/License-MIT-00d9ff?style=for-the-badge&labelColor=0d1117)](LICENSE)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/GPT--4o-Cognitive_Explainer-412991?style=for-the-badge&logo=openai&logoColor=white" alt="GPT-4o" />
-  <img src="https://img.shields.io/badge/Factor_Engine-80+_Factors-0d47a1?style=for-the-badge" alt="Factor Engine" />
-  <img src="https://img.shields.io/badge/CVRF-Episodic_Learning-00d9ff?style=for-the-badge" alt="CVRF" />
-  <img src="https://img.shields.io/badge/PWA-Installable-1a1a2e?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA" />
-</p>
+<br/>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Metaventions_AI-Architected_Intelligence-1a1a2e?style=for-the-badge" alt="Metaventions AI" />
-</p>
+<img src="https://img.shields.io/badge/Tests-205-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Tests" />
+<img src="https://img.shields.io/badge/Lines-62,000+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Lines" />
+<img src="https://img.shields.io/badge/Files-242+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Files" />
+<img src="https://img.shields.io/badge/Endpoints-29+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Endpoints" />
+<img src="https://img.shields.io/badge/Factors-80+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Factors" />
+<img src="https://img.shields.io/badge/Version-1.0.4-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
 
-<p align="center">
-  <a href="https://frontier-alpha.metaventionsai.com">
-    <img src="https://img.shields.io/badge/Live_Demo-frontier--alpha.vercel.app-00d9ff?style=for-the-badge" alt="Live Demo" />
-  </a>
-</p>
+<br/><br/>
 
----
+<img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white&labelColor=0d1117" alt="React" />
+<img src="https://img.shields.io/badge/TypeScript-5.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white&labelColor=0d1117" alt="TypeScript" />
+<img src="https://img.shields.io/badge/Fastify-4.x-000000?style=for-the-badge&logo=fastify&logoColor=white&labelColor=0d1117" alt="Fastify" />
+<img src="https://img.shields.io/badge/Vite-7.x-646CFF?style=for-the-badge&logo=vite&logoColor=white&labelColor=0d1117" alt="Vite" />
+<img src="https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white&labelColor=0d1117" alt="Supabase" />
+<img src="https://img.shields.io/badge/GPT--4o-Explainer-412991?style=for-the-badge&logo=openai&logoColor=white&labelColor=0d1117" alt="GPT-4o" />
 
-## Summary • Architecture • Features • Quick Start • Core Systems • API • Development • Roadmap • Contact
+<br/>
 
----
+*AI-powered portfolio optimization with explainable recommendations and self-improving belief systems.*
 
-## Executive Summary
+</div>
 
-A **62,000+ line**, **242-file** full-stack TypeScript platform that brings **institutional-grade quantitative analysis** to retail investors with two critical innovations: **it explains itself**, and **it learns from its own decisions**.
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%"/>
 
-Unlike black-box quant tools or simplistic robo-advisors, Frontier Alpha:
+<br/>
 
-- Analyzes **80+ research-backed factors** across six categories — momentum, value, quality, volatility, size, sentiment, macro, and sector
-- Evolves investment beliefs through **CVRF** (Conceptual Verbal Reinforcement Framework) — a self-improving system that learns what works episode by episode
-- Provides **plain-language explanations** for every recommendation, powered by factor analysis and optional LLM enhancement via GPT-4o
-- Forecasts **earnings impact** with expected moves, historical beat rates, and actionable positioning guidance
-- Runs **walk-forward backtests** with CVRF integration to validate strategies against real market history
-- Streams **real-time market data** via WebSocket with SSE and polling fallback
+## Core Philosophy
 
----
-
-## Architecture Overview
+<div align="center">
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          FRONTIER ALPHA PLATFORM                            │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │                        CLIENT (React 19 + Vite 7)                     │  │
-│  │                                                                       │  │
-│  │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────────────┐ │  │
-│  │  │ Portfolio   │ │ Factor     │ │ Earnings   │ │ CVRF Beliefs      │ │  │
-│  │  │ Dashboard   │ │ Explorer   │ │ Calendar   │ │ Visualization     │ │  │
-│  │  └────────────┘ └────────────┘ └────────────┘ └────────────────────┘ │  │
-│  │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────────────┐ │  │
-│  │  │ Risk Alerts │ │ Backtest   │ │ Explainer  │ │ Options Chain     │ │  │
-│  │  │ Monitor     │ │ Runner     │ │ Cards      │ │ Analysis          │ │  │
-│  │  └────────────┘ └────────────┘ └────────────┘ └────────────────────┘ │  │
-│  │                                                                       │  │
-│  │  58 Components │ Zustand │ React Query │ Recharts │ D3 │ Tailwind    │  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-│                                    │                                        │
-│                              REST + SSE                                     │
-│                                    │                                        │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │                      SERVER (Fastify 4 + Node 20)                     │  │
-│  │                                                                       │  │
-│  │  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────────┐ │  │
-│  │  │  Factor Engine   │ │  CVRF Manager   │ │  Earnings Oracle        │ │  │
-│  │  │  80+ factors     │ │  Belief updater │ │  Forecasts + history    │ │  │
-│  │  │  6 categories    │ │  Episode mgmt   │ │  Expected moves         │ │  │
-│  │  │  Sentiment       │ │  Concept extract│ │  Beat rates             │ │  │
-│  │  └─────────────────┘ └─────────────────┘ └─────────────────────────┘ │  │
-│  │  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────────┐ │  │
-│  │  │  Optimizer       │ │  Explainer      │ │  Backtest Runner        │ │  │
-│  │  │  Monte Carlo     │ │  LLM + template │ │  Walk-forward           │ │  │
-│  │  │  Max Sharpe      │ │  GPT-4o         │ │  CVRF integration       │ │  │
-│  │  │  Min variance    │ │  Confidence     │ │  Historical replay      │ │  │
-│  │  └─────────────────┘ └─────────────────┘ └─────────────────────────┘ │  │
-│  │  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────────┐ │  │
-│  │  │  Risk Alerts     │ │  Notifications  │ │  Analytics + Cache      │ │  │
-│  │  │  11 alert types  │ │  Push (browser) │ │  Sentry observability   │ │  │
-│  │  └─────────────────┘ └─────────────────┘ └─────────────────────────┘ │  │
-│  │                                                                       │  │
-│  │  29+ Endpoints │ Zod Validation │ Supabase JWT Auth │ TypeScript      │  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-│                                    │                                        │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │                        DATA LAYER                                     │  │
-│  │                                                                       │  │
-│  │  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────────┐ │  │
-│  │  │ Supabase         │ │ Polygon.io      │ │ Alpha Vantage           │ │  │
-│  │  │ PostgreSQL + RLS │ │ Real-time quotes│ │ Fundamentals + earnings │ │  │
-│  │  │ Real-time subs   │ │ WebSocket stream│ │ Ken French Library      │ │  │
-│  │  └─────────────────┘ └─────────────────┘ └─────────────────────────┘ │  │
-│  │                                                                       │  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-│                                                                             │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │  OPTIONAL: Python ML Engine (uvicorn :8000)                           │  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                │
+│   ANALYZE           →          LEARN            →          EXPLAIN            │
+│   80+ quantitative              from every                  every decision    │
+│   factors                       episode                     in plain language  │
+│                                                                                │
+│   ══════════════════════════════════════════════════════════════════════════   │
+│                                                                                │
+│   • Institutional-grade quant          • Self-improving CVRF beliefs          │
+│   • Beyond Fama-French 5              • Walk-forward backtesting             │
+│   • Real-time streaming               • LLM + template explanations          │
+│                                                                                │
+└────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Directory Structure
+</div>
+
+<br/>
+
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="100%"/>
+
+<br/>
+
+## System Architecture
+
+<div align="center">
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#00d9ff', 'primaryTextColor': '#fff', 'primaryBorderColor': '#00d9ff', 'lineColor': '#00d9ff', 'secondaryColor': '#1a1a2e', 'tertiaryColor': '#0d1117', 'clusterBkg': '#0d1117', 'clusterBorder': '#00d9ff'}}}%%
+flowchart TB
+    subgraph PLATFORM["FRONTIER ALPHA PLATFORM"]
+        direction TB
+
+        subgraph CLIENT["INTERFACE LAYER — React 19 + Vite 7"]
+            direction LR
+            PORTFOLIO["Portfolio\nDashboard\n━━━━━━━━━━\n58 Components\nZustand + RQ"]
+            FACTORS["Factor\nExplorer\n━━━━━━━━━━\nRecharts + D3\nVisualizations"]
+            EARNINGS["Earnings\nCalendar\n━━━━━━━━━━\nForecasts\nPositioning"]
+            CVRF_UI["CVRF Beliefs\nVisualization\n━━━━━━━━━━\nEpisode History\nConviction Map"]
+        end
+
+        subgraph SERVER["INTELLIGENCE LAYER — Fastify 4 + Node 20"]
+            direction LR
+            FACTOR_ENGINE["Factor Engine\n━━━━━━━━━━\n80+ Factors\n6 Categories"]
+            CVRF_CORE["CVRF Manager\n━━━━━━━━━━\nBelief Updater\nEpisode Learning"]
+            ORACLE["Earnings Oracle\n━━━━━━━━━━\nBeat Rates\nExpected Moves"]
+            EXPLAINER["Cognitive\nExplainer\n━━━━━━━━━━\nGPT-4o + Template\nConfidence Scores"]
+        end
+
+        subgraph ENGINES["COMPUTE LAYER"]
+            direction LR
+            OPTIMIZER["Monte Carlo\nOptimizer\n━━━━━━━━━━\nMax Sharpe\nMin Variance"]
+            BACKTEST["Walk-Forward\nBacktest\n━━━━━━━━━━\nCVRF Integration\nHistorical Replay"]
+            RISK["Risk Alert\nSystem\n━━━━━━━━━━\n11 Alert Types\nReal-time"]
+        end
+
+        subgraph DATA["DATA LAYER"]
+            SUPABASE[("Supabase\nPostgreSQL + RLS\n━━━━━━━━━━\nReal-time Subs\n6 Migrations")]
+            POLYGON["Polygon.io\n━━━━━━━━━━\nWebSocket Stream\nReal-time Quotes"]
+            ALPHA["Alpha Vantage\n━━━━━━━━━━\nFundamentals\nKen French"]
+        end
+    end
+
+    INVESTOR(("INVESTOR"))
+
+    INVESTOR <==>|"Browser + PWA"| PORTFOLIO
+    INVESTOR <==>|"Push Alerts"| RISK
+    PORTFOLIO --> FACTOR_ENGINE
+    FACTORS --> FACTOR_ENGINE
+    EARNINGS --> ORACLE
+    CVRF_UI --> CVRF_CORE
+    FACTOR_ENGINE --> EXPLAINER
+    CVRF_CORE --> OPTIMIZER
+    CVRF_CORE --> BACKTEST
+    ORACLE --> EXPLAINER
+    OPTIMIZER --> RISK
+    FACTOR_ENGINE -.->|"scores"| SUPABASE
+    CVRF_CORE -.->|"beliefs"| SUPABASE
+    FACTOR_ENGINE -.->|"quotes"| POLYGON
+    ORACLE -.->|"fundamentals"| ALPHA
+
+    style PLATFORM fill:#0d1117,stroke:#00d9ff,stroke-width:3px
+    style CLIENT fill:#1a1a2e,stroke:#00d9ff,stroke-width:2px
+    style SERVER fill:#1a1a2e,stroke:#9945ff,stroke-width:2px
+    style ENGINES fill:#1a1a2e,stroke:#ffd700,stroke-width:2px
+    style DATA fill:#16213e,stroke:#00d9ff,stroke-width:2px
+    style INVESTOR fill:#00d9ff,stroke:#fff,stroke-width:2px,color:#0d1117
+```
+
+<sub>Layered architecture — Institutional-grade intelligence for retail investors</sub>
+
+</div>
+
+<br/>
+
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%"/>
+
+<br/>
+
+## Core Systems
+
+<div align="center">
+<table>
+<tr>
+<td width="50%" align="center">
+<img src="https://user-images.githubusercontent.com/74038190/216122041-518ac897-8d92-4c6b-9b3f-ca01dcaf38ee.png" width="80"/>
+<h3>Factor Engine</h3>
+<b>80+ Quantitative Factors</b>
+<br/><br/>
+<p>Six research-backed categories going beyond Fama-French 5: momentum, value, quality, volatility, size, sentiment, macro, and sector exposures.</p>
+<br/>
+
+`FactorEngine.ts` `SentimentAnalyzer.ts`
+
+<br/>
+<img src="https://img.shields.io/badge/Factors-80+-00d9ff?style=for-the-badge&labelColor=0d1117"/>
+</td>
+<td width="50%" align="center">
+<img src="https://user-images.githubusercontent.com/74038190/216122065-2f028bae-25d6-4a3c-bc9f-175394ed5011.png" width="80"/>
+<h3>CVRF Intelligence</h3>
+<b>Self-Improving Belief System</b>
+<br/><br/>
+<p>Conceptual Verbal Reinforcement Framework. Learns episode-over-episode — reinforces correct beliefs, weakens incorrect ones. Investment convictions that evolve.</p>
+<br/>
+
+`CVRFManager.ts` `BeliefUpdater.ts` `EpisodeManager.ts`
+
+<br/>
+<img src="https://img.shields.io/badge/Learning-Episodic-00d9ff?style=for-the-badge&labelColor=0d1117"/>
+</td>
+</tr>
+<tr>
+<td width="50%" align="center">
+<img src="https://user-images.githubusercontent.com/74038190/216120974-24a76b31-7f39-41f1-a38f-b3c1377cc612.png" width="80"/>
+<h3>Earnings Oracle</h3>
+<b>Forecast + Position + React</b>
+<br/><br/>
+<p>Calendar, consensus estimates, historical reactions, options-implied expected moves, beat rates, and pre/post-earnings positioning recommendations.</p>
+<br/>
+
+`EarningsOracle.ts`
+
+<br/>
+<img src="https://img.shields.io/badge/Data-Historical+Live-00d9ff?style=for-the-badge&labelColor=0d1117"/>
+</td>
+<td width="50%" align="center">
+<img src="https://user-images.githubusercontent.com/74038190/216122028-c05b52fb-983e-4ee8-8811-6f30cd9ea5d5.png" width="80"/>
+<h3>Cognitive Explainer</h3>
+<b>GPT-4o + Template Dual-Mode</b>
+<br/><br/>
+<p>Every recommendation explained in plain language. LLM mode for rich narratives, template fallback for zero-API operation. Confidence scores and source attribution.</p>
+<br/>
+
+`ExplanationService.ts` `CognitiveInsight.tsx`
+
+<br/>
+<img src="https://img.shields.io/badge/AI-Explainable-00d9ff?style=for-the-badge&labelColor=0d1117"/>
+</td>
+</tr>
+<tr>
+<td width="50%" align="center">
+<img src="https://user-images.githubusercontent.com/74038190/216122069-5b8169c7-1d8e-4a13-b245-a8e4176c99f8.png" width="80"/>
+<h3>Portfolio Optimizer</h3>
+<b>Monte Carlo Simulation</b>
+<br/><br/>
+<p>Max Sharpe, min variance, and risk parity strategies. CVRF-integrated belief weighting. Walk-forward backtesting against real market history.</p>
+<br/>
+
+`optimizer/` `backtest/`
+
+<br/>
+<img src="https://img.shields.io/badge/Strategies-3-00d9ff?style=for-the-badge&labelColor=0d1117"/>
+</td>
+<td width="50%" align="center">
+<img src="https://user-images.githubusercontent.com/74038190/216122003-1c7d9f7e-fb00-4f85-9c16-7d9b5e5b9e85.png" width="80"/>
+<h3>Risk + Streaming</h3>
+<b>Real-time Market Intelligence</b>
+<br/><br/>
+<p>11 risk alert types (drawdown, volatility, concentration + 8 more). WebSocket → SSE → Polling fallback. Browser push notifications for earnings and risk events.</p>
+<br/>
+
+`notifications/` `trading/`
+
+<br/>
+<img src="https://img.shields.io/badge/Alerts-11_Types-00d9ff?style=for-the-badge&labelColor=0d1117"/>
+</td>
+</tr>
+</table>
+</div>
+
+<br/>
+
+### Component Registry
+
+| Layer | Component | Description | Tech | Status |
+|:-----:|:----------|:------------|:-----|:------:|
+| **Interface** | 58 Components | Portfolio, Factors, Earnings, CVRF, Risk, Options, Charts | React 19, Tailwind | `Production` |
+| **Intelligence** | Factor Engine | 80+ factor exposures across 6 categories | TypeScript | `v1.0.4` |
+| **Intelligence** | CVRF Manager | Episodic learning with belief persistence | TypeScript, Supabase | `v1.0.4` |
+| **Intelligence** | Earnings Oracle | Forecasts, beat rates, expected moves | TypeScript | `v1.0.4` |
+| **Intelligence** | Cognitive Explainer | GPT-4o + template dual-mode explanations | OpenAI, TypeScript | `v1.0.4` |
+| **Compute** | Portfolio Optimizer | Monte Carlo, max Sharpe, min variance, risk parity | TypeScript | `v1.0.4` |
+| **Compute** | Walk-Forward Backtest | CVRF-integrated historical replay | TypeScript | `v1.0.4` |
+| **Compute** | Risk Alert System | 11 alert types, real-time monitoring | TypeScript | `v1.0.4` |
+| **Data** | Supabase | PostgreSQL + RLS, real-time subscriptions | Supabase | `Active` |
+| **Data** | Polygon.io | WebSocket real-time market data | REST + WS | `Active` |
+| **Data** | Alpha Vantage | Fundamentals, earnings, Ken French Library | REST | `Active` |
+
+<br/>
+
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="100%"/>
+
+<br/>
+
+## CVRF — Episodic Learning Engine
+
+<div align="center">
+
+*The belief system that learns from its own track record*
+
+<br/>
 
 ```
-frontier-alpha/
-├── api/                      Vercel serverless functions (deployment layer)
-├── client/                   Vite + React 19 frontend
-│   └── src/
-│       ├── components/       58 UI components across 18 domains
-│       │   ├── portfolio/    Portfolio dashboard + optimizer
-│       │   ├── factors/      Factor explorer + visualizations
-│       │   ├── earnings/     Earnings calendar + forecasts
-│       │   ├── cvrf/         CVRF beliefs visualization
-│       │   ├── explainer/    Cognitive insight cards
-│       │   ├── risk/         Risk alert monitor
-│       │   ├── charts/       Recharts + D3 visualizations
-│       │   ├── trading/      Trade execution interface
-│       │   ├── options/      Options chain analysis
-│       │   └── ...           alerts, analytics, auth, settings, etc.
-│       ├── pages/            Route-level page components
-│       ├── stores/           Zustand state management
-│       └── hooks/            Custom React hooks
-├── src/                      Fastify server + business logic
-│   ├── factors/              Factor Engine (80+ factors)
-│   ├── optimizer/            Monte Carlo portfolio optimizer
-│   ├── cvrf/                 CVRF Manager + persistence + integration
-│   ├── earnings/             Earnings Oracle + historical analysis
-│   ├── backtest/             Walk-forward backtest runner
-│   ├── services/             ExplanationService, PortfolioService
-│   ├── sentiment/            Sentiment analysis engine
-│   ├── trading/              Trade execution layer
-│   ├── options/              Options pricing + chain analysis
-│   ├── analytics/            Usage analytics
-│   ├── notifications/        Push notification system
-│   ├── cache/                Caching layer
-│   ├── observability/        Sentry integration
-│   ├── middleware/           Auth (Supabase JWT)
-│   └── types/                Shared type definitions
-├── supabase/migrations/      Database schema (6 migrations)
-├── ml/                       Optional Python ML engine
-├── tests/                    Test suites (205 total)
-└── docs/                     Documentation
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                       CVRF — EPISODIC LEARNING LOOP                              │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                   │
+│  Episode N                                                                        │
+│    │                                                                              │
+│    ▼                                                                              │
+│  [Concept Extractor] → Extract investment beliefs from factor analysis           │
+│    │                                                                              │
+│    ▼                                                                              │
+│  [Belief Updater] → Compare predictions vs actual market outcomes                │
+│    │                   Reinforce correct beliefs (↑ conviction)                   │
+│    │                   Weaken incorrect beliefs  (↓ conviction)                   │
+│    ▼                                                                              │
+│  [Episode Manager] → Track performance across time windows                       │
+│    │                   Detect market regime changes                               │
+│    ▼                                                                              │
+│  [Persistent CVRF] → Store beliefs in Supabase (survive restarts)                │
+│    │                                                                              │
+│    ▼                                                                              │
+│  Episode N+1 → Better recommendations, stronger convictions                      │
+│                                                                                   │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
----
+<br/>
 
-## Features
+| Module | File | Purpose |
+|:------:|:-----|:--------|
+| **Core** | `CVRFManager.ts` | Belief management and update orchestration |
+| **Learning** | `BeliefUpdater.ts` | Reinforcement learning on conviction strength |
+| **Extraction** | `ConceptExtractor.ts` | Extract investment concepts from analysis |
+| **Episodes** | `EpisodeManager.ts` | Track and compare episode performance |
+| **Persistence** | `PersistentCVRFManager.ts` | Supabase storage layer |
+| **Integration** | `integration.ts` | Connect to optimizer and backtest runner |
 
-| Feature | Description |
-|---------|-------------|
-| **Factor Engine** | 80+ factor exposures across momentum, value, quality, volatility, size, sentiment, macro, and sector categories |
-| **Portfolio Optimizer** | Monte Carlo simulation with max Sharpe, min variance, and risk parity optimization strategies |
-| **CVRF Intelligence** | Self-improving belief system that learns from episode-over-episode performance — investment convictions that evolve |
-| **Cognitive Explainer** | Plain-language AI explanations for every recommendation with confidence scores and source attribution (GPT-4o + template fallback) |
-| **Earnings Oracle** | Calendar, forecasts, historical reactions, expected moves, and positioning recommendations |
-| **Walk-Forward Backtest** | Test strategies with CVRF integration against real historical market data |
-| **Risk Alerts** | Real-time monitoring for drawdown, volatility, concentration, and 8 other risk event types |
-| **Options Analysis** | Options chain visualization, pricing models, and strategy analysis |
-| **Real-time Streaming** | WebSocket market data with SSE and polling fallback for universal connectivity |
-| **Push Notifications** | Browser push alerts for risk events and earnings announcements |
-| **PWA Support** | Installable as a native-like app with offline caching and background sync |
-| **Sentiment Analysis** | Market sentiment scoring from multiple data sources |
+</div>
 
----
+<br/>
+
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%"/>
+
+<br/>
 
 ## Quick Start
 
@@ -213,131 +329,22 @@ npm run dev:all
 
 The client opens at `http://localhost:5173` and the API at `http://localhost:3000/api/v1/health`.
 
-**Live Demo**: [frontier-alpha.metaventionsai.com](https://frontier-alpha.metaventionsai.com)
+<br/>
 
----
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="100%"/>
 
-## Core Systems
-
-### Factor Engine (80+ Factors)
-
-The Factor Engine computes quantitative factor exposures across six research-backed categories, going well beyond the standard Fama-French 5-factor model.
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           FACTOR ENGINE                                     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐              │
-│  │ MOMENTUM   │ │   VALUE    │ │  QUALITY   │ │ VOLATILITY │              │
-│  │ Price trend│ │ P/E, P/B   │ │ ROE, margin│ │ Beta, std  │              │
-│  │ RSI, MACD  │ │ EV/EBITDA  │ │ Debt ratio │ │ Drawdown   │              │
-│  └────────────┘ └────────────┘ └────────────┘ └────────────┘              │
-│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐              │
-│  │    SIZE    │ │ SENTIMENT  │ │   MACRO    │ │   SECTOR   │              │
-│  │ Market cap │ │ News/social│ │ Rates, FX  │ │ Relative   │              │
-│  │ Float      │ │ Analyst    │ │ Commodities│ │ Performance│              │
-│  └────────────┘ └────────────┘ └────────────┘ └────────────┘              │
-│                                                                             │
-│  Input: Ticker(s) → 80+ factor scores → Composite ranking → Explanation    │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-| File | Purpose |
-|------|---------|
-| `src/factors/FactorEngine.ts` | Core factor computation engine |
-| `src/factors/SentimentAnalyzer.ts` | Sentiment-specific factor analysis |
-| `src/factors/index.ts` | Module exports |
-
-### CVRF Intelligence (Episodic Learning)
-
-The **Conceptual Verbal Reinforcement Framework** is a self-improving belief system. Unlike static factor models, CVRF learns from its own track record — adjusting conviction strength based on what actually worked.
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      CVRF — EPISODIC LEARNING LOOP                          │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  Episode N                                                                  │
-│    │                                                                        │
-│    ▼                                                                        │
-│  [Concept Extractor] → Extract beliefs from recommendations                │
-│    │                                                                        │
-│    ▼                                                                        │
-│  [Belief Updater] → Compare predictions vs actual outcomes                 │
-│    │                   Reinforce correct beliefs                            │
-│    │                   Weaken incorrect beliefs                             │
-│    ▼                                                                        │
-│  [Episode Manager] → Track performance across episodes                     │
-│    │                   Detect regime changes                               │
-│    ▼                                                                        │
-│  [Persistent CVRF] → Store beliefs in Supabase                             │
-│    │                   Survive restarts                                     │
-│    ▼                                                                        │
-│  Episode N+1 → Better recommendations                                      │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-| File | Purpose |
-|------|---------|
-| `src/cvrf/CVRFManager.ts` | Core belief management and update logic |
-| `src/cvrf/BeliefUpdater.ts` | Reinforcement learning on belief strength |
-| `src/cvrf/ConceptExtractor.ts` | Extract investment concepts from analysis |
-| `src/cvrf/EpisodeManager.ts` | Track and compare episode performance |
-| `src/cvrf/PersistentCVRFManager.ts` | Supabase persistence layer |
-| `src/cvrf/integration.ts` | Integration with optimizer and backtest |
-
-### Earnings Oracle
-
-Forecasts earnings impact with historical analysis, expected moves, and positioning guidance.
-
-| Capability | Description |
-|-----------|-------------|
-| **Calendar** | Upcoming earnings dates with consensus estimates |
-| **Historical Reactions** | Past earnings surprises and price moves |
-| **Expected Moves** | Options-implied move magnitude |
-| **Beat Rates** | Historical beat/miss frequency by ticker |
-| **Positioning** | Pre/post-earnings trade recommendations |
-
-### Cognitive Explainer (LLM + Template)
-
-Every recommendation comes with a plain-language explanation. The system uses a dual-mode approach:
-
-| Mode | Provider | Use Case |
-|------|----------|----------|
-| **LLM Enhanced** | GPT-4o | Rich narrative with market context and nuance |
-| **Template Fallback** | Built-in | Structured explanation from factor scores (no API needed) |
-
-Both modes include confidence scores and source attribution so the user knows exactly why a recommendation was made.
-
-### Real-time Streaming
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    REAL-TIME DATA PIPELINE                                   │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  Polygon.io ──WebSocket──▶ Server ──SSE──▶ Client                          │
-│                              │                                              │
-│                              ├── Quote cache (in-memory)                    │
-│                              ├── Risk alert evaluation                      │
-│                              └── Push notification triggers                 │
-│                                                                             │
-│  Fallback chain: WebSocket → SSE → Polling (30s interval)                  │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
----
+<br/>
 
 ## API
 
-The production API is deployed on Vercel at `https://frontier-alpha.metaventionsai.com`.
+<div align="center">
+
+*Production API at `https://frontier-alpha.metaventionsai.com`*
+
+</div>
 
 | Endpoint | Method | Description |
-|----------|--------|-------------|
+|:---------|:------:|:------------|
 | `/api/v1/health` | GET | Health check |
 | `/api/openapi` | GET | OpenAPI specification |
 | `/api/v1/quotes/:symbol` | GET | Real-time quote |
@@ -346,7 +353,10 @@ The production API is deployed on Vercel at `https://frontier-alpha.metaventions
 | `/api/v1/earnings/forecast/:symbol` | GET | Earnings forecast |
 | `/api/v1/cvrf/beliefs` | GET | Current CVRF beliefs |
 
-### Example Requests
+<details>
+<summary><b>Example Requests</b> (click to expand)</summary>
+
+<br/>
 
 ```bash
 # Real-time quote
@@ -369,7 +379,13 @@ curl https://frontier-alpha.metaventionsai.com/api/v1/cvrf/beliefs
 
 See the full [API Reference](docs/API.md) for all 29+ endpoints, request/response formats, and error codes.
 
----
+</details>
+
+<br/>
+
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%"/>
+
+<br/>
 
 ## Development
 
@@ -387,26 +403,26 @@ npm run db:migrate       # Apply Supabase migrations
 npm run ml:start         # Optional Python ML engine (port 8000)
 ```
 
-See the [Developer Guide](docs/DEVELOPER.md) for complete setup instructions.
-
----
+<br/>
 
 ## Documentation
 
 | Document | Description |
-|----------|-------------|
+|:---------|:------------|
 | [API Reference](docs/API.md) | Complete endpoint documentation with examples |
 | [User Guide](docs/USER_GUIDE.md) | End-user guide: features, workflows, PWA installation |
 | [Developer Guide](docs/DEVELOPER.md) | Setup, architecture decisions, testing, deployment |
 | [Protocol](docs/PROTOCOL.md) | Discovery and innovation protocol |
 | [Changelog](CHANGELOG.md) | Version history and feature log |
 
----
+<br/>
 
 ## Tech Stack
 
+<div align="center">
+
 | Layer | Technology |
-|-------|------------|
+|:-----:|:-----------|
 | **Frontend** | React 19, Vite 7, TypeScript 5.3, Tailwind CSS, Zustand, React Query |
 | **Visualization** | Recharts, D3.js, Lucide Icons |
 | **Backend** | Node.js 20, Fastify 4, TypeScript 5.3, Zod validation |
@@ -418,11 +434,21 @@ See the [Developer Guide](docs/DEVELOPER.md) for complete setup instructions.
 | **Testing** | Vitest (205 tests), Testing Library, MSW (Mock Service Worker) |
 | **PWA** | Service Worker, Web Push API, offline caching |
 
----
+</div>
+
+<br/>
+
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="100%"/>
+
+<br/>
 
 ## Roadmap
 
+<div align="center">
+
 ### Phase 1 — Complete
+
+</div>
 
 - [x] Factor Engine (80+ factors across 6 categories)
 - [x] Portfolio Optimizer (Monte Carlo, max Sharpe, min variance, risk parity)
@@ -438,7 +464,11 @@ See the [Developer Guide](docs/DEVELOPER.md) for complete setup instructions.
 - [x] Supabase Auth + RLS
 - [x] Vercel Deployment + CI/CD
 
+<div align="center">
+
 ### Phase 2 — Next
+
+</div>
 
 - [ ] Social sentiment aggregation (X, Reddit, StockTwits)
 - [ ] Multi-portfolio management
@@ -448,29 +478,87 @@ See the [Developer Guide](docs/DEVELOPER.md) for complete setup instructions.
 - [ ] Collaborative portfolios
 - [ ] Webhook integrations (Slack, Discord alerts)
 
----
+<br/>
 
-## License
+<img src="https://user-images.githubusercontent.com/74038190/212284100-561aa473-3905-4a80-b561-0d28506553ee.gif" width="100%"/>
 
-MIT License — See [LICENSE](LICENSE)
+<br/>
 
----
+## Vision
+
+<div align="center">
+
+<table>
+<tr>
+<td>
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║   "The best investment tools don't just analyze —                           ║
+║    they learn, explain, and evolve with the market."                        ║
+║                                                                              ║
+║   ════════════════════════════════════════════════════════════════════════   ║
+║                                                                              ║
+║   FRONTIER ALPHA IS BUILDING TOWARD:                                         ║
+║                                                                              ║
+║   ▸ Every retail investor has institutional-grade intelligence               ║
+║   ▸ Recommendations you can understand and verify                           ║
+║   ▸ Belief systems that compound knowledge over time                        ║
+║   ▸ AI that explains itself — never a black box                             ║
+║                                                                              ║
+║   ════════════════════════════════════════════════════════════════════════   ║
+║                                                                              ║
+║   "Let the invention be hidden in your vision."                              ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+</td>
+</tr>
+</table>
+
+</div>
+
+<br/>
+
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="100%"/>
+
+<br/>
 
 ## Contact
 
-**Metaventions AI**
-Dico Angelo
-dicoangelo@metaventionsai.com
+<div align="center">
 
-<p align="center">
-  <a href="https://metaventionsai.com">
-    <img src="https://img.shields.io/badge/Metaventions_AI-Website-00d9ff?style=for-the-badge" alt="Website" />
-  </a>
-  <a href="https://github.com/Dicoangelo">
-    <img src="https://img.shields.io/badge/GitHub-Dicoangelo-1a1a2e?style=for-the-badge&logo=github" alt="GitHub" />
-  </a>
-</p>
+<br/>
 
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:1a1a2e,50:0d47a1,100:00d9ff&height=100&section=footer" />
-</p>
+| Channel | Link |
+|:--------|:-----|
+| **Website** | [metaventionsai.com](https://metaventionsai.com) |
+| **GitHub** | [@Dicoangelo](https://github.com/Dicoangelo) |
+| **Twitter** | [@dicoangelo](https://twitter.com/dicoangelo) |
+| **Email** | dicoangelo@metaventionsai.com |
+
+<br/>
+
+<a href="https://metaventionsai.com">
+<img src="https://img.shields.io/badge/Metaventions_AI-00d9ff?style=for-the-badge&logo=safari&logoColor=white&labelColor=0d1117" height="35"/>
+</a>
+<a href="https://github.com/Dicoangelo">
+<img src="https://img.shields.io/badge/Explore_the_Ecosystem-00d9ff?style=for-the-badge&logo=github&logoColor=white&labelColor=0d1117" height="35"/>
+</a>
+<a href="https://twitter.com/dicoangelo">
+<img src="https://img.shields.io/badge/@dicoangelo-00d9ff?style=for-the-badge&logo=x&logoColor=white&labelColor=0d1117" height="35"/>
+</a>
+
+<br/><br/>
+
+**Part of the [Antigravity Ecosystem](https://github.com/Dicoangelo)** — Built by [@dicoangelo](https://twitter.com/dicoangelo)
+
+<br/>
+
+<img src="https://img.shields.io/badge/Status-Always_Building-00d9ff?style=flat-square&labelColor=0d1117"/>
+
+</div>
+
+<img src="https://capsule-render.vercel.app/api?type=waving&height=120&color=0:0d1117,50:0d47a1,100:00d9ff&section=footer" width="100%"/>

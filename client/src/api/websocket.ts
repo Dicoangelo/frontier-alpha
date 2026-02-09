@@ -1,10 +1,15 @@
 type MessageHandler = (data: unknown) => void;
 
 /**
- * Real-time quote client using Server-Sent Events (SSE)
- * Falls back to polling for browsers that don't support SSE
+ * Real-time quote client.
+ *
+ * Transport priority:
+ * 1. WebSocket → ws://server:port/ws/quotes (persistent, <20ms latency)
+ * 2. SSE → /api/v1/quotes/stream?sse=true (30s timeout, auto-reconnect)
+ * 3. Polling → /api/v1/quotes/stream (10s interval fallback)
  */
 class QuoteStreamClient {
+  private ws: WebSocket | null = null;
   private eventSource: EventSource | null = null;
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
   private handlers: Map<string, Set<MessageHandler>> = new Map();
@@ -13,15 +18,20 @@ class QuoteStreamClient {
   private reconnectDelay = 2000;
   private subscribedSymbols: string[] = [];
   private isConnected = false;
+  private transport: 'websocket' | 'sse' | 'polling' | null = null;
 
   /**
-   * Connect to the quote stream
+   * Connect to the quote stream.
+   * Tries WebSocket first, falls back to SSE, then polling.
    */
   connect() {
     if (this.isConnected) return;
 
-    // SSE is supported in all modern browsers
-    if (typeof EventSource !== 'undefined') {
+    // Try WebSocket first (connects to Fastify server)
+    const wsUrl = this.getWebSocketUrl();
+    if (wsUrl) {
+      this.connectWebSocket(wsUrl);
+    } else if (typeof EventSource !== 'undefined') {
       this.connectSSE();
     } else {
       this.startPolling();
@@ -29,14 +39,94 @@ class QuoteStreamClient {
   }
 
   /**
-   * Connect using Server-Sent Events
+   * Build WebSocket URL from environment
+   */
+  private getWebSocketUrl(): string | null {
+    const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_WS_URL;
+    if (!apiUrl) {
+      // Default to same host in dev (Fastify server on port 3000)
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const port = import.meta.env.VITE_SERVER_PORT || '3000';
+      return `${protocol}//${window.location.hostname}:${port}/ws/quotes`;
+    }
+    // Convert http(s) URL to ws(s)
+    return apiUrl.replace(/^http/, 'ws') + '/ws/quotes';
+  }
+
+  /**
+   * Connect via native WebSocket to Fastify server
+   */
+  private connectWebSocket(url: string) {
+    try {
+      this.ws = new WebSocket(url);
+      this.transport = 'websocket';
+
+      this.ws.onopen = () => {
+        console.log('WebSocket connected');
+        this.isConnected = true;
+        this.reconnectAttempts = 0;
+        this.notifyHandlers('connected', { connected: true });
+
+        // Subscribe to any pending symbols
+        if (this.subscribedSymbols.length > 0) {
+          this.sendWsSubscribe(this.subscribedSymbols);
+        }
+      };
+
+      this.ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === 'quote' && message.data) {
+            this.notifyHandlers('quote', message.data);
+          }
+        } catch (e) {
+          console.error('WebSocket message parse error:', e);
+        }
+      };
+
+      this.ws.onclose = () => {
+        console.log('WebSocket closed');
+        this.isConnected = false;
+        this.ws = null;
+        this.notifyHandlers('connected', { connected: false });
+        this.attemptReconnect();
+      };
+
+      this.ws.onerror = (err) => {
+        console.warn('WebSocket error, falling back to SSE:', err);
+        this.ws?.close();
+        this.ws = null;
+        this.transport = null;
+
+        // Fall back to SSE
+        if (typeof EventSource !== 'undefined') {
+          this.connectSSE();
+        } else {
+          this.startPolling();
+        }
+      };
+    } catch {
+      // WebSocket constructor can throw (e.g., invalid URL)
+      this.connectSSE();
+    }
+  }
+
+  /**
+   * Send subscribe message over WebSocket
+   */
+  private sendWsSubscribe(symbols: string[]) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'subscribe', symbols }));
+    }
+  }
+
+  /**
+   * Connect using Server-Sent Events (fallback for Vercel deployments)
    */
   private connectSSE() {
-    if (this.subscribedSymbols.length === 0) {
-      console.log('No symbols to subscribe to');
-      return;
-    }
+    if (this.subscribedSymbols.length === 0) return;
 
+    this.transport = 'sse';
     const apiUrl = import.meta.env.VITE_API_URL || '';
     const symbolsParam = this.subscribedSymbols.join(',');
     const url = `${apiUrl}/api/v1/quotes/stream?symbols=${symbolsParam}&sse=true`;
@@ -55,12 +145,11 @@ class QuoteStreamClient {
         const message = JSON.parse(event.data);
 
         if (message.type === 'quotes' && Array.isArray(message.data)) {
-          // Notify quote handlers for each quote
           for (const quote of message.data) {
             this.notifyHandlers('quote', quote);
           }
         } else if (message.type === 'complete') {
-          // Stream ended, reconnect to continue
+          // SSE stream ended (30s timeout), reconnect
           this.reconnect();
         }
       } catch (e) {
@@ -79,9 +168,10 @@ class QuoteStreamClient {
   }
 
   /**
-   * Fallback polling for environments without SSE
+   * Fallback polling for environments without SSE/WebSocket
    */
   private startPolling() {
+    this.transport = 'polling';
     const apiUrl = import.meta.env.VITE_API_URL || '';
 
     const poll = async () => {
@@ -109,10 +199,7 @@ class QuoteStreamClient {
       }
     };
 
-    // Initial poll
     poll();
-
-    // Poll every 10 seconds
     this.pollingInterval = setInterval(poll, 10000);
   }
 
@@ -125,8 +212,11 @@ class QuoteStreamClient {
 
     this.subscribedSymbols = [...new Set([...this.subscribedSymbols, ...symbols])];
 
-    // Reconnect with new symbols if already connected, or connect if not yet connected
-    if (this.isConnected) {
+    if (this.transport === 'websocket' && this.ws?.readyState === WebSocket.OPEN) {
+      // WebSocket: just send subscribe for new symbols (no reconnect needed)
+      this.sendWsSubscribe(newSymbols);
+    } else if (this.isConnected) {
+      // SSE/polling: need to reconnect with full symbol list
       this.disconnect();
       this.connect();
     } else {
@@ -140,12 +230,12 @@ class QuoteStreamClient {
   unsubscribe(symbols: string[]) {
     this.subscribedSymbols = this.subscribedSymbols.filter(s => !symbols.includes(s));
 
-    // Reconnect with remaining symbols
-    if (this.isConnected && this.subscribedSymbols.length > 0) {
+    if (this.subscribedSymbols.length === 0) {
+      this.disconnect();
+    } else if (this.transport !== 'websocket' && this.isConnected) {
+      // SSE/polling need reconnect to change symbols
       this.disconnect();
       this.connect();
-    } else if (this.subscribedSymbols.length === 0) {
-      this.disconnect();
     }
   }
 
@@ -163,20 +253,14 @@ class QuoteStreamClient {
     };
   }
 
-  /**
-   * Notify all handlers of a specific type
-   */
   private notifyHandlers(type: string, data: any) {
-    const handlers = this.handlers.get(type);
-    handlers?.forEach((handler) => handler(data));
+    this.handlers.get(type)?.forEach((handler) => handler(data));
   }
 
-  /**
-   * Attempt to reconnect after disconnect
-   */
   private attemptReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.log('Max reconnect attempts reached, falling back to polling');
+      this.transport = null;
       this.startPolling();
       return;
     }
@@ -187,13 +271,10 @@ class QuoteStreamClient {
     console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
 
     setTimeout(() => {
-      this.connectSSE();
+      this.connect();
     }, delay);
   }
 
-  /**
-   * Reconnect to get fresh stream
-   */
   private reconnect() {
     this.disconnect();
     setTimeout(() => {
@@ -207,6 +288,11 @@ class QuoteStreamClient {
   disconnect() {
     this.isConnected = false;
 
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+
     if (this.eventSource) {
       this.eventSource.close();
       this.eventSource = null;
@@ -217,21 +303,20 @@ class QuoteStreamClient {
       this.pollingInterval = null;
     }
 
+    this.transport = null;
     this.notifyHandlers('connected', { connected: false });
   }
 
-  /**
-   * Get connection status
-   */
   get connected(): boolean {
     return this.isConnected;
   }
 
-  /**
-   * Get currently subscribed symbols
-   */
   get symbols(): string[] {
     return [...this.subscribedSymbols];
+  }
+
+  get activeTransport(): string | null {
+    return this.transport;
   }
 }
 

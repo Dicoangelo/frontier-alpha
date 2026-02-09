@@ -14,7 +14,7 @@ import type {
   WithinEpisodeRiskControl,
   OverEpisodeBeliefAdjustment,
 } from './types.js';
-import { DEFAULT_CVRF_CONFIG, DEFAULT_BELIEF_STATE } from './types.js';
+import { DEFAULT_CVRF_CONFIG } from './types.js';
 import { EpisodeManager } from './EpisodeManager.js';
 import { ConceptExtractor } from './ConceptExtractor.js';
 import { BeliefUpdater } from './BeliefUpdater.js';
@@ -248,6 +248,7 @@ export class PersistentCVRFManager {
 
     // Create result
     const result: CVRFCycleResult = {
+      cycleId: `cycle_${this.cycleCounter + 1}_${Date.now()}`,
       timestamp: new Date(),
       episodeComparison: comparison,
       extractedInsights: insights,

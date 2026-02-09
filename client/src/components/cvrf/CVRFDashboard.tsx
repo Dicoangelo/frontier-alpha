@@ -1,7 +1,11 @@
 /**
  * CVRF Dashboard Component
  *
- * Main dashboard view combining all CVRF components
+ * Main dashboard view combining all CVRF components:
+ * - Performance chart (full width)
+ * - Factor heatmap + Regime timeline
+ * - Controls, Stats, Beliefs, Cycle History (3 columns)
+ * - Episode comparison (full width)
  */
 
 import { RefreshCw, Brain, AlertTriangle } from 'lucide-react';
@@ -11,6 +15,11 @@ import { CVRFBeliefDisplay } from './CVRFBeliefDisplay';
 import { CVRFEpisodeControls } from './CVRFEpisodeControls';
 import { CVRFEpisodeTimeline } from './CVRFEpisodeTimeline';
 import { CVRFCycleHistory } from './CVRFCycleHistory';
+import { EpisodePerformanceChart } from './EpisodePerformanceChart';
+import { EpisodeComparisonView } from './EpisodeComparison';
+import { FactorWeightHeatmap } from './FactorWeightHeatmap';
+import { RegimeTimeline } from './RegimeTimeline';
+import { MetaPromptCard } from './MetaPromptCard';
 
 export function CVRFDashboard() {
   const { isLoading, isError, refetch } = useCVRFDashboard();
@@ -55,7 +64,21 @@ export function CVRFDashboard() {
       )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+        {/* Row 1: Performance Chart (Full Width) */}
+        <EpisodePerformanceChart />
+
+        {/* Row 2: Factor Heatmap + Regime Timeline */}
+        <div className="grid grid-cols-12 gap-6">
+          <div className="col-span-12 lg:col-span-8">
+            <FactorWeightHeatmap />
+          </div>
+          <div className="col-span-12 lg:col-span-4">
+            <RegimeTimeline />
+          </div>
+        </div>
+
+        {/* Row 3: Controls, Stats/Beliefs, Cycle History */}
         <div className="grid grid-cols-12 gap-6">
           {/* Left Column - Controls & Timeline */}
           <div className="col-span-12 lg:col-span-4 space-y-6">
@@ -74,6 +97,12 @@ export function CVRFDashboard() {
             <CVRFCycleHistory />
           </div>
         </div>
+
+        {/* Row 4: Meta-Prompt (Full Width) */}
+        <MetaPromptCard />
+
+        {/* Row 5: Episode Comparison (Full Width) */}
+        <EpisodeComparisonView />
       </div>
 
       {/* Footer */}

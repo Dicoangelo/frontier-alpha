@@ -1,4 +1,4 @@
-# 🤠 FRONTIER ALPHA
+# 💎 FRONTIER ALPHA
 
 ## Discovery & Innovation Protocol for AI-Powered Fintech
 
@@ -446,7 +446,7 @@ Response:
      - Human + AI collaboration, not replacement
 ```
 
-**This is Frontier Alpha. Stake your claim.** 🤠
+**This is Frontier Alpha. Stake your claim.** 💎📈
 
 ---
 

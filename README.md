@@ -1,6 +1,6 @@
-# Frontier Alpha
+# 💎 Frontier Alpha
 
-> **Cognitive Factor Intelligence Platform** -- AI-powered portfolio optimization with explainable recommendations and self-improving belief systems.
+> **Cognitive Factor Intelligence Platform** — AI-powered portfolio optimization with explainable recommendations and self-improving belief systems.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)

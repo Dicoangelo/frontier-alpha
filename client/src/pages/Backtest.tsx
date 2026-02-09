@@ -15,7 +15,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   Area,
   ReferenceLine,
 } from 'recharts';
@@ -374,7 +373,7 @@ export function Backtest() {
                           border: '1px solid var(--color-border, #e5e7eb)',
                           borderRadius: '8px',
                         }}
-                        formatter={(value: number) => [`$${value.toLocaleString()}`, 'Portfolio Value']}
+                        formatter={(value: number | undefined) => [`$${(value ?? 0).toLocaleString()}`, 'Portfolio Value']}
                         labelFormatter={(label) => new Date(label).toLocaleDateString()}
                       />
                       <Area
@@ -419,8 +418,8 @@ export function Backtest() {
                           tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
                         />
                         <Tooltip
-                          formatter={(value: number, name: string) => [
-                            name === 'return' ? `${(value * 100).toFixed(2)}%` : value.toFixed(2),
+                          formatter={(value: number | undefined, name?: string) => [
+                            name === 'return' ? `${((value ?? 0) * 100).toFixed(2)}%` : (value ?? 0).toFixed(2),
                             name === 'return' ? 'OOS Return' : 'Sharpe',
                           ]}
                         />

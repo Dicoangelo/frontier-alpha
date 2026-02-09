@@ -14,11 +14,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ReferenceLine,
 } from 'recharts';
-import { BarChart3, TrendingUp } from 'lucide-react';
-import { useCVRFEpisodes, useCVRFHistory } from '@/hooks/useCVRF';
+import { BarChart3 } from 'lucide-react';
+import { useCVRFEpisodes } from '@/hooks/useCVRF';
 import type { CVRFEpisode } from '@/types/cvrf';
 
 type MetricView = 'returns' | 'sharpe' | 'drawdown';

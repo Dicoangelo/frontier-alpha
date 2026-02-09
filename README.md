@@ -40,7 +40,7 @@
 </p>
 
 <p align="center">
-  <a href="https://frontier-alpha.vercel.app">
+  <a href="https://frontier-alpha.metaventionsai.com">
     <img src="https://img.shields.io/badge/Live_Demo-frontier--alpha.vercel.app-00d9ff?style=for-the-badge" alt="Live Demo" />
   </a>
 </p>
@@ -213,7 +213,7 @@ npm run dev:all
 
 The client opens at `http://localhost:5173` and the API at `http://localhost:3000/api/v1/health`.
 
-**Live Demo**: [frontier-alpha.vercel.app](https://frontier-alpha.vercel.app)
+**Live Demo**: [frontier-alpha.metaventionsai.com](https://frontier-alpha.metaventionsai.com)
 
 ---
 
@@ -334,7 +334,7 @@ Both modes include confidence scores and source attribution so the user knows ex
 
 ## API
 
-The production API is deployed on Vercel at `https://frontier-alpha.vercel.app`.
+The production API is deployed on Vercel at `https://frontier-alpha.metaventionsai.com`.
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -350,21 +350,21 @@ The production API is deployed on Vercel at `https://frontier-alpha.vercel.app`.
 
 ```bash
 # Real-time quote
-curl https://frontier-alpha.vercel.app/api/v1/quotes/AAPL
+curl https://frontier-alpha.metaventionsai.com/api/v1/quotes/AAPL
 
 # Factor exposures
-curl https://frontier-alpha.vercel.app/api/v1/portfolio/factors/AAPL,NVDA,MSFT
+curl https://frontier-alpha.metaventionsai.com/api/v1/portfolio/factors/AAPL,NVDA,MSFT
 
 # Optimize a portfolio
-curl -X POST https://frontier-alpha.vercel.app/api/v1/portfolio/optimize \
+curl -X POST https://frontier-alpha.metaventionsai.com/api/v1/portfolio/optimize \
   -H "Content-Type: application/json" \
   -d '{"symbols": ["AAPL","NVDA","MSFT","GOOGL","AMZN"], "config": {"objective": "max_sharpe"}}'
 
 # Earnings forecast
-curl https://frontier-alpha.vercel.app/api/v1/earnings/forecast/NVDA
+curl https://frontier-alpha.metaventionsai.com/api/v1/earnings/forecast/NVDA
 
 # CVRF beliefs
-curl https://frontier-alpha.vercel.app/api/v1/cvrf/beliefs
+curl https://frontier-alpha.metaventionsai.com/api/v1/cvrf/beliefs
 ```
 
 See the full [API Reference](docs/API.md) for all 29+ endpoints, request/response formats, and error codes.
@@ -463,7 +463,7 @@ Dico Angelo
 dicoangelo@metaventionsai.com
 
 <p align="center">
-  <a href="https://metaventions-ai-architected-intelligence-1061986917838.us-west1.run.app/">
+  <a href="https://metaventionsai.com">
     <img src="https://img.shields.io/badge/Metaventions_AI-Website-00d9ff?style=for-the-badge" alt="Website" />
   </a>
   <a href="https://github.com/Dicoangelo">

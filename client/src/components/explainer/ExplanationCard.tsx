@@ -169,12 +169,12 @@ export function ExplanationCard({
       });
 
       // api client interceptor unwraps response.data
-      const data = (response as Record<string, unknown>)?.data ?? response;
+      const data = (response as unknown as Record<string, unknown>)?.data ?? response;
 
       if (data && typeof data === 'object' && 'text' in data) {
         setResult(data as ExplanationResult);
-      } else if (data && typeof data === 'object' && 'success' in data && data.data) {
-        setResult(data.data as ExplanationResult);
+      } else if (data && typeof data === 'object' && 'success' in data && (data as Record<string, unknown>).data) {
+        setResult((data as Record<string, unknown>).data as ExplanationResult);
       } else {
         setError('Unexpected response format.');
       }

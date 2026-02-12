@@ -262,7 +262,7 @@ export function BeliefConstellation() {
       .on('zoom', (event) => {
         g.attr('transform', event.transform);
       });
-    svg.call(zoom);
+    svg.call(zoom as unknown as (selection: d3.Selection<SVGSVGElement | null, unknown, null, undefined>) => void);
 
     // Build simulation
     const simulation = d3.forceSimulation<FactorNode>(nodes)
@@ -325,7 +325,7 @@ export function BeliefConstellation() {
 
     // Hover + click events
     node
-      .on('mouseenter', function (event, d) {
+      .on('mouseenter', function (_event, d) {
         setHoveredNode(d);
         d3.select(this).select('circle')
           .transition().duration(200)

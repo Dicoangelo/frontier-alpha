@@ -1163,8 +1163,8 @@ function StrategiesSection() {
                 borderRadius: '8px',
                 fontSize: '12px',
               }}
-              formatter={(value: number) => [`$${value.toFixed(2)}`, 'P&L']}
-              labelFormatter={(label: number) => `Price: $${label.toFixed(2)}`}
+              formatter={(value: unknown) => [`$${Number(value).toFixed(2)}`, 'P&L']}
+              labelFormatter={(label: unknown) => `Price: $${Number(label).toFixed(2)}`}
             />
             <ReferenceLine y={0} stroke="var(--color-text-muted, #9ca3af)" strokeDasharray="2 2" />
             <ReferenceLine

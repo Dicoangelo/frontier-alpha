@@ -498,10 +498,11 @@ function AttributionSection({
                 borderRadius: '8px',
                 fontSize: '12px',
               }}
-              formatter={(value: number, name: string, props: { payload: { rawValue: number; type: string } }) => {
+              formatter={(_value: unknown, name: unknown, props: unknown) => {
                 if (name === 'base') return [null, null];
-                const raw = props.payload.rawValue;
-                return [`${raw >= 0 ? '+' : ''}${(raw * 100).toFixed(2)}%`, props.payload.type === 'total' ? 'Total Return' : 'Contribution'];
+                const p = props as { payload: { rawValue: number; type: string } };
+                const raw = p.payload.rawValue;
+                return [`${raw >= 0 ? '+' : ''}${(raw * 100).toFixed(2)}%`, p.payload.type === 'total' ? 'Total Return' : 'Contribution'];
               }}
             />
             <ReferenceLine y={0} stroke="var(--color-text-muted, #9ca3af)" strokeDasharray="2 2" />

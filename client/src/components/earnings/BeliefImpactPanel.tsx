@@ -27,7 +27,7 @@ const EARNINGS_SENSITIVE_FACTORS = [
 function estimateImpact(
   factorWeights: Record<string, number>,
   factorConfidences: Record<string, number>,
-  symbol: string,
+  _symbol: string,
   expectedMove: number,
 ): FactorImpact[] {
   const impacts: FactorImpact[] = [];

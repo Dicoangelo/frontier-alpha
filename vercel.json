@@ -4,13 +4,6 @@
   "framework": "vite",
   "installCommand": "npm install && cd client && npm install",
   "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" != \"main\" ]; then exit 0; fi; git diff --quiet HEAD^ HEAD -- . ':!*.md' ':!*.txt' ':!.github' ':!tests' ':!*.test.ts' ':!*.spec.ts' ':!.env.example'",
-  "regions": ["iad1"],
-  "functions": {
-    "api/edge/**/*.ts": {
-      "runtime": "edge",
-      "regions": ["iad1"]
-    }
-  },
   "rewrites": [
     { "source": "/api/edge/:path*", "destination": "/api/edge/:path*" },
     { "source": "/api/:path*", "destination": "/api/:path*" },

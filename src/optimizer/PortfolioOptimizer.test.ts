@@ -5,7 +5,7 @@
  * constraint enforcement, and Monte Carlo simulation output format.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { PortfolioOptimizer } from './PortfolioOptimizer.js';
 import type { Price, OptimizationConfig } from '../types/index.js';
 
@@ -242,7 +242,7 @@ describe('PortfolioOptimizer', () => {
       it('should fall back to equal weights for unknown objective', async () => {
         const prices = createTestPrices();
         const config: OptimizationConfig = {
-          objective: 'unknown' as any,
+          objective: 'unknown' as unknown as OptimizationConfig['objective'],
           riskFreeRate: 0.05,
         };
 

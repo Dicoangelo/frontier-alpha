@@ -88,6 +88,7 @@ export function BottomSheet({
       sheet.removeEventListener('touchmove', handleTouchMove);
       sheet.removeEventListener('touchend', handleTouchEnd);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- handleClose is stable (only calls onClose prop)
   }, [isOpen, isDragging, dragY]);
 
   // Handle escape key
@@ -100,6 +101,7 @@ export function BottomSheet({
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- handleClose is stable (only calls onClose prop)
   }, [isOpen]);
 
   // Lock body scroll when open
@@ -191,6 +193,7 @@ export function BottomSheet({
 }
 
 // Convenience hook for managing bottom sheet state
+// eslint-disable-next-line react-refresh/only-export-components
 export function useBottomSheet() {
   const [isOpen, setIsOpen] = useState(false);
 

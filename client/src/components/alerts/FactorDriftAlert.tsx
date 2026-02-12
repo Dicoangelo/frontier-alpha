@@ -135,6 +135,7 @@ export function FactorDriftAlert({
 
       driftMutation.mutate({ exposures, targets });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally omitting driftMutation and configData to avoid infinite re-trigger
   }, [exposures, selectedStrategy, customTargets]);
 
   const result = driftMutation.data?.data;
@@ -193,17 +194,21 @@ export function FactorDriftAlert({
             size="sm"
             onClick={() => driftMutation.mutate({ exposures })}
             disabled={driftMutation.isPending}
+            aria-label="Refresh factor drift data"
           >
             <RefreshCw
               className={`w-4 h-4 ${driftMutation.isPending ? 'animate-spin' : ''}`}
+              aria-hidden="true"
             />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowSettings(!showSettings)}
+            aria-label="Toggle drift monitor settings"
+            aria-expanded={showSettings}
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-4 h-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -277,9 +282,9 @@ export function FactorDriftAlert({
               </div>
               {!drift.withinTolerance && (
                 drift.drift > 0 ? (
-                  <TrendingUp className="w-4 h-4 text-red-500" />
+                  <TrendingUp className="w-4 h-4 text-red-500" aria-hidden="true" />
                 ) : (
-                  <TrendingDown className="w-4 h-4 text-red-500" />
+                  <TrendingDown className="w-4 h-4 text-red-500" aria-hidden="true" />
                 )
               )}
             </div>

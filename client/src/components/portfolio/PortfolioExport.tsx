@@ -110,7 +110,7 @@ export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExport
         text: `Check out my portfolio allocation on Frontier Alpha`,
         url: window.location.href,
       });
-    } catch (err) {
+    } catch {
       // User cancelled or error
       console.log('Share cancelled');
     }
@@ -132,8 +132,8 @@ export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExport
           <div className="absolute right-0 mt-2 w-64 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] shadow-lg z-50">
             <div className="flex items-center justify-between border-b border-[var(--color-border-light)] px-4 py-3">
               <h3 className="font-medium text-[var(--color-text)]">Export Portfolio</h3>
-              <button onClick={() => setIsOpen(false)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-muted)]">
-                <X className="h-4 w-4" />
+              <button onClick={() => setIsOpen(false)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-muted)]" aria-label="Close export menu">
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 

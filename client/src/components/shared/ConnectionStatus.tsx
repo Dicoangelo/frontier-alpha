@@ -11,8 +11,8 @@ export function ConnectionStatus() {
   const [state, setState] = useState<ConnectionState>(wsClient.connectionState);
 
   useEffect(() => {
-    return wsClient.on('connectionState', (data: any) => {
-      setState(data.state as ConnectionState);
+    return wsClient.on('connectionState', (data: unknown) => {
+      setState((data as { state: ConnectionState }).state);
     });
   }, []);
 
@@ -52,8 +52,8 @@ export function ConnectionDot() {
   const [state, setState] = useState<ConnectionState>(wsClient.connectionState);
 
   useEffect(() => {
-    return wsClient.on('connectionState', (data: any) => {
-      setState(data.state as ConnectionState);
+    return wsClient.on('connectionState', (data: unknown) => {
+      setState((data as { state: ConnectionState }).state);
     });
   }, []);
 

@@ -9,8 +9,8 @@
  * - RiskAlertSystem: Integrated with dual-level risk control
  */
 
-import { CVRFManager, cvrfManager } from './CVRFManager.js';
-import type { CVRFCycleResult, BeliefState, TradingDecision } from './types.js';
+import { CVRFManager } from './CVRFManager.js';
+import type { CVRFCycleResult, TradingDecision } from './types.js';
 import type {
   OptimizationConfig,
   OptimizationResult,
@@ -98,7 +98,7 @@ export function validateOptimizationWithCVRF(
   adjustedWeights?: Map<string, number>;
 } {
   const constraints = cvrfManager.getOptimizationConstraints();
-  const beliefs = cvrfManager.getCurrentBeliefs();
+  const _beliefs = cvrfManager.getCurrentBeliefs();
   const warnings: string[] = [];
   let adjustedWeights: Map<string, number> | undefined;
 
@@ -266,7 +266,7 @@ export async function runCVRFEnhancedTradingLoop(
   // Simulate trading days
   for (let day = 0; day < tradingDays; day++) {
     // Get CVRF-informed constraints
-    const constraints = cvrfManager.getOptimizationConstraints();
+    const _constraints = cvrfManager.getOptimizationConstraints();
 
     // Simulate a trading decision (in real use, this comes from optimizer)
     const decision = cvrfManager.recordDecision({

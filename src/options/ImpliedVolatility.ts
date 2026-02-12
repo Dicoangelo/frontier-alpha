@@ -393,32 +393,32 @@ export class ImpliedVolatilityService {
       }
 
       const result = data.optionChain.result[0];
-      const quote = result.quote;
+      const _quote = result.quote;
       const options = result.options?.[0];
 
       if (!options) return null;
 
-      const calls: OptionData[] = (options.calls || []).map((c: any) => ({
-        strike: c.strike,
-        expiration: new Date(c.expiration * 1000).toISOString(),
-        bid: c.bid || 0,
-        ask: c.ask || 0,
-        last: c.lastPrice || 0,
-        volume: c.volume || 0,
-        openInterest: c.openInterest || 0,
-        impliedVolatility: c.impliedVolatility || 0,
+      const calls: OptionData[] = (options.calls || []).map((c: Record<string, unknown>) => ({
+        strike: c.strike as number,
+        expiration: new Date((c.expiration as number) * 1000).toISOString(),
+        bid: (c.bid as number) || 0,
+        ask: (c.ask as number) || 0,
+        last: (c.lastPrice as number) || 0,
+        volume: (c.volume as number) || 0,
+        openInterest: (c.openInterest as number) || 0,
+        impliedVolatility: (c.impliedVolatility as number) || 0,
         type: 'call' as const,
       }));
 
-      const puts: OptionData[] = (options.puts || []).map((p: any) => ({
-        strike: p.strike,
-        expiration: new Date(p.expiration * 1000).toISOString(),
-        bid: p.bid || 0,
-        ask: p.ask || 0,
-        last: p.lastPrice || 0,
-        volume: p.volume || 0,
-        openInterest: p.openInterest || 0,
-        impliedVolatility: p.impliedVolatility || 0,
+      const puts: OptionData[] = (options.puts || []).map((p: Record<string, unknown>) => ({
+        strike: p.strike as number,
+        expiration: new Date((p.expiration as number) * 1000).toISOString(),
+        bid: (p.bid as number) || 0,
+        ask: (p.ask as number) || 0,
+        last: (p.lastPrice as number) || 0,
+        volume: (p.volume as number) || 0,
+        openInterest: (p.openInterest as number) || 0,
+        impliedVolatility: (p.impliedVolatility as number) || 0,
         type: 'put' as const,
       }));
 
@@ -695,9 +695,9 @@ export class ImpliedVolatilityService {
    */
   private calculateTermIV(
     chain: OptionsChain,
-    currentPrice: number
+    _currentPrice: number
   ): { iv30: number; iv60: number; iv90: number } {
-    const now = new Date();
+    const _now = new Date();
 
     // Group options by approximate DTE
     const termBuckets = {

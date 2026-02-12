@@ -15,6 +15,7 @@ import type {
   MetaPrompt,
   EpisodeComparison,
   CVRFConfig,
+  MLPredictions,
 } from './types.js';
 import { DEFAULT_CVRF_CONFIG } from './types.js';
 
@@ -96,26 +97,33 @@ export class BeliefUpdater {
    * @param comparison Episode comparison result
    * @param insights Extracted conceptual insights
    * @param metaPrompt Generated meta-prompt (optimization direction)
+   * @param mlPredictions Optional ML predictions for accelerated/informed updates
    * @returns Updated belief state and list of updates
    */
   updateBeliefs(
     comparison: EpisodeComparison,
     insights: ConceptualInsight[],
-    metaPrompt: MetaPrompt
+    metaPrompt: MetaPrompt,
+    mlPredictions?: MLPredictions
   ): { newBeliefs: BeliefState; updates: BeliefUpdate[] } {
     const updates: BeliefUpdate[] = [];
 
     // Calculate effective learning rate from decision overlap
-    const tau = this.calculateLearningRate(comparison.decisionOverlap);
+    let tau = this.calculateLearningRate(comparison.decisionOverlap);
+
+    // ML-accelerated learning: regime changes trigger faster adaptation
+    if (mlPredictions?.regimeChanged) {
+      tau = Math.min(this.config.maxLearningRate, tau * 2.0);
+    }
 
     // Save current state for history
     this.beliefHistory.push({ ...this.currentBeliefs });
 
     // Update factor weights based on insights
-    updates.push(...this.updateFactorWeights(insights, metaPrompt, tau));
+    updates.push(...this.updateFactorWeights(insights, metaPrompt, tau, mlPredictions));
 
     // Update factor confidences
-    updates.push(...this.updateFactorConfidences(insights, tau));
+    updates.push(...this.updateFactorConfidences(insights, tau, mlPredictions));
 
     // Update risk beliefs
     updates.push(...this.updateRiskBeliefs(comparison, insights, tau));
@@ -126,8 +134,8 @@ export class BeliefUpdater {
     // Update allocation beliefs
     updates.push(...this.updateAllocationBeliefs(insights, tau));
 
-    // Update regime beliefs
-    updates.push(...this.updateRegimeBeliefs(insights, tau));
+    // Update regime beliefs (ML-enhanced)
+    updates.push(...this.updateRegimeBeliefs(insights, tau, mlPredictions));
 
     // Store conceptual priors
     this.updateConceptualPriors(insights);
@@ -174,9 +182,18 @@ export class BeliefUpdater {
   private updateFactorWeights(
     insights: ConceptualInsight[],
     metaPrompt: MetaPrompt,
-    tau: number
+    tau: number,
+    mlPredictions?: MLPredictions
   ): BeliefUpdate[] {
     const updates: BeliefUpdate[] = [];
+
+    // Build factor importance map from ML attribution (explore/exploit guidance)
+    const factorImportance = new Map<string, number>();
+    if (mlPredictions?.factorAttribution) {
+      for (const fc of mlPredictions.factorAttribution.factors) {
+        factorImportance.set(fc.factor, Math.abs(fc.shapleyValue));
+      }
+    }
 
     // Apply factor adjustments from meta-prompt
     for (const [factor, adjustment] of metaPrompt.factorAdjustments) {
@@ -184,7 +201,15 @@ export class BeliefUpdater {
       if (currentWeight === undefined) continue;
 
       // Scale adjustment by learning rate
-      const scaledAdjustment = adjustment * tau;
+      let scaledAdjustment = adjustment * tau;
+
+      // ML-informed explore/exploit: high-importance factors get exploited (larger updates),
+      // low-importance factors get explored (smaller but non-zero updates)
+      const importance = factorImportance.get(factor);
+      if (importance !== undefined) {
+        const importanceMultiplier = 0.5 + importance * 1.5; // range [0.5, 2.0] for importance in [0, 1]
+        scaledAdjustment *= importanceMultiplier;
+      }
 
       // Clamp change to max allowed
       const clampedAdjustment = Math.sign(scaledAdjustment) * Math.min(
@@ -197,12 +222,13 @@ export class BeliefUpdater {
       if (newWeight !== currentWeight) {
         this.currentBeliefs.factorWeights.set(factor, newWeight);
 
+        const mlNote = importance !== undefined ? ` (ML importance: ${importance.toFixed(2)})` : '';
         updates.push({
           field: `factorWeights.${factor}`,
           oldValue: currentWeight,
           newValue: newWeight,
           learningRate: tau,
-          metaPrompt: `Factor adjustment for ${factor}: ${adjustment > 0 ? 'increase' : 'decrease'} based on episode comparison`,
+          metaPrompt: `Factor adjustment for ${factor}: ${adjustment > 0 ? 'increase' : 'decrease'} based on episode comparison${mlNote}`,
           timestamp: new Date(),
         });
       }
@@ -229,7 +255,8 @@ export class BeliefUpdater {
 
   private updateFactorConfidences(
     insights: ConceptualInsight[],
-    tau: number
+    tau: number,
+    mlPredictions?: MLPredictions
   ): BeliefUpdate[] {
     const updates: BeliefUpdate[] = [];
 
@@ -246,21 +273,28 @@ export class BeliefUpdater {
       if (currentConfidence === undefined) continue;
 
       // Increase confidence for positive insights, decrease for negative
-      const confidenceChange = insight.impactDirection === 'positive'
+      let confidenceChange = insight.impactDirection === 'positive'
         ? insight.confidence * tau * 0.1
         : -insight.confidence * tau * 0.1;
+
+      // ML momentum boost: if ML model has high confidence in a factor, boost CVRF confidence
+      const momentum = mlPredictions?.factorMomentum?.get(factor);
+      if (momentum && momentum.confidence > 0.6) {
+        confidenceChange += momentum.confidence * tau * 0.05;
+      }
 
       const newConfidence = Math.max(0.1, Math.min(0.95, currentConfidence + confidenceChange));
 
       if (newConfidence !== currentConfidence) {
         this.currentBeliefs.factorConfidences.set(factor, newConfidence);
 
+        const mlNote = momentum ? ` (ML momentum confidence: ${momentum.confidence.toFixed(2)})` : '';
         updates.push({
           field: `factorConfidences.${factor}`,
           oldValue: currentConfidence,
           newValue: newConfidence,
           learningRate: tau,
-          metaPrompt: `Confidence ${confidenceChange > 0 ? 'increased' : 'decreased'} based on ${insight.type} insight`,
+          metaPrompt: `Confidence ${confidenceChange > 0 ? 'increased' : 'decreased'} based on ${insight.type} insight${mlNote}`,
           timestamp: new Date(),
         });
       }
@@ -282,7 +316,7 @@ export class BeliefUpdater {
     const riskInsights = insights.filter(i => i.type === 'risk');
 
     // Update max drawdown threshold based on comparison
-    const betterDrawdown = comparison.betterEpisode.maxDrawdown;
+    const _betterDrawdown = comparison.betterEpisode.maxDrawdown;
     const worseDrawdown = comparison.worseEpisode.maxDrawdown;
 
     if (worseDrawdown > this.currentBeliefs.maxDrawdownThreshold * 1.5) {
@@ -436,9 +470,62 @@ export class BeliefUpdater {
 
   private updateRegimeBeliefs(
     insights: ConceptualInsight[],
-    tau: number
+    tau: number,
+    mlPredictions?: MLPredictions
   ): BeliefUpdate[] {
     const updates: BeliefUpdate[] = [];
+
+    // Prefer ML regime detection over heuristic-based insight extraction
+    if (mlPredictions?.regime) {
+      const mlRegime = mlPredictions.regime.regime;
+      const mlConfidence = mlPredictions.regime.confidence;
+      const oldRegime = this.currentBeliefs.currentRegime;
+      const oldConfidence = this.currentBeliefs.regimeConfidence;
+
+      if (mlRegime !== oldRegime) {
+        // ML-detected regime change: use ML confidence directly, blended with current
+        const newConfidence = Math.max(0.3, Math.min(0.95, mlConfidence * 0.7 + oldConfidence * 0.3));
+
+        this.currentBeliefs.currentRegime = mlRegime;
+        this.currentBeliefs.regimeConfidence = newConfidence;
+
+        updates.push({
+          field: 'currentRegime',
+          oldValue: oldRegime,
+          newValue: mlRegime,
+          learningRate: tau,
+          metaPrompt: `ML regime detection: ${oldRegime} → ${mlRegime} (HMM confidence: ${(mlConfidence * 100).toFixed(0)}%)`,
+          timestamp: new Date(),
+        });
+
+        updates.push({
+          field: 'regimeConfidence',
+          oldValue: oldConfidence,
+          newValue: newConfidence,
+          learningRate: tau,
+          metaPrompt: `Regime confidence updated to ${(newConfidence * 100).toFixed(0)}% (ML-enhanced)`,
+          timestamp: new Date(),
+        });
+      } else if (mlConfidence > oldConfidence) {
+        // Same regime but ML is more confident — reinforce
+        const newConfidence = Math.max(0.3, Math.min(0.95, mlConfidence * 0.5 + oldConfidence * 0.5));
+        if (newConfidence !== oldConfidence) {
+          this.currentBeliefs.regimeConfidence = newConfidence;
+          updates.push({
+            field: 'regimeConfidence',
+            oldValue: oldConfidence,
+            newValue: newConfidence,
+            learningRate: tau,
+            metaPrompt: `Regime confidence reinforced to ${(newConfidence * 100).toFixed(0)}% by ML`,
+            timestamp: new Date(),
+          });
+        }
+      }
+
+      return updates;
+    }
+
+    // Fallback: heuristic regime detection from insights (original behavior)
     const regimeInsights = insights.filter(i => i.type === 'regime');
 
     for (const insight of regimeInsights) {

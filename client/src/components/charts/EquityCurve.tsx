@@ -392,16 +392,17 @@ export function EquityCurve({
         </div>
 
         {/* Timeframe selector */}
-        <div className="flex gap-1 bg-[var(--color-bg-tertiary)] rounded-lg p-1">
+        <div className="flex gap-1 bg-[var(--color-bg-tertiary)] rounded-lg p-1" role="group" aria-label="Chart timeframe">
           {(['1W', '1M', '3M', '6M', '1Y', 'YTD'] as const).map((tf) => (
             <button
               key={tf}
               onClick={() => setSelectedTimeframe(tf)}
-              className={`px-3 py-1 text-xs rounded-md transition-colors ${
+              className={`px-3 py-2 min-h-[36px] text-xs rounded-md transition-colors touch-manipulation ${
                 selectedTimeframe === tf
                   ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]'
                   : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
               }`}
+              aria-pressed={selectedTimeframe === tf}
             >
               {tf}
             </button>
@@ -410,12 +411,13 @@ export function EquityCurve({
       </div>
 
       {/* Chart */}
-      <div ref={containerRef} className="h-64 w-full">
+      <div ref={containerRef} className="h-64 w-full" role="img" aria-label={`Portfolio equity curve showing ${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(1)}% total return over ${selectedTimeframe} timeframe`}>
         <canvas
           ref={canvasRef}
           className="w-full h-full cursor-crosshair"
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
+          aria-hidden="true"
         />
       </div>
 

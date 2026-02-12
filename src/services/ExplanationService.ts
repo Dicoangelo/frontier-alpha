@@ -17,7 +17,6 @@ import type {
   SentimentScore,
   EarningsImpactForecast,
   Portfolio,
-  Position,
 } from '../types/index.js';
 
 // ============================================================================

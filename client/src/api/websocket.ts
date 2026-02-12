@@ -256,7 +256,7 @@ class QuoteStreamClient {
     };
   }
 
-  private notifyHandlers(type: string, data: any) {
+  private notifyHandlers(type: string, data: unknown) {
     this.handlers.get(type)?.forEach((handler) => handler(data));
   }
 

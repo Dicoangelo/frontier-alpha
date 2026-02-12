@@ -88,6 +88,7 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
 
   useEffect(() => {
     fetchAttribution();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchAttribution is stable, symbols serialized for comparison
   }, [period, symbols?.join(',')]);
 
   const formatPercent = (value: number, decimals: number = 2): string => {
@@ -133,15 +134,16 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
         <button
           onClick={fetchAttribution}
           className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-lg"
+          aria-label="Refresh performance attribution"
         >
-          <RefreshCw className="w-4 h-4" />
+          <RefreshCw className="w-4 h-4" aria-hidden="true" />
         </button>
       }
     >
       <div className="space-y-6">
         {/* Period Selector */}
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex gap-1 bg-[var(--color-bg-secondary)] rounded-lg p-1">
+          <div className="flex gap-1 bg-[var(--color-bg-secondary)] rounded-lg p-1" role="group" aria-label="Attribution period">
             {PERIODS.map((p) => (
               <button
                 key={p}
@@ -151,6 +153,7 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
                     ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]'
                     : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
                 }`}
+                aria-pressed={period === p}
               >
                 {p}
               </button>

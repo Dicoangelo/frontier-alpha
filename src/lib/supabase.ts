@@ -145,3 +145,34 @@ export interface FrontierEarningsHistory {
   actual_move: number;
   created_at: string;
 }
+
+// Social tables
+
+export interface FrontierProfile {
+  id: string;
+  user_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FrontierFollow {
+  id: string;
+  follower_id: string;
+  following_id: string;
+  created_at: string;
+}
+
+export type SharedPortfolioVisibility = 'public' | 'followers' | 'private';
+
+export interface FrontierSharedPortfolio {
+  id: string;
+  user_id: string;
+  portfolio_data: Record<string, unknown>;
+  visibility: SharedPortfolioVisibility;
+  share_token: string;
+  created_at: string;
+}

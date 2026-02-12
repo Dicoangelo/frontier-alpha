@@ -56,6 +56,7 @@ export function LiveRegion({ children, mode = 'polite', atomic = true }: LiveReg
  * Focus trap for modals and dialogs.
  * Ensures keyboard users can't tab outside the component.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useFocusTrap(ref: React.RefObject<HTMLElement>, isActive: boolean) {
   const handleKeyDown = (e: KeyboardEvent) => {
     if (!isActive || !ref.current || e.key !== 'Tab') return;
@@ -81,6 +82,7 @@ export function useFocusTrap(ref: React.RefObject<HTMLElement>, isActive: boolea
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- handleKeyDown depends only on isActive and ref which are already deps
   }, [isActive, ref]);
 }
 
@@ -112,6 +114,7 @@ export function SkipToMain({ targetId = 'main-content' }: { targetId?: string })
  */
 let announcerElement: HTMLDivElement | null = null;
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function announce(message: string, priority: 'polite' | 'assertive' = 'polite') {
   if (typeof document === 'undefined') return;
 

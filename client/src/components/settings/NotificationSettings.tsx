@@ -223,7 +223,7 @@ export function NotificationSettings() {
             {SEVERITY_LEVELS.map((level) => (
               <button
                 key={level.id}
-                onClick={() => setSettings({ ...settings, severityThreshold: level.id as any })}
+                onClick={() => setSettings({ ...settings, severityThreshold: level.id as NotificationSettings['severityThreshold'] })}
                 disabled={!settings.emailEnabled}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   settings.severityThreshold === level.id
@@ -250,7 +250,7 @@ export function NotificationSettings() {
             {DIGEST_OPTIONS.map((option) => (
               <button
                 key={option.id}
-                onClick={() => setSettings({ ...settings, digestFrequency: option.id as any })}
+                onClick={() => setSettings({ ...settings, digestFrequency: option.id as NotificationSettings['digestFrequency'] })}
                 disabled={!settings.emailEnabled}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   settings.digestFrequency === option.id

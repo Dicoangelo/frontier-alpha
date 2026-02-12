@@ -14,6 +14,7 @@ interface OnboardingContextValue {
 
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useOnboardingContext() {
   const context = useContext(OnboardingContext);
   if (!context) {

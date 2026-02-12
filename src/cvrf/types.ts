@@ -9,6 +9,9 @@
  */
 
 import type { FactorExposure, OptimizationResult, SentimentScore } from '../types/index.js';
+import type { MarketRegime, RegimeDetectionResult } from '../ml/RegimeDetector.js';
+import type { MomentumPrediction } from '../ml/NeuralFactorModel.js';
+import type { FactorAttributionResult } from '../ml/FactorAttribution.js';
 
 // ============================================================================
 // EPISODE TYPES
@@ -208,6 +211,8 @@ export interface CVRFCycleResult {
   beliefUpdates: BeliefUpdate[];
   newBeliefState: BeliefState;
   explanation: string;
+  /** ML predictions used in this cycle (if available) */
+  mlPredictions?: MLPredictions;
 }
 
 /**
@@ -220,6 +225,38 @@ export interface CVRFPerformanceMetrics {
   insightQuality: number; // Correlation between insights and performance
   overfitRisk: number; // Risk of overfitting to recent data
   adaptationSpeed: number; // How quickly beliefs adapt to regime changes
+}
+
+// ============================================================================
+// ML-ENHANCED TYPES
+// ============================================================================
+
+/**
+ * ML predictions fed into the CVRF cycle for smarter belief updates
+ */
+export interface MLPredictions {
+  /** Current regime detection result from HMM */
+  regime?: RegimeDetectionResult;
+  /** Factor momentum predictions from NeuralFactorModel */
+  factorMomentum?: Map<string, MomentumPrediction>;
+  /** Factor attribution analysis */
+  factorAttribution?: FactorAttributionResult;
+  /** Whether a regime change was detected (current vs previous) */
+  regimeChanged?: boolean;
+  /** Previous regime (if a change was detected) */
+  previousRegime?: MarketRegime;
+}
+
+/**
+ * ML-enhanced meta-prompt with regime and factor intelligence
+ */
+export interface MLEnhancedMetaPrompt extends MetaPrompt {
+  /** Regime context injected into meta-prompt */
+  regimeContext?: string;
+  /** Factor importance ranking from ML attribution */
+  factorImportanceRanking?: Array<{ factor: string; importance: number }>;
+  /** Explore/exploit guidance based on factor attribution */
+  exploreExploitGuidance?: string;
 }
 
 // ============================================================================

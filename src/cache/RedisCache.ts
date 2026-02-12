@@ -145,7 +145,7 @@ export class RedisCache {
       const ioredis = await import('ioredis');
       const Redis = ioredis.default || ioredis;
 
-      this.client = new (Redis as any)(this.config.redisUrl!, {
+      this.client = new (Redis as unknown as new (url: string, opts: Record<string, unknown>) => RedisClient)(this.config.redisUrl!, {
         maxRetriesPerRequest: 3,
         retryStrategy: (times) => {
           if (times > 3) return null; // Stop retrying
@@ -277,21 +277,21 @@ export class RedisCache {
   /**
    * Cache a quote
    */
-  async cacheQuote(symbol: string, quote: any): Promise<boolean> {
+  async cacheQuote(symbol: string, quote: unknown): Promise<boolean> {
     return this.set(`quote:${symbol}`, quote, this.config.quoteTtlSeconds);
   }
 
   /**
    * Get cached quote
    */
-  async getQuote(symbol: string): Promise<any | null> {
+  async getQuote(symbol: string): Promise<unknown | null> {
     return this.get(`quote:${symbol}`);
   }
 
   /**
    * Cache multiple quotes
    */
-  async cacheQuotes(quotes: Record<string, any>): Promise<void> {
+  async cacheQuotes(quotes: Record<string, unknown>): Promise<void> {
     const promises = Object.entries(quotes).map(([symbol, quote]) =>
       this.cacheQuote(symbol, quote)
     );
@@ -301,8 +301,8 @@ export class RedisCache {
   /**
    * Get multiple quotes
    */
-  async getQuotes(symbols: string[]): Promise<Map<string, any>> {
-    const result = new Map<string, any>();
+  async getQuotes(symbols: string[]): Promise<Map<string, unknown>> {
+    const result = new Map<string, unknown>();
 
     for (const symbol of symbols) {
       const quote = await this.getQuote(symbol);
@@ -317,21 +317,21 @@ export class RedisCache {
   /**
    * Cache factor data
    */
-  async cacheFactors(symbol: string, factors: any): Promise<boolean> {
+  async cacheFactors(symbol: string, factors: unknown): Promise<boolean> {
     return this.set(`factors:${symbol}`, factors, this.config.factorTtlSeconds);
   }
 
   /**
    * Get cached factors
    */
-  async getFactors(symbol: string): Promise<any | null> {
+  async getFactors(symbol: string): Promise<unknown | null> {
     return this.get(`factors:${symbol}`);
   }
 
   /**
    * Cache API response
    */
-  async cacheApiResponse(endpoint: string, params: Record<string, any>, response: any): Promise<boolean> {
+  async cacheApiResponse(endpoint: string, params: Record<string, unknown>, response: unknown): Promise<boolean> {
     const paramsHash = this.hashParams(params);
     return this.set(`api:${endpoint}:${paramsHash}`, response, this.config.apiTtlSeconds);
   }
@@ -339,7 +339,7 @@ export class RedisCache {
   /**
    * Get cached API response
    */
-  async getApiResponse(endpoint: string, params: Record<string, any>): Promise<any | null> {
+  async getApiResponse(endpoint: string, params: Record<string, unknown>): Promise<unknown | null> {
     const paramsHash = this.hashParams(params);
     return this.get(`api:${endpoint}:${paramsHash}`);
   }
@@ -372,7 +372,7 @@ export class RedisCache {
   /**
    * Hash parameters for cache key
    */
-  private hashParams(params: Record<string, any>): string {
+  private hashParams(params: Record<string, unknown>): string {
     const sorted = Object.keys(params)
       .sort()
       .map((k) => `${k}:${params[k]}`)
@@ -467,9 +467,23 @@ export function getCache(): RedisCache {
   return cacheInstance;
 }
 
+// Express middleware request/response shapes
+interface MiddlewareRequest {
+  method?: string;
+  path?: string;
+  url?: string;
+  query?: Record<string, unknown>;
+}
+
+interface MiddlewareResponse {
+  statusCode?: number;
+  setHeader(name: string, value: string): void;
+  json(body: unknown): unknown;
+}
+
 // Express middleware for API caching
-export function cacheMiddleware(ttlSeconds: number = 300) {
-  return async function (req: any, res: any, next: () => void) {
+export function cacheMiddleware(_ttlSeconds: number = 300) {
+  return async function (req: MiddlewareRequest, res: MiddlewareResponse, next: () => void) {
     const cache = getCache();
 
     // Skip if cache disabled or not a GET request
@@ -489,10 +503,10 @@ export function cacheMiddleware(ttlSeconds: number = 300) {
 
     // Capture response for caching
     const originalJson = res.json.bind(res);
-    res.json = function (body: any) {
+    res.json = function (body: unknown) {
       // Cache successful responses
-      if (res.statusCode >= 200 && res.statusCode < 300) {
-        cache.cacheApiResponse(endpoint, params, body).catch((err) => logger.error({ err }, 'RedisCache cacheApiResponse error'));
+      if (res.statusCode !== undefined && res.statusCode >= 200 && res.statusCode < 300) {
+        cache.cacheApiResponse(endpoint, params, body).catch((err: unknown) => logger.error({ err }, 'RedisCache cacheApiResponse error'));
       }
       res.setHeader('X-Cache', 'MISS');
       return originalJson(body);

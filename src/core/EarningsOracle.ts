@@ -122,7 +122,7 @@ export class EarningsOracle {
    */
   private factorAdjustment(
     currentFactors: FactorExposure[],
-    historical: EarningsReaction[]
+    _historical: EarningsReaction[]
   ): number {
     // Key factors that amplify/dampen earnings reactions
     const factorWeights: Record<string, number> = {

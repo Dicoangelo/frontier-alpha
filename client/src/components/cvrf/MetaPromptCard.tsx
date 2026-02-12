@@ -42,7 +42,7 @@ function useMetaPrompt() {
     queryKey: ['cvrf', 'meta-prompt'],
     queryFn: async () => {
       const response = await api.get<CVRFApiResponse<MetaPromptData | null>>('/cvrf/meta-prompt');
-      return (response as any).data;
+      return (response as CVRFApiResponse<MetaPromptData | null>).data;
     },
     staleTime: 60 * 1000,
   });

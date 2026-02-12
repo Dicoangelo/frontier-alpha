@@ -76,8 +76,9 @@ export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
           <Link
             to="/settings"
             className="hidden lg:flex p-2 text-theme-secondary hover:text-theme click-feedback rounded-sm"
+            aria-label="Settings"
           >
-            <Settings className="w-5 h-5" />
+            <Settings className="w-5 h-5" aria-hidden="true" />
           </Link>
         </div>
       </div>

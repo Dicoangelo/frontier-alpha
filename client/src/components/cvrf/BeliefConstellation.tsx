@@ -96,8 +96,9 @@ function DetailPanel({ node, onClose }: DetailPanelProps) {
         <button
           onClick={onClose}
           className="p-1 hover:bg-[var(--color-bg-tertiary)] rounded"
+          aria-label="Close factor details"
         >
-          <X className="w-4 h-4 text-[var(--color-text-muted)]" />
+          <X className="w-4 h-4 text-[var(--color-text-muted)]" aria-hidden="true" />
         </button>
       </div>
       <div className="px-4 py-3 space-y-3">
@@ -434,12 +435,13 @@ export function BeliefConstellation() {
       </div>
 
       {/* Graph */}
-      <div ref={containerRef} className="relative">
+      <div ref={containerRef} className="relative" role="img" aria-label={`Belief constellation showing ${nodes.length} factors across categories. Regime: ${regime.label}`}>
         <svg
           ref={svgRef}
           width={dimensions.width}
           height={dimensions.height}
           className="bg-[var(--color-bg-tertiary)]"
+          aria-hidden="true"
         />
 
         {/* Detail Panel */}

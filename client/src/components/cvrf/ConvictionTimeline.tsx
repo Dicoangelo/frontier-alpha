@@ -31,22 +31,13 @@ interface BeliefDiff {
 function BeliefDiffPanel({ selected }: { selected: TimelineNode | null }) {
   const { data: beliefs } = useCVRFBeliefs();
 
-  if (!selected) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-[var(--color-text-muted)] py-8">
-        <Clock className="w-8 h-8 mb-3 opacity-40" />
-        <p className="text-sm">Select a cycle to view belief changes</p>
-      </div>
-    );
-  }
-
-  const cycle = selected.cycle;
+  const cycle = selected?.cycle;
 
   // Simulate belief diffs from cycle data
   // In production, the backend would provide actual before/after snapshots
   // For now, derive from current beliefs + performance delta + belief updates count
   const diffs: BeliefDiff[] = useMemo(() => {
-    if (!beliefs) return [];
+    if (!beliefs || !cycle) return [];
 
     const factors = Object.entries(beliefs.factorWeights);
     const result: BeliefDiff[] = [];
@@ -72,6 +63,15 @@ function BeliefDiffPanel({ selected }: { selected: TimelineNode | null }) {
 
     return result.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
   }, [beliefs, cycle]);
+
+  if (!selected) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-[var(--color-text-muted)] py-8">
+        <Clock className="w-8 h-8 mb-3 opacity-40" />
+        <p className="text-sm">Select a cycle to view belief changes</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -189,8 +189,8 @@ export function ConvictionTimeline() {
   const { data: episodesData, isLoading: episodesLoading } = useCVRFEpisodes();
 
   const isLoading = historyLoading || episodesLoading;
-  const cycles = history || [];
-  const completedEpisodes = episodesData?.completed || [];
+  const cycles = useMemo(() => history || [], [history]);
+  const completedEpisodes = useMemo(() => episodesData?.completed || [], [episodesData?.completed]);
 
   // Build timeline nodes
   const timelineNodes: TimelineNode[] = useMemo(() => {

@@ -231,7 +231,7 @@ export class SentimentAnalyzer {
     const interval = setInterval(async () => {
       const symbol = symbols[Math.floor(Math.random() * symbols.length)];
       const mockSource: SentimentSource = {
-        type: ['news', 'social', 'sec', 'earnings'][Math.floor(Math.random() * 4)] as any,
+        type: ['news', 'social', 'sec', 'earnings'][Math.floor(Math.random() * 4)] as unknown as SentimentSource['type'],
         title: this.generateMockHeadline(symbol),
         content: '',
         timestamp: new Date(),

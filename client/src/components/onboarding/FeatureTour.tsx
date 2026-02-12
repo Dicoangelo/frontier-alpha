@@ -125,6 +125,7 @@ export function FeatureTour({ isActive, onComplete, onSkip }: FeatureTourProps) 
   useEffect(() => {
     if (!isActive) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- position updates from DOM measurements
     updatePositions();
 
     const handleResize = () => updatePositions();

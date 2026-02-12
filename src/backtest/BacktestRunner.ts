@@ -7,7 +7,6 @@
 
 import { WalkForwardEngine } from './WalkForwardEngine.js';
 import type { WalkForwardConfig, WalkForwardResult, StrategyConfig } from './WalkForwardEngine.js';
-import type { BacktestConfig, BacktestResult } from './Backtester.js';
 
 export interface BacktestRunConfig {
   symbols: string[];

@@ -10,6 +10,8 @@
 
 import { RefreshCw, Brain, AlertTriangle } from 'lucide-react';
 import { useCVRFDashboard } from '@/hooks/useCVRF';
+import { SkeletonCVRFPage } from '@/components/shared/LoadingSkeleton';
+import { DataLoadError } from '@/components/shared/EmptyState';
 import { CVRFStatsCard } from './CVRFStatsCard';
 import { CVRFBeliefDisplay } from './CVRFBeliefDisplay';
 import { CVRFEpisodeControls } from './CVRFEpisodeControls';
@@ -24,19 +26,25 @@ import { BeliefConstellation } from './BeliefConstellation';
 import { ConvictionTimeline } from './ConvictionTimeline';
 
 export function CVRFDashboard() {
-  const { isLoading, isError, refetch } = useCVRFDashboard();
+  const { isLoading, isError, beliefs, episodes, refetch } = useCVRFDashboard();
+
+  // Show full-page skeleton on initial load (no data yet)
+  const hasNoData = !beliefs && !episodes;
+  if (isLoading && hasNoData) {
+    return <SkeletonCVRFPage />;
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-tertiary)]">
       {/* Header */}
-      <div className="bg-[var(--color-bg)] border-b border-[var(--color-border)] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <div className="bg-[var(--color-bg)] border-b border-[var(--color-border)] px-4 sm:px-6 py-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0">
               <Brain className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[var(--color-text)]">CVRF Dashboard</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-[var(--color-text)]">CVRF Dashboard</h1>
               <p className="text-sm text-[var(--color-text-muted)]">
                 Conceptual Verbal Reinforcement Framework
               </p>
@@ -45,7 +53,7 @@ export function CVRFDashboard() {
           <button
             onClick={() => refetch()}
             disabled={isLoading}
-            className="px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-secondary)] rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+            className="px-4 py-2 min-h-[44px] text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-secondary)] rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
@@ -53,9 +61,16 @@ export function CVRFDashboard() {
         </div>
       </div>
 
-      {/* Error Banner */}
-      {isError && (
-        <div className="bg-red-500/10 border-b border-red-500/20 px-6 py-3">
+      {/* Error State — show full error when all data failed */}
+      {isError && hasNoData && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+          <DataLoadError onRetry={() => refetch()} error="Failed to load CVRF data. Check your connection and try again." />
+        </div>
+      )}
+
+      {/* Error Banner — partial errors when some data loaded */}
+      {isError && !hasNoData && (
+        <div className="bg-red-500/10 border-b border-red-500/20 px-4 sm:px-6 py-3">
           <div className="max-w-7xl mx-auto flex items-center gap-2 text-red-700">
             <AlertTriangle className="w-4 h-4" />
             <span className="text-sm">
@@ -66,7 +81,7 @@ export function CVRFDashboard() {
       )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+      {!hasNoData && <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Row 1: Performance Chart (Full Width) */}
         <EpisodePerformanceChart />
 
@@ -111,11 +126,11 @@ export function CVRFDashboard() {
 
         {/* Row 6: Episode Comparison (Full Width) */}
         <EpisodeComparisonView />
-      </div>
+      </div>}
 
       {/* Footer */}
-      <div className="border-t border-[var(--color-border)] bg-[var(--color-bg)] px-6 py-4 mt-auto">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+      <div className="border-t border-[var(--color-border)] bg-[var(--color-bg)] px-4 sm:px-6 py-4 mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[var(--color-text-muted)]">
           <div>
             Based on{' '}
             <a href="#" className="text-indigo-600 hover:underline">

@@ -33,14 +33,14 @@ interface SpanContext {
   spanId: string;
   operation: string;
   startTime: number;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 // Error context
 interface ErrorContext {
   user?: { id: string; email?: string };
   tags?: Record<string, string>;
-  extra?: Record<string, any>;
+  extra?: Record<string, unknown>;
   fingerprint?: string[];
 }
 
@@ -213,7 +213,7 @@ export class Observability {
   /**
    * Start a performance span
    */
-  startSpan(operation: string, data?: Record<string, any>): string {
+  startSpan(operation: string, data?: Record<string, unknown>): string {
     const spanId = `span_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
     this.activeSpans.set(spanId, {
@@ -255,7 +255,7 @@ export class Observability {
   async trace<T>(
     operation: string,
     fn: () => Promise<T>,
-    data?: Record<string, any>
+    data?: Record<string, unknown>
   ): Promise<T> {
     const spanId = this.startSpan(operation, data);
 
@@ -335,7 +335,7 @@ export class Observability {
   /**
    * Get metrics summary
    */
-  getMetricsSummary(): Record<string, any> {
+  getMetricsSummary(): Record<string, unknown> {
     return {
       errors: this.metrics.getAggregated('errors', 3600000), // 1 hour
       apiLatency: this.metrics.getAggregated('api.latency', 3600000),
@@ -349,7 +349,7 @@ export class Observability {
   /**
    * Set user context for error tracking
    */
-  setUser(user: { id: string; email?: string; username?: string }): void {
+  setUser(_user: { id: string; email?: string; username?: string }): void {
     // Sentry.setUser(user);
     logger.info('Observability user context set');
   }
@@ -365,7 +365,7 @@ export class Observability {
   /**
    * Add breadcrumb for debugging
    */
-  addBreadcrumb(message: string, category: string, data?: Record<string, any>): void {
+  addBreadcrumb(message: string, category: string, data?: Record<string, unknown>): void {
     // Sentry.addBreadcrumb({
     //   message,
     //   category,
@@ -380,10 +380,26 @@ export class Observability {
 // Singleton instance
 export const observability = Observability.getInstance();
 
+// Middleware request/response shapes
+interface ObsMiddlewareRequest {
+  url?: string;
+  method?: string;
+  query?: Record<string, unknown>;
+  body?: unknown;
+  headers?: Record<string, unknown>;
+}
+
+interface ObsMiddlewareResponse {
+  statusCode?: number;
+  end: (...args: unknown[]) => unknown;
+  status(code: number): ObsMiddlewareResponse;
+  json(body: unknown): unknown;
+}
+
 // Express/Vercel middleware for API instrumentation
 export function observabilityMiddleware(
-  req: any,
-  res: any,
+  req: ObsMiddlewareRequest,
+  res: ObsMiddlewareResponse,
   next: () => void
 ): void {
   const startTime = Date.now();
@@ -395,7 +411,7 @@ export function observabilityMiddleware(
 
   // Capture response
   const originalEnd = res.end;
-  res.end = function (...args: any[]) {
+  res.end = function (...args: unknown[]) {
     const duration = Date.now() - startTime;
     const statusCode = res.statusCode || 200;
 
@@ -410,9 +426,9 @@ export function observabilityMiddleware(
 // Error handler middleware
 export function errorHandlerMiddleware(
   error: Error,
-  req: any,
-  res: any,
-  next: () => void
+  req: ObsMiddlewareRequest,
+  res: ObsMiddlewareResponse,
+  _next: () => void
 ): void {
   const eventId = observability.captureError(error, {
     tags: {

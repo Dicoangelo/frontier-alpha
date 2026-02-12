@@ -155,8 +155,8 @@ export function Portfolio() {
   const cashBalance = portfolio?.data?.cash || 0;
   const totalValue = portfolio?.data?.totalValue || 0;
 
-  // Add Position Form Component (reused in both inline and bottom sheet)
-  const AddPositionForm = ({ onCancel }: { onCancel: () => void }) => (
+  // Add Position Form (reused in both inline and bottom sheet)
+  const renderAddPositionForm = (onCancel: () => void) => (
     <form onSubmit={handleAdd} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Symbol</label>
@@ -551,12 +551,10 @@ export function Portfolio() {
         title="Add New Position"
         height="auto"
       >
-        <AddPositionForm
-          onCancel={() => {
+        {renderAddPositionForm(() => {
             addPositionSheet.close();
             setFormData({ symbol: '', shares: '', avgCost: '' });
-          }}
-        />
+          })}
       </BottomSheet>
 
       {/* Share Modal */}

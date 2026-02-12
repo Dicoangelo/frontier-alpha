@@ -1,0 +1,743 @@
+{
+  "name": "frontier-alpha-v2-world-class",
+  "description": "Comprehensive step-change upgrade of Frontier Alpha from Phase 1 prototype to world-class cognitive factor intelligence platform. Fixes 8 critical security issues, delivers UI/UX polish to Bloomberg-meets-Stripe standards, and introduces the CVRF Belief Constellation as a breakthrough differentiator.",
+  "branchName": "ralph/v2-world-class-step-change",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Rotate all exposed secrets and secure environment config",
+      "description": "As a platform operator, I want all API keys, database credentials, and service tokens rotated and properly secured so that no credentials are exposed in the codebase.",
+      "acceptanceCriteria": [
+        "All API keys in .env are rotated (Polygon, Alpha Vantage, Supabase service key, PostgreSQL password)",
+        ".env is in .gitignore and verified not tracked by git",
+        ".env.example contains only placeholder values with NO real keys",
+        "Hardcoded Supabase URL fallback in src/middleware/auth.ts:5 is removed — app fails explicitly if env vars are missing",
+        "Hardcoded fallback in src/lib/supabase.ts:5-6 is removed",
+        "Server refuses to start if critical env vars (SUPABASE_URL, SUPABASE_SERVICE_KEY, POLYGON_API_KEY) are missing — add startup validation",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "CRITICAL P0 — exposed secrets in .env file including Supabase service key JWT, Polygon/Alpha Vantage API keys, and PostgreSQL credentials",
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-002",
+      "title": "Fix XSS vulnerability in Help component",
+      "description": "As a user, I want the help system to be safe from cross-site scripting so that my session tokens and financial data cannot be stolen.",
+      "acceptanceCriteria": [
+        "dangerouslySetInnerHTML removed from client/src/pages/Help.tsx:160-176",
+        "dangerouslySetInnerHTML removed from client/src/components/help/HelpPanel.tsx:455-465",
+        "Markdown rendering uses DOMPurify or react-markdown instead of regex + innerHTML",
+        "Unit test added: injecting <script>alert('xss')</script> in help content renders as escaped text, not executable",
+        "Unit test added: injecting <img src=x onerror=...> renders as escaped text",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "CRITICAL P0 — XSS via dangerouslySetInnerHTML with regex-based markdown processing",
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-003",
+      "title": "Add authentication to all sensitive endpoints",
+      "description": "As a platform operator, I want all data-access endpoints to require valid authentication so that user data is protected.",
+      "acceptanceCriteria": [
+        "api/v1/trading/account.ts requires valid JWT before returning any data",
+        "api/v1/cvrf/episodes.ts requires valid JWT",
+        "api/v1/portfolio/index.ts requires valid JWT",
+        "All api/v1/settings/* endpoints require valid JWT",
+        "Unauthenticated requests return { success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } } with HTTP 401",
+        "Test added: request to /api/v1/trading/account without token returns 401",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "P0 — trading/account endpoint returns buying power and portfolio value without auth check",
+      "dependsOn": [
+        "US-001"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-004",
+      "title": "Create theme constants file and CSS custom properties",
+      "description": "As a developer, I want a centralized theme system so that all components use consistent colors, spacing, and dark mode values.",
+      "acceptanceCriteria": [
+        "New file client/src/lib/theme.ts created with all color constants (primary, secondary, success, danger, warning, muted, backgrounds, borders)",
+        "CSS custom properties defined for --color-positive, --color-negative, --color-primary, --color-accent",
+        "Dark mode variables properly defined (no hardcoded bg-gray-900 or text-blue-500)",
+        "Theme exported as both CSS variables and TypeScript constants for use in components",
+        "Existing CSS custom properties (--color-text, --color-bg-tertiary, etc.) consolidated into theme file",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Foundation for all UI stories — hardcoded colors found across 20+ components",
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-005",
+      "title": "Setup structured logger with pino",
+      "description": "As a developer, I want a structured logging system so that production logs are searchable, alertable, and don't leak sensitive data.",
+      "acceptanceCriteria": [
+        "pino installed and configured in src/lib/logger.ts",
+        "Logger includes: timestamp, level, requestId, service name fields",
+        "Sensitive data redaction configured (emails, API keys, portfolio values, user IDs)",
+        "JSON output in production, pretty-print in development",
+        "Logger exported and available for import across all server-side files",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Foundation for US-012 — 40+ console.* calls currently leak sensitive data to production logs",
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-006",
+      "title": "Create standardized error response middleware",
+      "description": "As a frontend developer, I want all API endpoints to return errors in the same format so that client-side error handling is predictable.",
+      "acceptanceCriteria": [
+        "Error response schema defined and exported: { success: false, error: { code: string, message: string, details?: object } }",
+        "Helper functions created: badRequest(), unauthorized(), notFound(), internalError() that return standardized responses",
+        "Auth errors use code 'UNAUTHORIZED' with HTTP 401",
+        "Validation errors use code 'VALIDATION_ERROR' with HTTP 400 and include field-level details",
+        "Server errors use code 'INTERNAL_ERROR' with HTTP 500 — no technical details exposed to client",
+        "Error messages are human-friendly (no 'PGRST116 JWT expired' — instead 'Please log in again')",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Foundation for US-013, US-014 — current API has 3 different error formats across endpoints",
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-007",
+      "title": "Build toast notification component",
+      "description": "As a user, I want a toast notification system so that I receive immediate visual feedback when I perform any action.",
+      "acceptanceCriteria": [
+        "Toast component created at client/src/components/shared/Toast.tsx with success/error/warning/info variants",
+        "Toast provider wraps the app — accessible from any component via useToast() hook",
+        "Toasts auto-dismiss after 4 seconds",
+        "Toasts are stackable (multiple can show at once)",
+        "Toasts have role='alert' for accessibility",
+        "Success toasts use green accent, error toasts use red, warning uses yellow",
+        "Toasts include optional action button (e.g., 'Undo')",
+        "Toast animations: slide in from top-right, fade out",
+        "Verify in browser: toasts render correctly in both light and dark mode",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Foundation for US-021 — currently zero feedback on any user mutation (add/update/delete position) [SKIPPED - handled by other session]",
+      "dependsOn": []
+    },
+    {
+      "id": "US-008",
+      "title": "Add dataSource field to API responses for mock data detection",
+      "description": "As a user, I want API responses to clearly indicate whether data is live or simulated so that I never make trading decisions based on mock prices.",
+      "acceptanceCriteria": [
+        "All API endpoints that can fall back to mock data include dataSource: 'mock' | 'live' in response body",
+        "X-Data-Source header added to all responses ('mock' or 'live')",
+        "Portfolio optimize endpoint (api/v1/portfolio/optimize.ts) includes dataSource when using fallback prices",
+        "Trading account endpoint (api/v1/trading/account.ts) returns HTTP 503 with { success: false, error: { code: 'BROKER_UNAVAILABLE' } } when broker fails — NOT HTTP 200 with mock data",
+        "Quotes stream endpoint (api/v1/quotes/stream.ts) includes dataSource in each message",
+        "Factor calculation endpoints include dataSource when using mock SPY prices",
+        "At least 5 affected endpoints have dataSource field verified with tests",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "P0 — 12+ endpoints silently fall back to mock data. Users can make trading decisions on fake prices.",
+      "dependsOn": [
+        "US-006"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-009",
+      "title": "Add mock data banner to frontend UI",
+      "description": "As a user, I want a visible banner when I'm viewing simulated data so that I'm always aware of the data source.",
+      "acceptanceCriteria": [
+        "New component client/src/components/shared/MockDataBanner.tsx created",
+        "Persistent yellow/amber banner appears at top of page when any API response has dataSource: 'mock'",
+        "Banner text: 'Demo Mode — Using simulated data. Connect API keys for live market data.'",
+        "Banner is dismissible but reappears on page navigation if still in mock mode",
+        "Banner uses theme colors from US-004",
+        "Banner is responsive and doesn't overlap content on mobile",
+        "Verify in browser: banner appears when API returns mock data, disappears when live",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Frontend counterpart to US-008 — visual indicator that data is simulated [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-008",
+        "US-004"
+      ]
+    },
+    {
+      "id": "US-010",
+      "title": "Encrypt portfolio sharing mechanism",
+      "description": "As a user, I want shared portfolio links to be secure so that my holdings are not visible in plaintext in URLs.",
+      "acceptanceCriteria": [
+        "client/src/components/portfolio/PortfolioExport.tsx no longer uses btoa(JSON.stringify(positions)) in URLs",
+        "New server-side endpoint POST /api/v1/portfolio/share generates a random 32-char hex share token",
+        "Portfolio snapshot stored in Supabase portfolio_shares table",
+        "Share URL format: ${origin}/shared/${token}",
+        "GET /api/v1/portfolio/shared/:token retrieves the snapshot",
+        "Share tokens expire after 30 days (expiry column in table)",
+        "SharedPortfolio.tsx page updated to fetch from API instead of decoding URL params",
+        "Old base64 share links show a user-friendly error message",
+        "Supabase migration added for portfolio_shares table",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "P0 — base64-encoded portfolio data in URL exposes holdings to browser history, logs, referer headers [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-001"
+      ]
+    },
+    {
+      "id": "US-011",
+      "title": "Add pagination to CVRF episodes endpoint",
+      "description": "As a user with extensive trading history, I want the episodes endpoint to be paginated so that the app doesn't crash or timeout.",
+      "acceptanceCriteria": [
+        "api/v1/cvrf/episodes.ts accepts ?limit=50&offset=0 query parameters",
+        "Default limit is 50 episodes when no parameters provided",
+        "Response includes { total, limit, offset, hasMore } pagination metadata",
+        "Decisions returned as count per episode by default — add ?expand=decisions for full data",
+        "Client-side CVRF page updated to use paginated fetching with Load More or infinite scroll",
+        "Test added: 100 episodes returns only first 50 with hasMore: true",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "P0 — no limit on episodes query. 1000 episodes x 100 decisions = 100K objects per request",
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-012",
+      "title": "Replace console.* calls with structured logger",
+      "description": "As a developer, I want all server-side logging to use the structured logger so that production logs are clean and don't leak PII.",
+      "acceptanceCriteria": [
+        "All console.log, console.error, console.warn in src/ directory replaced with logger.info/error/warn",
+        "AlertDelivery.ts no longer logs email recipients and content (lines 145-148)",
+        "PortfolioService.ts uses logger with requestId context instead of raw console.error",
+        "AlpacaAdapter.ts uses structured logger for all connection and error events",
+        "RiskAlertSystem.ts uses logger instead of console.error for persistence failures",
+        "index.ts startup banner uses logger.info instead of console.log",
+        "At least 40 console.* calls replaced",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "P1 — 40+ console.* calls leak emails, portfolio values, API errors, user IDs to production logs",
+      "dependsOn": [
+        "US-005"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-013",
+      "title": "Apply standardized error format across all API endpoints",
+      "description": "As a frontend developer, I want every API endpoint to use the same error format so that the client error handler works consistently.",
+      "acceptanceCriteria": [
+        "api/v1/auth/login.ts uses standardized error helpers from US-006",
+        "api/v1/trading/connect.ts uses standardized errors (currently returns bare string)",
+        "api/v1/portfolio/optimize.ts uses standardized errors",
+        "api/v1/cvrf/* endpoints use standardized errors",
+        "No endpoint returns { success: true, data: { error: 'string' } } pattern (mixed success/error eliminated)",
+        "Client-side api/client.ts error interceptor updated to parse standardized format",
+        "At least 10 endpoints updated to use standardized format",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "P2 — three different error response formats found across API endpoints",
+      "dependsOn": [
+        "US-006"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-014",
+      "title": "Add Zod input validation on critical endpoints",
+      "description": "As a platform operator, I want all user-facing API inputs validated with Zod schemas so that malicious or malformed requests are rejected.",
+      "acceptanceCriteria": [
+        "Zod installed as dependency",
+        "Portfolio optimize endpoint validates symbols as z.array(z.string().regex(/^[A-Z0-9.]{1,10}$/))",
+        "Portfolio positions endpoint validates: symbol (uppercase), shares (positive number), avgCost (positive number)",
+        "CVRF episode endpoints validate: watchlist symbols, target return (positive), max drawdown (positive, < 100)",
+        "Trading endpoints validate: order type enum, quantity (positive), side enum",
+        "All validation errors return standardized format from US-006",
+        "At least 5 critical endpoints have Zod validation",
+        "Test added: sending invalid symbol format returns 400 with VALIDATION_ERROR",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "P2 — symbols not validated as ticker format. Attack vector: symbols: ['../../../../etc/passwd']",
+      "dependsOn": [
+        "US-006"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-015",
+      "title": "Fix Landing page hero and call-to-action",
+      "description": "As a new visitor, I want the landing page to immediately communicate the product's value with clear visual hierarchy.",
+      "acceptanceCriteria": [
+        "Hero text has proper contrast — white text has backdrop gradient overlay ensuring WCAG AA compliance",
+        "Primary CTA button styled with Metaventions accent color (#7B2CFF), prominent size, not just a text link",
+        "Social proof section added below hero: '80+ factors | 140K+ data points | Powered by Metaventions AI'",
+        "Footer links (Documentation, API) point to actual pages — no href='#' placeholders",
+        "Landing page renders correctly on mobile (320px viewport)",
+        "Page uses theme constants from US-004",
+        "Verify in browser: hero text readable on all viewport sizes, CTA button prominent",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "First impression — hero text has white-on-light contrast issue, CTA is unclear [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-004"
+      ]
+    },
+    {
+      "id": "US-016",
+      "title": "Make portfolio table mobile-responsive",
+      "description": "As a mobile user, I want to see my full portfolio information without horizontal scrolling.",
+      "acceptanceCriteria": [
+        "Portfolio.tsx renders card layout on screens < 640px instead of table",
+        "Each position card shows: symbol (bold), shares, P&L (colored), action buttons",
+        "Cost basis and current price shown as secondary text in card",
+        "Cards have 44px minimum tap targets for edit/delete buttons",
+        "Pull-to-refresh works on mobile card layout",
+        "Edit mode works on mobile (bottom sheet or inline)",
+        "Uses theme colors from US-004 for P&L coloring",
+        "Verify in browser: portfolio page at 375px viewport shows cards, not broken table",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Currently hides critical columns (Avg Cost, Current) on mobile. Table requires horizontal scroll. [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-004"
+      ]
+    },
+    {
+      "id": "US-017",
+      "title": "Add loading, error, and empty states to Dashboard and Portfolio",
+      "description": "As a user, I want Dashboard and Portfolio to handle all states gracefully so I always understand what's happening.",
+      "acceptanceCriteria": [
+        "Dashboard.tsx shows skeleton loaders (not spinner) during initial data fetch for all cards",
+        "Dashboard error state includes user-friendly message and 'Try Again' button — no technical jargon",
+        "Dashboard empty state (no portfolio) shows helpful message with 'Create Portfolio' CTA",
+        "Portfolio.tsx error state uses NetworkError or DataLoadError consistently",
+        "All error messages use human-friendly language (no PGRST codes)",
+        "Uses toast component from US-007 for mutation feedback on Portfolio page",
+        "Verify in browser: simulate slow network — skeleton loaders appear correctly",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Dashboard has infinite fallback chain on 401. Portfolio has no mutation feedback. [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-004",
+        "US-007"
+      ]
+    },
+    {
+      "id": "US-018",
+      "title": "Add loading, error, and empty states to secondary pages",
+      "description": "As a user, I want Optimize, Trading, Factors, and Settings pages to handle all states gracefully.",
+      "acceptanceCriteria": [
+        "Optimize.tsx shows loading state with progress indication during Monte Carlo optimization",
+        "Trading.tsx shows clear connection state: connected (green), disconnected (red), connecting (yellow)",
+        "Factors.tsx shows skeleton loaders for factor bars during data fetch",
+        "Settings.tsx shows save confirmation and loading state during updates",
+        "All error states include user-friendly message and 'Try Again' button",
+        "All empty states include helpful text and primary action CTA",
+        "Uses toast component from US-007 for Settings save feedback",
+        "Verify in browser: each page shows appropriate loading/error/empty states",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Multiple pages have inconsistent loading behavior — some show nothing during fetch [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-004",
+        "US-007"
+      ]
+    },
+    {
+      "id": "US-019",
+      "title": "Fix risk metrics thresholds and add context",
+      "description": "As a user, I want risk metrics to be accurate and understandable so I can make informed decisions.",
+      "acceptanceCriteria": [
+        "Sharpe Ratio: 'Good' threshold updated from >= 1.0 to >= 1.5, with tooltip explaining meaning",
+        "Volatility: badge explains context — '20% is high for conservative portfolios, normal for growth'",
+        "Max Drawdown: 'Caution' at 5%, 'Warning' at 10%, 'Critical' at 20%",
+        "All risk metrics include benchmark comparison (vs SPY or user-selected benchmark)",
+        "Each metric has tooltip explaining what it means in plain English",
+        "Factor t-stat display (FactorBar.tsx:149-151) replaced with 'Strong Signal' / 'Moderate' / 'Weak' badges",
+        "FactorBar tooltip (FactorBar.tsx:108) uses theme background — not hardcoded bg-gray-900",
+        "Verify in browser: risk metrics show helpful context, dark mode tooltips visible",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Misleading thresholds: Sharpe 1.0 marked 'Good' (barely above risk-free). t-stat jargon unexplained. [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-004"
+      ]
+    },
+    {
+      "id": "US-020",
+      "title": "Improve accessibility across all components",
+      "description": "As a user with assistive technology, I want the platform to be navigable and understandable.",
+      "acceptanceCriteria": [
+        "Active nav link has aria-current='page' attribute",
+        "Portfolio table has role='table' and proper scope attributes on headers",
+        "All icon-only buttons have descriptive aria-label attributes (audit existing, add missing)",
+        "Color-coded status indicators have text or icon alternatives (not color-only)",
+        "Focus styles are visible on all interactive elements (consistent focus ring using theme accent)",
+        "Dashboard risk gauge is keyboard accessible",
+        "Sign Out button has confirmation dialog before executing",
+        "Verify in browser: tab through main navigation — focus ring visible on all interactive elements",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Limited ARIA attributes, missing keyboard hints, color-only status indicators [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-004"
+      ]
+    },
+    {
+      "id": "US-021",
+      "title": "Wire toast notifications to all user mutations",
+      "description": "As a user, I want every action I take to produce immediate visual feedback confirming success or showing errors.",
+      "acceptanceCriteria": [
+        "Add position -> green toast 'Position added: AAPL (100 shares)'",
+        "Update position -> green toast 'Position updated: AAPL'",
+        "Delete position -> toast with undo option 'Position removed: AAPL [Undo]'",
+        "Settings save -> green toast 'Settings saved'",
+        "Share portfolio -> green toast 'Share link copied to clipboard'",
+        "API error on any mutation -> red toast with user-friendly error message and retry option",
+        "CVRF episode start/close -> green toast confirming action",
+        "Verify in browser: perform each action — toast appears and auto-dismisses after 4s",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "Currently zero feedback on mutations. User adds position — no confirmation it saved. [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-007",
+        "US-017"
+      ]
+    },
+    {
+      "id": "US-022",
+      "title": "Build CVRF belief state API endpoint",
+      "description": "As a frontend developer, I need an API endpoint that returns the current CVRF belief state and historical snapshots for visualization.",
+      "acceptanceCriteria": [
+        "GET /api/v1/cvrf/beliefs/current returns current belief state: array of { factorId, factorName, category, conviction (0-1), direction ('bullish'|'bearish'|'neutral'), lastUpdated }",
+        "GET /api/v1/cvrf/beliefs/timeline?days=30 returns daily belief snapshots for the specified period",
+        "GET /api/v1/cvrf/beliefs/correlations returns factor-to-factor correlation matrix",
+        "Endpoints require JWT authentication",
+        "Responses use standardized error format from US-006",
+        "Beliefs derived from existing CVRF episode/decision data — leverages PersistentCVRFManager",
+        "Test added: endpoint returns 80+ factors with conviction scores",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "Foundation for CVRF Belief Constellation visualization. No competitor has visible belief system.",
+      "dependsOn": [
+        "US-011",
+        "US-006"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-023",
+      "title": "Build CVRF Belief Constellation interactive visualization",
+      "description": "As a user, I want to see an interactive network graph of the CVRF's current factor convictions so I can understand and trust the AI's reasoning at a glance.",
+      "acceptanceCriteria": [
+        "New component client/src/components/cvrf/BeliefConstellation.tsx renders interactive 2D force-directed graph",
+        "Each of the 80+ factors rendered as a node using D3.js force simulation",
+        "Node size encodes conviction strength (0.0 to 1.0)",
+        "Node color: green gradient for bullish, red for bearish, gray for neutral",
+        "Edges connect correlated factors — thickness proportional to correlation strength",
+        "Hovering a node shows tooltip: factor name, category, conviction score, direction, last update",
+        "Clicking a node shows detail panel: which portfolio holdings are most affected",
+        "Graph renders at 60fps with 80+ nodes on modern browsers",
+        "Responsive: full graph on desktop, simplified cluster view on mobile",
+        "Integrated into existing CVRF page as primary visualization",
+        "Uses theme colors from US-004",
+        "Verify in browser: constellation renders with real CVRF data, nodes are interactive",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "Crown jewel feature. Industry's first visible, interactive, self-improving AI belief system. Scored 9.75/10 in research. [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-022",
+        "US-004"
+      ]
+    },
+    {
+      "id": "US-024",
+      "title": "Add CVRF conviction timeline and belief diff",
+      "description": "As a user, I want to see how CVRF beliefs evolved over time and compare before/after states of major events.",
+      "acceptanceCriteria": [
+        "New component client/src/components/cvrf/ConvictionTimeline.tsx shows horizontal scrollable timeline",
+        "Each major belief shift annotated with triggering event (earnings, macro data, sentiment)",
+        "Belief Diff view: split-screen showing constellation state before and after a selected event",
+        "Changed nodes highlighted with animated transitions between states",
+        "Timeline filterable by factor category (style, quality, volatility, sentiment, macro, sector)",
+        "Fetches data from /api/v1/cvrf/beliefs/timeline endpoint (US-022)",
+        "Integrated into CVRF page alongside BeliefConstellation",
+        "Verify in browser: scroll timeline, click event — belief diff animates correctly",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "Shows CVRF learning over time — key for investor demo 'the system gets smarter' narrative [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-022",
+        "US-004"
+      ]
+    },
+    {
+      "id": "US-025",
+      "title": "Add 'Why This Trade' chain-of-thought traces",
+      "description": "As a user, I want every portfolio recommendation to include a structured reasoning trace from CVRF.",
+      "acceptanceCriteria": [
+        "New API endpoint GET /api/v1/explain/trade/:symbol returns CVRF chain-of-thought",
+        "Response includes: top 5 contributing factors with conviction scores, confidence interval",
+        "GPT-4o synthesizes quantitative data into 2-3 paragraph natural language explanation",
+        "Template fallback if GPT-4o unavailable (uses existing CognitiveExplainer template system)",
+        "New component client/src/components/explainer/TradeReasoning.tsx renders chain-of-thought",
+        "Accessible from portfolio table: click any position -> 'Why?' button in actions column",
+        "Accessible from optimization results: each suggested change includes reasoning link",
+        "Verify in browser: click 'Why?' on a position — reasoning panel opens with CVRF explanation",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "Makes CVRF reasoning tangible — every recommendation is explainable and auditable [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-022"
+      ]
+    },
+    {
+      "id": "US-026",
+      "title": "Add CVRF belief impact panel to earnings page",
+      "description": "As a user, I want to see exactly how each earnings release changes the CVRF's beliefs.",
+      "acceptanceCriteria": [
+        "New component client/src/components/earnings/BeliefImpactPanel.tsx",
+        "For each earnings event: affected factors, conviction change (e.g., 'quality: 0.71 -> 0.78'), net portfolio impact",
+        "Color-coded: green for conviction increase, red for decrease, gray for unchanged",
+        "Panel fetches belief data from /api/v1/cvrf/beliefs/current and compares with historical",
+        "Integrated into Earnings page alongside calendar and forecast views",
+        "Responsive on mobile",
+        "Uses theme colors from US-004",
+        "Verify in browser: earnings page shows belief impact for each upcoming earning",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "Shows how earnings data updates CVRF in real-time. Unique vs Bloomberg/Boosted.ai. [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-022",
+        "US-004"
+      ]
+    },
+    {
+      "id": "US-027",
+      "title": "Add earnings calendar heatmap",
+      "description": "As a user, I want a visual calendar where upcoming earnings are color-coded by expected CVRF impact.",
+      "acceptanceCriteria": [
+        "New component client/src/components/earnings/EarningsHeatmap.tsx renders monthly calendar grid",
+        "Each day cell color-coded by aggregate expected CVRF impact of that day's earnings",
+        "Holdings with fragile CVRF conviction (near reversal thresholds) flagged with warning indicator",
+        "Clicking a day shows list of earnings with expected impact details",
+        "Calendar navigable (prev/next month)",
+        "Responsive: scrollable week view on mobile",
+        "Uses theme colors from US-004",
+        "Verify in browser: heatmap renders with earnings data, clicking days shows details",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "Visual earnings impact at a glance — helps users prioritize what to watch [SKIPPED - handled by other session]",
+      "dependsOn": [
+        "US-004"
+      ]
+    },
+    {
+      "id": "US-028",
+      "title": "Add WebSocket reconnection logic",
+      "description": "As a user viewing real-time quotes, I want the connection to automatically reconnect if it drops.",
+      "acceptanceCriteria": [
+        "Client-side WebSocket manager (client/src/api/websocket.ts) implements automatic reconnection",
+        "Exponential backoff: 1s, 2s, 4s, 8s, 16s — max 5 retries",
+        "Visual indicator in UI: green dot = connected, yellow = reconnecting, red = disconnected",
+        "Subtle banner appears when disconnected: 'Live feed disconnected. Reconnecting...'",
+        "Banner auto-dismisses on successful reconnection",
+        "Data refreshes via REST fallback during reconnection gap",
+        "Server-side WebSocket handler (src/index.ts) handles graceful reconnection",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "WebSocket closes on error — quotes silently stop updating with no reconnect attempt [SKIPPED - handled by other session]",
+      "dependsOn": []
+    },
+    {
+      "id": "US-029",
+      "title": "Add rate limit headers to API responses",
+      "description": "As an API consumer, I want rate limit information in response headers so I can manage my request budget.",
+      "acceptanceCriteria": [
+        "All rate-limited responses include RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset headers",
+        "api/lib/rateLimiter.ts updated to inject headers into every response",
+        "429 responses include Retry-After header with seconds until reset",
+        "Client-side API client reads rate limit headers and logs warning when < 10% remaining",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Missing standard rate limit headers. Users get surprised 429 errors.",
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-030",
+      "title": "Add smoke tests for critical user flows",
+      "description": "As a developer, I want smoke tests covering the most critical user paths so regressions are caught before deploy.",
+      "acceptanceCriteria": [
+        "Test: Auth flow — signup, login, token refresh, logout return expected response shapes",
+        "Test: Portfolio CRUD — create, add position, update position, delete position",
+        "Test: Factor calculation — request factors for known symbols, verify response structure",
+        "Test: CVRF episode — start episode, record decision, close episode",
+        "Test: Earnings endpoint — fetch upcoming earnings, verify required fields present",
+        "All tests use MSW for API mocking (no real API calls)",
+        "All tests run in under 2 minutes total",
+        "At least 15 new test cases added",
+        "npm run typecheck passes",
+        "npm run lint passes",
+        "npm test passes",
+        "npm run build passes"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "97% of frontend untested. These smoke tests cover the most critical paths.",
+      "dependsOn": [
+        "US-003",
+        "US-011",
+        "US-013"
+      ],
+      "completionNotes": "Completed by agent"
+    }
+  ],
+  "metadata": {
+    "updatedAt": "2026-02-12T07:52:35.184Z"
+  }
+}

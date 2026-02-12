@@ -11,6 +11,8 @@ import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { DataLoadError } from '@/components/shared/EmptyState';
 import { useUpcomingEarnings, useEarningsForecast, useRefreshForecast } from '@/hooks/useEarnings';
 
+const DEMO_SYMBOLS = ['NVDA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'JPM', 'V', 'JNJ'];
+
 export function Earnings() {
   const queryClient = useQueryClient();
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
@@ -24,7 +26,6 @@ export function Earnings() {
   });
 
   // Use portfolio symbols if available, otherwise use demo symbols
-  const DEMO_SYMBOLS = ['NVDA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'JPM', 'V', 'JNJ'];
   const symbols = useMemo(() => {
     const portfolioSymbols = portfolio?.positions?.map(p => p.symbol) || [];
     return portfolioSymbols.length > 0 ? portfolioSymbols : DEMO_SYMBOLS;

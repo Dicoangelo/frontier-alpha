@@ -327,7 +327,7 @@ export class SECFilingsParser {
     };
   }
 
-  private extractKeyMetrics(filing: SECFiling): KeyMetric[] {
+  private extractKeyMetrics(_filing: SECFiling): KeyMetric[] {
     // Mock key metric extraction
     return [
       { name: 'Revenue', value: 10.5 + Math.random() * 5, change: 0.08 + Math.random() * 0.1, unit: 'B$' },

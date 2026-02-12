@@ -111,7 +111,7 @@ async function validateApiKey(apiKey: string): Promise<{
  */
 async function authenticateWithJWT(
   request: FastifyRequest,
-  reply: FastifyReply
+  _reply: FastifyReply
 ): Promise<boolean> {
   const authHeader = request.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -153,7 +153,7 @@ async function authenticateWithJWT(
  */
 async function authenticateWithApiKey(
   request: FastifyRequest,
-  reply: FastifyReply
+  _reply: FastifyReply
 ): Promise<boolean> {
   const apiKey = extractApiKey(request);
   if (!apiKey) {

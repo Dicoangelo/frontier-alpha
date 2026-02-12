@@ -62,7 +62,7 @@ function buildChartData(episodes: CVRFEpisode[]): ChartDataPoint[] {
 
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: any[];
+  payload?: { payload: ChartDataPoint }[];
   label?: string;
 }
 
@@ -185,7 +185,7 @@ export function EpisodePerformanceChart() {
       </div>
 
       {/* Chart */}
-      <div className="h-72">
+      <div className="h-72" role="img" aria-label={`Episode performance chart showing ${metric} across ${chartData.length} episodes`}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, #e5e7eb)" />

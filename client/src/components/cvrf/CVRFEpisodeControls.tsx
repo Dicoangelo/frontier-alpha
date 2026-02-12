@@ -91,7 +91,7 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
       resetForm();
       onSuccess();
       onClose();
-    } catch (err) {
+    } catch {
       setError('Failed to record decision. Please try again.');
     }
   };

@@ -9,6 +9,7 @@ import axios, { type AxiosInstance } from 'axios';
 import { logger } from '../lib/logger.js';
 import {
   BrokerAdapter,
+  MockBrokerAdapter,
   type BrokerConfig,
   type BrokerAccount,
   type BrokerPosition,
@@ -19,6 +20,39 @@ import {
 const ALPACA_PAPER_URL = 'https://paper-api.alpaca.markets';
 const ALPACA_LIVE_URL = 'https://api.alpaca.markets';
 const ALPACA_DATA_URL = 'https://data.alpaca.markets';
+
+// Raw Alpaca API response shapes
+interface AlpacaRawPosition {
+  symbol: string;
+  qty: string;
+  market_value: string;
+  cost_basis: string;
+  unrealized_pl: string;
+  unrealized_plpc: string;
+  current_price: string;
+  avg_entry_price: string;
+}
+
+interface AlpacaRawOrder {
+  id: string;
+  client_order_id: string;
+  symbol: string;
+  qty: string;
+  side: string;
+  type: string;
+  time_in_force: string;
+  limit_price: string | null;
+  stop_price: string | null;
+  status: string;
+  filled_qty: string;
+  filled_avg_price: string | null;
+  created_at: string;
+  updated_at: string;
+  submitted_at: string | null;
+  filled_at: string | null;
+  expired_at: string | null;
+  canceled_at: string | null;
+}
 
 export class AlpacaAdapter extends BrokerAdapter {
   private client: AxiosInstance;
@@ -103,7 +137,7 @@ export class AlpacaAdapter extends BrokerAdapter {
    */
   async getPositions(): Promise<BrokerPosition[]> {
     const response = await this.client.get('/v2/positions');
-    return response.data.map((p: any) => this.mapPosition(p));
+    return response.data.map((p: AlpacaRawPosition) => this.mapPosition(p));
   }
 
   /**
@@ -113,15 +147,15 @@ export class AlpacaAdapter extends BrokerAdapter {
     try {
       const response = await this.client.get(`/v2/positions/${symbol}`);
       return this.mapPosition(response.data);
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
         return null;
       }
       throw error;
     }
   }
 
-  private mapPosition(data: any): BrokerPosition {
+  private mapPosition(data: AlpacaRawPosition): BrokerPosition {
     return {
       symbol: data.symbol,
       qty: parseFloat(data.qty),
@@ -144,7 +178,7 @@ export class AlpacaAdapter extends BrokerAdapter {
       throw new Error(validation.errors.join(', '));
     }
 
-    const payload: any = {
+    const payload: Record<string, string> = {
       symbol: orderReq.symbol.toUpperCase(),
       qty: orderReq.qty.toString(),
       side: orderReq.side,
@@ -175,8 +209,8 @@ export class AlpacaAdapter extends BrokerAdapter {
     try {
       const response = await this.client.get(`/v2/orders/${orderId}`);
       return this.mapOrder(response.data);
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
         return null;
       }
       throw error;
@@ -187,13 +221,13 @@ export class AlpacaAdapter extends BrokerAdapter {
    * Get orders with optional status filter
    */
   async getOrders(status?: string): Promise<Order[]> {
-    const params: any = { limit: 100 };
+    const params: Record<string, string | number> = { limit: 100 };
     if (status) {
       params.status = status;
     }
 
     const response = await this.client.get('/v2/orders', { params });
-    return response.data.map((o: any) => this.mapOrder(o));
+    return response.data.map((o: AlpacaRawOrder) => this.mapOrder(o));
   }
 
   /**
@@ -203,8 +237,8 @@ export class AlpacaAdapter extends BrokerAdapter {
     try {
       await this.client.delete(`/v2/orders/${orderId}`);
       return true;
-    } catch (error: any) {
-      if (error.response?.status === 404 || error.response?.status === 422) {
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && (error.response?.status === 404 || error.response?.status === 422)) {
         return false;
       }
       throw error;
@@ -224,18 +258,18 @@ export class AlpacaAdapter extends BrokerAdapter {
     }
   }
 
-  private mapOrder(data: any): Order {
+  private mapOrder(data: AlpacaRawOrder): Order {
     return {
       id: data.id,
       clientOrderId: data.client_order_id,
       symbol: data.symbol,
       qty: parseFloat(data.qty),
-      side: data.side,
-      type: data.type,
-      timeInForce: data.time_in_force,
+      side: data.side as Order['side'],
+      type: data.type as Order['type'],
+      timeInForce: data.time_in_force as Order['timeInForce'],
       limitPrice: data.limit_price ? parseFloat(data.limit_price) : undefined,
       stopPrice: data.stop_price ? parseFloat(data.stop_price) : undefined,
-      status: data.status.toLowerCase(),
+      status: data.status.toLowerCase() as Order['status'],
       filledQty: parseFloat(data.filled_qty),
       filledAvgPrice: data.filled_avg_price ? parseFloat(data.filled_avg_price) : undefined,
       createdAt: new Date(data.created_at),
@@ -310,6 +344,5 @@ export function createBroker(
   }
 
   // Fall back to mock broker
-  const { MockBrokerAdapter } = require('./BrokerAdapter');
   return new MockBrokerAdapter(fullConfig);
 }

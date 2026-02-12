@@ -327,7 +327,7 @@ export class MockBrokerAdapter extends BrokerAdapter {
     return true;
   }
 
-  async getQuote(symbol: string): Promise<{ bid: number; ask: number; last: number } | null> {
+  async getQuote(_symbol: string): Promise<{ bid: number; ask: number; last: number } | null> {
     // Return mock quote
     const basePrice = 100 + Math.random() * 100;
     return {

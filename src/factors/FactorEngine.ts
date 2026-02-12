@@ -13,7 +13,6 @@
  */
 
 import type { Factor, FactorExposure, FactorCategory, Price } from '../types/index.js';
-import { supabaseAdmin } from '../lib/supabase.js';
 import { logger } from '../lib/logger.js';
 
 // ============================================================================
@@ -599,7 +598,7 @@ export class FactorEngine {
     // Interest Rate Sensitivity
     if (macro.tenYearYield.length > 0) {
       const yieldChanges = this.calculateReturns(
-        macro.tenYearYield.map((v, i) => ({ close: v, timestamp: new Date() } as Price))
+        macro.tenYearYield.map((v, _i) => ({ close: v, timestamp: new Date() } as Price))
       );
       const beta = this.calculateBeta(returns, yieldChanges);
       exposures.push({

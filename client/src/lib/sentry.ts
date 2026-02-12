@@ -99,7 +99,7 @@ export function initSentry(): Promise<void> {
         integrations,
 
         // Scrub sensitive headers before sending
-        beforeSend(event: Record<string, any>, hint: Record<string, any>) {
+        beforeSend(event: Record<string, unknown>, hint: Record<string, unknown>) {
           if (event.request?.headers) {
             delete event.request.headers['authorization'];
             delete event.request.headers['cookie'];

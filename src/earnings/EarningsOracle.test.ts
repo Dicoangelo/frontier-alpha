@@ -5,7 +5,7 @@
  * and historical pattern analysis.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { EarningsOracle } from './EarningsOracle.js';
 
 describe('EarningsOracle', () => {

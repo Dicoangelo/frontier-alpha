@@ -92,7 +92,7 @@ export interface CVRFRiskAssessment {
     };
   };
   overEpisode: {
-    conceptualInsights: any[];
+    conceptualInsights: unknown[];
     metaPrompt: {
       optimizationDirection: string;
       keyLearnings: string[];

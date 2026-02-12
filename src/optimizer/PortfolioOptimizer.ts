@@ -195,7 +195,7 @@ export class PortfolioOptimizer {
     const iterations = 1000;
     
     for (let iter = 0; iter < iterations; iter++) {
-      const vol = this.portfolioVolatility(weights, sigma);
+      const _vol = this.portfolioVolatility(weights, sigma);
       const riskContributions = this.riskContributions(weights, sigma);
       const targetContribution = 1 / n;
       

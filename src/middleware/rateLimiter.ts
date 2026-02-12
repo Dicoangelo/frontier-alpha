@@ -193,8 +193,8 @@ export async function rateLimiterMiddleware(
   let limit: number;
 
   // Check if request was authenticated via API key (set by apiKeyAuthMiddleware)
-  const apiKeyId = (request as any).apiKeyId as string | undefined;
-  const apiKeyRateLimit = (request as any).apiKeyRateLimit as number | undefined;
+  const apiKeyId = (request as unknown as Record<string, unknown>).apiKeyId as string | undefined;
+  const apiKeyRateLimit = (request as unknown as Record<string, unknown>).apiKeyRateLimit as number | undefined;
 
   if (apiKeyId) {
     // Authenticated via API key
@@ -245,8 +245,8 @@ export function createRateLimiter(config: Partial<RateLimitConfig> = {}) {
     request: FastifyRequest,
     reply: FastifyReply
   ): Promise<void> {
-    const apiKeyId = (request as any).apiKeyId as string | undefined;
-    const apiKeyRateLimit = (request as any).apiKeyRateLimit as number | undefined;
+    const apiKeyId = (request as unknown as Record<string, unknown>).apiKeyId as string | undefined;
+    const apiKeyRateLimit = (request as unknown as Record<string, unknown>).apiKeyRateLimit as number | undefined;
 
     let identifier: string;
     let limit: number;

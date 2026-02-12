@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
@@ -7,6 +7,8 @@ import { SkipToMain } from '@/components/shared/VisuallyHidden';
 import { HelpPanel, useHelpPanel, FloatingHelpButton } from '@/components/help';
 import { ConnectionStatus } from '@/components/shared/ConnectionStatus';
 import { MockDataBanner } from '@/components/shared/MockDataBanner';
+import { KeyboardHelpModal } from '@/components/shared/KeyboardHelpModal';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,8 +16,19 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const location = useLocation();
-  const { isOpen: helpOpen, openHelp, closeHelp, initialTopic } = useHelpPanel();
+  const { isOpen: helpOpen, openHelp, closeHelp, toggleHelp, initialTopic } = useHelpPanel();
+
+  const handleToggleShortcutsModal = useCallback(() => {
+    setShortcutsOpen((prev) => !prev);
+  }, []);
+
+  // Keyboard shortcuts for navigation and modal toggling
+  useKeyboardShortcuts({
+    onToggleHelp: toggleHelp,
+    onToggleShortcutsModal: handleToggleShortcutsModal,
+  });
 
   // Close sidebar when pressing Escape
   useEffect(() => {
@@ -98,6 +111,9 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Help Panel */}
       <HelpPanel isOpen={helpOpen} onClose={closeHelp} initialTopic={initialTopic} />
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardHelpModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </div>
   );
 }

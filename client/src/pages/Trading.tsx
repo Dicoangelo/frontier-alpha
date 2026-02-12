@@ -168,8 +168,9 @@ export default function Trading() {
                   size="sm"
                   onClick={() => refetchPositions()}
                   disabled={positionsLoading}
+                  aria-label="Refresh positions"
                 >
-                  <RefreshCw className={`w-4 h-4 ${positionsLoading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 ${positionsLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
                 </Button>
               </div>
 
@@ -375,7 +376,7 @@ function ConnectionSettingsModal({
       <Card className="w-full max-w-lg p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-[var(--color-text)]">Broker Connection</h2>
-          <button onClick={onClose} className="p-1 hover:bg-[var(--color-bg-secondary)] rounded">
+          <button onClick={onClose} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[var(--color-bg-secondary)] rounded">
             <span className="text-2xl text-[var(--color-text-muted)]">&times;</span>
           </button>
         </div>
@@ -424,7 +425,7 @@ function ConnectionSettingsModal({
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="PK..."
-              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -437,16 +438,16 @@ function ConnectionSettingsModal({
               value={apiSecret}
               onChange={(e) => setApiSecret(e.target.value)}
               placeholder="Your secret key"
-              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
             <input
               type="checkbox"
               checked={paperTrading}
               onChange={(e) => setPaperTrading(e.target.checked)}
-              className="w-4 h-4 rounded border-[var(--color-border)] text-blue-600"
+              className="w-5 h-5 rounded border-[var(--color-border)] text-blue-600"
             />
             <span className="text-sm text-[var(--color-text-secondary)]">Paper trading (recommended)</span>
           </label>
@@ -459,7 +460,7 @@ function ConnectionSettingsModal({
 
           {connectBroker.isError && (
             <div className="p-3 bg-red-500/10 rounded-lg text-sm text-red-400">
-              {(connectBroker.error as any)?.response?.data?.error || 'Connection failed. Check your credentials.'}
+              {(connectBroker.error as Error)?.message || 'Connection failed. Check your credentials.'}
             </div>
           )}
 

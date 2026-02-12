@@ -339,7 +339,7 @@ export class PerformanceAttribution {
    */
   static generateMockAttribution(symbols: string[]): AttributionSummary {
     // Generate mock returns for each symbol
-    const portfolioPositions: Position[] = symbols.map((symbol, i) => {
+    const portfolioPositions: Position[] = symbols.map((symbol, _i) => {
       const hash = symbol.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
       return {
         symbol,

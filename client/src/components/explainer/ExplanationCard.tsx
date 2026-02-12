@@ -169,7 +169,7 @@ export function ExplanationCard({
       });
 
       // api client interceptor unwraps response.data
-      const data = (response as any)?.data ?? response;
+      const data = (response as Record<string, unknown>)?.data ?? response;
 
       if (data && typeof data === 'object' && 'text' in data) {
         setResult(data as ExplanationResult);

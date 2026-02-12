@@ -218,6 +218,7 @@ export function MonteCarloChart({
     ctx.fillText('Frequency', 0, 0);
     ctx.restore();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- generateHistogramData depends only on result which is already a dep
   }, [result, dimensions, isDark]);
 
   const isPositive = result.medianReturn > 0;
@@ -277,8 +278,8 @@ export function MonteCarloChart({
       </div>
 
       {/* Distribution Chart */}
-      <div className="relative">
-        <canvas ref={canvasRef} className="w-full" />
+      <div className="relative" role="img" aria-label={`Monte Carlo simulation distribution showing median return of ${(result.medianReturn * 100).toFixed(1)}% with ${(result.probPositive * 100).toFixed(0)}% probability of positive outcome`}>
+        <canvas ref={canvasRef} className="w-full" aria-hidden="true" />
       </div>
 
       {/* Confidence Intervals */}

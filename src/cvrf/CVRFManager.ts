@@ -28,6 +28,7 @@ import type {
   TradingDecision,
   WithinEpisodeRiskControl,
   OverEpisodeBeliefAdjustment,
+  MLPredictions,
 } from './types.js';
 import { DEFAULT_CVRF_CONFIG } from './types.js';
 import { EpisodeManager } from './EpisodeManager.js';
@@ -64,8 +65,11 @@ export class CVRFManager {
    *
    * This is the main entry point for episodic belief optimization.
    * Call this after each trading episode completes.
+   *
+   * @param mlPredictions Optional ML predictions (regime detection, factor momentum,
+   *   factor attribution) to enhance belief updates
    */
-  async runCVRFCycle(): Promise<CVRFCycleResult | null> {
+  async runCVRFCycle(mlPredictions?: MLPredictions): Promise<CVRFCycleResult | null> {
     // Check if we have enough episodes
     if (!this.episodeManager.hasEnoughEpisodesForCVRF()) {
       logger.info('CVRF: Insufficient episodes for comparison, need at least 2');
@@ -79,17 +83,18 @@ export class CVRFManager {
       return null;
     }
 
-    // Step 2: Extract conceptual insights
-    const insights = this.conceptExtractor.extractInsights(comparison);
+    // Step 2: Extract conceptual insights (ML-enhanced if predictions available)
+    const insights = this.conceptExtractor.extractInsights(comparison, mlPredictions);
 
     // Step 3: Generate meta-prompt (textual optimization direction)
-    const metaPrompt = this.conceptExtractor.generateMetaPrompt(comparison, insights);
+    const metaPrompt = this.conceptExtractor.generateMetaPrompt(comparison, insights, mlPredictions);
 
-    // Step 4 & 5: Update beliefs using textual gradient descent
+    // Step 4 & 5: Update beliefs using textual gradient descent (ML-accelerated)
     const { newBeliefs, updates } = this.beliefUpdater.updateBeliefs(
       comparison,
       insights,
-      metaPrompt
+      metaPrompt,
+      mlPredictions
     );
 
     // Generate explanation
@@ -110,6 +115,7 @@ export class CVRFManager {
       beliefUpdates: updates,
       newBeliefState: newBeliefs,
       explanation,
+      mlPredictions,
     };
 
     // Store in history
@@ -151,16 +157,21 @@ export class CVRFManager {
 
   /**
    * Close current episode and optionally trigger CVRF cycle
+   *
+   * @param endDate Optional end date for the episode
+   * @param triggerCVRF Whether to trigger a CVRF cycle after closing
+   * @param mlPredictions Optional ML predictions to enhance the CVRF cycle
    */
   async closeEpisode(
     endDate?: Date,
-    triggerCVRF: boolean = true
+    triggerCVRF: boolean = true,
+    mlPredictions?: MLPredictions
   ): Promise<{ episode: Episode | null; cvrfResult: CVRFCycleResult | null }> {
     const episode = this.episodeManager.closeEpisode(endDate);
 
     let cvrfResult: CVRFCycleResult | null = null;
     if (triggerCVRF && episode) {
-      cvrfResult = await this.runCVRFCycle();
+      cvrfResult = await this.runCVRFCycle(mlPredictions);
     }
 
     return { episode, cvrfResult };
@@ -247,7 +258,7 @@ export class CVRFManager {
    * Get over-episode belief adjustment recommendations
    */
   getOverEpisodeAdjustment(): OverEpisodeBeliefAdjustment {
-    const beliefs = this.beliefUpdater.getCurrentBeliefs();
+    const _beliefs = this.beliefUpdater.getCurrentBeliefs();
     const lastCycle = this.cycleHistory[this.cycleHistory.length - 1];
 
     if (!lastCycle) {

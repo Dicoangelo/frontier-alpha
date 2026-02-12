@@ -4,7 +4,7 @@ import { RefreshCw, TrendingUp, Layers, Globe, Activity, MessageSquare } from 'l
 import { Card } from '@/components/shared/Card';
 import { FactorBar } from '@/components/factors/FactorBar';
 import { Button } from '@/components/shared/Button';
-import { Spinner } from '@/components/shared/Spinner';
+import { SkeletonFactorsPage } from '@/components/shared/LoadingSkeleton';
 import { portfolioApi } from '@/api/portfolio';
 import { useFactorsByCategory, useRefreshFactors, FACTOR_CATEGORY_LABELS, FACTOR_CATEGORY_DESCRIPTIONS } from '@/hooks/useFactors';
 import { DataLoadError, NoFactorData } from '@/components/shared/EmptyState';
@@ -62,6 +62,8 @@ function FactorCategoryCard({ category, factors }: FactorCategoryCardProps) {
   );
 }
 
+const DEMO_SYMBOLS = ['NVDA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN'];
+
 export function Factors() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -73,7 +75,6 @@ export function Factors() {
   });
 
   // Use portfolio symbols if available, otherwise use demo symbols
-  const DEMO_SYMBOLS = ['NVDA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN'];
   const symbols = useMemo(() => {
     const portfolioSymbols = portfolio?.positions?.map(p => p.symbol) || [];
     return portfolioSymbols.length > 0 ? portfolioSymbols : DEMO_SYMBOLS;
@@ -107,11 +108,11 @@ export function Factors() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)]">Factor Analysis</h1>
           <p className="text-[var(--color-text-muted)] mt-1">
-            Deep-dive into your portfolio's factor exposures
+            Deep-dive into your portfolio&apos;s factor exposures
           </p>
         </div>
         <Button
@@ -172,11 +173,7 @@ export function Factors() {
       </div>
 
       {/* Loading State */}
-      {isLoading && (
-        <div className="flex items-center justify-center h-64">
-          <Spinner className="w-8 h-8" />
-        </div>
-      )}
+      {isLoading && <SkeletonFactorsPage />}
 
       {/* Error State */}
       {!isLoading && factorsError && (

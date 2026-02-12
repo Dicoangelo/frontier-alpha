@@ -171,7 +171,7 @@ export function Alerts() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Bell className="w-6 h-6 text-[var(--color-text-secondary)]" />
           <h1 className="text-2xl font-bold text-[var(--color-text)]">Alerts</h1>
@@ -224,24 +224,24 @@ export function Alerts() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-[var(--color-text-muted)]" />
           <span className="text-sm text-[var(--color-text-secondary)]">Filter:</span>
         </div>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-sm min-h-[44px]">
           <input
             type="checkbox"
             checked={showAcknowledged}
             onChange={(e) => setShowAcknowledged(e.target.checked)}
-            className="rounded border-[var(--color-border)]"
+            className="w-5 h-5 rounded border-[var(--color-border)]"
           />
           Show acknowledged
         </label>
         {severityFilter !== 'all' && (
           <button
             onClick={() => setSeverityFilter('all')}
-            className="text-sm text-blue-600 hover:text-blue-700"
+            className="text-sm text-blue-600 hover:text-blue-700 min-h-[44px] px-2"
           >
             Clear filter
           </button>
@@ -291,7 +291,7 @@ function SummaryCard({
   return (
     <button
       onClick={onClick}
-      className={`p-4 rounded-lg border transition-all ${color} ${
+      className={`p-4 min-h-[44px] rounded-lg border transition-all ${color} ${
         active ? 'ring-2 ring-blue-500' : ''
       } hover:shadow-md`}
     >

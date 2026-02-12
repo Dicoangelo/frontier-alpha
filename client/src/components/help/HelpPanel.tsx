@@ -47,9 +47,11 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
     if (initialTopic && isOpen) {
       const result = getTopicById(initialTopic);
       if (result) {
+        /* eslint-disable react-hooks/set-state-in-effect -- syncing prop to local state on open */
         setSelectedSection(result.section.id);
         setSelectedTopic(result.topic);
         setExpandedSections(new Set([result.section.id]));
+        /* eslint-enable react-hooks/set-state-in-effect */
       }
     }
   }, [initialTopic, isOpen]);
@@ -509,6 +511,7 @@ function TopicDetail({ topic, onSelectTopic }: TopicDetailProps) {
 }
 
 // Hook for using help panel with keyboard shortcut
+// eslint-disable-next-line react-refresh/only-export-components
 export function useHelpPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [initialTopic, setInitialTopic] = useState<string | undefined>();
@@ -523,27 +526,18 @@ export function useHelpPanel() {
     setInitialTopic(undefined);
   }, []);
 
-  // Keyboard shortcut: ? to open help
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Only trigger if not in an input field
-      const target = e.target as HTMLElement;
-      const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+  // Keyboard shortcut '?' is now handled by useKeyboardShortcuts in Layout
+  // which opens the keyboard shortcuts modal. Help panel toggles via 'h' key.
 
-      if (e.key === '?' && !isInput) {
-        e.preventDefault();
-        setIsOpen((prev) => !prev);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+  const toggleHelp = useCallback(() => {
+    setIsOpen((prev) => !prev);
   }, []);
 
   return {
     isOpen,
     openHelp,
     closeHelp,
+    toggleHelp,
     initialTopic,
   };
 }

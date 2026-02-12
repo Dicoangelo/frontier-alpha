@@ -23,12 +23,12 @@ import type {
 
 export async function getBeliefs(): Promise<CVRFBeliefState> {
   const response = await api.get<CVRFApiResponse<CVRFBeliefState>>('/cvrf/beliefs');
-  return (response as any).data;
+  return (response as CVRFApiResponse<CVRFBeliefState>).data;
 }
 
 export async function getConstraints(): Promise<CVRFConstraints> {
   const response = await api.get<CVRFApiResponse<CVRFConstraints>>('/cvrf/constraints');
-  return (response as any).data;
+  return (response as CVRFApiResponse<CVRFConstraints>).data;
 }
 
 // ============================================================================
@@ -47,12 +47,12 @@ export async function getEpisodes(params?: {
       expand: params?.expand,
     },
   });
-  return (response as any).data;
+  return (response as CVRFApiResponse<CVRFEpisodesResponse>).data;
 }
 
 export async function startEpisode(): Promise<CVRFEpisode> {
   const response = await api.post<CVRFApiResponse<CVRFEpisode>>('/cvrf/episode/start');
-  return (response as any).data;
+  return (response as CVRFApiResponse<CVRFEpisode>).data;
 }
 
 export async function closeEpisode(params: {
@@ -64,11 +64,12 @@ export async function closeEpisode(params: {
     volatility?: number;
   };
 }): Promise<{ episode: CVRFEpisode; cvrfResult: CVRFCycleResult | null }> {
-  const response = await api.post<CVRFApiResponse<{ episode: CVRFEpisode; cvrfResult: CVRFCycleResult | null }>>(
+  type CloseData = { episode: CVRFEpisode; cvrfResult: CVRFCycleResult | null };
+  const response = await api.post<CVRFApiResponse<CloseData>>(
     '/cvrf/episode/close',
     params
   );
-  return (response as any).data;
+  return (response as CVRFApiResponse<CloseData>).data;
 }
 
 // ============================================================================
@@ -85,7 +86,7 @@ export async function recordDecision(decision: {
   factors?: CVRFDecision['factors'];
 }): Promise<CVRFDecision> {
   const response = await api.post<CVRFApiResponse<CVRFDecision>>('/cvrf/decision', decision);
-  return (response as any).data;
+  return (response as CVRFApiResponse<CVRFDecision>).data;
 }
 
 // ============================================================================
@@ -94,12 +95,12 @@ export async function recordDecision(decision: {
 
 export async function getCycleHistory(): Promise<CVRFCycleResult[]> {
   const response = await api.get<CVRFApiResponse<CVRFCycleResult[]>>('/cvrf/history');
-  return (response as any).data;
+  return (response as CVRFApiResponse<CVRFCycleResult[]>).data;
 }
 
 export async function getStats(): Promise<CVRFStats> {
   const response = await api.get<CVRFApiResponse<CVRFStats>>('/cvrf/stats');
-  return (response as any).data;
+  return (response as CVRFApiResponse<CVRFStats>).data;
 }
 
 // ============================================================================
@@ -112,7 +113,7 @@ export async function getRiskAssessment(params: {
   positions: Array<{ symbol: string; weight: number }>;
 }): Promise<CVRFRiskAssessment> {
   const response = await api.post<CVRFApiResponse<CVRFRiskAssessment>>('/cvrf/risk', params);
-  return (response as any).data;
+  return (response as CVRFApiResponse<CVRFRiskAssessment>).data;
 }
 
 // ============================================================================

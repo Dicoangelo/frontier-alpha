@@ -13,13 +13,14 @@
  */
 
 import type {
-  Episode,
   EpisodeComparison,
   TradingDecision,
   ConceptualInsight,
   AnalystPerspective,
   MetaPrompt,
+  MLEnhancedMetaPrompt,
   CVRFConfig,
+  MLPredictions,
 } from './types.js';
 import type { FactorExposure } from '../types/index.js';
 import { DEFAULT_CVRF_CONFIG } from './types.js';
@@ -79,8 +80,11 @@ export class ConceptExtractor {
 
   /**
    * Extract conceptual insights from an episode comparison
+   *
+   * @param comparison Episode comparison result
+   * @param mlPredictions Optional ML predictions for enhanced regime insights
    */
-  extractInsights(comparison: EpisodeComparison): ConceptualInsight[] {
+  extractInsights(comparison: EpisodeComparison, mlPredictions?: MLPredictions): ConceptualInsight[] {
     const insights: ConceptualInsight[] = [];
 
     // Extract factor insights
@@ -98,8 +102,12 @@ export class ConceptExtractor {
     // Extract allocation insights
     insights.push(...this.extractAllocationInsights(comparison));
 
-    // Extract regime insights
-    insights.push(...this.extractRegimeInsights(comparison));
+    // Extract regime insights (ML-enhanced if available)
+    if (mlPredictions?.regime) {
+      insights.push(...this.extractMLRegimeInsights(comparison, mlPredictions));
+    } else {
+      insights.push(...this.extractRegimeInsights(comparison));
+    }
 
     // Filter by confidence and limit count
     return insights
@@ -147,17 +155,22 @@ export class ConceptExtractor {
 
   /**
    * Generate meta-prompt from insights (the textual optimization direction)
+   *
+   * @param comparison Episode comparison result
+   * @param insights Extracted conceptual insights
+   * @param mlPredictions Optional ML predictions for enhanced meta-prompts
    */
   generateMetaPrompt(
     comparison: EpisodeComparison,
-    insights: ConceptualInsight[]
+    insights: ConceptualInsight[],
+    mlPredictions?: MLPredictions
   ): MetaPrompt {
     // Separate positive and negative insights
     const positiveInsights = insights.filter(i => i.impactDirection === 'positive');
     const negativeInsights = insights.filter(i => i.impactDirection === 'negative');
 
     // Generate optimization direction
-    const optimizationDirection = this.composeOptimizationDirection(
+    let optimizationDirection = this.composeOptimizationDirection(
       positiveInsights,
       negativeInsights,
       comparison.performanceDelta
@@ -178,14 +191,57 @@ export class ConceptExtractor {
     // Generate timing insights
     const timingInsights = this.generateTimingInsights(insights);
 
-    return {
+    // ML-enhanced meta-prompt fields
+    let regimeContext: string | undefined;
+    let factorImportanceRanking: Array<{ factor: string; importance: number }> | undefined;
+    let exploreExploitGuidance: string | undefined;
+
+    if (mlPredictions) {
+      // Add regime context to optimization direction
+      if (mlPredictions.regime) {
+        const r = mlPredictions.regime;
+        regimeContext = `Current regime: ${r.regime} (${(r.confidence * 100).toFixed(0)}% confidence). ` +
+          `Probabilities: bull=${(r.probabilities.bull * 100).toFixed(0)}%, ` +
+          `bear=${(r.probabilities.bear * 100).toFixed(0)}%, ` +
+          `sideways=${(r.probabilities.sideways * 100).toFixed(0)}%, ` +
+          `volatile=${(r.probabilities.volatile * 100).toFixed(0)}%.`;
+
+        if (mlPredictions.regimeChanged && mlPredictions.previousRegime) {
+          regimeContext += ` Regime transition: ${mlPredictions.previousRegime} → ${r.regime}. Accelerate adaptation.`;
+        }
+
+        optimizationDirection += ` [Regime: ${r.regime}]`;
+      }
+
+      // Factor importance from attribution
+      if (mlPredictions.factorAttribution) {
+        factorImportanceRanking = mlPredictions.factorAttribution.factors
+          .map(f => ({ factor: f.factor, importance: Math.abs(f.shapleyValue) }))
+          .sort((a, b) => b.importance - a.importance);
+
+        const topFactors = factorImportanceRanking.slice(0, 3).map(f => f.factor);
+        const lowFactors = factorImportanceRanking.slice(-2).map(f => f.factor);
+
+        exploreExploitGuidance = `Exploit (high attribution): ${topFactors.join(', ')}. ` +
+          `Explore (low attribution): ${lowFactors.join(', ')}.`;
+
+        keyLearnings.push(`Factor attribution: top drivers are ${topFactors.join(', ')}`);
+      }
+    }
+
+    const result: MLEnhancedMetaPrompt = {
       optimizationDirection,
       keyLearnings,
       factorAdjustments,
       riskGuidance,
       timingInsights,
       generatedAt: new Date(),
+      regimeContext,
+      factorImportanceRanking,
+      exploreExploitGuidance,
     };
+
+    return result;
   }
 
   // ============================================================================
@@ -341,7 +397,7 @@ export class ConceptExtractor {
 
   private extractRiskInsights(comparison: EpisodeComparison): ConceptualInsight[] {
     const insights: ConceptualInsight[] = [];
-    const { betterEpisode, worseEpisode, performanceDelta } = comparison;
+    const { betterEpisode, worseEpisode, performanceDelta: _performanceDelta } = comparison;
 
     // Compare drawdowns (with safe defaults)
     const betterDrawdown = betterEpisode.maxDrawdown || 0;
@@ -478,6 +534,59 @@ export class ConceptExtractor {
   }
 
   // ============================================================================
+  // ML-ENHANCED REGIME INSIGHT EXTRACTION
+  // ============================================================================
+
+  private extractMLRegimeInsights(
+    comparison: EpisodeComparison,
+    mlPredictions: MLPredictions
+  ): ConceptualInsight[] {
+    const insights: ConceptualInsight[] = [];
+    const { performanceDelta } = comparison;
+
+    if (!mlPredictions.regime) return insights;
+
+    const regime = mlPredictions.regime;
+
+    if (mlPredictions.regimeChanged && mlPredictions.previousRegime) {
+      // Regime transition detected by ML
+      insights.push({
+        id: `insight_regime_ml_${++this.insightCounter}`,
+        type: 'regime',
+        concept: `ML detected regime transition from ${mlPredictions.previousRegime} to ${regime.regime} ` +
+          `(${(regime.confidence * 100).toFixed(0)}% confidence). Portfolio adaptation required.`,
+        evidence: [
+          `HMM regime detection: ${regime.regime}`,
+          `Transition: ${mlPredictions.previousRegime} → ${regime.regime}`,
+          `Bull probability: ${(regime.probabilities.bull * 100).toFixed(1)}%`,
+          `Bear probability: ${(regime.probabilities.bear * 100).toFixed(1)}%`,
+          `Performance delta: ${(performanceDelta * 100).toFixed(1)}%`,
+        ],
+        confidence: regime.confidence,
+        sourceEpisode: comparison.betterEpisode.id,
+        impactDirection: performanceDelta > 0 ? 'positive' : 'negative',
+      });
+    } else {
+      // No regime change, but provide regime confirmation
+      insights.push({
+        id: `insight_regime_ml_${++this.insightCounter}`,
+        type: 'regime',
+        concept: `ML confirms ${regime.regime} regime continues (${(regime.confidence * 100).toFixed(0)}% confidence)`,
+        evidence: [
+          `HMM regime: ${regime.regime}`,
+          `Confidence: ${(regime.confidence * 100).toFixed(1)}%`,
+          `Bull: ${(regime.probabilities.bull * 100).toFixed(1)}%, Bear: ${(regime.probabilities.bear * 100).toFixed(1)}%`,
+        ],
+        confidence: regime.confidence * 0.8, // Lower confidence for "no change" insights
+        sourceEpisode: comparison.betterEpisode.id,
+        impactDirection: 'neutral',
+      });
+    }
+
+    return insights;
+  }
+
+  // ============================================================================
   // HELPER METHODS
   // ============================================================================
 
@@ -500,7 +609,7 @@ export class ConceptExtractor {
   private detectRegime(factors: FactorExposure[]): string {
     const momentum = factors.find(f => f.factor === 'momentum')?.exposure || 0;
     const volatility = factors.find(f => f.factor === 'volatility')?.exposure || 0;
-    const value = factors.find(f => f.factor === 'value')?.exposure || 0;
+    const _value = factors.find(f => f.factor === 'value')?.exposure || 0;
 
     if (momentum > 0.5 && volatility < 0.3) return 'bull';
     if (momentum < -0.5 || volatility > 0.8) return 'bear';
@@ -573,7 +682,7 @@ export class ConceptExtractor {
     comparison: EpisodeComparison,
     insights: ConceptualInsight[]
   ): string {
-    const riskInsights = insights.filter(i => i.type === 'risk');
+    const _riskInsights = insights.filter(i => i.type === 'risk');
     const betterDrawdown = comparison.betterEpisode.maxDrawdown || 0;
     const worseDrawdown = comparison.worseEpisode.maxDrawdown || 0;
     const drawdownDiff = worseDrawdown - betterDrawdown;

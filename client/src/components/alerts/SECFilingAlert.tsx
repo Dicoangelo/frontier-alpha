@@ -411,14 +411,17 @@ export function SECFilingAlert({
     refetchInterval: 10 * 60 * 1000, // Auto-refresh every 10 minutes
   });
 
-  const allAlerts: FilingAlert[] = response?.data?.alerts || response?.data?.filings || [];
-  const summary: FilingSummary = response?.data?.summary || {
+  const allAlerts: FilingAlert[] = useMemo(
+    () => response?.data?.alerts || response?.data?.filings || [],
+    [response?.data?.alerts, response?.data?.filings]
+  );
+  const summary: FilingSummary = useMemo(() => response?.data?.summary || {
     total: allAlerts.length,
     critical: allAlerts.filter((a) => a.severity === 'critical').length,
     high: allAlerts.filter((a) => a.severity === 'high').length,
     medium: allAlerts.filter((a) => a.severity === 'medium').length,
     low: allAlerts.filter((a) => a.severity === 'low').length,
-  };
+  }, [response?.data?.summary, allAlerts]);
 
   // Filter alerts based on user selection
   const filteredAlerts = useMemo(() => {
@@ -480,8 +483,9 @@ export function SECFilingAlert({
           size="sm"
           onClick={() => refetch()}
           disabled={isFetching}
+          aria-label="Refresh SEC filings"
         >
-          <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} aria-hidden="true" />
         </Button>
       </div>
 
@@ -630,6 +634,7 @@ export function SECFilingAlert({
         <button
           onClick={() => setShowAllFilings(!showAllFilings)}
           className="w-full mt-3 py-2 text-sm text-blue-600 hover:text-blue-500 font-medium transition-colors"
+          aria-expanded={showAllFilings}
         >
           {showAllFilings
             ? 'Show less'

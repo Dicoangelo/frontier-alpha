@@ -78,6 +78,10 @@ tags:
     description: News sentiment analysis
   - name: Options
     description: Options analytics and implied volatility
+  - name: ML
+    description: ML engine — regime detection, factor attribution, model management
+  - name: Tax
+    description: Tax optimization — lots, harvesting, wash sales, and reporting
   - name: Broker
     description: Trade execution (paper trading)
   - name: Settings
@@ -894,6 +898,508 @@ paths:
                 $ref: '#/components/schemas/IVResponse'
         '400':
           description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /options/chain:
+    get:
+      tags:
+        - Options
+      summary: Get options chain
+      description: Returns full options chain (calls and puts) for a symbol
+      operationId: getOptionsChain
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          description: Underlying symbol
+          schema:
+            type: string
+            example: "AAPL"
+      responses:
+        '200':
+          description: Options chain data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptionsChainResponse'
+        '400':
+          description: Missing symbol parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /options/greeks:
+    get:
+      tags:
+        - Options
+      summary: Get Greeks
+      description: |
+        Returns Greeks for a single contract (when strike, expiration, type provided)
+        or portfolio-level aggregated Greeks (when only symbol provided).
+      operationId: getOptionsGreeks
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          description: Underlying symbol
+          schema:
+            type: string
+            example: "AAPL"
+        - name: strike
+          in: query
+          required: false
+          description: Strike price (for single contract mode)
+          schema:
+            type: number
+            example: 150
+        - name: expiration
+          in: query
+          required: false
+          description: Expiration date YYYY-MM-DD (for single contract mode)
+          schema:
+            type: string
+            example: "2026-03-14"
+        - name: type
+          in: query
+          required: false
+          description: Option type (for single contract mode)
+          schema:
+            type: string
+            enum: [call, put]
+        - name: underlyingPrice
+          in: query
+          required: false
+          description: Override underlying price
+          schema:
+            type: number
+        - name: iv
+          in: query
+          required: false
+          description: Override implied volatility (annualized, e.g. 0.25 = 25%)
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Greeks data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GreeksResponse'
+        '400':
+          description: Missing symbol parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /options/strategies:
+    get:
+      tags:
+        - Options
+      summary: Get recommended strategies
+      description: Returns strategy recommendations based on IV rank and market regime
+      operationId: getStrategyRecommendations
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          description: Underlying symbol
+          schema:
+            type: string
+            example: "AAPL"
+        - name: ivRank
+          in: query
+          required: false
+          description: IV rank 0-100 (auto-fetched if not provided)
+          schema:
+            type: number
+            example: 65
+        - name: regime
+          in: query
+          required: false
+          description: Market regime
+          schema:
+            type: string
+            enum: [bull, bear, sideways, volatile]
+            default: sideways
+      responses:
+        '200':
+          description: Strategy recommendations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StrategyRecommendationsResponse'
+        '400':
+          description: Missing symbol parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - Options
+      summary: Analyze a strategy
+      description: Build and analyze an options strategy with P&L curve, breakevens, and probability of profit
+      operationId: analyzeStrategy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StrategyAnalysisRequest'
+      responses:
+        '200':
+          description: Strategy analysis result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StrategyAnalysisResponse'
+        '400':
+          description: Invalid strategy type or missing symbol
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /options/vol-surface:
+    get:
+      tags:
+        - Options
+      summary: Get volatility surface
+      description: Returns IV surface data (strike × expiration × IV) with Greeks heatmap
+      operationId: getVolSurface
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          description: Underlying symbol
+          schema:
+            type: string
+            example: "AAPL"
+      responses:
+        '200':
+          description: Volatility surface data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolSurfaceResponse'
+        '400':
+          description: Missing symbol parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ml/regime:
+    get:
+      tags:
+        - ML
+      summary: Get current market regime
+      description: |
+        Detect the current market regime (bull, bear, sideways, volatile) using
+        a Hidden Markov Model on historical price data. Returns confidence scores,
+        per-regime probabilities, and the full transition matrix.
+      operationId: getMLRegime
+      parameters:
+        - name: symbols
+          in: query
+          description: Comma-separated symbols (uses first for detection, defaults to SPY)
+          schema:
+            type: string
+            default: SPY
+            example: AAPL
+      responses:
+        '200':
+          description: Regime detection result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegimeResponse'
+        '400':
+          description: Insufficient price data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Detection failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ml/attribution:
+    get:
+      tags:
+        - ML
+      summary: Get factor attribution
+      description: |
+        Compute gradient-based factor attribution with Shapley-inspired values
+        for a set of symbols. Returns per-factor contributions, importance scores,
+        waterfall chart data, and summary statistics.
+      operationId: getMLAttribution
+      parameters:
+        - name: symbols
+          in: query
+          description: Comma-separated symbols for portfolio attribution
+          schema:
+            type: string
+            default: AAPL,MSFT,GOOGL
+            example: AAPL,MSFT,GOOGL
+      responses:
+        '200':
+          description: Factor attribution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttributionResponse'
+        '400':
+          description: Insufficient data or no factor exposures
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Attribution failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ml/models:
+    get:
+      tags:
+        - ML
+      summary: Get model versions and status
+      description: |
+        List ML model versions with training metrics and deployment status.
+        Supports filtering by model type and status.
+      operationId: getMLModels
+      parameters:
+        - name: type
+          in: query
+          description: Filter by model type
+          schema:
+            type: string
+            enum:
+              - regime_detector
+              - neural_factor
+        - name: status
+          in: query
+          description: Filter by model status
+          schema:
+            type: string
+            enum:
+              - training
+              - validated
+              - deployed
+              - archived
+      responses:
+        '200':
+          description: Model versions list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsResponse'
+        '500':
+          description: Failed to fetch models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tax/lots:
+    get:
+      tags:
+        - Tax
+      summary: Get tax lots
+      description: Returns tax lots for the authenticated user with holding period metadata
+      operationId: getTaxLots
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: symbol
+          in: query
+          schema:
+            type: string
+          description: Filter lots by symbol (e.g., AAPL)
+      responses:
+        '200':
+          description: Tax lots
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/TaxLotsResponse'
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tax/harvest:
+    get:
+      tags:
+        - Tax
+      summary: Get harvesting opportunities
+      description: Scans portfolio for tax-loss harvesting opportunities with replacement securities
+      operationId: getHarvestingOpportunities
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: symbols
+          in: query
+          schema:
+            type: string
+          description: Comma-separated symbols to scan (default AAPL,MSFT,GOOGL,NVDA,AMZN)
+      responses:
+        '200':
+          description: Harvesting opportunities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/HarvestingScanResponse'
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - Tax
+      summary: Execute a harvest
+      description: Sells shares at a loss to realize tax-loss harvesting benefit
+      operationId: executeHarvest
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HarvestExecutionRequest'
+      responses:
+        '200':
+          description: Harvest execution result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/HarvestExecutionResponse'
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+        '400':
+          description: Validation error or insufficient shares
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tax/wash-sales:
+    get:
+      tags:
+        - Tax
+      summary: Get wash sale warnings
+      description: Scans transaction history for IRS wash sale violations
+      operationId: getWashSales
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Wash sale scan results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/WashSaleScanResponse'
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tax/report:
+    get:
+      tags:
+        - Tax
+      summary: Get annual tax report
+      description: Generates IRS Schedule D / Form 8949 compatible annual tax report
+      operationId: getTaxReport
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: year
+          in: query
+          schema:
+            type: integer
+          description: Tax year (default current year)
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv]
+          description: Export format (default json)
+      responses:
+        '200':
+          description: Annual tax report
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/AnnualTaxReport'
+                  meta:
+                    $ref: '#/components/schemas/ResponseMeta'
+            text/csv:
+              schema:
+                type: string
+        '400':
+          description: Invalid year parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -2645,3 +3151,750 @@ components:
         timestamp:
           type: string
           format: date-time
+
+    # ML Engine schemas
+    RegimeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            regime:
+              type: string
+              enum: [bull, bear, sideways, volatile]
+              description: Current detected market regime
+            confidence:
+              type: number
+              minimum: 0
+              maximum: 1
+              description: Confidence in the detected regime (0-1)
+            probabilities:
+              type: object
+              properties:
+                bull:
+                  type: number
+                bear:
+                  type: number
+                sideways:
+                  type: number
+                volatile:
+                  type: number
+              description: Per-regime probability distribution
+            transitions:
+              type: object
+              description: Regime transition probability matrix
+              additionalProperties:
+                type: object
+                properties:
+                  bull:
+                    type: number
+                  bear:
+                    type: number
+                  sideways:
+                    type: number
+                  volatile:
+                    type: number
+            symbol:
+              type: string
+              description: Symbol used for detection
+            timestamp:
+              type: string
+              format: date-time
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    FactorContribution:
+      type: object
+      properties:
+        factor:
+          type: string
+        exposure:
+          type: number
+        factorReturn:
+          type: number
+        contribution:
+          type: number
+        gradientImportance:
+          type: number
+        shapleyValue:
+          type: number
+        direction:
+          type: string
+          enum: [positive, negative]
+        percentOfTotal:
+          type: number
+
+    WaterfallItem:
+      type: object
+      properties:
+        label:
+          type: string
+        start:
+          type: number
+        end:
+          type: number
+        value:
+          type: number
+        type:
+          type: string
+          enum: [positive, negative, total, residual]
+
+    AttributionSummary:
+      type: object
+      properties:
+        positiveCount:
+          type: integer
+        negativeCount:
+          type: integer
+        totalPositive:
+          type: number
+        totalNegative:
+          type: number
+        topPositive:
+          type: string
+          nullable: true
+        topNegative:
+          type: string
+          nullable: true
+        rSquared:
+          type: number
+
+    AttributionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            totalReturn:
+              type: number
+            factorReturn:
+              type: number
+            residualReturn:
+              type: number
+            factors:
+              type: array
+              items:
+                $ref: '#/components/schemas/FactorContribution'
+            waterfall:
+              type: array
+              items:
+                $ref: '#/components/schemas/WaterfallItem'
+            summary:
+              $ref: '#/components/schemas/AttributionSummary'
+            symbols:
+              type: array
+              items:
+                type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    ModelVersion:
+      type: object
+      properties:
+        id:
+          type: string
+        model_type:
+          type: string
+          enum: [regime_detector, neural_factor]
+        version:
+          type: string
+        status:
+          type: string
+          enum: [training, validated, deployed, archived]
+        metrics:
+          type: object
+          description: Model performance metrics (varies by model type)
+        trained_at:
+          type: string
+          format: date-time
+        data_points:
+          type: integer
+
+    ModelsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            models:
+              type: array
+              items:
+                $ref: '#/components/schemas/ModelVersion'
+            count:
+              type: integer
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    # Options Intelligence schemas
+    OptionContract:
+      type: object
+      properties:
+        strike:
+          type: number
+          description: Strike price
+        expiration:
+          type: string
+          description: Expiration date (YYYY-MM-DD)
+        bid:
+          type: number
+        ask:
+          type: number
+        last:
+          type: number
+        volume:
+          type: integer
+        openInterest:
+          type: integer
+        impliedVolatility:
+          type: number
+          description: Annualized IV (e.g. 0.25 = 25%)
+        type:
+          type: string
+          enum: [call, put]
+
+    OptionsChainResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            symbol:
+              type: string
+            expirations:
+              type: array
+              items:
+                type: string
+            calls:
+              type: array
+              items:
+                $ref: '#/components/schemas/OptionContract'
+            puts:
+              type: array
+              items:
+                $ref: '#/components/schemas/OptionContract'
+            underlyingPrice:
+              type: number
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    GreeksData:
+      type: object
+      properties:
+        delta:
+          type: number
+        gamma:
+          type: number
+        theta:
+          type: number
+          description: Per calendar day
+        vega:
+          type: number
+          description: Per 1% IV move
+        rho:
+          type: number
+          description: Per 1% rate move
+
+    GreeksResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            mode:
+              type: string
+              enum: [contract, portfolio]
+              description: Whether response is for single contract or portfolio
+            greeks:
+              type: object
+              description: Greeks data (structure varies by mode)
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    StrategyAnalysisRequest:
+      type: object
+      required:
+        - type
+        - symbol
+      properties:
+        type:
+          type: string
+          enum: [covered_call, protective_put, bull_call_spread, bear_put_spread, iron_condor, straddle, strangle]
+          description: Strategy type to analyze
+        symbol:
+          type: string
+          description: Underlying symbol
+        underlyingPrice:
+          type: number
+          description: Override underlying price (auto-fetched if omitted)
+        expiration:
+          type: string
+          description: Expiration date (YYYY-MM-DD, defaults to 30 days out)
+        strikes:
+          type: array
+          items:
+            type: number
+          description: Strike prices (strategy-dependent ordering)
+        premiums:
+          type: array
+          items:
+            type: number
+          description: Per-leg premiums
+        iv:
+          type: number
+          description: Implied volatility override (e.g. 0.25 = 25%)
+
+    StrategyAnalysisResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            strategy:
+              type: object
+              description: Strategy definition with legs
+            maxProfit:
+              type: number
+            maxLoss:
+              type: number
+            breakevens:
+              type: array
+              items:
+                type: number
+            probabilityOfProfit:
+              type: number
+              minimum: 0
+              maximum: 1
+            netDebit:
+              type: number
+              description: Positive = debit, negative = credit
+            riskRewardRatio:
+              type: number
+            pnlData:
+              type: array
+              items:
+                type: object
+                properties:
+                  price:
+                    type: number
+                  profit:
+                    type: number
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    StrategyRecommendation:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [covered_call, protective_put, bull_call_spread, bear_put_spread, iron_condor, straddle, strangle]
+        name:
+          type: string
+        rationale:
+          type: string
+        outlook:
+          type: string
+          enum: [bullish, bearish, neutral, volatile]
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    StrategyRecommendationsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            symbol:
+              type: string
+            ivRank:
+              type: number
+            regime:
+              type: string
+            recommendations:
+              type: array
+              items:
+                $ref: '#/components/schemas/StrategyRecommendation'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    VolSurfacePoint:
+      type: object
+      properties:
+        strike:
+          type: number
+        expiration:
+          type: string
+        iv:
+          type: number
+          description: Implied volatility at this point
+
+    VolSurfaceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            symbol:
+              type: string
+            underlyingPrice:
+              type: number
+            strikes:
+              type: array
+              items:
+                type: number
+            expirations:
+              type: array
+              items:
+                type: string
+            surface:
+              type: array
+              items:
+                $ref: '#/components/schemas/VolSurfacePoint'
+            heatmap:
+              type: object
+              description: Greeks heatmap (strike × expiration grid)
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    # ========================
+    # Tax Optimization Schemas
+    # ========================
+
+    TaxLot:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        symbol:
+          type: string
+        shares:
+          type: number
+        costBasis:
+          type: number
+          description: Per-share cost basis
+        purchaseDate:
+          type: string
+          format: date-time
+        soldDate:
+          type: string
+          format: date-time
+          nullable: true
+        isOpen:
+          type: boolean
+        holdingDays:
+          type: integer
+        isShortTerm:
+          type: boolean
+
+    TaxLotsResponse:
+      type: object
+      properties:
+        lots:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxLot'
+        count:
+          type: integer
+
+    HarvestingOpportunity:
+      type: object
+      properties:
+        symbol:
+          type: string
+        unrealizedLoss:
+          type: number
+          description: Negative value
+        currentPrice:
+          type: number
+        costBasis:
+          type: number
+        totalShares:
+          type: number
+        estimatedTaxSavings:
+          type: number
+        shortTermLoss:
+          type: number
+        longTermLoss:
+          type: number
+        shortTermTaxSavings:
+          type: number
+        longTermTaxSavings:
+          type: number
+        replacements:
+          type: array
+          items:
+            type: object
+            properties:
+              symbol:
+                type: string
+              sector:
+                type: string
+              reason:
+                type: string
+        lots:
+          type: array
+          items:
+            type: object
+            properties:
+              lotId:
+                type: string
+              shares:
+                type: number
+              costBasis:
+                type: number
+              purchaseDate:
+                type: string
+                format: date-time
+              unrealizedLoss:
+                type: number
+              isShortTerm:
+                type: boolean
+              holdingDays:
+                type: integer
+
+    HarvestingScanResponse:
+      type: object
+      properties:
+        opportunities:
+          type: array
+          items:
+            $ref: '#/components/schemas/HarvestingOpportunity'
+        totalUnrealizedLosses:
+          type: number
+        totalEstimatedTaxSavings:
+          type: number
+        scannedPositions:
+          type: integer
+        qualifyingPositions:
+          type: integer
+
+    HarvestExecutionRequest:
+      type: object
+      required:
+        - symbol
+        - shares
+        - salePrice
+      properties:
+        symbol:
+          type: string
+        shares:
+          type: number
+        salePrice:
+          type: number
+        method:
+          type: string
+          enum: [fifo, lifo, specific]
+          description: Cost basis method (default fifo)
+        lotIds:
+          type: array
+          items:
+            type: string
+          description: Specific lot IDs to sell (for specific identification method)
+
+    HarvestExecutionResponse:
+      type: object
+      properties:
+        totalProceeds:
+          type: number
+        totalCostBasis:
+          type: number
+        realizedGain:
+          type: number
+        isShortTerm:
+          type: boolean
+        events:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              taxYear:
+                type: integer
+              eventType:
+                type: string
+              symbol:
+                type: string
+              realizedGain:
+                type: number
+              isWashSale:
+                type: boolean
+              shares:
+                type: number
+              salePrice:
+                type: number
+              costBasis:
+                type: number
+              saleDate:
+                type: string
+                format: date-time
+
+    WashSaleViolation:
+      type: object
+      properties:
+        saleLotId:
+          type: string
+        saleSymbol:
+          type: string
+        saleDate:
+          type: string
+          format: date-time
+        saleShares:
+          type: number
+        saleLoss:
+          type: number
+        replacementLotId:
+          type: string
+        replacementSymbol:
+          type: string
+        replacementDate:
+          type: string
+          format: date-time
+        replacementShares:
+          type: number
+        replacementCostBasis:
+          type: number
+        disallowedLoss:
+          type: number
+        adjustedCostBasis:
+          type: number
+        affectedShares:
+          type: number
+        matchType:
+          type: string
+          enum: [same_ticker, substantially_identical]
+
+    WashSaleScanResponse:
+      type: object
+      properties:
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/WashSaleViolation'
+        totalDisallowedLosses:
+          type: number
+        totalAdjustedCostBasis:
+          type: number
+        scannedEvents:
+          type: integer
+        violationCount:
+          type: integer
+
+    Form8949Row:
+      type: object
+      properties:
+        description:
+          type: string
+        dateAcquired:
+          type: string
+        dateSold:
+          type: string
+        proceeds:
+          type: number
+        costBasis:
+          type: number
+        adjustmentCode:
+          type: string
+          description: "'W' for wash sale, '' for none"
+        adjustmentAmount:
+          type: number
+        gainOrLoss:
+          type: number
+        isShortTerm:
+          type: boolean
+        symbol:
+          type: string
+        shares:
+          type: number
+
+    AnnualTaxReport:
+      type: object
+      properties:
+        taxYear:
+          type: integer
+        userId:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+        summary:
+          type: object
+          properties:
+            taxYear:
+              type: integer
+            shortTermGains:
+              type: number
+            shortTermLosses:
+              type: number
+            longTermGains:
+              type: number
+            longTermLosses:
+              type: number
+            netShortTerm:
+              type: number
+            netLongTerm:
+              type: number
+            totalRealizedGain:
+              type: number
+            washSaleAdjustment:
+              type: number
+            eventCount:
+              type: integer
+        washSaleDisallowedLosses:
+          type: number
+        washSaleViolations:
+          type: array
+          items:
+            $ref: '#/components/schemas/WashSaleViolation'
+        harvestingSavingsEstimate:
+          type: number
+        harvestingOpportunitiesCount:
+          type: integer
+        shortTermTransactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Form8949Row'
+        longTermTransactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Form8949Row'
+        scheduleD:
+          type: object
+          properties:
+            shortTermProceeds:
+              type: number
+            shortTermCostBasis:
+              type: number
+            shortTermAdjustments:
+              type: number
+            shortTermGainOrLoss:
+              type: number
+            longTermProceeds:
+              type: number
+            longTermCostBasis:
+              type: number
+            longTermAdjustments:
+              type: number
+            longTermGainOrLoss:
+              type: number
+            netGainOrLoss:
+              type: number

@@ -5,12 +5,11 @@
  * and edge cases (missing data, zero values).
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   FactorEngine,
   FACTOR_DEFINITIONS,
   SECTOR_MAP,
-  FundamentalData,
 } from './FactorEngine.js';
 import type { Price, FactorExposure } from '../types/index.js';
 

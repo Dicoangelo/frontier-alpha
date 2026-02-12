@@ -128,6 +128,7 @@ export function WelcomeModal({ isOpen, onClose, onStartTour, onTryDemo }: Welcom
 }
 
 // Hook to manage onboarding state
+// eslint-disable-next-line react-refresh/only-export-components
 export function useOnboarding() {
   const STORAGE_KEY = 'frontier_onboarding_complete';
 

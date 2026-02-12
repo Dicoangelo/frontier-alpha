@@ -64,7 +64,7 @@ function BeliefDiffPanel({ selected }: { selected: TimelineNode | null }) {
     return result.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
   }, [beliefs, cycle]);
 
-  if (!selected) {
+  if (!selected || !cycle) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-[var(--color-text-muted)] py-8">
         <Clock className="w-8 h-8 mb-3 opacity-40" />

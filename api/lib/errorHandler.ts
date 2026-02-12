@@ -8,10 +8,12 @@ export const ErrorCodes = {
   FORBIDDEN: 'FORBIDDEN',
   NOT_FOUND: 'NOT_FOUND',
   VALIDATION_ERROR: 'VALIDATION_ERROR',
+  METHOD_NOT_ALLOWED: 'METHOD_NOT_ALLOWED',
   RATE_LIMITED: 'RATE_LIMITED',
   CONFLICT: 'CONFLICT',
 
   // Server errors (5xx)
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
   SERVER_ERROR: 'SERVER_ERROR',
   DATABASE_ERROR: 'DATABASE_ERROR',
   EXTERNAL_API_ERROR: 'EXTERNAL_API_ERROR',
@@ -21,14 +23,19 @@ export const ErrorCodes = {
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
 
+/**
+ * Standardized error response schema.
+ * All API errors follow this format:
+ * { success: false, error: { code: string, message: string, details?: object } }
+ */
 export interface ApiError {
-  code: ErrorCode;
+  code: ErrorCode | string;
   message: string;
-  details?: Record<string, any>;
-  retryAfter?: number; // For rate limiting
+  details?: Record<string, unknown>;
+  retryAfter?: number;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: ApiError;
@@ -36,7 +43,7 @@ export interface ApiResponse<T = any> {
     timestamp: string;
     requestId: string;
     latencyMs: number;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -44,14 +51,14 @@ export interface ApiResponse<T = any> {
 export class AppError extends Error {
   public readonly code: ErrorCode;
   public readonly statusCode: number;
-  public readonly details?: Record<string, any>;
+  public readonly details?: Record<string, unknown>;
   public readonly retryAfter?: number;
 
   constructor(
     code: ErrorCode,
     message: string,
     statusCode: number = 500,
-    details?: Record<string, any>,
+    details?: Record<string, unknown>,
     retryAfter?: number
   ) {
     super(message);
@@ -63,7 +70,7 @@ export class AppError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 
-  static badRequest(message: string, details?: Record<string, any>): AppError {
+  static badRequest(message: string, details?: Record<string, unknown>): AppError {
     return new AppError(ErrorCodes.BAD_REQUEST, message, 400, details);
   }
 
@@ -79,8 +86,8 @@ export class AppError extends Error {
     return new AppError(ErrorCodes.NOT_FOUND, `${resource} not found`, 404);
   }
 
-  static validation(message: string, details?: Record<string, any>): AppError {
-    return new AppError(ErrorCodes.VALIDATION_ERROR, message, 422, details);
+  static validation(message: string, details?: Record<string, unknown>): AppError {
+    return new AppError(ErrorCodes.VALIDATION_ERROR, message, 400, details);
   }
 
   static rateLimited(retryAfter: number = 60): AppError {
@@ -94,7 +101,11 @@ export class AppError extends Error {
   }
 
   static serverError(message: string = 'An unexpected error occurred'): AppError {
-    return new AppError(ErrorCodes.SERVER_ERROR, message, 500);
+    return new AppError(ErrorCodes.INTERNAL_ERROR, message, 500);
+  }
+
+  static methodNotAllowed(message: string = 'Method not allowed'): AppError {
+    return new AppError(ErrorCodes.METHOD_NOT_ALLOWED, message, 405);
   }
 
   static databaseError(message: string): AppError {
@@ -236,17 +247,12 @@ export function withErrorHandler<T>(
         return;
       }
 
-      // Unknown errors
+      // Unknown errors — never expose technical details to client
       const response: ApiResponse = {
         success: false,
         error: {
-          code: ErrorCodes.SERVER_ERROR,
-          message:
-            process.env.NODE_ENV === 'production'
-              ? 'An unexpected error occurred'
-              : error instanceof Error
-                ? error.message
-                : 'Unknown error',
+          code: ErrorCodes.INTERNAL_ERROR,
+          message: 'An unexpected error occurred',
         },
         meta: {
           timestamp: new Date().toISOString(),
@@ -279,6 +285,95 @@ export function success<T>(
   };
 
   res.status(statusCode).json(response);
+}
+
+// ============================================================================
+// Standardized Error Response Helpers
+//
+// These functions send a standardized error response directly via res.json().
+// Use them in Vercel endpoint handlers for consistent error formatting:
+//
+//   badRequest(res, 'Missing symbol');
+//   unauthorized(res);
+//   notFound(res, 'Portfolio');
+//   validationError(res, 'Invalid input', { symbol: 'Symbol is required' });
+//   internalError(res);
+//   methodNotAllowed(res);
+//
+// All responses follow the schema:
+//   { success: false, error: { code: string, message: string, details?: object } }
+// ============================================================================
+
+function sendErrorResponse(
+  res: VercelResponse,
+  statusCode: number,
+  code: ErrorCode | string,
+  message: string,
+  details?: Record<string, unknown>,
+): void {
+  const body: ApiResponse = {
+    success: false,
+    error: { code, message, ...(details && { details }) },
+  };
+  res.status(statusCode).json(body);
+}
+
+/** 400 — generic bad request */
+export function badRequest(
+  res: VercelResponse,
+  message: string = 'Bad request',
+  details?: Record<string, unknown>,
+): void {
+  sendErrorResponse(res, 400, ErrorCodes.BAD_REQUEST, message, details);
+}
+
+/** 401 — authentication required */
+export function unauthorized(
+  res: VercelResponse,
+  message: string = 'Authentication required',
+): void {
+  sendErrorResponse(res, 401, ErrorCodes.UNAUTHORIZED, message);
+}
+
+/** 403 — access denied */
+export function forbidden(
+  res: VercelResponse,
+  message: string = 'Access denied',
+): void {
+  sendErrorResponse(res, 403, ErrorCodes.FORBIDDEN, message);
+}
+
+/** 404 — resource not found */
+export function notFound(
+  res: VercelResponse,
+  resource: string = 'Resource',
+): void {
+  sendErrorResponse(res, 404, ErrorCodes.NOT_FOUND, `${resource} not found`);
+}
+
+/** 400 — validation error with optional field-level details */
+export function validationError(
+  res: VercelResponse,
+  message: string = 'Validation failed',
+  details?: Record<string, unknown>,
+): void {
+  sendErrorResponse(res, 400, ErrorCodes.VALIDATION_ERROR, message, details);
+}
+
+/** 405 — method not allowed */
+export function methodNotAllowed(
+  res: VercelResponse,
+  message: string = 'Method not allowed',
+): void {
+  sendErrorResponse(res, 405, ErrorCodes.METHOD_NOT_ALLOWED, message);
+}
+
+/** 500 — internal server error (never expose technical details to client) */
+export function internalError(
+  res: VercelResponse,
+  message: string = 'An unexpected error occurred',
+): void {
+  sendErrorResponse(res, 500, ErrorCodes.INTERNAL_ERROR, message);
 }
 
 // Validation helpers

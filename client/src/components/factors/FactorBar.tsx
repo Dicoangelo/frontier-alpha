@@ -105,16 +105,16 @@ export function FactorBar({ factor, showCategory = true }: FactorBarProps) {
               <Info className="w-3.5 h-3.5" />
             </button>
             {showTooltip && (
-              <div className="absolute left-0 bottom-full mb-2 w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-20">
-                {info.description}
-                <div className="absolute left-2 top-full w-2 h-2 bg-gray-900 transform rotate-45 -translate-y-1" />
+              <div className="absolute left-0 bottom-full mb-2 w-64 p-2.5 bg-[var(--color-bg)] dark:bg-[#1a1f2e] text-[var(--color-text)] text-xs rounded-lg shadow-lg border border-[var(--color-border)] z-20">
+                <p>{info.description}</p>
+                <div className="absolute left-2 top-full w-2 h-2 bg-[var(--color-bg)] dark:bg-[#1a1f2e] border-b border-r border-[var(--color-border)] transform rotate-45 -translate-y-1" />
               </div>
             )}
           </div>
         </div>
         <div className="flex items-center gap-3">
           <span className={`text-xs ${signalColor}`}>{signalLabel}</span>
-          <span className={`text-sm font-bold tabular-nums ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          <span className={`text-sm font-bold tabular-nums ${isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {isPositive ? '+' : ''}{factor.exposure.toFixed(2)}
           </span>
         </div>
@@ -144,19 +144,23 @@ export function FactorBar({ factor, showCategory = true }: FactorBarProps) {
         />
       </div>
 
-      <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
-        <span>
-          t-stat: <span className={factor.tStat >= 2 ? 'text-green-600 font-medium' : ''}>
-            {factor.tStat.toFixed(2)}
-          </span>
+      <div className="flex justify-between items-center text-xs text-[var(--color-text-muted)]">
+        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+          signalStrength >= 2
+            ? 'bg-[var(--color-positive)]/15 text-[var(--color-positive)]'
+            : signalStrength >= 1
+              ? 'bg-[var(--color-warning)]/15 text-[var(--color-warning)]'
+              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
+        }`}>
+          {signalLabel} Signal
         </span>
         <span>
-          contribution: <span className={factor.contribution > 0 ? 'text-green-600' : factor.contribution < 0 ? 'text-red-600' : ''}>
+          contribution: <span className={factor.contribution > 0 ? 'text-[var(--color-positive)]' : factor.contribution < 0 ? 'text-[var(--color-negative)]' : ''}>
             {factor.contribution > 0 ? '+' : ''}{(factor.contribution * 100).toFixed(1)}%
           </span>
         </span>
         <span>
-          confidence: <span className={factor.confidence >= 0.8 ? 'text-green-600 font-medium' : ''}>
+          confidence: <span className={factor.confidence >= 0.8 ? 'text-[var(--color-positive)] font-medium' : ''}>
             {(factor.confidence * 100).toFixed(0)}%
           </span>
         </span>

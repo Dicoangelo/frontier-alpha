@@ -1,8 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { requireAuth } from '../../../lib/auth.js';
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://rqidgeittsjkpkykmdrz.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('SUPABASE_URL and SUPABASE_SERVICE_KEY must be set');
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -30,27 +35,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Missing authorization header' },
-    });
+  // Require authentication
+  const user = await requireAuth(req, res);
+  if (!user) {
+    return; // requireAuth already sent 401 response
   }
 
-  const token = authHeader.substring(7);
-
   try {
-    // Verify the user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Invalid token' },
-      });
-    }
 
     // Get user's portfolio
     const { data: portfolio, error: portfolioError } = await supabase

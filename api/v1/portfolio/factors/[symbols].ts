@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireAuth } from '../../../lib/auth.js';
 
 // Inline types
 interface Price {
@@ -238,6 +239,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const symbolList = symbols.split(',').map(s => s.trim().toUpperCase());
     const prices = new Map<string, Price[]>();
+    const dataSource = 'mock' as const;
 
     // Generate 300 days of mock prices for each symbol + SPY
     for (const symbol of [...symbolList, 'SPY']) {
@@ -247,9 +249,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const exposures = calculateExposures(symbolList, prices);
 
+    res.setHeader('X-Data-Source', dataSource);
     return res.status(200).json({
       success: true,
       data: Object.fromEntries(exposures),
+      dataSource,
       meta: {
         timestamp: new Date().toISOString(),
         requestId: `req-${Math.random().toString(36).slice(2, 8)}`,

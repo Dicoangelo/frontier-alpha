@@ -1,5 +1,7 @@
 type MessageHandler = (data: unknown) => void;
 
+export type ConnectionState = 'connected' | 'reconnecting' | 'disconnected';
+
 /**
  * Real-time quote client.
  *
@@ -15,9 +17,10 @@ class QuoteStreamClient {
   private handlers: Map<string, Set<MessageHandler>> = new Map();
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
-  private reconnectDelay = 2000;
+  private baseReconnectDelay = 1000; // 1s base → 1s, 2s, 4s, 8s, 16s
   private subscribedSymbols: string[] = [];
   private isConnected = false;
+  private _connectionState: ConnectionState = 'disconnected';
   private transport: 'websocket' | 'sse' | 'polling' | null = null;
 
   /**
@@ -62,8 +65,8 @@ class QuoteStreamClient {
       this.transport = 'websocket';
 
       this.ws.onopen = () => {
-        console.log('WebSocket connected');
         this.isConnected = true;
+        this.setConnectionState('connected');
         this.reconnectAttempts = 0;
         this.notifyHandlers('connected', { connected: true });
 
@@ -85,9 +88,9 @@ class QuoteStreamClient {
       };
 
       this.ws.onclose = () => {
-        console.log('WebSocket closed');
         this.isConnected = false;
         this.ws = null;
+        this.setConnectionState('reconnecting');
         this.notifyHandlers('connected', { connected: false });
         this.attemptReconnect();
       };
@@ -134,8 +137,8 @@ class QuoteStreamClient {
     this.eventSource = new EventSource(url);
 
     this.eventSource.onopen = () => {
-      console.log('SSE connected');
       this.isConnected = true;
+      this.setConnectionState('connected');
       this.reconnectAttempts = 0;
       this.notifyHandlers('connected', { connected: true });
     };
@@ -158,8 +161,8 @@ class QuoteStreamClient {
     };
 
     this.eventSource.onerror = () => {
-      console.log('SSE error or disconnected');
       this.isConnected = false;
+      this.setConnectionState('reconnecting');
       this.notifyHandlers('connected', { connected: false });
       this.eventSource?.close();
       this.eventSource = null;
@@ -259,20 +262,26 @@ class QuoteStreamClient {
 
   private attemptReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.log('Max reconnect attempts reached, falling back to polling');
+      this.setConnectionState('disconnected');
       this.transport = null;
       this.startPolling();
       return;
     }
 
     this.reconnectAttempts++;
-    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-
-    console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
+    // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+    const delay = this.baseReconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+    this.setConnectionState('reconnecting');
+    this.notifyHandlers('connectionState', { state: this._connectionState, attempt: this.reconnectAttempts, nextRetryMs: delay });
 
     setTimeout(() => {
       this.connect();
     }, delay);
+  }
+
+  private setConnectionState(state: ConnectionState) {
+    this._connectionState = state;
+    this.notifyHandlers('connectionState', { state });
   }
 
   private reconnect() {
@@ -287,6 +296,7 @@ class QuoteStreamClient {
    */
   disconnect() {
     this.isConnected = false;
+    this.setConnectionState('disconnected');
 
     if (this.ws) {
       this.ws.close();
@@ -317,6 +327,10 @@ class QuoteStreamClient {
 
   get activeTransport(): string | null {
     return this.transport;
+  }
+
+  get connectionState(): ConnectionState {
+    return this._connectionState;
   }
 }
 

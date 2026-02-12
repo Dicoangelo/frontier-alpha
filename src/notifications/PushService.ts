@@ -15,6 +15,8 @@
  * Note: Requires `web-push` package — npm install web-push
  */
 
+import { logger } from '../lib/logger.js';
+
 // web-push is a CommonJS module; use dynamic import or require depending on environment
 let webpush: typeof import('web-push') | null = null;
 
@@ -97,13 +99,7 @@ async function ensureVapidConfigured(): Promise<void> {
     publicKey = generated.publicKey;
     privateKey = generated.privateKey;
 
-    console.warn(
-      '\n[PushService] VAPID keys not found in environment. Generated new keys.\n' +
-        'Add these to your .env file:\n\n' +
-        `VAPID_PUBLIC_KEY=${publicKey}\n` +
-        `VAPID_PRIVATE_KEY=${privateKey}\n` +
-        `WEB_PUSH_SUBJECT=${subject}\n`
-    );
+    logger.warn('VAPID keys not found in environment — generated new keys. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY in .env');
   }
 
   wp.setVapidDetails(subject, publicKey, privateKey);
@@ -219,10 +215,7 @@ export class PushService {
 
       // 404 or 410 means the subscription is expired/invalid
       if (err.statusCode === 404 || err.statusCode === 410) {
-        console.log(
-          `[PushService] Subscription expired (${err.statusCode}), removing:`,
-          subscription.endpoint.slice(0, 60) + '...'
-        );
+        logger.info({ statusCode: err.statusCode }, 'Push subscription expired, removing');
         this.removeSubscription(subscription.endpoint);
       }
 

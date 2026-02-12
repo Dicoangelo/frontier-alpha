@@ -11,6 +11,7 @@
  */
 
 import { getPushService, type PushNotificationPayload } from './PushService.js';
+import { logger } from '../lib/logger.js';
 
 export interface AlertPayload {
   id: string;
@@ -142,10 +143,7 @@ class SendGridProvider implements EmailProvider {
 // Console provider for development
 class ConsoleProvider implements EmailProvider {
   async send(payload: EmailPayload): Promise<{ success: boolean; messageId?: string; error?: string }> {
-    console.log('\n📧 [AlertDelivery] Email notification:');
-    console.log(`   To: ${payload.to}`);
-    console.log(`   Subject: ${payload.subject}`);
-    console.log(`   Preview: ${payload.text?.slice(0, 100)}...`);
+    logger.info({ subject: payload.subject }, 'Email notification sent (console provider)');
     return { success: true, messageId: `console-${Date.now()}` };
   }
 }
@@ -292,7 +290,7 @@ export class AlertDelivery {
           }));
         }
       } catch (error) {
-        console.error('[AlertDelivery] Push digest notification failed:', error);
+        logger.error({ err: error }, 'Push digest notification failed');
         pushResults = [
           {
             success: false,
@@ -350,7 +348,7 @@ export class AlertDelivery {
         error: r.error,
       }));
     } catch (error) {
-      console.error('[AlertDelivery] Push notification failed:', error);
+      logger.error({ err: error }, 'Push notification failed');
       return [
         {
           success: false,

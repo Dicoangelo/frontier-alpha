@@ -5,6 +5,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { methodNotAllowed, internalError } from '../../lib/errorHandler.js';
 
 function getDemoMarketClock() {
   const now = new Date();
@@ -47,10 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'GET') {
-    return res.status(405).json({
-      success: false,
-      error: 'Method not allowed',
-    });
+    return methodNotAllowed(res);
   }
 
   const requestId = `req-${Math.random().toString(36).slice(2, 8)}`;
@@ -109,17 +107,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         data: {
           ...getDemoMarketClock(),
           source: 'demo',
-          error: error.response?.data?.message || error.message,
         },
         meta: { requestId },
       });
     }
   } catch (error: any) {
     console.error('[Trading Clock] Error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message || 'Internal server error',
-      meta: { requestId },
-    });
+    return internalError(res);
   }
 }

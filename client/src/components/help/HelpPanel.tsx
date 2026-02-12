@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import {
   X,
   Search,
@@ -454,11 +455,12 @@ function TopicDetail({ topic, onSelectTopic }: TopicDetailProps) {
         flushList();
         // Handle inline bold
         const processed = trimmed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        const sanitized = DOMPurify.sanitize(processed, { ALLOWED_TAGS: ['strong'], ALLOWED_ATTR: [] });
         elements.push(
           <p
             key={`p-${index}`}
             className="text-[var(--color-text-secondary)] mb-3 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: processed }}
+            dangerouslySetInnerHTML={{ __html: sanitized }}
           />
         );
       }

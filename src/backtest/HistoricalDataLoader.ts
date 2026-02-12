@@ -8,6 +8,8 @@
  * - Caching for efficiency
  */
 
+import { logger } from '../lib/logger.js';
+
 export interface OHLCV {
   date: string;
   open: number;
@@ -176,7 +178,7 @@ export class HistoricalDataLoader {
       const data: PolygonAggsResponse = await response.json();
 
       if (data.status !== 'OK' || !data.results) {
-        console.warn(`No price data for ${symbol} from ${startDate} to ${endDate}`);
+        logger.warn({ symbol, startDate, endDate }, 'No price data available');
         return [];
       }
 
@@ -190,7 +192,7 @@ export class HistoricalDataLoader {
         volume: bar.v,
       }));
     } catch (error) {
-      console.error(`Failed to fetch prices for ${symbol}:`, error);
+      logger.error({ err: error, symbol }, 'Failed to fetch prices');
       return this.generateMockPrices(symbol, startDate, endDate);
     }
   }

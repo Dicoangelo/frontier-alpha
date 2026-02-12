@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { badRequest } from '../../lib/errorHandler.js';
 
 interface Quote {
   symbol: string;
@@ -123,16 +124,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Parse symbols from query
   const symbolsParam = req.query.symbols as string | undefined;
   if (!symbolsParam) {
-    return res.status(400).json({ error: 'symbols parameter required' });
+    return badRequest(res, 'symbols parameter required');
   }
 
   const symbols = symbolsParam.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
   if (symbols.length === 0) {
-    return res.status(400).json({ error: 'No valid symbols provided' });
+    return badRequest(res, 'No valid symbols provided');
   }
 
   if (symbols.length > 50) {
-    return res.status(400).json({ error: 'Maximum 50 symbols allowed' });
+    return badRequest(res, 'Maximum 50 symbols allowed');
   }
 
   // Check for SSE mode
@@ -149,20 +150,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Send initial quotes
     let quotes: Quote[] = [];
+    let dataSource: 'mock' | 'live' = 'mock';
     if (apiKey && isProduction) {
       const result = await fetchPolygonQuotes(symbols, apiKey);
       quotes = result.quotes;
-    }
-
-    // Fill in any missing with mock data
-    for (const symbol of symbols) {
-      if (!quotes.find(q => q.symbol === symbol)) {
-        quotes.push(generateMockQuote(symbol, BASE_PRICES[symbol]));
+      if (quotes.length > 0) {
+        dataSource = 'live';
       }
     }
 
+    // Fill in any missing with mock data
+    const liveSymbols = new Set(quotes.map(q => q.symbol));
+    for (const symbol of symbols) {
+      if (!liveSymbols.has(symbol)) {
+        quotes.push(generateMockQuote(symbol, BASE_PRICES[symbol]));
+        if (dataSource === 'live') dataSource = 'mock'; // mixed means mock
+      }
+    }
+
+    res.setHeader('X-Data-Source', dataSource);
+
     // Send initial data
-    res.write(`data: ${JSON.stringify({ type: 'quotes', data: quotes })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'quotes', data: quotes, dataSource })}\n\n`);
 
     // Set up periodic updates (every 2 seconds for 30 seconds max)
     let count = 0;
@@ -180,19 +189,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Fetch updated quotes
       let updatedQuotes: Quote[] = [];
+      let updateSource: 'mock' | 'live' = 'mock';
       if (apiKey && isProduction) {
         const result = await fetchPolygonQuotes(symbols, apiKey);
         updatedQuotes = result.quotes;
-      }
-
-      // Fill in with mock updates for development
-      for (const symbol of symbols) {
-        if (!updatedQuotes.find(q => q.symbol === symbol)) {
-          updatedQuotes.push(generateMockQuote(symbol, BASE_PRICES[symbol]));
+        if (updatedQuotes.length > 0) {
+          updateSource = 'live';
         }
       }
 
-      res.write(`data: ${JSON.stringify({ type: 'quotes', data: updatedQuotes })}\n\n`);
+      // Fill in with mock updates for development
+      const updatedLiveSymbols = new Set(updatedQuotes.map(q => q.symbol));
+      for (const symbol of symbols) {
+        if (!updatedLiveSymbols.has(symbol)) {
+          updatedQuotes.push(generateMockQuote(symbol, BASE_PRICES[symbol]));
+          if (updateSource === 'live') updateSource = 'mock';
+        }
+      }
+
+      res.write(`data: ${JSON.stringify({ type: 'quotes', data: updatedQuotes, dataSource: updateSource })}\n\n`);
     }, 2000);
 
     // Clean up on client disconnect
@@ -208,31 +223,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const isProduction = process.env.NODE_ENV === 'production';
 
   let quotes: Quote[] = [];
-  let source = 'mock';
-  let apiError: string | undefined;
+  let dataSource: 'mock' | 'live' = 'mock';
 
   if (apiKey && isProduction) {
     const result = await fetchPolygonQuotes(symbols, apiKey);
     quotes = result.quotes;
-    apiError = result.error;
     if (quotes.length > 0) {
-      source = 'polygon';
+      dataSource = 'live';
     }
   }
 
   // Fill in any missing symbols with mock data
+  const restLiveSymbols = new Set(quotes.map(q => q.symbol));
   for (const symbol of symbols) {
-    if (!quotes.find(q => q.symbol === symbol)) {
+    if (!restLiveSymbols.has(symbol)) {
       quotes.push(generateMockQuote(symbol, BASE_PRICES[symbol]));
+      if (dataSource === 'live') dataSource = 'mock';
     }
   }
 
+  res.setHeader('X-Data-Source', dataSource);
   return res.status(200).json({
     success: true,
     data: quotes,
+    dataSource,
     meta: {
       timestamp: new Date().toISOString(),
-      source,
       count: quotes.length,
     },
   });

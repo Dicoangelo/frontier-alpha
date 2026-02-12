@@ -11,6 +11,7 @@
  */
 
 import { CognitiveExplainer, cognitiveExplainer } from '../core/CognitiveExplainer.js';
+import { logger } from '../lib/logger.js';
 import type {
   FactorExposure,
   SentimentScore,
@@ -158,7 +159,7 @@ async function generateWithLLM(
     });
 
     if (!response.ok) {
-      console.warn(`OpenAI API returned ${response.status}, falling back to templates`);
+      logger.warn({ status: response.status }, 'OpenAI API returned error, falling back to templates');
       return null;
     }
 
@@ -170,7 +171,7 @@ async function generateWithLLM(
 
     return { text, confidence: 0.85 };
   } catch (error) {
-    console.warn('LLM generation failed, falling back to templates:', error);
+    logger.warn({ err: error }, 'LLM generation failed, falling back to templates');
     return null;
   }
 }

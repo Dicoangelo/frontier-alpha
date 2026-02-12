@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import {
   Search,
   ChevronRight,
@@ -167,11 +168,12 @@ export function Help() {
       } else if (trimmed) {
         flushList();
         const processed = trimmed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        const sanitized = DOMPurify.sanitize(processed, { ALLOWED_TAGS: ['strong'], ALLOWED_ATTR: [] });
         elements.push(
           <p
             key={`p-${index}`}
             className="text-[var(--color-text-secondary)] mb-4 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: processed }}
+            dangerouslySetInnerHTML={{ __html: sanitized }}
           />
         );
       }

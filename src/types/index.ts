@@ -164,6 +164,6 @@ export interface CognitiveExplanation {
 export interface APIResponse<T> {
   success: boolean;
   data?: T;
-  error?: { code: string; message: string };
+  error?: { code: string; message: string; details?: Record<string, unknown> };
   meta?: { timestamp: Date; requestId: string; latencyMs: number };
 }

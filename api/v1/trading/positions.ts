@@ -5,6 +5,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { methodNotAllowed } from '../../lib/errorHandler.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
@@ -17,10 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'GET') {
-    return res.status(405).json({
-      success: false,
-      error: 'Method not allowed',
-    });
+    return methodNotAllowed(res);
   }
 
   const requestId = `req-${Math.random().toString(36).slice(2, 8)}`;
@@ -33,6 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Check if broker is configured
     if (!alpacaKey || !alpacaSecret) {
       // Return empty positions for demo mode
+      res.setHeader('X-Data-Source', 'mock');
       return res.status(200).json({
         success: true,
         data: {
@@ -41,6 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           brokerType: 'demo',
           paperTrading: true,
         },
+        dataSource: 'mock' as const,
         meta: { requestId },
       });
     }
@@ -78,6 +78,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
     });
 
+    res.setHeader('X-Data-Source', 'live');
     return res.status(200).json({
       success: true,
       data: {
@@ -87,11 +88,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         brokerType: 'alpaca',
         paperTrading: isPaper,
       },
+      dataSource: 'live' as const,
       meta: { requestId },
     });
   } catch (error: any) {
     console.error('[Trading Positions] Error:', error.response?.data || error.message);
 
+    res.setHeader('X-Data-Source', 'mock');
     return res.status(200).json({
       success: true,
       data: {
@@ -99,8 +102,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         brokerConnected: false,
         brokerType: 'demo',
         paperTrading: true,
-        error: error.response?.data?.message || error.message,
       },
+      dataSource: 'mock' as const,
       meta: { requestId },
     });
   }

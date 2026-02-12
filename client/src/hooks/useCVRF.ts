@@ -4,8 +4,9 @@
  * React Query hooks for the Conceptual Verbal Reinforcement Framework
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cvrfApi } from '@/api/cvrf';
+import { toast } from '@/components/shared/Toast';
 
 // ============================================================================
 // QUERY KEYS
@@ -57,8 +58,26 @@ export function useCVRFConstraints() {
 export function useCVRFEpisodes() {
   return useQuery({
     queryKey: cvrfKeys.episodes(),
-    queryFn: cvrfApi.getEpisodes,
+    queryFn: () => cvrfApi.getEpisodes(),
     staleTime: 10 * 1000, // 10 seconds
+    refetchOnWindowFocus: true,
+  });
+}
+
+/**
+ * Get CVRF episodes with pagination (for timeline / infinite scroll)
+ */
+export function useCVRFEpisodesPaginated(pageSize = 50) {
+  return useInfiniteQuery({
+    queryKey: [...cvrfKeys.episodes(), 'paginated', pageSize],
+    queryFn: ({ pageParam = 0 }) =>
+      cvrfApi.getEpisodes({ limit: pageSize, offset: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.pagination.hasMore
+        ? lastPage.pagination.offset + lastPage.pagination.limit
+        : undefined,
+    staleTime: 10 * 1000,
     refetchOnWindowFocus: true,
   });
 }
@@ -72,8 +91,11 @@ export function useStartEpisode() {
   return useMutation({
     mutationFn: cvrfApi.startEpisode,
     onSuccess: () => {
-      // Invalidate episodes to refetch with new active episode
       queryClient.invalidateQueries({ queryKey: cvrfKeys.episodes() });
+      toast.success('Episode started', 'CVRF episode is now active');
+    },
+    onError: () => {
+      toast.error('Failed to start episode');
     },
   });
 }
@@ -87,8 +109,11 @@ export function useCloseEpisode() {
   return useMutation({
     mutationFn: cvrfApi.closeEpisode,
     onSuccess: () => {
-      // Invalidate all CVRF queries since beliefs may have updated
       queryClient.invalidateQueries({ queryKey: cvrfKeys.all });
+      toast.success('Episode closed', 'Beliefs updated from episode results');
+    },
+    onError: () => {
+      toast.error('Failed to close episode');
     },
   });
 }
@@ -106,8 +131,11 @@ export function useRecordDecision() {
   return useMutation({
     mutationFn: cvrfApi.recordDecision,
     onSuccess: () => {
-      // Invalidate episodes to update decision count
       queryClient.invalidateQueries({ queryKey: cvrfKeys.episodes() });
+      toast.info('Decision recorded');
+    },
+    onError: () => {
+      toast.error('Failed to record decision');
     },
   });
 }

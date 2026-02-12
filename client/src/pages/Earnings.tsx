@@ -4,8 +4,11 @@ import { Calendar, AlertCircle } from 'lucide-react';
 import { portfolioApi } from '@/api/portfolio';
 import { EarningsCalendar } from '@/components/earnings/EarningsCalendar';
 import { EarningsForecast } from '@/components/earnings/EarningsForecast';
+import { EarningsHeatmap } from '@/components/earnings/EarningsHeatmap';
+import { BeliefImpactPanel } from '@/components/earnings/BeliefImpactPanel';
 import { SkeletonEarningsPage } from '@/components/shared/Skeleton';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
+import { DataLoadError } from '@/components/shared/EmptyState';
 import { useUpcomingEarnings, useEarningsForecast, useRefreshForecast } from '@/hooks/useEarnings';
 
 export function Earnings() {
@@ -31,6 +34,8 @@ export function Earnings() {
   const {
     data: earnings = [],
     isLoading: earningsLoading,
+    isError: earningsError,
+    refetch: refetchEarnings,
   } = useUpcomingEarnings(symbols, daysAhead);
 
   // Get forecast for selected symbol
@@ -56,6 +61,15 @@ export function Earnings() {
   // Show skeleton while loading
   if (isLoading) {
     return <SkeletonEarningsPage />;
+  }
+
+  // Show error state
+  if (earningsError) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <DataLoadError onRetry={() => refetchEarnings()} error="Failed to load earnings data" />
+      </div>
+    );
   }
 
   // Calculate stats
@@ -135,6 +149,15 @@ export function Earnings() {
         </div>
       )}
 
+      {/* Heatmap */}
+      {symbols.length > 0 && earnings.length > 0 && (
+        <EarningsHeatmap
+          earnings={earnings}
+          onSelect={setSelectedSymbol}
+          selectedSymbol={selectedSymbol}
+        />
+      )}
+
       {/* Main Content - Calendar + Forecast */}
       {symbols.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -152,6 +175,14 @@ export function Earnings() {
             isRefreshing={isRefreshing}
           />
         </div>
+      )}
+
+      {/* CVRF Belief Impact */}
+      {symbols.length > 0 && (
+        <BeliefImpactPanel
+          earnings={earnings}
+          selectedSymbol={selectedSymbol}
+        />
       )}
 
       {/* No upcoming earnings message */}

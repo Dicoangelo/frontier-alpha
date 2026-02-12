@@ -71,8 +71,9 @@ export const handlers = [
     return HttpResponse.json({
       success: true,
       data: symbols.map(mockQuote),
-      meta: { ...mockMeta(), source: 'msw', count: symbols.length },
-    });
+      dataSource: 'mock',
+      meta: { ...mockMeta(), count: symbols.length },
+    }, { headers: { 'X-Data-Source': 'mock' } });
   }),
 
   http.get(`${API_BASE}/api/v1/quotes/:symbol`, ({ params }) => {
@@ -80,8 +81,9 @@ export const handlers = [
     return HttpResponse.json({
       success: true,
       data: mockQuote(symbol),
+      dataSource: 'mock',
       meta: mockMeta(),
-    });
+    }, { headers: { 'X-Data-Source': 'mock' } });
   }),
 
   // ========================
@@ -114,8 +116,9 @@ export const handlers = [
     return HttpResponse.json({
       success: true,
       data: mockEarningsForecast(symbol),
+      dataSource: 'mock',
       meta: mockMeta(),
-    });
+    }, { headers: { 'X-Data-Source': 'mock' } });
   }),
 
   // ========================
@@ -130,18 +133,19 @@ export const handlers = [
     return HttpResponse.json({
       success: true,
       data,
+      dataSource: 'mock',
       meta: mockMeta(),
-    });
+    }, { headers: { 'X-Data-Source': 'mock' } });
   }),
 
   http.get(`${API_BASE}/api/v1/portfolio/attribution`, ({ request }) => {
     if (!hasAuth(request)) return unauthorized();
-    return HttpResponse.json({ success: true, data: {}, meta: mockMeta() });
+    return HttpResponse.json({ success: true, data: {}, dataSource: 'mock', meta: mockMeta() }, { headers: { 'X-Data-Source': 'mock' } });
   }),
 
   http.get(`${API_BASE}/api/v1/portfolio/risk`, ({ request }) => {
     if (!hasAuth(request)) return unauthorized();
-    return HttpResponse.json({ success: true, data: {}, meta: mockMeta() });
+    return HttpResponse.json({ success: true, data: {}, dataSource: 'mock', meta: mockMeta() }, { headers: { 'X-Data-Source': 'mock' } });
   }),
 
   http.get(`${API_BASE}/api/v1/portfolio/metrics`, ({ request }) => {
@@ -154,17 +158,64 @@ export const handlers = [
   // ========================
   http.get(`${API_BASE}/api/v1/portfolio`, ({ request }) => {
     if (!hasAuth(request)) return unauthorized();
-    return HttpResponse.json({ success: true, data: { positions: [] }, meta: mockMeta() });
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: 'portfolio-1',
+        name: 'My Portfolio',
+        positions: [
+          { id: 'pos-1', symbol: 'AAPL', shares: 50, weight: 0.35, costBasis: 180.5, currentPrice: 227.63, unrealizedPnL: 2356.5 },
+          { id: 'pos-2', symbol: 'MSFT', shares: 30, weight: 0.45, costBasis: 380.25, currentPrice: 415.2, unrealizedPnL: 1048.5 },
+        ],
+        cash: 5000,
+        totalValue: 30129,
+        currency: 'USD',
+      },
+      dataSource: 'mock',
+      meta: mockMeta(),
+    }, { headers: { 'X-Data-Source': 'mock' } });
   }),
 
-  http.post(`${API_BASE}/api/v1/portfolio/positions`, ({ request }) => {
+  http.get(`${API_BASE}/api/v1/portfolio/positions`, ({ request }) => {
     if (!hasAuth(request)) return unauthorized();
-    return HttpResponse.json({ success: true, data: {}, meta: mockMeta() });
+    return HttpResponse.json({
+      success: true,
+      data: [
+        { id: 'pos-1', symbol: 'AAPL', shares: 50, costBasis: 180.5 },
+        { id: 'pos-2', symbol: 'MSFT', shares: 30, costBasis: 380.25 },
+      ],
+      meta: { ...mockMeta(), count: 2 },
+    });
   }),
 
-  http.put(`${API_BASE}/api/v1/portfolio/positions/:id`, ({ request }) => {
+  http.post(`${API_BASE}/api/v1/portfolio/positions`, async ({ request }) => {
     if (!hasAuth(request)) return unauthorized();
-    return HttpResponse.json({ success: true, data: {}, meta: mockMeta() });
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: `pos-${Date.now()}`,
+        symbol: body.symbol || 'AAPL',
+        shares: body.shares || 10,
+        costBasis: body.avgCost || 150,
+      },
+      meta: mockMeta(),
+    }, { status: 201 });
+  }),
+
+  http.put(`${API_BASE}/api/v1/portfolio/positions/:id`, async ({ request, params }) => {
+    if (!hasAuth(request)) return unauthorized();
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: params.id,
+        symbol: 'AAPL',
+        shares: body.shares ?? 50,
+        costBasis: body.avgCost ?? 180.5,
+      },
+      meta: mockMeta(),
+    });
   }),
 
   http.delete(`${API_BASE}/api/v1/portfolio/positions/:id`, ({ request }) => {
@@ -184,9 +235,11 @@ export const handlers = [
         expectedReturn: 0.12,
         expectedVolatility: 0.18,
         sharpeRatio: 0.67,
+        dataSource: 'mock',
       },
+      dataSource: 'mock',
       meta: mockMeta(),
-    });
+    }, { headers: { 'X-Data-Source': 'mock' } });
   }),
 
   // ========================
@@ -317,6 +370,126 @@ export const handlers = [
   http.put(`${API_BASE}/api/v1/settings/notifications`, ({ request }) => {
     if (!hasAuth(request)) return unauthorized();
     return HttpResponse.json({ success: true, data: {}, meta: mockMeta() });
+  }),
+
+  // ========================
+  // CVRF Episode Lifecycle
+  // ========================
+  http.post(`${API_BASE}/api/v1/cvrf/episode/start`, async ({ request }) => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: `episode_${Date.now()}`,
+        episodeNumber: 6,
+        startDate: new Date().toISOString(),
+        message: 'CVRF episode started. Record decisions and close when complete.',
+      },
+      meta: { ...mockMeta(), persistent: true },
+    });
+  }),
+
+  http.post(`${API_BASE}/api/v1/cvrf/decision`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+
+    if (!body.symbol || !body.action) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'VALIDATION_ERROR', message: 'Validation failed', details: { symbol: 'Required', action: 'Required' } },
+        },
+        { status: 400 }
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: `dec_${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        symbol: body.symbol,
+        action: body.action,
+        weightBefore: body.weightBefore ?? 0,
+        weightAfter: body.weightAfter ?? 0,
+        reason: body.reason ?? '',
+        confidence: body.confidence ?? 0.5,
+        factors: body.factors ?? [],
+      },
+      meta: { ...mockMeta(), persistent: true },
+    });
+  }),
+
+  http.post(`${API_BASE}/api/v1/cvrf/episode/close`, async () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        episode: {
+          id: `episode_${Date.now()}`,
+          episodeNumber: 6,
+          startDate: new Date(Date.now() - 86400000).toISOString(),
+          endDate: new Date().toISOString(),
+          decisionsCount: 3,
+          portfolioReturn: 0.025,
+          sharpeRatio: 1.4,
+        },
+        cvrfResult: {
+          performanceDelta: 0.015,
+          decisionOverlap: 0.67,
+          insightsExtracted: 2,
+          beliefUpdates: 3,
+          newRegime: 'bull_trending',
+        },
+      },
+      meta: { ...mockMeta(), persistent: true },
+    });
+  }),
+
+  // ========================
+  // CVRF Episodes (Protected, Paginated)
+  // ========================
+  http.get(`${API_BASE}/api/v1/cvrf/episodes`, ({ request }) => {
+    if (!hasAuth(request)) return unauthorized();
+
+    const url = new URL(request.url);
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50', 10) || 50, 200);
+    const offset = parseInt(url.searchParams.get('offset') || '0', 10) || 0;
+    const expand = url.searchParams.get('expand');
+
+    // Generate mock episodes
+    const totalCompleted = 5;
+    const episodes = Array.from({ length: Math.min(limit, totalCompleted - offset) }, (_, i) => {
+      const n = offset + i + 1;
+      const base: Record<string, unknown> = {
+        id: `episode_${n}`,
+        episodeNumber: n,
+        startDate: new Date(Date.now() - n * 86400000).toISOString(),
+        endDate: new Date(Date.now() - (n - 1) * 86400000).toISOString(),
+        decisionsCount: 3,
+        portfolioReturn: 0.02 * (n % 3 === 0 ? -1 : 1),
+        sharpeRatio: 1.2,
+        maxDrawdown: 0.03,
+        status: 'completed',
+      };
+      if (expand === 'decisions') {
+        base.decisions = [];
+      }
+      return base;
+    });
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        current: null,
+        completed: episodes,
+        totalEpisodes: totalCompleted,
+        pagination: {
+          total: totalCompleted,
+          limit,
+          offset,
+          hasMore: offset + limit < totalCompleted,
+        },
+      },
+      meta: mockMeta(),
+    });
   }),
 
   // ========================

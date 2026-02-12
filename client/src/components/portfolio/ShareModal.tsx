@@ -15,6 +15,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { api } from '@/api/client';
+import { toast } from '@/components/shared/Toast';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
 
@@ -94,6 +95,10 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
       setNewShareUrl(response.data.shareUrl);
       setShowCreateForm(false);
       setFormData({ permissions: 'view', expiresIn: 0, shareWithEmail: '' });
+      toast.success('Share link created');
+    },
+    onError: () => {
+      toast.error('Failed to create share link');
     },
   });
 
@@ -102,6 +107,10 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
     mutationFn: (shareId: string) => api.delete(`/portfolio/share/${shareId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolio-shares'] });
+      toast.warning('Share link revoked');
+    },
+    onError: () => {
+      toast.error('Failed to revoke share link');
     },
   });
 

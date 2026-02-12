@@ -3,12 +3,18 @@ import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface ToastProps {
   id: string;
   type: ToastType;
   title: string;
   message?: string;
   duration?: number;
+  action?: ToastAction;
   onClose: (id: string) => void;
 }
 
@@ -21,36 +27,36 @@ const icons = {
 
 const colors = {
   success: {
-    bg: 'bg-green-500/10',
-    border: 'border-green-500/20',
-    icon: 'text-green-500',
-    title: 'text-green-800',
-    message: 'text-green-600',
+    bg: 'bg-[var(--color-positive)]/10',
+    border: 'border-[var(--color-positive)]/20',
+    icon: 'text-[var(--color-positive)]',
+    title: 'text-[var(--color-text)]',
+    message: 'text-[var(--color-text-secondary)]',
   },
   error: {
-    bg: 'bg-red-500/10',
-    border: 'border-red-500/20',
-    icon: 'text-red-500',
-    title: 'text-red-800',
-    message: 'text-red-600',
+    bg: 'bg-[var(--color-danger)]/10',
+    border: 'border-[var(--color-danger)]/20',
+    icon: 'text-[var(--color-danger)]',
+    title: 'text-[var(--color-text)]',
+    message: 'text-[var(--color-text-secondary)]',
   },
   info: {
-    bg: 'bg-blue-500/10',
-    border: 'border-blue-500/20',
-    icon: 'text-blue-500',
-    title: 'text-blue-800',
-    message: 'text-blue-600',
+    bg: 'bg-[var(--color-accent)]/10',
+    border: 'border-[var(--color-accent)]/20',
+    icon: 'text-[var(--color-accent)]',
+    title: 'text-[var(--color-text)]',
+    message: 'text-[var(--color-text-secondary)]',
   },
   warning: {
-    bg: 'bg-amber-500/10',
-    border: 'border-amber-500/20',
-    icon: 'text-amber-500',
-    title: 'text-amber-800',
-    message: 'text-amber-600',
+    bg: 'bg-[var(--color-warning)]/10',
+    border: 'border-[var(--color-warning)]/20',
+    icon: 'text-[var(--color-warning)]',
+    title: 'text-[var(--color-text)]',
+    message: 'text-[var(--color-text-secondary)]',
   },
 };
 
-function Toast({ id, type, title, message, duration = 5000, onClose }: ToastProps) {
+function Toast({ id, type, title, message, duration = 4000, action, onClose }: ToastProps) {
   const [isExiting, setIsExiting] = useState(false);
   const Icon = icons[type];
   const colorScheme = colors[type];
@@ -88,6 +94,17 @@ function Toast({ id, type, title, message, duration = 5000, onClose }: ToastProp
           {message && (
             <p className={`text-sm mt-1 ${colorScheme.message}`}>{message}</p>
           )}
+          {action && (
+            <button
+              onClick={() => {
+                action.onClick();
+                handleClose();
+              }}
+              className={`text-sm font-medium mt-2 ${colorScheme.icon} hover:opacity-80 transition-opacity`}
+            >
+              {action.label}
+            </button>
+          )}
         </div>
         <button
           onClick={handleClose}
@@ -108,6 +125,7 @@ interface ToastItem {
   title: string;
   message?: string;
   duration?: number;
+  action?: ToastAction;
 }
 
 let toastListeners: ((toasts: ToastItem[]) => void)[] = [];

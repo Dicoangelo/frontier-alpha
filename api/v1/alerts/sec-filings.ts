@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import axios from 'axios';
+import { badRequest, methodNotAllowed, internalError } from '../../lib/errorHandler.js';
 
 interface SECFiling {
   id: string;
@@ -205,11 +206,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { symbols } = req.body as { symbols: string[] };
 
       if (!symbols || !Array.isArray(symbols) || symbols.length === 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'symbols array is required',
-          meta: { requestId },
-        });
+        return badRequest(res, 'symbols array is required');
       }
 
       const alerts = await fetchSECFilings(symbols.slice(0, 20)); // Limit to 20 symbols
@@ -224,17 +221,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    return res.status(405).json({
-      success: false,
-      error: 'Method not allowed',
-      meta: { requestId },
-    });
+    return methodNotAllowed(res);
   } catch (error) {
     console.error('SEC filings error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Internal server error',
-      meta: { requestId },
-    });
+    return internalError(res);
   }
 }

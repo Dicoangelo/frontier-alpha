@@ -1,4 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireAuth } from '../../lib/auth.js';
+import { methodNotAllowed, internalError } from '../../lib/errorHandler.js';
+import { validateBody, schemas } from '../../lib/validation.js';
 
 // ============================================================================
 // TYPES
@@ -507,12 +510,12 @@ async function optimizePortfolio(
   symbols: string[],
   config: OptimizationConfig,
   apiKey?: string
-): Promise<OptimizationResult> {
+): Promise<OptimizationResult & { dataSource: 'mock' | 'live' }> {
   const prices = new Map<string, Price[]>();
 
   // Fetch prices for all symbols + SPY benchmark
   const allSymbols = [...symbols, 'SPY'];
-  let source = 'mock';
+  let dataSource: 'mock' | 'live' = 'mock';
 
   for (const symbol of allSymbols) {
     let symbolPrices: Price[] | null = null;
@@ -521,7 +524,7 @@ async function optimizePortfolio(
     if (apiKey) {
       symbolPrices = await fetchPolygonHistoricalPrices(symbol, apiKey, 300);
       if (symbolPrices && symbolPrices.length > 0) {
-        source = 'polygon';
+        dataSource = 'live';
       }
     }
 
@@ -582,7 +585,7 @@ async function optimizePortfolio(
 
   const explanation = `Optimized portfolio with expected annual return of ${(expectedReturn * 100).toFixed(1)}% ` +
     `and volatility of ${(expectedVol * 100).toFixed(1)}% (Sharpe: ${sharpe.toFixed(2)}). ` +
-    `Top holdings: ${holdingsStr}. Data source: ${source}.`;
+    `Top holdings: ${holdingsStr}. Data source: ${dataSource}.`;
 
   // Convert weights to object
   const weightsObj: Record<string, number> = {};
@@ -598,6 +601,7 @@ async function optimizePortfolio(
     factorExposures,
     monteCarlo,
     explanation,
+    dataSource,
   };
 }
 
@@ -616,37 +620,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({
-      success: false,
-      error: { code: 'METHOD_NOT_ALLOWED', message: 'Only POST method is allowed' },
-    });
+    return methodNotAllowed(res);
   }
 
   const start = Date.now();
 
   try {
-    const { symbols, config } = req.body as {
-      symbols?: string[];
-      config?: Partial<OptimizationConfig>;
-    };
+    // Validate & parse input with Zod
+    const body = validateBody(req, res, schemas.optimizePortfolio);
+    if (!body) return;
 
-    // Validate request
-    if (!symbols || !Array.isArray(symbols) || symbols.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: { code: 'BAD_REQUEST', message: 'symbols array is required' },
-      });
-    }
+    const { symbols, config } = body;
 
-    if (symbols.length > 50) {
-      return res.status(400).json({
-        success: false,
-        error: { code: 'BAD_REQUEST', message: 'Maximum 50 symbols allowed' },
-      });
-    }
-
-    // Normalize symbols
-    const normalizedSymbols = symbols.map(s => s.trim().toUpperCase());
+    // Symbols are already validated as uppercase ticker format by Zod
+    const normalizedSymbols = symbols;
 
     // Default config
     const fullConfig: OptimizationConfig = {
@@ -662,14 +649,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Run optimization
     const result = await optimizePortfolio(normalizedSymbols, fullConfig, apiKey);
 
+    res.setHeader('X-Data-Source', result.dataSource);
     return res.status(200).json({
       success: true,
       data: result,
+      dataSource: result.dataSource,
       meta: {
         timestamp: new Date().toISOString(),
         requestId: `req-${Math.random().toString(36).slice(2, 8)}`,
         latencyMs: Date.now() - start,
-        source: apiKey ? 'polygon' : 'mock',
       },
     });
   } catch (error: any) {
@@ -690,20 +678,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           code: 'SERVICE_UNAVAILABLE',
           message: 'External data service temporarily unavailable. Please try again.',
         },
-        meta: {
-          timestamp: new Date().toISOString(),
-          latencyMs: Date.now() - start,
-        },
       });
     }
 
-    return res.status(500).json({
-      success: false,
-      error: { code: 'OPTIMIZATION_ERROR', message: error.message },
-      meta: {
-        timestamp: new Date().toISOString(),
-        latencyMs: Date.now() - start,
-      },
-    });
+    return internalError(res);
   }
 }

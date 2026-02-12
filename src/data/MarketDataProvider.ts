@@ -12,6 +12,7 @@
 
 import type { Price, Quote, Asset } from '../types/index.js';
 import { supabaseAdmin } from '../lib/supabase.js';
+import { logger } from '../lib/logger.js';
 import WebSocket from 'ws';
 import Redis, { type Redis as RedisClient } from 'ioredis';
 
@@ -95,14 +96,14 @@ export class MarketDataProvider {
           connectTimeout: 5000,
         }) as RedisClient;
         this.redis.on('error', (err) => {
-          console.warn('Redis connection error:', err.message);
+          logger.warn({ message: err.message }, 'Redis connection error');
         });
         this.redis.connect().catch(() => {
-          console.warn('Redis not available, using memory cache only');
+          logger.warn('Redis not available, using memory cache only');
           this.redis = null;
         });
       } catch {
-        console.warn('Redis initialization failed, using memory cache only');
+        logger.warn('Redis initialization failed, using memory cache only');
       }
     }
   }
@@ -133,7 +134,7 @@ export class MarketDataProvider {
           return quote;
         }
       } catch (e) {
-        console.warn(`Redis cache error for ${upperSymbol}:`, e);
+        logger.warn({ err: e, symbol: upperSymbol }, 'Redis cache error');
       }
     }
 
@@ -164,7 +165,7 @@ export class MarketDataProvider {
           }
         }
       } catch (e) {
-        console.warn(`Supabase cache error for ${upperSymbol}:`, e);
+        logger.warn({ err: e, symbol: upperSymbol }, 'Supabase cache error');
       }
     }
 
@@ -181,7 +182,7 @@ export class MarketDataProvider {
           return quote;
         }
       } catch (e) {
-        console.error(`Polygon quote error for ${upperSymbol}:`, e);
+        logger.error({ err: e, symbol: upperSymbol }, 'Polygon quote error');
       }
     }
 
@@ -198,7 +199,7 @@ export class MarketDataProvider {
           return quote;
         }
       } catch (e) {
-        console.error(`Alpha Vantage quote error for ${upperSymbol}:`, e);
+        logger.error({ err: e, symbol: upperSymbol }, 'Alpha Vantage quote error');
       }
     }
 
@@ -211,7 +212,7 @@ export class MarketDataProvider {
     }
 
     // 7. DEVELOPMENT ONLY: Generate mock quote
-    console.warn(`[DEV] Using mock quote for ${upperSymbol}`);
+    logger.warn({ symbol: upperSymbol }, 'Using mock quote (dev fallback)');
     return this.generateMockQuote(upperSymbol);
   }
 
@@ -229,7 +230,7 @@ export class MarketDataProvider {
         300  // 5 minutes TTL
       );
     } catch (e) {
-      console.warn('Failed to cache quote to Redis:', e);
+      logger.warn({ err: e }, 'Failed to cache quote to Redis');
     }
   }
 
@@ -250,7 +251,7 @@ export class MarketDataProvider {
           cached_at: new Date().toISOString(),
         });
     } catch (e) {
-      console.error('Failed to cache quote to Supabase:', e);
+      logger.error({ err: e }, 'Failed to cache quote to Supabase');
     }
   }
 
@@ -327,7 +328,7 @@ export class MarketDataProvider {
           return prices;
         }
       } catch (e) {
-        console.warn(`Supabase historical prices error for ${upperSymbol}:`, e);
+        logger.warn({ err: e, symbol: upperSymbol }, 'Supabase historical prices error');
       }
     }
 
@@ -342,7 +343,7 @@ export class MarketDataProvider {
           return prices;
         }
       } catch (e) {
-        console.error(`Alpha Vantage price error for ${upperSymbol}:`, e);
+        logger.error({ err: e, symbol: upperSymbol }, 'Alpha Vantage price error');
       }
     }
 
@@ -355,7 +356,7 @@ export class MarketDataProvider {
     }
 
     // DEVELOPMENT ONLY: Generate mock prices
-    console.warn(`[DEV] Using mock prices for ${upperSymbol}`);
+    logger.warn({ symbol: upperSymbol }, 'Using mock prices (dev fallback)');
     return this.generateMockPrices(upperSymbol, days);
   }
 
@@ -385,7 +386,7 @@ export class MarketDataProvider {
           .upsert(batch, { onConflict: 'symbol,date' });
       }
     } catch (e) {
-      console.warn('Failed to cache historical prices to Supabase:', e);
+      logger.warn({ err: e }, 'Failed to cache historical prices to Supabase');
     }
   }
 
@@ -434,7 +435,7 @@ export class MarketDataProvider {
             // Fill any missing factors with generated data
             for (const factor of factorNames) {
               if (!factors.has(factor)) {
-                console.warn(`[WARN] Missing factor ${factor} in database, using generated data`);
+                logger.warn({ factor }, 'Missing factor in database, using generated data');
                 factors.set(factor, this.generateFactorReturns(factor, days));
               }
             }
@@ -442,16 +443,13 @@ export class MarketDataProvider {
           }
         }
       } catch (e) {
-        console.warn('Supabase factor returns error:', e);
+        logger.warn({ err: e }, 'Supabase factor returns error');
       }
     }
 
     // PRODUCTION WARNING: Ken French data should be loaded via script
     if (!this.config.allowMockFallback) {
-      console.warn(
-        'Ken French factor data not found in database. ' +
-        'Run: npm run download-ken-french to populate factor returns.'
-      );
+      logger.warn('Ken French factor data not found in database — run: npm run download-ken-french');
     }
 
     // Fallback to generated factor returns
@@ -473,7 +471,7 @@ export class MarketDataProvider {
     onQuote: (quote: Quote) => void
   ): Promise<() => void> {
     const upperSymbols = symbols.map(s => s.toUpperCase());
-    console.log(`Subscribing to quotes for: ${upperSymbols.join(', ')}`);
+    logger.info({ symbols: upperSymbols }, 'Subscribing to quotes');
 
     // Register callback for each symbol
     for (const symbol of upperSymbols) {
@@ -496,7 +494,7 @@ export class MarketDataProvider {
     // DEVELOPMENT FALLBACK: Use polling if WebSocket not available
     let pollInterval: NodeJS.Timeout | null = null;
     if (!this.config.polygonApiKey && this.config.allowMockFallback) {
-      console.warn('[DEV] Using mock polling for quotes (1s interval)');
+      logger.warn('Using mock polling for quotes (1s interval, dev fallback)');
       pollInterval = setInterval(() => {
         for (const symbol of upperSymbols) {
           const quote = this.generateMockQuote(symbol);
@@ -523,7 +521,7 @@ export class MarketDataProvider {
       if (pollInterval) {
         clearInterval(pollInterval);
       }
-      console.log(`Unsubscribed from: ${upperSymbols.join(', ')}`);
+      logger.info({ symbols: upperSymbols }, 'Unsubscribed from quotes');
     };
   }
 
@@ -537,12 +535,12 @@ export class MarketDataProvider {
 
     return new Promise((resolve, reject) => {
       const wsUrl = 'wss://socket.polygon.io/stocks';
-      console.log('Connecting to Polygon.io WebSocket...');
+      logger.info('Connecting to Polygon.io WebSocket');
 
       this.polygonWs = new WebSocket(wsUrl);
 
       this.polygonWs.on('open', () => {
-        console.log('WebSocket connected, authenticating...');
+        logger.info('WebSocket connected, authenticating');
         // Authenticate with API key
         const authMsg: PolygonAuthMessage = {
           action: 'auth',
@@ -558,7 +556,7 @@ export class MarketDataProvider {
           for (const msg of messages) {
             if (msg.ev === 'status') {
               if (msg.status === 'auth_success') {
-                console.log('Polygon.io WebSocket authenticated');
+                logger.info('Polygon.io WebSocket authenticated');
                 this.wsConnected = true;
                 this.wsReconnectAttempts = 0;
                 this.startHeartbeat();
@@ -570,7 +568,7 @@ export class MarketDataProvider {
                 }
                 resolve();
               } else if (msg.status === 'auth_failed') {
-                console.error('Polygon.io authentication failed:', msg.message);
+                logger.error({ message: msg.message }, 'Polygon.io authentication failed');
                 reject(new Error('Authentication failed'));
               }
             } else if (msg.ev === 'T' && msg.sym && msg.p !== undefined) {
@@ -582,12 +580,12 @@ export class MarketDataProvider {
             }
           }
         } catch (e) {
-          console.error('Error parsing Polygon message:', e);
+          logger.error({ err: e }, 'Error parsing Polygon message');
         }
       });
 
       this.polygonWs.on('close', (code, reason) => {
-        console.log(`WebSocket closed: ${code} - ${reason}`);
+        logger.info({ code, reason: reason.toString() }, 'WebSocket closed');
         this.wsConnected = false;
         this.stopHeartbeat();
 
@@ -595,13 +593,13 @@ export class MarketDataProvider {
         if (this.wsReconnectAttempts < this.MAX_RECONNECT_ATTEMPTS) {
           this.wsReconnectAttempts++;
           const delay = Math.min(1000 * Math.pow(2, this.wsReconnectAttempts), 30000);
-          console.log(`Reconnecting in ${delay}ms (attempt ${this.wsReconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS})`);
+          logger.info({ delayMs: delay, attempt: this.wsReconnectAttempts, maxAttempts: this.MAX_RECONNECT_ATTEMPTS }, 'WebSocket reconnecting');
           setTimeout(() => this.connectPolygonWebSocket(), delay);
         }
       });
 
       this.polygonWs.on('error', (error) => {
-        console.error('WebSocket error:', error);
+        logger.error({ err: error }, 'WebSocket error');
         reject(error);
       });
 
@@ -629,7 +627,7 @@ export class MarketDataProvider {
       params: `${trades},${quotes}`,
     };
     this.polygonWs.send(JSON.stringify(msg));
-    console.log(`Subscribed to: ${symbols.join(', ')}`);
+    logger.info({ symbols }, 'Polygon WebSocket subscribed');
   }
 
   /**
@@ -714,7 +712,7 @@ export class MarketDataProvider {
         try {
           callback(quote);
         } catch (e) {
-          console.error(`Error in quote subscriber for ${quote.symbol}:`, e);
+          logger.error({ err: e, symbol: quote.symbol }, 'Error in quote subscriber');
         }
       }
     }

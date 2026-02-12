@@ -1,16 +1,14 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://rqidgeittsjkpkykmdrz.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
-
-if (!supabaseServiceKey) {
-  console.warn('SUPABASE_SERVICE_KEY not set - database features will be disabled');
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+  throw new Error('SUPABASE_URL and SUPABASE_SERVICE_KEY must be set in environment variables');
 }
 
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
 // Server-side client with service role key (bypasses RLS)
-// Use a dummy key for local development when no service key is provided
-const effectiveKey = supabaseServiceKey || 'dummy-key-for-local-dev';
-export const supabaseAdmin: SupabaseClient = createClient(supabaseUrl, effectiveKey, {
+export const supabaseAdmin: SupabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,

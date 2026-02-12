@@ -8,6 +8,8 @@
  * - Graceful degradation when Redis unavailable
  */
 
+import { logger } from '../lib/logger.js';
+
 // Redis client interface (compatible with ioredis)
 interface RedisClient {
   get(key: string): Promise<string | null>;
@@ -154,9 +156,9 @@ export class RedisCache {
 
       await this.client.ping();
       this.connected = true;
-      console.log('[RedisCache] Connected to Redis');
+      logger.info('RedisCache connected');
     } catch (error) {
-      console.warn('[RedisCache] Failed to connect to Redis, using in-memory fallback:', error);
+      logger.warn({ err: error }, 'RedisCache failed to connect, using in-memory fallback');
       this.client = null;
       this.connected = false;
     }
@@ -193,7 +195,7 @@ export class RedisCache {
       return null;
     } catch (error) {
       this.stats.errors++;
-      console.error('[RedisCache] Get error:', error);
+      logger.error({ err: error }, 'RedisCache get error');
       return null;
     }
   }
@@ -218,7 +220,7 @@ export class RedisCache {
       return true;
     } catch (error) {
       this.stats.errors++;
-      console.error('[RedisCache] Set error:', error);
+      logger.error({ err: error }, 'RedisCache set error');
       return false;
     }
   }
@@ -240,7 +242,7 @@ export class RedisCache {
       return true;
     } catch (error) {
       this.stats.errors++;
-      console.error('[RedisCache] Delete error:', error);
+      logger.error({ err: error }, 'RedisCache delete error');
       return false;
     }
   }
@@ -263,7 +265,7 @@ export class RedisCache {
       }
     } catch (error) {
       this.stats.errors++;
-      console.error('[RedisCache] Delete pattern error:', error);
+      logger.error({ err: error }, 'RedisCache delete pattern error');
       return 0;
     }
   }
@@ -435,7 +437,7 @@ export class RedisCache {
       }
       this.memoryCache.clear();
     } catch (error) {
-      console.error('[RedisCache] Clear error:', error);
+      logger.error({ err: error }, 'RedisCache clear error');
     }
   }
 
@@ -447,9 +449,9 @@ export class RedisCache {
       try {
         await this.client.quit();
         this.connected = false;
-        console.log('[RedisCache] Disconnected from Redis');
+        logger.info('RedisCache disconnected');
       } catch (error) {
-        console.error('[RedisCache] Disconnect error:', error);
+        logger.error({ err: error }, 'RedisCache disconnect error');
       }
     }
   }
@@ -490,7 +492,7 @@ export function cacheMiddleware(ttlSeconds: number = 300) {
     res.json = function (body: any) {
       // Cache successful responses
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        cache.cacheApiResponse(endpoint, params, body).catch(console.error);
+        cache.cacheApiResponse(endpoint, params, body).catch((err) => logger.error({ err }, 'RedisCache cacheApiResponse error'));
       }
       res.setHeader('X-Cache', 'MISS');
       return originalJson(body);

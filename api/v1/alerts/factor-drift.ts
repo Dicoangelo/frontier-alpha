@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { badRequest, methodNotAllowed, internalError } from '../../lib/errorHandler.js';
 
 interface FactorTarget {
   factor: string;
@@ -151,11 +152,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
 
       if (!exposures || !Array.isArray(exposures)) {
-        return res.status(400).json({
-          success: false,
-          error: 'exposures array is required',
-          meta: { requestId },
-        });
+        return badRequest(res, 'exposures array is required');
       }
 
       const targetList = targets || DEFAULT_TARGETS;
@@ -230,17 +227,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    return res.status(405).json({
-      success: false,
-      error: 'Method not allowed',
-      meta: { requestId },
-    });
+    return methodNotAllowed(res);
   } catch (error) {
     console.error('Factor drift alert error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Internal server error',
-      meta: { requestId },
-    });
+    return internalError(res);
   }
 }

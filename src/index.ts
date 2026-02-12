@@ -126,10 +126,10 @@ export class FrontierAlphaServer {
     this.app.addHook('onRequest', async (request, _reply) => {
       (request as any).__startTime = process.hrtime.bigint();
       (request as any).__reqLogger = logger.child({ requestId: request.id });
-      (request as any).__reqLogger.info('incoming request', {
+      (request as any).__reqLogger.info({
         method: request.method,
         url: request.url,
-      });
+      }, 'incoming request');
       metrics.incGauge('active_connections');
     });
 
@@ -145,21 +145,21 @@ export class FrontierAlphaServer {
       recordRequest(request.method, route, reply.statusCode, durationSec);
 
       const reqLogger = (request as any).__reqLogger ?? logger;
-      reqLogger.info('request completed', {
+      reqLogger.info({
         method: request.method,
         url: request.url,
         status: reply.statusCode,
         durationMs: Math.round(durationMs * 100) / 100,
-      });
+      }, 'request completed');
     });
 
     this.app.addHook('onError', async (request, _reply, error) => {
       const reqLogger = (request as any).__reqLogger ?? logger;
-      reqLogger.error('request error', {
+      reqLogger.error({
         method: request.method,
         url: request.url,
-        error: { name: error.name, message: error.message, stack: error.stack },
-      });
+        err: error,
+      }, 'request error');
     });
   }
 
@@ -196,7 +196,7 @@ export class FrontierAlphaServer {
 
     this.app.get<{ Reply: APIResponse<any> }>(
       '/api/v1/portfolio',
-      { preHandler: this.useDatabase ? authMiddleware : undefined },
+      { preHandler: authMiddleware },
       async (request, reply) => {
         const start = Date.now();
 
@@ -263,13 +263,7 @@ export class FrontierAlphaServer {
       async (request, reply) => {
         const start = Date.now();
         const { symbol, shares, avgCost } = request.body;
-
-        if (!request.user) {
-          return reply.status(401).send({
-            success: false,
-            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-          });
-        }
+        // authMiddleware ensures request.user is always defined
 
         try {
           const position = await portfolioService.addPosition(
@@ -282,7 +276,7 @@ export class FrontierAlphaServer {
           if (!position) {
             return reply.status(400).send({
               success: false,
-              error: { code: 'ADD_FAILED', message: 'Failed to add position' },
+              error: { code: 'BAD_REQUEST', message: 'Failed to add position' },
             });
           }
 
@@ -295,10 +289,11 @@ export class FrontierAlphaServer {
               latencyMs: Date.now() - start,
             },
           };
-        } catch (error: any) {
+        } catch (error) {
+          logger.error({ err: error }, 'Failed to add position');
           return reply.status(500).send({
             success: false,
-            error: { code: 'SERVER_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
           });
         }
       }
@@ -316,13 +311,7 @@ export class FrontierAlphaServer {
         const start = Date.now();
         const { id } = request.params;
         const { shares, avgCost } = request.body;
-
-        if (!request.user) {
-          return reply.status(401).send({
-            success: false,
-            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-          });
-        }
+        // authMiddleware ensures request.user is always defined
 
         try {
           const position = await portfolioService.updatePosition(
@@ -348,10 +337,11 @@ export class FrontierAlphaServer {
               latencyMs: Date.now() - start,
             },
           };
-        } catch (error: any) {
+        } catch (error) {
+          logger.error({ err: error }, 'Failed to update position');
           return reply.status(500).send({
             success: false,
-            error: { code: 'SERVER_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
           });
         }
       }
@@ -367,13 +357,7 @@ export class FrontierAlphaServer {
       async (request, reply) => {
         const start = Date.now();
         const { id } = request.params;
-
-        if (!request.user) {
-          return reply.status(401).send({
-            success: false,
-            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-          });
-        }
+        // authMiddleware ensures request.user is always defined
 
         try {
           const deleted = await portfolioService.deletePosition(request.user.id, id);
@@ -394,10 +378,11 @@ export class FrontierAlphaServer {
               latencyMs: Date.now() - start,
             },
           };
-        } catch (error: any) {
+        } catch (error) {
+          logger.error({ err: error }, 'Failed to delete position');
           return reply.status(500).send({
             success: false,
-            error: { code: 'SERVER_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
           });
         }
       }
@@ -435,10 +420,11 @@ export class FrontierAlphaServer {
               latencyMs: Date.now() - start,
             },
           };
-        } catch (error: any) {
+        } catch (error) {
+          logger.error({ err: error }, 'Portfolio optimization failed');
           return reply.status(500).send({
             success: false,
-            error: { code: 'OPTIMIZATION_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'Portfolio optimization failed' },
           });
         }
       }
@@ -472,10 +458,11 @@ export class FrontierAlphaServer {
               latencyMs: Date.now() - start,
             },
           };
-        } catch (error: any) {
+        } catch (error) {
+          logger.error({ err: error }, 'Factor calculation failed');
           return reply.status(500).send({
             success: false,
-            error: { code: 'FACTOR_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'Factor calculation failed' },
           });
         }
       }
@@ -493,7 +480,10 @@ export class FrontierAlphaServer {
       async (request, reply) => {
         const symbolsParam = request.query.symbols;
         if (!symbolsParam) {
-          return reply.status(400).send({ error: 'symbols parameter required' });
+          return reply.status(400).send({
+            success: false,
+            error: { code: 'VALIDATION_ERROR', message: 'Symbols parameter is required' },
+          });
         }
 
         const symbols = symbolsParam.split(',').map((s: string) => s.trim().toUpperCase()).filter(Boolean);
@@ -621,10 +611,11 @@ export class FrontierAlphaServer {
               latencyMs: Date.now() - start,
             },
           };
-        } catch (error: any) {
+        } catch (error) {
+          logger.error({ err: error }, 'Earnings forecast failed');
           return reply.status(500).send({
             success: false,
-            error: { code: 'FORECAST_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'Earnings forecast failed' },
           });
         }
       }
@@ -674,10 +665,11 @@ export class FrontierAlphaServer {
               latencyMs: Date.now() - start,
             },
           };
-        } catch (error: any) {
+        } catch (error) {
+          logger.error({ err: error }, 'Explanation generation failed');
           return reply.status(500).send({
             success: false,
-            error: { code: 'EXPLAIN_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'Explanation generation failed' },
           });
         }
       }
@@ -706,7 +698,7 @@ export class FrontierAlphaServer {
             return reply.status(400).send({
               success: false,
               error: {
-                code: 'INVALID_TYPE',
+                code: 'VALIDATION_ERROR',
                 message: `Invalid explanation type. Must be one of: ${VALID_EXPLANATION_TYPES.join(', ')}`,
               },
             });
@@ -729,10 +721,11 @@ export class FrontierAlphaServer {
               llmEnabled: this.explanationService.isLLMEnabled,
             },
           };
-        } catch (error: any) {
+        } catch (error) {
+          logger.error({ err: error }, 'Explanation generation failed');
           return reply.status(500).send({
             success: false,
-            error: { code: 'EXPLAIN_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'Explanation generation failed' },
           });
         }
       }
@@ -748,13 +741,7 @@ export class FrontierAlphaServer {
       async (request, reply) => {
         const start = Date.now();
 
-        if (!request.user) {
-          return reply.status(401).send({
-            success: false,
-            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-          });
-        }
-
+        // authMiddleware ensures request.user is always defined
         const { data, error } = await supabaseAdmin
           .from('frontier_user_settings')
           .select('*')
@@ -762,9 +749,10 @@ export class FrontierAlphaServer {
           .single();
 
         if (error && error.code !== 'PGRST116') {
+          logger.error({ err: error }, 'Failed to fetch user settings');
           return reply.status(500).send({
             success: false,
-            error: { code: 'FETCH_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'Failed to load settings' },
           });
         }
 
@@ -805,13 +793,7 @@ export class FrontierAlphaServer {
       async (request, reply) => {
         const start = Date.now();
 
-        if (!request.user) {
-          return reply.status(401).send({
-            success: false,
-            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-          });
-        }
-
+        // authMiddleware ensures request.user is always defined
         const { data, error } = await supabaseAdmin
           .from('frontier_user_settings')
           .upsert({
@@ -822,9 +804,10 @@ export class FrontierAlphaServer {
           .single();
 
         if (error) {
+          logger.error({ err: error }, 'Failed to update settings');
           return reply.status(500).send({
             success: false,
-            error: { code: 'UPDATE_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'Failed to update settings' },
           });
         }
 
@@ -849,13 +832,7 @@ export class FrontierAlphaServer {
       { preHandler: authMiddleware },
       async (request, reply) => {
         const start = Date.now();
-
-        if (!request.user) {
-          return reply.status(401).send({
-            success: false,
-            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-          });
-        }
+        // authMiddleware ensures request.user is always defined
 
         const { data, error } = await supabaseAdmin
           .from('frontier_risk_alerts')
@@ -865,9 +842,10 @@ export class FrontierAlphaServer {
           .limit(50);
 
         if (error) {
+          logger.error({ err: error }, 'Failed to fetch alerts');
           return reply.status(500).send({
             success: false,
-            error: { code: 'FETCH_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'Failed to load alerts' },
           });
         }
 
@@ -892,13 +870,7 @@ export class FrontierAlphaServer {
       async (request, reply) => {
         const start = Date.now();
         const { id } = request.params;
-
-        if (!request.user) {
-          return reply.status(401).send({
-            success: false,
-            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-          });
-        }
+        // authMiddleware ensures request.user is always defined
 
         const { data, error } = await supabaseAdmin
           .from('frontier_risk_alerts')
@@ -909,9 +881,10 @@ export class FrontierAlphaServer {
           .single();
 
         if (error) {
+          logger.error({ err: error }, 'Failed to acknowledge alert');
           return reply.status(500).send({
             success: false,
-            error: { code: 'UPDATE_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'Failed to acknowledge alert' },
           });
         }
 
@@ -1018,10 +991,11 @@ export class FrontierAlphaServer {
               latencyMs: Date.now() - start,
             },
           };
-        } catch (error: any) {
+        } catch (error) {
+          logger.error({ err: error }, 'CVRF episode close failed');
           return reply.status(400).send({
             success: false,
-            error: { code: 'CVRF_ERROR', message: error.message },
+            error: { code: 'BAD_REQUEST', message: 'Failed to close CVRF episode' },
           });
         }
       }
@@ -1066,10 +1040,11 @@ export class FrontierAlphaServer {
               latencyMs: Date.now() - start,
             },
           };
-        } catch (error: any) {
+        } catch (error) {
+          logger.error({ err: error }, 'Failed to record decision');
           return reply.status(400).send({
             success: false,
-            error: { code: 'DECISION_ERROR', message: error.message },
+            error: { code: 'BAD_REQUEST', message: 'Failed to record trading decision' },
           });
         }
       }
@@ -1168,13 +1143,7 @@ export class FrontierAlphaServer {
       { preHandler: authMiddleware },
       async (request, reply) => {
         const start = Date.now();
-
-        if (!request.user) {
-          return reply.status(401).send({
-            success: false,
-            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-          });
-        }
+        // authMiddleware ensures request.user is always defined
 
         const { data, error } = await supabaseAdmin
           .from('frontier_api_keys')
@@ -1183,9 +1152,10 @@ export class FrontierAlphaServer {
           .order('created_at', { ascending: false });
 
         if (error) {
+          logger.error({ err: error }, 'Failed to fetch API keys');
           return reply.status(500).send({
             success: false,
-            error: { code: 'FETCH_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'Failed to load API keys' },
           });
         }
 
@@ -1225,13 +1195,7 @@ export class FrontierAlphaServer {
       { preHandler: authMiddleware },
       async (request, reply) => {
         const start = Date.now();
-
-        if (!request.user) {
-          return reply.status(401).send({
-            success: false,
-            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-          });
-        }
+        // authMiddleware ensures request.user is always defined
 
         const { name, permissions, rate_limit } = request.body;
 
@@ -1259,9 +1223,10 @@ export class FrontierAlphaServer {
           .single();
 
         if (error) {
+          logger.error({ err: error }, 'Failed to create API key');
           return reply.status(500).send({
             success: false,
-            error: { code: 'CREATE_ERROR', message: error.message },
+            error: { code: 'INTERNAL_ERROR', message: 'Failed to create API key' },
           });
         }
 
@@ -1291,13 +1256,7 @@ export class FrontierAlphaServer {
       async (request, reply) => {
         const start = Date.now();
         const { id } = request.params;
-
-        if (!request.user) {
-          return reply.status(401).send({
-            success: false,
-            error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-          });
-        }
+        // authMiddleware ensures request.user is always defined
 
         const { data, error } = await supabaseAdmin
           .from('frontier_api_keys')
@@ -1359,7 +1318,7 @@ export class FrontierAlphaServer {
             });
           }
         } catch (e) {
-          console.error('WebSocket message error:', e);
+          logger.error({ err: e }, 'WebSocket message error');
         }
       });
     });
@@ -1372,49 +1331,28 @@ export class FrontierAlphaServer {
         host: this.config.host,
       });
       
-      logger.info('Frontier Alpha server started', {
+      logger.info({
         host: this.config.host,
         port: this.config.port,
         environment: process.env.NODE_ENV || 'development',
         version: '1.0.3-debug',
-      });
+      }, 'Frontier Alpha server started');
 
-      console.log(`
-╔══════════════════════════════════════════════════════════════════╗
-║  FRONTIER ALPHA - Cognitive Factor Intelligence Platform          ║
-║  CVRF (Conceptual Verbal Reinforcement Framework) Enabled         ║
-╠══════════════════════════════════════════════════════════════════╣
-║  Server running on http://${this.config.host}:${this.config.port}
-║
-║  Portfolio API:
-║    GET  /api/v1/portfolio
-║    POST /api/v1/portfolio/optimize
-║    GET  /api/v1/portfolio/factors/:symbols
-║    POST /api/v1/portfolio/explain
-║
-║  Observability:
-║    GET  /api/v1/metrics             - Prometheus metrics
-║
-║  CVRF (Belief Optimization):
-║    GET  /api/v1/cvrf/beliefs        - Current belief state
-║    POST /api/v1/cvrf/episode/start  - Start trading episode
-║    POST /api/v1/cvrf/episode/close  - Close & run CVRF cycle
-║    POST /api/v1/cvrf/decision       - Record trading decision
-║    GET  /api/v1/cvrf/constraints    - Optimization constraints
-║    POST /api/v1/cvrf/risk           - Dual-level risk assessment
-║    GET  /api/v1/cvrf/history        - CVRF cycle history
-║
-║  Market Data:
-║    GET  /api/v1/quotes/:symbol
-║    GET  /api/v1/earnings/upcoming
-║    GET  /api/v1/earnings/forecast/:symbol
-║
-║  WebSocket:
-║    ws://localhost:${this.config.port}/ws/quotes
-╚══════════════════════════════════════════════════════════════════╝
-      `);
+      logger.info({
+        host: this.config.host,
+        port: this.config.port,
+        endpoints: [
+          'GET  /api/v1/portfolio',
+          'POST /api/v1/portfolio/optimize',
+          'GET  /api/v1/portfolio/factors/:symbols',
+          'GET  /api/v1/cvrf/beliefs',
+          'GET  /api/v1/quotes/:symbol',
+          'GET  /api/v1/earnings/upcoming',
+          `ws://localhost:${this.config.port}/ws/quotes`,
+        ],
+      }, 'Frontier Alpha startup complete — CVRF enabled');
     } catch (err) {
-      logger.error('Failed to start server', { error: err });
+      logger.error({ err }, 'Failed to start server');
       process.exit(1);
     }
   }
@@ -1429,6 +1367,21 @@ export class FrontierAlphaServer {
 // ============================================================================
 
 export async function main() {
+  // Validate critical environment variables on startup
+  const requiredEnvVars = [
+    'SUPABASE_URL',
+    'SUPABASE_SERVICE_KEY',
+    'POLYGON_API_KEY',
+  ];
+
+  const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+  if (missingVars.length > 0) {
+    logger.error({ missing: missingVars }, 'Missing required environment variables');
+    logger.fatal({ missing: missingVars }, 'Missing required environment variables — see .env.example');
+    process.exit(1);
+  }
+
   const server = new FrontierAlphaServer({
     port: parseInt(process.env.PORT || '3000'),
     polygonApiKey: process.env.POLYGON_API_KEY,
@@ -1447,7 +1400,7 @@ export async function main() {
 
 // Run if executed directly
 if (process.argv[1]?.endsWith('index.ts') || process.argv[1]?.endsWith('index.js')) {
-  main().catch(console.error);
+  main().catch((err) => logger.fatal({ err }, 'Unhandled startup error'));
 }
 
 export default FrontierAlphaServer;

@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@/api/client';
+import { toast } from '@/components/shared/Toast';
 
 interface BacktestRunConfig {
   symbols: string[];
@@ -73,6 +74,13 @@ function useRunBacktest() {
     mutationFn: async (config: BacktestRunConfig) => {
       const response = await api.post('/backtest/run', config);
       return (response as any).data as BacktestResult;
+    },
+    onSuccess: (data) => {
+      const returnPct = (data.walkForward.totalReturn * 100).toFixed(1);
+      toast.success('Backtest complete', `${returnPct}% total return across ${data.walkForward.windows} windows`);
+    },
+    onError: (error) => {
+      toast.error('Backtest failed', (error as Error).message);
     },
   });
 }

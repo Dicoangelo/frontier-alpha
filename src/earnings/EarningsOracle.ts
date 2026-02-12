@@ -5,6 +5,8 @@
  * data-driven forecasts for upcoming earnings announcements.
  */
 
+import { logger } from '../lib/logger.js';
+
 interface HistoricalEarning {
   reportDate: string;
   fiscalQuarter: string;
@@ -106,7 +108,7 @@ export class EarningsOracle {
 
       // Check for rate limit or error
       if (data.Note || data['Error Message']) {
-        console.warn(`Alpha Vantage warning for ${symbol}:`, data.Note || data['Error Message']);
+        logger.warn({ symbol, message: data.Note || data['Error Message'] }, 'Alpha Vantage warning');
         return [];
       }
 
@@ -135,7 +137,7 @@ export class EarningsOracle {
 
       return earnings;
     } catch (error) {
-      console.error(`Failed to fetch earnings for ${symbol}:`, error);
+      logger.error({ err: error, symbol }, 'Failed to fetch earnings');
       return [];
     }
   }
@@ -168,7 +170,7 @@ export class EarningsOracle {
       const data: PolygonAggsResponse = await response.json();
 
       if (data.status !== 'OK' || !data.results) {
-        console.warn(`No price data for ${symbol}`);
+        logger.warn({ symbol }, 'No price data');
         return [];
       }
 
@@ -185,7 +187,7 @@ export class EarningsOracle {
       this.priceCache.set(symbol, prices);
       return prices;
     } catch (error) {
-      console.error(`Failed to fetch prices for ${symbol}:`, error);
+      logger.error({ err: error, symbol }, 'Failed to fetch prices');
       return [];
     }
   }

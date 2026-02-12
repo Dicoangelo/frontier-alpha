@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { factorsApi, groupByCategory } from '@/api/factors';
+import { toast } from '@/components/shared/Toast';
 
 export function useFactors(symbols: string[]) {
   return useQuery({
@@ -37,6 +38,10 @@ export function useRefreshFactors() {
     mutationFn: (symbols: string[]) => factorsApi.refreshFactors(symbols),
     onSuccess: (data, symbols) => {
       queryClient.setQueryData(['factors', symbols.sort().join(',')], data);
+      toast.success('Factors refreshed');
+    },
+    onError: () => {
+      toast.error('Failed to refresh factors');
     },
   });
 }

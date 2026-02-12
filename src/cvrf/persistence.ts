@@ -106,14 +106,16 @@ export async function getActiveEpisode(userId: string | null = null): Promise<Ep
 
 export async function getRecentEpisodes(
   userId: string | null = null,
-  limit: number = 10
+  limit: number = 10,
+  offset: number = 0,
+  expandDecisions: boolean = true
 ): Promise<Episode[]> {
   const query = supabaseAdmin
     .from('cvrf_episodes')
     .select('*')
     .eq('status', 'completed')
     .order('end_date', { ascending: false })
-    .limit(limit);
+    .range(offset, offset + limit - 1);
 
   if (userId) {
     query.eq('user_id', userId);
@@ -125,6 +127,11 @@ export async function getRecentEpisodes(
 
   if (error || !data) {
     return [];
+  }
+
+  if (!expandDecisions) {
+    // Return episodes without loading decisions (count only)
+    return data.map(ep => dbToEpisode(ep, []));
   }
 
   // Load decisions for each episode
@@ -140,6 +147,29 @@ export async function getRecentEpisodes(
   }
 
   return episodes;
+}
+
+export async function getCompletedEpisodesCount(
+  userId: string | null = null
+): Promise<number> {
+  const query = supabaseAdmin
+    .from('cvrf_episodes')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'completed');
+
+  if (userId) {
+    query.eq('user_id', userId);
+  } else {
+    query.is('user_id', null);
+  }
+
+  const { count, error } = await query;
+
+  if (error || count === null) {
+    return 0;
+  }
+
+  return count;
 }
 
 export async function createEpisode(

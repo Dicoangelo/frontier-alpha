@@ -10,6 +10,8 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { badRequest, methodNotAllowed, notFound, internalError } from '../../lib/errorHandler.js';
+import { validateBody, schemas } from '../../lib/validation.js';
 
 interface OrderRequest {
   symbol: string;
@@ -156,7 +158,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             },
             meta: { requestId },
           });
-        } catch (error: any) {
+        } catch (_error: any) {
           return res.status(200).json({
             success: true,
             data: {
@@ -171,7 +173,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               brokerConnected: false,
               brokerType: 'demo',
               paperTrading: true,
-              error: error.response?.data?.message || error.message,
             },
             meta: { requestId },
           });
@@ -224,38 +225,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             },
             meta: { requestId },
           });
-        } catch (error: any) {
+        } catch (_error: any) {
           return res.status(200).json({
             success: true,
             data: {
               orders: Array.from(orders.values()),
-              error: error.response?.data?.message || error.message,
             },
             meta: { requestId },
           });
         }
       }
 
-      return res.status(400).json({
-        success: false,
-        error: 'action parameter required (account or orders)',
-        meta: { requestId },
-      });
+      return badRequest(res, 'action parameter required (account or orders)');
     }
 
     // POST - Submit order
     if (req.method === 'POST') {
-      const orderReq = req.body as OrderRequest;
-
-      // Validate order
-      const validation = validateOrder(orderReq);
-      if (!validation.valid) {
-        return res.status(400).json({
-          success: false,
-          error: validation.errors.join(', '),
-          meta: { requestId },
-        });
-      }
+      // Validate & parse input with Zod
+      const orderReq = validateBody(req, res, schemas.legacyOrder);
+      if (!orderReq) return;
 
       // If broker is configured, use real API
       if (brokerConfigured) {
@@ -311,11 +299,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           });
         } catch (error: any) {
           console.error('[Broker] Alpaca order failed:', error.response?.data || error.message);
-          return res.status(500).json({
-            success: false,
-            error: error.response?.data?.message || 'Order submission failed',
-            meta: { requestId },
-          });
+          return internalError(res);
         }
       }
 
@@ -361,11 +345,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { orderId } = req.query;
 
       if (!orderId) {
-        return res.status(400).json({
-          success: false,
-          error: 'orderId parameter required',
-          meta: { requestId },
-        });
+        return badRequest(res, 'orderId parameter required');
       }
 
       if (brokerConfigured) {
@@ -388,12 +368,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             data: { canceled: true, orderId },
             meta: { requestId },
           });
-        } catch (error: any) {
-          return res.status(500).json({
-            success: false,
-            error: error.response?.data?.message || 'Order cancellation failed',
-            meta: { requestId },
-          });
+        } catch (_error: any) {
+          return internalError(res);
         }
       }
 
@@ -408,24 +384,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      return res.status(404).json({
-        success: false,
-        error: 'Order not found',
-        meta: { requestId },
-      });
+      return notFound(res, 'Order');
     }
 
-    return res.status(405).json({
-      success: false,
-      error: 'Method not allowed',
-      meta: { requestId },
-    });
-  } catch (error) {
-    console.error('Trade endpoint error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Internal server error',
-      meta: { requestId },
-    });
+    return methodNotAllowed(res);
+  } catch (_error) {
+    return internalError(res);
   }
 }

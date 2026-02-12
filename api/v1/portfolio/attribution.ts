@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireAuth } from '../../lib/auth.js';
 import { PerformanceAttribution } from '../../../src/analytics/PerformanceAttribution';
 
 interface PortfolioPosition {
@@ -115,7 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const polygonKey = process.env.POLYGON_API_KEY;
-  let source = 'mock';
+  let dataSource: 'mock' | 'live' = 'mock';
 
   // Calculate returns for each position
   const portfolioPositions = await Promise.all(
@@ -126,7 +127,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (polygonKey && process.env.NODE_ENV === 'production') {
         periodReturn = await fetchHistoricalReturns(pos.symbol, days, polygonKey);
         if (periodReturn !== null) {
-          source = 'polygon';
+          dataSource = 'live';
         }
       }
 
@@ -223,14 +224,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   );
 
+  res.setHeader('X-Data-Source', dataSource);
   return res.status(200).json({
     success: true,
     data: attribution,
+    dataSource,
     meta: {
       timestamp: new Date().toISOString(),
       requestId: `req-${Math.random().toString(36).slice(2, 8)}`,
       latencyMs: Date.now() - start,
-      source,
       period,
       positionCount: positions.length,
     },

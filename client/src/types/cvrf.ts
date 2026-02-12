@@ -134,10 +134,18 @@ export interface CVRFStats {
   };
 }
 
+export interface CVRFPagination {
+  total: number;
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
 export interface CVRFEpisodesResponse {
   current: CVRFEpisode | null;
   completed: CVRFEpisode[];
   totalEpisodes: number;
+  pagination: CVRFPagination;
 }
 
 // API Response wrapper

@@ -20,6 +20,8 @@ import { EpisodeComparisonView } from './EpisodeComparison';
 import { FactorWeightHeatmap } from './FactorWeightHeatmap';
 import { RegimeTimeline } from './RegimeTimeline';
 import { MetaPromptCard } from './MetaPromptCard';
+import { BeliefConstellation } from './BeliefConstellation';
+import { ConvictionTimeline } from './ConvictionTimeline';
 
 export function CVRFDashboard() {
   const { isLoading, isError, refetch } = useCVRFDashboard();
@@ -68,7 +70,10 @@ export function CVRFDashboard() {
         {/* Row 1: Performance Chart (Full Width) */}
         <EpisodePerformanceChart />
 
-        {/* Row 2: Factor Heatmap + Regime Timeline */}
+        {/* Row 2: Belief Constellation (Full Width) */}
+        <BeliefConstellation />
+
+        {/* Row 3: Factor Heatmap + Regime Timeline */}
         <div className="grid grid-cols-12 gap-6">
           <div className="col-span-12 lg:col-span-8">
             <FactorWeightHeatmap />
@@ -98,10 +103,13 @@ export function CVRFDashboard() {
           </div>
         </div>
 
-        {/* Row 4: Meta-Prompt (Full Width) */}
+        {/* Row 4: Conviction Timeline (Full Width) */}
+        <ConvictionTimeline />
+
+        {/* Row 5: Meta-Prompt (Full Width) */}
         <MetaPromptCard />
 
-        {/* Row 5: Episode Comparison (Full Width) */}
+        {/* Row 6: Episode Comparison (Full Width) */}
         <EpisodeComparisonView />
       </div>
 

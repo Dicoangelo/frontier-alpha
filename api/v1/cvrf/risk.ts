@@ -3,6 +3,7 @@
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createPersistentCVRFManager } from '../../../src/cvrf/PersistentCVRFManager.js';
+import { methodNotAllowed, validationError, internalError } from '../../lib/errorHandler.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,17 +15,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, error: { code: 'METHOD_NOT_ALLOWED', message: 'Use POST' } });
+    return methodNotAllowed(res);
   }
 
   const start = Date.now();
   const { portfolioValue, portfolioReturns, positions } = req.body || {};
 
   if (!portfolioValue || !positions) {
-    return res.status(400).json({
-      success: false,
-      error: { code: 'VALIDATION_ERROR', message: 'portfolioValue and positions are required' },
-    });
+    return validationError(res, 'portfolioValue and positions are required');
   }
 
   try {
@@ -71,10 +69,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         persistent: true,
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      error: { code: 'CVRF_ERROR', message: error.message },
-    });
+  } catch (_error: any) {
+    return internalError(res);
   }
 }

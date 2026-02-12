@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { methodNotAllowed, validationError, unauthorized, internalError } from '../../lib/errorHandler.js';
 // Dynamic import to avoid potential side effects
 // import { createClient } from '@supabase/supabase-js';
 
@@ -40,10 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({
-      success: false,
-      error: { code: 'METHOD_NOT_ALLOWED', message: 'Only POST requests allowed' },
-    });
+    return methodNotAllowed(res);
   }
 
   const requestId = `req-${Math.random().toString(36).slice(2, 8)}`;
@@ -53,11 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Validate input
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Email and password are required' },
-        meta: { requestId },
-      });
+      return validationError(res, 'Email and password are required');
     }
 
     // Get Supabase client (lazy initialization)
@@ -81,35 +75,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (error) {
       // Invalid credentials
       if (error.message.includes('Invalid login credentials')) {
-        return res.status(401).json({
-          success: false,
-          error: { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
-          meta: { requestId },
-        });
+        return unauthorized(res, 'Invalid email or password');
       }
 
       // Email not confirmed
       if (error.message.includes('Email not confirmed')) {
-        return res.status(401).json({
-          success: false,
-          error: { code: 'EMAIL_NOT_CONFIRMED', message: 'Please confirm your email address' },
-          meta: { requestId },
-        });
+        return unauthorized(res, 'Please confirm your email address');
       }
 
-      return res.status(401).json({
-        success: false,
-        error: { code: 'AUTH_ERROR', message: error.message },
-        meta: { requestId },
-      });
+      return unauthorized(res, 'Authentication failed');
     }
 
     if (!data.user || !data.session) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'AUTH_ERROR', message: 'Authentication failed' },
-        meta: { requestId },
-      });
+      return unauthorized(res, 'Authentication failed');
     }
 
     // Return success response
@@ -132,13 +110,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     console.error('[Auth] Login error:', error);
-    return res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: error instanceof Error ? error.message : 'Internal server error',
-      },
-      meta: { requestId },
-    });
+    return internalError(res);
   }
 }

@@ -2,12 +2,14 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { createClient } from '@supabase/supabase-js';
 import { createHash } from 'crypto';
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://rqidgeittsjkpkykmdrz.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+  throw new Error('SUPABASE_URL and SUPABASE_SERVICE_KEY must be set in environment variables');
+}
 
-// Use a dummy key for local development when no service key is provided
-const effectiveKey = supabaseServiceKey || 'dummy-key-for-local-dev';
-const supabase = createClient(supabaseUrl, effectiveKey, {
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,
@@ -213,7 +215,7 @@ export async function authMiddleware(
   // Neither worked
   return reply.status(401).send({
     success: false,
-    error: { code: 'UNAUTHORIZED', message: 'Missing or invalid authorization header' },
+    error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
   });
 }
 

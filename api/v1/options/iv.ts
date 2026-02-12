@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import axios from 'axios';
+import { methodNotAllowed, badRequest, internalError } from '../../lib/errorHandler.js';
 
 interface IVData {
   symbol: string;
@@ -392,10 +393,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'GET') {
-    return res.status(405).json({
-      success: false,
-      error: 'Method not allowed',
-    });
+    return methodNotAllowed(res);
   }
 
   const requestId = `req-${Math.random().toString(36).slice(2, 8)}`;
@@ -407,11 +405,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : [];
 
     if (symbols.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'symbols parameter is required',
-        meta: { requestId },
-      });
+      return badRequest(res, 'symbols parameter is required');
     }
 
     // Limit to 10 symbols to prevent abuse
@@ -449,6 +443,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const highSkewPositions = allIVs.filter(d => d.skew > 3).map(d => d.symbol);
     const backwardationPositions = allIVs.filter(d => d.termStructure === 'backwardation').map(d => d.symbol);
 
+    // Determine top-level dataSource: 'live' if any symbol used options data, else 'mock'
+    const hasLiveOptionsData = allIVs.some(d => d.dataSource === 'options');
+    const topLevelDataSource: 'mock' | 'live' = hasLiveOptionsData ? 'live' : 'mock';
+
+    res.setHeader('X-Data-Source', topLevelDataSource);
     return res.status(200).json({
       success: true,
       data: {
@@ -472,6 +471,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           },
         },
       },
+      dataSource: topLevelDataSource,
       meta: {
         timestamp: new Date().toISOString(),
         requestId,
@@ -485,10 +485,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     console.error('IV endpoint error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Internal server error',
-      meta: { requestId },
-    });
+    return internalError(res);
   }
 }

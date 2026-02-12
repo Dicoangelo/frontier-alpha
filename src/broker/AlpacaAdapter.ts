@@ -6,6 +6,7 @@
  */
 
 import axios, { type AxiosInstance } from 'axios';
+import { logger } from '../lib/logger.js';
 import {
   BrokerAdapter,
   type BrokerConfig,
@@ -64,10 +65,10 @@ export class AlpacaAdapter extends BrokerAdapter {
     try {
       await this.client.get('/v2/account');
       this.connected = true;
-      console.log(`[Alpaca] Connected (${this.isPaperTrading ? 'Paper' : 'Live'})`);
+      logger.info({ mode: this.isPaperTrading ? 'Paper' : 'Live' }, 'Alpaca connected');
       return true;
     } catch (error) {
-      console.error('[Alpaca] Connection failed:', error);
+      logger.error({ err: error }, 'Alpaca connection failed');
       this.connected = false;
       return false;
     }
@@ -75,7 +76,7 @@ export class AlpacaAdapter extends BrokerAdapter {
 
   async disconnect(): Promise<void> {
     this.connected = false;
-    console.log('[Alpaca] Disconnected');
+    logger.info('Alpaca disconnected');
   }
 
   /**
@@ -218,7 +219,7 @@ export class AlpacaAdapter extends BrokerAdapter {
       await this.client.delete('/v2/orders');
       return true;
     } catch (error) {
-      console.error('[Alpaca] Failed to cancel all orders:', error);
+      logger.error({ err: error }, 'Alpaca failed to cancel all orders');
       return false;
     }
   }
@@ -260,7 +261,7 @@ export class AlpacaAdapter extends BrokerAdapter {
         last: (quote.bp + quote.ap) / 2, // Midpoint
       };
     } catch (error) {
-      console.error(`[Alpaca] Failed to get quote for ${symbol}:`, error);
+      logger.error({ err: error, symbol }, 'Alpaca failed to get quote');
       return null;
     }
   }

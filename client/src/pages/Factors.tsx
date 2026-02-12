@@ -7,6 +7,7 @@ import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
 import { portfolioApi } from '@/api/portfolio';
 import { useFactorsByCategory, useRefreshFactors, FACTOR_CATEGORY_LABELS, FACTOR_CATEGORY_DESCRIPTIONS } from '@/hooks/useFactors';
+import { DataLoadError, NoFactorData } from '@/components/shared/EmptyState';
 import type { FactorExposureWithCategory } from '@/api/factors';
 
 const CATEGORY_ICONS: Record<string, typeof TrendingUp> = {
@@ -82,6 +83,8 @@ export function Factors() {
   const {
     data: factorsByCategory,
     isLoading: factorsLoading,
+    isError: factorsError,
+    refetch: refetchFactors,
     insight,
     lastUpdated,
   } = useFactorsByCategory(symbols);
@@ -175,14 +178,28 @@ export function Factors() {
         </div>
       )}
 
+      {/* Error State */}
+      {!isLoading && factorsError && (
+        <Card className="p-6">
+          <DataLoadError onRetry={() => refetchFactors()} error="Failed to load factor data" />
+        </Card>
+      )}
+
       {/* Empty State */}
-      {!isLoading && symbols.length === 0 && (
+      {!isLoading && !factorsError && symbols.length === 0 && (
         <Card>
           <div className="flex flex-col items-center justify-center h-64 text-[var(--color-text-muted)]">
             <Layers className="w-12 h-12 mb-4 opacity-50" />
             <p>No positions in your portfolio</p>
             <p className="text-sm mt-1">Add positions to analyze their factor exposures</p>
           </div>
+        </Card>
+      )}
+
+      {/* No factor data */}
+      {!isLoading && !factorsError && symbols.length > 0 && totalFactors === 0 && (
+        <Card className="p-6">
+          <NoFactorData />
         </Card>
       )}
 

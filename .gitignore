@@ -30,3 +30,6 @@ venv/
 coverage/
 .vercel
 .env*.local
+
+# Ralph TUI
+.ralph-tui/

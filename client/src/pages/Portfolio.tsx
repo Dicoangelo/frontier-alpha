@@ -12,6 +12,8 @@ import { DataLoadError, NetworkError, EmptyPortfolio } from '@/components/shared
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { BottomSheet, useBottomSheet } from '@/components/shared/BottomSheet';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { toast } from '@/components/shared/Toast';
+import { TradeReasoning, WhyButton } from '@/components/explainer/TradeReasoning';
 
 interface Position {
   id: string;
@@ -39,6 +41,7 @@ export function Portfolio() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ symbol: '', shares: '', avgCost: '' });
+  const [whySymbol, setWhySymbol] = useState<string | null>(null);
 
   const { data: portfolio, isLoading, error, refetch } = useQuery<{ data: PortfolioData }>({
     queryKey: ['portfolio'],
@@ -53,6 +56,10 @@ export function Portfolio() {
       setShowAddForm(false);
       addPositionSheet.close();
       setFormData({ symbol: '', shares: '', avgCost: '' });
+      toast.success('Position added', `${formData.symbol.toUpperCase()} added to portfolio`);
+    },
+    onError: (error) => {
+      toast.error('Failed to add position', getErrorMessage(error));
     },
   });
 
@@ -62,7 +69,11 @@ export function Portfolio() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolio'] });
       setEditingId(null);
+      toast.success('Position updated');
       setFormData({ symbol: '', shares: '', avgCost: '' });
+    },
+    onError: (error) => {
+      toast.error('Failed to update position', getErrorMessage(error));
     },
   });
 
@@ -70,6 +81,10 @@ export function Portfolio() {
     mutationFn: (id: string) => api.delete(`/portfolio/positions/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      toast.success('Position removed');
+    },
+    onError: (error) => {
+      toast.error('Failed to remove position', getErrorMessage(error));
     },
   });
 
@@ -315,117 +330,216 @@ export function Portfolio() {
         </Card>
       )}
 
-      <Card>
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
-          <table className="w-full min-w-[600px]">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-3 px-4 font-medium text-[var(--color-text-secondary)]">Symbol</th>
-                <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Shares</th>
-                <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)] hidden sm:table-cell">Avg Cost</th>
-                <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)] hidden sm:table-cell">Current</th>
-                <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">P&L</th>
-                <th className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {positions.length === 0 ? (
-                <tr>
-                  <td colSpan={6}>
-                    <EmptyPortfolio onAddPosition={handleAddPositionClick} />
-                  </td>
-                </tr>
-              ) : (
-                positions.map((position) => (
-                  <tr key={position.id} className="border-b hover:bg-[var(--color-bg-tertiary)]">
-                    {editingId === position.id ? (
-                      <>
-                        <td className="py-3 px-4 font-medium">{position.symbol}</td>
-                        <td className="py-3 px-4">
-                          <input
-                            type="number"
-                            step="0.000001"
-                            inputMode="decimal"
-                            value={formData.shares}
-                            onChange={(e) => setFormData({ ...formData, shares: e.target.value })}
-                            className="w-24 px-2 py-2 min-h-[44px] border rounded text-right"
-                          />
-                        </td>
-                        <td className="py-3 px-4 hidden sm:table-cell">
-                          <input
-                            type="number"
-                            step="0.01"
-                            inputMode="decimal"
-                            value={formData.avgCost}
-                            onChange={(e) => setFormData({ ...formData, avgCost: e.target.value })}
-                            className="w-24 px-2 py-2 min-h-[44px] border rounded text-right"
-                          />
-                        </td>
-                        <td className="py-3 px-4 text-right hidden sm:table-cell">-</td>
-                        <td className="py-3 px-4 text-right">-</td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <button
-                              onClick={handleUpdate}
-                              className="p-2.5 min-w-[44px] min-h-[44px] text-green-600 hover:bg-green-500/10 rounded-lg flex items-center justify-center touch-manipulation"
-                              aria-label="Save changes"
-                            >
-                              <Check className="w-5 h-5" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditingId(null);
-                                setFormData({ symbol: '', shares: '', avgCost: '' });
-                              }}
-                              className="p-2.5 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] rounded-lg flex items-center justify-center touch-manipulation"
-                              aria-label="Cancel editing"
-                            >
-                              <X className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="py-3 px-4 font-medium">{position.symbol}</td>
-                        <td className="py-3 px-4 text-right">{position.shares.toFixed(2)}</td>
-                        <td className="py-3 px-4 text-right hidden sm:table-cell">${position.costBasis.toFixed(2)}</td>
-                        <td className="py-3 px-4 text-right hidden sm:table-cell">
-                          ${(position.currentPrice || position.costBasis).toFixed(2)}
-                        </td>
-                        <td className={`py-3 px-4 text-right ${
-                          (position.unrealizedPnL || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+      {/* Mobile: Card layout */}
+      {isMobile ? (
+        <div className="space-y-3">
+          {positions.length === 0 ? (
+            <Card className="p-6">
+              <EmptyPortfolio onAddPosition={handleAddPositionClick} />
+            </Card>
+          ) : (
+            positions.map((position) => (
+              <Card key={position.id} className="p-4">
+                {editingId === position.id ? (
+                  <form onSubmit={handleUpdate} className="space-y-3">
+                    <div className="font-bold text-lg text-[var(--color-text)]">{position.symbol}</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">Shares</label>
+                        <input
+                          type="number"
+                          step="0.000001"
+                          inputMode="decimal"
+                          value={formData.shares}
+                          onChange={(e) => setFormData({ ...formData, shares: e.target.value })}
+                          className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg text-base"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-[var(--color-text-muted)] mb-1">Avg Cost</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          inputMode="decimal"
+                          value={formData.avgCost}
+                          onChange={(e) => setFormData({ ...formData, avgCost: e.target.value })}
+                          className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg text-base"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        className="flex-1 min-h-[44px] bg-[var(--color-positive)] text-white rounded-lg font-medium flex items-center justify-center gap-2"
+                      >
+                        <Check className="w-4 h-4" /> Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setEditingId(null); setFormData({ symbol: '', shares: '', avgCost: '' }); }}
+                        className="flex-1 min-h-[44px] bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] rounded-lg font-medium flex items-center justify-center gap-2"
+                      >
+                        <X className="w-4 h-4" /> Cancel
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1">
+                        <span className="font-bold text-lg text-[var(--color-text)]">{position.symbol}</span>
+                        <span className={`text-sm font-semibold ${
+                          (position.unrealizedPnL || 0) >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'
                         }`}>
                           {(position.unrealizedPnL || 0) >= 0 ? '+' : ''}
                           ${(position.unrealizedPnL || 0).toFixed(2)}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <button
-                              onClick={() => startEdit(position)}
-                              className="p-2.5 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:text-blue-600 hover:bg-blue-500/10 rounded-lg flex items-center justify-center touch-manipulation"
-                              aria-label={`Edit ${position.symbol}`}
-                            >
-                              <Edit2 className="w-5 h-5" />
-                            </button>
-                            <button
-                              onClick={() => deletePositionMutation.mutate(position.id)}
-                              className="p-2.5 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:text-red-600 hover:bg-red-500/10 rounded-lg flex items-center justify-center touch-manipulation"
-                              aria-label={`Delete ${position.symbol}`}
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                        </span>
+                      </div>
+                      <div className="text-sm text-[var(--color-text-secondary)]">
+                        {position.shares.toFixed(2)} shares
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                        Cost ${position.costBasis.toFixed(2)} · Current ${(position.currentPrice || position.costBasis).toFixed(2)}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <WhyButton symbol={position.symbol} onClick={setWhySymbol} />
+                      <button
+                        onClick={() => startEdit(position)}
+                        className="p-2.5 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:text-[var(--color-info)] hover:bg-[var(--color-info)]/10 rounded-lg flex items-center justify-center touch-manipulation"
+                        aria-label={`Edit ${position.symbol}`}
+                      >
+                        <Edit2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => deletePositionMutation.mutate(position.id)}
+                        className="p-2.5 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 rounded-lg flex items-center justify-center touch-manipulation"
+                        aria-label={`Delete ${position.symbol}`}
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            ))
+          )}
         </div>
-      </Card>
+      ) : (
+        /* Desktop: Table layout */
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full" role="table">
+              <thead>
+                <tr className="border-b">
+                  <th scope="col" className="text-left py-3 px-4 font-medium text-[var(--color-text-secondary)]">Symbol</th>
+                  <th scope="col" className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Shares</th>
+                  <th scope="col" className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Avg Cost</th>
+                  <th scope="col" className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Current</th>
+                  <th scope="col" className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">P&L</th>
+                  <th scope="col" className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {positions.length === 0 ? (
+                  <tr>
+                    <td colSpan={6}>
+                      <EmptyPortfolio onAddPosition={handleAddPositionClick} />
+                    </td>
+                  </tr>
+                ) : (
+                  positions.map((position) => (
+                    <tr key={position.id} className="border-b hover:bg-[var(--color-bg-tertiary)]">
+                      {editingId === position.id ? (
+                        <>
+                          <td className="py-3 px-4 font-medium">{position.symbol}</td>
+                          <td className="py-3 px-4">
+                            <input
+                              type="number"
+                              step="0.000001"
+                              inputMode="decimal"
+                              value={formData.shares}
+                              onChange={(e) => setFormData({ ...formData, shares: e.target.value })}
+                              className="w-24 px-2 py-2 min-h-[44px] border rounded text-right"
+                            />
+                          </td>
+                          <td className="py-3 px-4">
+                            <input
+                              type="number"
+                              step="0.01"
+                              inputMode="decimal"
+                              value={formData.avgCost}
+                              onChange={(e) => setFormData({ ...formData, avgCost: e.target.value })}
+                              className="w-24 px-2 py-2 min-h-[44px] border rounded text-right"
+                            />
+                          </td>
+                          <td className="py-3 px-4 text-right">-</td>
+                          <td className="py-3 px-4 text-right">-</td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={handleUpdate}
+                                className="p-2.5 min-w-[44px] min-h-[44px] text-[var(--color-positive)] hover:bg-[var(--color-positive)]/10 rounded-lg flex items-center justify-center"
+                                aria-label="Save changes"
+                              >
+                                <Check className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingId(null);
+                                  setFormData({ symbol: '', shares: '', avgCost: '' });
+                                }}
+                                className="p-2.5 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] rounded-lg flex items-center justify-center"
+                                aria-label="Cancel editing"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="py-3 px-4 font-medium">{position.symbol}</td>
+                          <td className="py-3 px-4 text-right">{position.shares.toFixed(2)}</td>
+                          <td className="py-3 px-4 text-right">${position.costBasis.toFixed(2)}</td>
+                          <td className="py-3 px-4 text-right">
+                            ${(position.currentPrice || position.costBasis).toFixed(2)}
+                          </td>
+                          <td className={`py-3 px-4 text-right ${
+                            (position.unrealizedPnL || 0) >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'
+                          }`}>
+                            {(position.unrealizedPnL || 0) >= 0 ? '+' : ''}
+                            ${(position.unrealizedPnL || 0).toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <WhyButton symbol={position.symbol} onClick={setWhySymbol} />
+                              <button
+                                onClick={() => startEdit(position)}
+                                className="p-2.5 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:text-[var(--color-info)] hover:bg-[var(--color-info)]/10 rounded-lg flex items-center justify-center"
+                                aria-label={`Edit ${position.symbol}`}
+                              >
+                                <Edit2 className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => deletePositionMutation.mutate(position.id)}
+                                className="p-2.5 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 rounded-lg flex items-center justify-center"
+                                aria-label={`Delete ${position.symbol}`}
+                              >
+                                <Trash2 className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       {/* Bottom Sheet for mobile Add Position */}
       <BottomSheet
@@ -454,6 +568,13 @@ export function Portfolio() {
           portfolioName={portfolio.data.name}
         />
       )}
+
+      {/* Trade Reasoning Modal */}
+      <TradeReasoning
+        symbol={whySymbol || ''}
+        isOpen={!!whySymbol}
+        onClose={() => setWhySymbol(null)}
+      />
     </div>
   );
 

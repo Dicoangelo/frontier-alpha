@@ -13,6 +13,7 @@
  */
 
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
+import { logger } from '../lib/logger.js';
 import {
   BrokerAdapter,
   type BrokerConfig,
@@ -192,13 +193,13 @@ export class AlpacaAdapter extends BrokerAdapter {
     const errorHandler = (error: AxiosError) => {
       if (error.response) {
         const data = error.response.data as any;
-        console.error(`[Alpaca] API Error ${error.response.status}:`, data);
+        logger.error({ status: error.response.status, data }, 'Alpaca API error');
 
         // Throw a more descriptive error
         const message = data?.message || data?.error || error.message;
         throw new Error(`Alpaca API Error: ${message}`);
       } else if (error.request) {
-        console.error('[Alpaca] Network Error:', error.message);
+        logger.error({ message: error.message }, 'Alpaca network error');
         throw new Error(`Network Error: ${error.message}`);
       }
       throw error;
@@ -224,10 +225,10 @@ export class AlpacaAdapter extends BrokerAdapter {
     try {
       await this.client.get('/v2/account');
       this.connected = true;
-      console.log(`[Alpaca] Connected (${this.isPaperTrading ? 'Paper' : 'Live'})`);
+      logger.info({ mode: this.isPaperTrading ? 'paper' : 'live' }, 'Alpaca connected');
       return true;
     } catch (error) {
-      console.error('[Alpaca] Connection failed:', error);
+      logger.error({ err: error }, 'Alpaca connection failed');
       this.connected = false;
       return false;
     }
@@ -235,7 +236,7 @@ export class AlpacaAdapter extends BrokerAdapter {
 
   async disconnect(): Promise<void> {
     this.connected = false;
-    console.log('[Alpaca] Disconnected');
+    logger.info('Alpaca disconnected');
   }
 
   // ========================================
@@ -423,7 +424,7 @@ export class AlpacaAdapter extends BrokerAdapter {
       const response = await this.client.delete('/v2/orders');
       return Array.isArray(response.data) ? response.data.length : 0;
     } catch (error) {
-      console.error('[Alpaca] Failed to cancel all orders:', error);
+      logger.error({ err: error }, 'Alpaca failed to cancel all orders');
       return 0;
     }
   }
@@ -511,7 +512,7 @@ export class AlpacaAdapter extends BrokerAdapter {
         timestamp: new Date(quote.t),
       };
     } catch (error) {
-      console.error(`[Alpaca] Failed to get quote for ${symbol}:`, error);
+      logger.error({ err: error, symbol }, 'Alpaca failed to get quote');
       return null;
     }
   }
@@ -536,7 +537,7 @@ export class AlpacaAdapter extends BrokerAdapter {
         });
       }
     } catch (error) {
-      console.error('[Alpaca] Failed to get bulk quotes:', error);
+      logger.error({ err: error }, 'Alpaca failed to get bulk quotes');
       // Fallback to individual requests
       for (const symbol of symbols) {
         const quote = await this.getQuote(symbol);
@@ -585,7 +586,7 @@ export class AlpacaAdapter extends BrokerAdapter {
         status: data.status,
       };
     } catch (error) {
-      console.error(`[Alpaca] Failed to get asset ${symbol}:`, error);
+      logger.error({ err: error, symbol }, 'Alpaca failed to get asset');
       return null;
     }
   }

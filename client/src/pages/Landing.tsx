@@ -49,21 +49,30 @@ export function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0F1219] flex flex-col grid-bg">
+    <div className="min-h-screen bg-[var(--color-bg)] dark:bg-[#0F1219] flex flex-col grid-bg">
       {/* Sovereign spectrum top bar */}
       <div className="sovereign-bar fixed top-0 left-0 right-0 z-50" />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-16">
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-16 relative">
+        {/* Backdrop gradient overlay — ensures WCAG AA contrast for hero text */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse 80% 60% at 50% 30%, rgba(123,44,255,0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 30% 70%, rgba(24,230,255,0.06) 0%, transparent 60%)',
+          }}
+          aria-hidden="true"
+        />
+
         {/* Logo/Brand */}
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center relative z-10">
           <div className="flex items-center justify-center gap-4 mb-6">
             <img src="/metaventions-logo.png" alt="Metaventions AI" className="w-16 h-16 rounded-sm" />
           </div>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-4 leading-[0.9] tracking-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white mb-4 leading-[0.9] tracking-tight">
             Frontier<span className="text-gradient-brand">Alpha</span>
           </h1>
-          <p className="text-xl md:text-2xl text-white/60 max-w-2xl mx-auto font-light">
+          <p className="text-lg sm:text-xl md:text-2xl text-white/70 max-w-2xl mx-auto font-light">
             Institutional Intelligence. Human Understanding.
           </p>
           <p className="text-[10px] text-white/30 mt-4 mono tracking-[0.5em] uppercase">
@@ -72,25 +81,26 @@ export function Landing() {
         </div>
 
         {/* Ticker Input */}
-        <div className="w-full max-w-2xl mx-auto">
-          <div className="glass-slab rounded-sm p-6 sm:p-8">
-            <label className="block text-[10px] mono tracking-[0.4em] uppercase text-white/40 mb-3">
+        <div className="w-full max-w-2xl mx-auto relative z-10">
+          <div className="glass-slab rounded-sm p-4 sm:p-6 md:p-8">
+            <label htmlFor="ticker-input" className="block text-[10px] mono tracking-[0.4em] uppercase text-white/40 mb-3">
               Enter your portfolio tickers
             </label>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <input
+                id="ticker-input"
                 type="text"
                 value={tickers}
                 onChange={(e) => setTickers(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="NVDA, AAPL, MSFT, GOOGL..."
-                className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-sm text-white placeholder-white/20 focus:outline-none focus:border-[#7B2CFF] transition-all mono text-sm"
+                className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-sm text-white placeholder-white/20 focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] transition-all mono text-sm"
                 disabled={isAnalyzing}
               />
               <button
                 onClick={handleAnalyze}
                 disabled={isAnalyzing}
-                className="px-8 py-3 bg-white text-black hover:bg-black hover:text-white border-2 border-white rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase transition-all click-feedback disabled:opacity-50 shadow-2xl"
+                className="px-8 py-3 bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase transition-all click-feedback disabled:opacity-50 shadow-[0_0_30px_rgba(123,44,255,0.3)] hover:shadow-[0_0_40px_rgba(123,44,255,0.5)] min-w-[140px]"
               >
                 {isAnalyzing ? (
                   <>
@@ -107,7 +117,7 @@ export function Landing() {
             </div>
 
             {error && (
-              <p className="mt-3 text-[#FF6B8A] text-sm mono">{error}</p>
+              <p className="mt-3 text-[var(--color-danger)] text-sm mono" role="alert">{error}</p>
             )}
 
             {/* Quick Portfolios */}
@@ -117,7 +127,7 @@ export function Landing() {
                 <button
                   key={portfolio.name}
                   onClick={() => setTickers(portfolio.symbols)}
-                  className="px-3 py-1 text-[10px] mono tracking-[0.2em] uppercase bg-white/5 hover:bg-white/10 text-white/50 hover:text-[#18E6FF] rounded-sm transition-colors border border-white/10 click-feedback"
+                  className="px-3 py-1 text-[10px] mono tracking-[0.2em] uppercase bg-white/5 hover:bg-white/10 text-white/50 hover:text-[var(--color-accent-secondary)] rounded-sm transition-colors border border-white/10 click-feedback"
                 >
                   {portfolio.name}
                 </button>
@@ -126,13 +136,31 @@ export function Landing() {
           </div>
         </div>
 
+        {/* Social Proof */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-white/40 mono text-xs sm:text-sm tracking-wide relative z-10">
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[var(--color-accent)]" aria-hidden="true" />
+            80+ Factors
+          </span>
+          <span className="hidden sm:inline text-white/20" aria-hidden="true">|</span>
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[var(--color-positive)]" aria-hidden="true" />
+            140K+ Data Points
+          </span>
+          <span className="hidden sm:inline text-white/20" aria-hidden="true">|</span>
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[var(--color-accent-secondary)]" aria-hidden="true" />
+            Powered by Metaventions AI
+          </span>
+        </div>
+
         {/* Features Grid */}
-        <section className="mt-16 max-w-4xl mx-auto px-4" aria-labelledby="features-heading">
+        <section className="mt-16 max-w-4xl mx-auto px-4 relative z-10" aria-labelledby="features-heading">
           <h2 id="features-heading" className="sr-only">Platform Features</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="glass-slab rounded-sm p-6 sm:p-8 text-center group hover:-translate-y-1 transition-all duration-500">
-              <div className="w-12 h-12 mx-auto mb-4 bg-[#7B2CFF]/10 rounded-sm flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#7B2CFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            <div className="glass-slab rounded-sm p-5 sm:p-6 md:p-8 text-center group hover:-translate-y-1 transition-all duration-500">
+              <div className="w-12 h-12 mx-auto mb-4 bg-[var(--color-accent)]/10 rounded-sm flex items-center justify-center" style={{ backgroundColor: 'rgba(123,44,255,0.1)' }}>
+                <svg className="w-6 h-6 text-[var(--color-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
@@ -142,8 +170,8 @@ export function Landing() {
               </p>
             </div>
 
-            <div className="glass-slab rounded-sm p-6 sm:p-8 text-center group hover:-translate-y-1 transition-all duration-500">
-              <div className="w-12 h-12 mx-auto mb-4 bg-[#00FFC6]/10 rounded-sm flex items-center justify-center">
+            <div className="glass-slab rounded-sm p-5 sm:p-6 md:p-8 text-center group hover:-translate-y-1 transition-all duration-500">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-sm flex items-center justify-center" style={{ backgroundColor: 'rgba(0,255,198,0.1)' }}>
                 <svg className="w-6 h-6 text-[#00FFC6]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
@@ -154,9 +182,9 @@ export function Landing() {
               </p>
             </div>
 
-            <div className="glass-slab rounded-sm p-6 sm:p-8 text-center group hover:-translate-y-1 transition-all duration-500">
-              <div className="w-12 h-12 mx-auto mb-4 bg-[#18E6FF]/10 rounded-sm flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#18E6FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <div className="glass-slab rounded-sm p-5 sm:p-6 md:p-8 text-center group hover:-translate-y-1 transition-all duration-500">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-sm flex items-center justify-center" style={{ backgroundColor: 'rgba(24,230,255,0.1)' }}>
+                <svg className="w-6 h-6 text-[var(--color-accent-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
@@ -173,22 +201,30 @@ export function Landing() {
       <footer className="border-t border-white/5 py-6 px-4">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-[10px] text-white/30 mono tracking-[0.2em] uppercase">
-            Powered by <span className="text-[#7B2CFF]">Metaventions AI</span> — institutional-grade factor models
+            Powered by <span className="text-[var(--color-accent)]">Metaventions AI</span> — institutional-grade factor models
           </div>
-          <div className="flex gap-6">
+          <nav className="flex gap-6" aria-label="Footer navigation">
             <button
               onClick={() => navigate('/login')}
-              className="text-[10px] text-white/30 hover:text-[#18E6FF] mono tracking-[0.2em] uppercase transition-colors"
+              className="text-[10px] text-white/30 hover:text-[var(--color-accent-secondary)] mono tracking-[0.2em] uppercase transition-colors"
             >
               Sign In
             </button>
-            <a href="#" className="text-[10px] text-white/30 hover:text-[#18E6FF] mono tracking-[0.2em] uppercase transition-colors">
+            <button
+              onClick={() => navigate('/help')}
+              className="text-[10px] text-white/30 hover:text-[var(--color-accent-secondary)] mono tracking-[0.2em] uppercase transition-colors"
+            >
               Documentation
-            </a>
-            <a href="#" className="text-[10px] text-white/30 hover:text-[#18E6FF] mono tracking-[0.2em] uppercase transition-colors">
+            </button>
+            <a
+              href="/api/v1/openapi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-white/30 hover:text-[var(--color-accent-secondary)] mono tracking-[0.2em] uppercase transition-colors"
+            >
               API
             </a>
-          </div>
+          </nav>
         </div>
       </footer>
     </div>

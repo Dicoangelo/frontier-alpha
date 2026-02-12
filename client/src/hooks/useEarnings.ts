@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { earningsApi } from '@/api/earnings';
+import { toast } from '@/components/shared/Toast';
 import type { EarningsImpactForecast } from '@/types';
 
 export function useUpcomingEarnings(symbols: string[], daysAhead: number = 30) {
@@ -38,6 +39,10 @@ export function useRefreshForecast() {
     mutationFn: (symbol: string) => earningsApi.refreshForecast(symbol),
     onSuccess: (data, symbol) => {
       queryClient.setQueryData(['earnings', 'forecast', symbol], data);
+      toast.success('Forecast refreshed', `${symbol} earnings forecast updated`);
+    },
+    onError: () => {
+      toast.error('Failed to refresh forecast');
     },
   });
 }

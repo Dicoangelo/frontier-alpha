@@ -35,8 +35,18 @@ export async function getConstraints(): Promise<CVRFConstraints> {
 // EPISODES
 // ============================================================================
 
-export async function getEpisodes(): Promise<CVRFEpisodesResponse> {
-  const response = await api.get<CVRFApiResponse<CVRFEpisodesResponse>>('/cvrf/episodes');
+export async function getEpisodes(params?: {
+  limit?: number;
+  offset?: number;
+  expand?: 'decisions';
+}): Promise<CVRFEpisodesResponse> {
+  const response = await api.get<CVRFApiResponse<CVRFEpisodesResponse>>('/cvrf/episodes', {
+    params: {
+      limit: params?.limit,
+      offset: params?.offset,
+      expand: params?.expand,
+    },
+  });
   return (response as any).data;
 }
 

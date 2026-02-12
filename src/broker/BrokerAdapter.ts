@@ -7,6 +7,8 @@
  * - TD Ameritrade (future)
  */
 
+import { logger } from '../lib/logger.js';
+
 export interface BrokerAccount {
   id: string;
   status: 'active' | 'inactive' | 'restricted';
@@ -198,13 +200,13 @@ export class MockBrokerAdapter extends BrokerAdapter {
 
   async connect(): Promise<boolean> {
     this.connected = true;
-    console.log('[MockBroker] Connected');
+    logger.info('MockBroker connected');
     return true;
   }
 
   async disconnect(): Promise<void> {
     this.connected = false;
-    console.log('[MockBroker] Disconnected');
+    logger.info('MockBroker disconnected');
   }
 
   async getAccount(): Promise<BrokerAccount> {

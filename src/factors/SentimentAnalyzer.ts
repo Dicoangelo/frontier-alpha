@@ -5,6 +5,8 @@
  * Integrates with Alpha Vantage NEWS_SENTIMENT endpoint.
  */
 
+import { logger } from '../lib/logger.js';
+
 export interface SentimentScore {
   symbol: string;
   overallSentiment: number; // -1 to 1
@@ -87,7 +89,7 @@ export class SentimentAnalyzer {
 
       const response = await fetch(url);
       if (!response.ok) {
-        console.warn(`Alpha Vantage sentiment API error: ${response.status}`);
+        logger.warn({ status: response.status }, 'Alpha Vantage sentiment API error');
         return this.generateMockSentiment(symbol);
       }
 
@@ -95,7 +97,7 @@ export class SentimentAnalyzer {
 
       // Check for rate limit message
       if (!data.feed) {
-        console.warn('Alpha Vantage rate limit or invalid response');
+        logger.warn('Alpha Vantage rate limit or invalid response');
         return this.generateMockSentiment(symbol);
       }
 
@@ -109,7 +111,7 @@ export class SentimentAnalyzer {
 
       return sentiment;
     } catch (error) {
-      console.error(`Failed to fetch sentiment for ${symbol}:`, error);
+      logger.error({ err: error, symbol }, 'Failed to fetch sentiment');
       return this.generateMockSentiment(symbol);
     }
   }

@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireAuth } from '../../lib/auth.js';
 import type { UserNotificationSettings } from '../../../src/notifications/AlertDelivery';
 
 // In production, this would be stored in Supabase
@@ -23,14 +24,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(204).end();
   }
 
+  // Require authentication
+  const user = await requireAuth(req, res);
+  if (!user) {
+    return; // requireAuth already sent 401 response
+  }
+
   const start = Date.now();
-
-  // Extract user ID from auth token (simplified - use real auth in production)
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.replace('Bearer ', '');
-
-  // In demo mode, use a session ID or 'demo-user'
-  const userId = token ? `user-${token.slice(0, 8)}` : 'demo-user';
+  const userId = user.id;
 
   if (req.method === 'GET') {
     // Get current notification settings

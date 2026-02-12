@@ -1,8 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { requireAuth } from '../../lib/auth.js';
+import { notFound, internalError } from '../../lib/errorHandler.js';
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://rqidgeittsjkpkykmdrz.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('SUPABASE_URL and SUPABASE_SERVICE_KEY must be set');
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -15,28 +21,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(204).end();
   }
 
-  const start = Date.now();
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Missing authorization header' },
-    });
+  // Require authentication
+  const user = await requireAuth(req, res);
+  if (!user) {
+    return; // requireAuth already sent 401 response
   }
 
-  const token = authHeader.substring(7);
+  const start = Date.now();
 
   try {
-    // Verify the user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Invalid token' },
-      });
-    }
 
     // Get user's portfolio
     const { data: portfolio, error: portfolioError } = await supabase
@@ -46,10 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .single();
 
     if (portfolioError || !portfolio) {
-      return res.status(404).json({
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'No portfolio found' },
-      });
+      return notFound(res, 'Portfolio');
     }
 
     // Get positions
@@ -59,15 +49,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .eq('portfolio_id', portfolio.id);
 
     if (positionsError) {
-      return res.status(500).json({
-        success: false,
-        error: { code: 'DB_ERROR', message: positionsError.message },
-      });
+      console.error('Positions fetch error:', positionsError);
+      return internalError(res, 'Failed to load portfolio positions');
     }
 
     // Fetch real quotes for positions
     const symbols = (positions || []).map((p: any) => p.symbol);
     const quotesMap = new Map<string, { price: number; change: number }>();
+    let dataSource: 'mock' | 'live' = 'mock';
 
     if (symbols.length > 0) {
       const polygonApiKey = process.env.POLYGON_API_KEY;
@@ -85,6 +74,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   change: ticker.todaysChangePerc || 0,
                 });
               }
+              if (polygonData.tickers.length > 0) {
+                dataSource = 'live';
+              }
             }
           }
         } catch (quoteError) {
@@ -94,6 +86,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Build positions with quotes (fallback to deterministic mock if no real quotes)
+    let hasMockFallback = false;
     const positionsWithQuotes = (positions || []).map((pos: any) => {
       const quote = quotesMap.get(pos.symbol);
       let currentPrice: number;
@@ -104,6 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Fallback: deterministic price based on symbol hash
         const hash = pos.symbol.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0);
         currentPrice = 50 + (hash % 450);
+        hasMockFallback = true;
       }
 
       const unrealizedPnL = (currentPrice - pos.avg_cost) * pos.shares;
@@ -119,6 +113,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
     });
 
+    // If any position used mock prices, mark as mock
+    if (hasMockFallback) {
+      dataSource = 'mock';
+    }
+
     // Calculate total value and weights
     const totalPositionValue = positionsWithQuotes.reduce(
       (sum: number, p: any) => sum + p.currentPrice * p.shares,
@@ -130,6 +129,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       p.weight = (p.currentPrice * p.shares) / totalValue;
     });
 
+    res.setHeader('X-Data-Source', dataSource);
     return res.status(200).json({
       success: true,
       data: {
@@ -140,16 +140,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         totalValue,
         currency: 'USD',
       },
+      dataSource,
       meta: {
         timestamp: new Date().toISOString(),
         requestId: `req-${Math.random().toString(36).slice(2, 8)}`,
         latencyMs: Date.now() - start,
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      error: { code: 'SERVER_ERROR', message: error.message },
-    });
+  } catch (error) {
+    console.error('Portfolio error:', error);
+    return internalError(res);
   }
 }

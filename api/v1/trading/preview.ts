@@ -6,6 +6,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { methodNotAllowed, internalError } from '../../lib/errorHandler.js';
 
 interface OrderPreviewRequest {
   symbol: string;
@@ -45,10 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({
-      success: false,
-      error: 'Method not allowed',
-    });
+    return methodNotAllowed(res);
   }
 
   const requestId = `req-${Math.random().toString(36).slice(2, 8)}`;
@@ -221,10 +219,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error: any) {
     console.error('[Trading Preview] Error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message || 'Internal server error',
-      meta: { requestId },
-    });
+    return internalError(res);
   }
 }

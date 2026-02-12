@@ -70,6 +70,23 @@ interface DBBelief {
   created_at: string;
 }
 
+interface DBCycleResult {
+  id: string;
+  cycle_number: number;
+  timestamp: string;
+  current_episode_id: string;
+  previous_episode_id: string;
+  current_episode_return: number;
+  previous_episode_return: number;
+  performance_delta: number;
+  decision_overlap: number;
+  extracted_insights: unknown[];
+  meta_prompt: Record<string, unknown> | null;
+  belief_updates: unknown[];
+  new_belief_state: Record<string, unknown> | null;
+  explanation: string;
+}
+
 // ============================================================================
 // EPISODE PERSISTENCE
 // ============================================================================
@@ -228,7 +245,7 @@ export async function saveDecision(
 ): Promise<TradingDecision> {
   const id = `decision_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  const { data, error } = await supabaseAdmin
+  const { data: _data, error } = await supabaseAdmin
     .from('cvrf_decisions')
     .insert({
       id,
@@ -434,8 +451,14 @@ function dbToBelief(db: DBBelief): BeliefState {
   };
 }
 
-function dbToCycleResult(db: any): CVRFCycleResult {
-  const newBeliefState = db.new_belief_state || {};
+function dbToCycleResult(db: DBCycleResult): CVRFCycleResult {
+  const newBeliefState = (db.new_belief_state || {}) as Record<string, unknown> & {
+    id?: string;
+    version?: number;
+    updatedAt?: string;
+    factorWeights?: Record<string, number>;
+    factorConfidences?: Record<string, number>;
+  };
   return {
     cycleId: db.id || `cycle_${db.cycle_number || 0}`,
     timestamp: new Date(db.timestamp),
@@ -459,16 +482,16 @@ function dbToCycleResult(db: any): CVRFCycleResult {
       profitableTrades: [],
       losingTrades: [],
     },
-    extractedInsights: db.extracted_insights || [],
-    metaPrompt: db.meta_prompt || {
+    extractedInsights: (db.extracted_insights || []) as CVRFCycleResult['extractedInsights'],
+    metaPrompt: (db.meta_prompt || {
       optimizationDirection: '',
       keyLearnings: [],
       factorAdjustments: {},
       riskGuidance: '',
       timingInsights: '',
       generatedAt: new Date(db.timestamp),
-    },
-    beliefUpdates: db.belief_updates || [],
+    }) as unknown as CVRFCycleResult['metaPrompt'],
+    beliefUpdates: (db.belief_updates || []) as CVRFCycleResult['beliefUpdates'],
     newBeliefState: {
       ...newBeliefState,
       id: newBeliefState.id || '',
@@ -476,7 +499,7 @@ function dbToCycleResult(db: any): CVRFCycleResult {
       updatedAt: new Date(newBeliefState.updatedAt || db.timestamp),
       factorWeights: new Map(Object.entries(newBeliefState.factorWeights || {})),
       factorConfidences: new Map(Object.entries(newBeliefState.factorConfidences || {})),
-    },
+    } as CVRFCycleResult['newBeliefState'],
     explanation: db.explanation || '',
   };
 }

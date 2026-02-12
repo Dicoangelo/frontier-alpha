@@ -394,7 +394,7 @@ export class WalkForwardEngine {
    */
   private riskParityWeights(
     volatilities: Map<string, number>,
-    constraints?: { maxWeight?: number; minWeight?: number }
+    _constraints?: { maxWeight?: number; minWeight?: number }
   ): Map<string, number> {
     const weights = new Map<string, number>();
 

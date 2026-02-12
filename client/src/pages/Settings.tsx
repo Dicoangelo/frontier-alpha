@@ -42,6 +42,7 @@ export function Settings() {
 
   useEffect(() => {
     if (settingsData?.data) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing query data to local form state
       setSettings(settingsData.data);
     }
   }, [settingsData]);
@@ -58,7 +59,7 @@ export function Settings() {
     },
   });
 
-  const handleChange = (field: keyof UserSettings, value: any) => {
+  const handleChange = (field: keyof UserSettings, value: UserSettings[keyof UserSettings]) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
@@ -106,7 +107,7 @@ export function Settings() {
               type="email"
               value={user?.email || ''}
               disabled
-              className="w-full px-3 py-2 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)]"
+              className="w-full px-3 py-2 min-h-[44px] bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)]"
             />
           </div>
 
@@ -117,7 +118,7 @@ export function Settings() {
               value={settings.display_name || ''}
               onChange={(e) => handleChange('display_name', e.target.value)}
               placeholder="Your name"
-              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -132,12 +133,12 @@ export function Settings() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">Risk Tolerance</label>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               {(['conservative', 'moderate', 'aggressive'] as const).map((level) => (
                 <button
                   key={level}
                   onClick={() => handleChange('risk_tolerance', level)}
-                  className={`flex-1 py-3 px-4 rounded-lg border-2 capitalize transition ${
+                  className={`flex-1 py-3 px-4 min-h-[44px] rounded-lg border-2 capitalize transition ${
                     settings.risk_tolerance === level
                       ? 'border-blue-500 bg-blue-500/10 text-blue-700'
                       : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
@@ -149,7 +150,7 @@ export function Settings() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                 Max Position Size
@@ -162,7 +163,7 @@ export function Settings() {
                   step="5"
                   value={settings.max_position_pct}
                   onChange={(e) => handleChange('max_position_pct', parseFloat(e.target.value))}
-                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg pr-8"
+                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg pr-8"
                 />
                 <span className="absolute right-3 top-2 text-[var(--color-text-muted)]">%</span>
               </div>
@@ -180,7 +181,7 @@ export function Settings() {
                   step="1"
                   value={settings.stop_loss_pct}
                   onChange={(e) => handleChange('stop_loss_pct', parseFloat(e.target.value))}
-                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg pr-8"
+                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg pr-8"
                 />
                 <span className="absolute right-3 top-2 text-[var(--color-text-muted)]">%</span>
               </div>
@@ -198,7 +199,7 @@ export function Settings() {
                   step="5"
                   value={settings.take_profit_pct}
                   onChange={(e) => handleChange('take_profit_pct', parseFloat(e.target.value))}
-                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg pr-8"
+                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg pr-8"
                 />
                 <span className="absolute right-3 top-2 text-[var(--color-text-muted)]">%</span>
               </div>

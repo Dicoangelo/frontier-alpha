@@ -23,6 +23,10 @@ const Settings = lazy(() => import('@/pages/Settings').then(m => ({ default: m.S
 const Help = lazy(() => import('@/pages/Help').then(m => ({ default: m.Help })));
 const CVRF = lazy(() => import('@/pages/CVRF').then(m => ({ default: m.CVRF })));
 const Backtest = lazy(() => import('@/pages/Backtest').then(m => ({ default: m.Backtest })));
+const ML = lazy(() => import('@/pages/ML').then(m => ({ default: m.ML })));
+const Options = lazy(() => import('@/pages/Options').then(m => ({ default: m.Options })));
+const Social = lazy(() => import('@/pages/Social').then(m => ({ default: m.Social })));
+const Tax = lazy(() => import('@/pages/Tax').then(m => ({ default: m.Tax })));
 const SharedPortfolio = lazy(() => import('@/pages/SharedPortfolio'));
 
 const queryClient = new QueryClient({
@@ -100,7 +104,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout>
-              <Dashboard />
+              <ErrorBoundary>
+                <Dashboard />
+              </ErrorBoundary>
             </Layout>
           </ProtectedRoute>
         }
@@ -110,7 +116,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout>
-              <Dashboard />
+              <ErrorBoundary>
+                <Dashboard />
+              </ErrorBoundary>
             </Layout>
           </ProtectedRoute>
         }
@@ -120,7 +128,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout>
-              <Portfolio />
+              <ErrorBoundary>
+                <Portfolio />
+              </ErrorBoundary>
             </Layout>
           </ProtectedRoute>
         }
@@ -130,7 +140,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout>
-              <Factors />
+              <ErrorBoundary>
+                <Factors />
+              </ErrorBoundary>
             </Layout>
           </ProtectedRoute>
         }
@@ -140,7 +152,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout>
-              <Earnings />
+              <ErrorBoundary>
+                <Earnings />
+              </ErrorBoundary>
             </Layout>
           </ProtectedRoute>
         }
@@ -150,7 +164,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout>
-              <Optimize />
+              <ErrorBoundary>
+                <Optimize />
+              </ErrorBoundary>
             </Layout>
           </ProtectedRoute>
         }
@@ -160,7 +176,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout>
-              <Alerts />
+              <ErrorBoundary>
+                <Alerts />
+              </ErrorBoundary>
             </Layout>
           </ProtectedRoute>
         }
@@ -170,7 +188,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout>
-              <Trading />
+              <ErrorBoundary>
+                <Trading />
+              </ErrorBoundary>
             </Layout>
           </ProtectedRoute>
         }
@@ -180,7 +200,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout>
-              <Settings />
+              <ErrorBoundary>
+                <Settings />
+              </ErrorBoundary>
             </Layout>
           </ProtectedRoute>
         }
@@ -190,7 +212,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout>
-              <Help />
+              <ErrorBoundary>
+                <Help />
+              </ErrorBoundary>
             </Layout>
           </ProtectedRoute>
         }
@@ -199,7 +223,57 @@ function AppRoutes() {
         path="/cvrf"
         element={
           <ProtectedRoute>
-            <CVRF />
+            <ErrorBoundary>
+              <CVRF />
+            </ErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ml"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ErrorBoundary>
+                <ML />
+              </ErrorBoundary>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/options"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ErrorBoundary>
+                <Options />
+              </ErrorBoundary>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/social"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ErrorBoundary>
+                <Social />
+              </ErrorBoundary>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tax"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ErrorBoundary>
+                <Tax />
+              </ErrorBoundary>
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -208,7 +282,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout>
-              <Backtest />
+              <ErrorBoundary>
+                <Backtest />
+              </ErrorBoundary>
             </Layout>
           </ProtectedRoute>
         }
@@ -216,7 +292,11 @@ function AppRoutes() {
       {/* Public route for shared portfolios - no auth required */}
       <Route
         path="/shared/:token"
-        element={<SharedPortfolio />}
+        element={
+          <ErrorBoundary>
+            <SharedPortfolio />
+          </ErrorBoundary>
+        }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

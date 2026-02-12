@@ -135,6 +135,7 @@ function notifyListeners() {
   toastListeners.forEach(listener => listener([...toastState]));
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const toast = {
   show: (options: Omit<ToastItem, 'id'>) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;

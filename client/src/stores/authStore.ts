@@ -80,8 +80,8 @@ export const useAuthStore = create<AuthState>()(
 
           set({ loading: false });
           return false;
-        } catch (error: any) {
-          set({ error: error.message || 'Login failed', loading: false });
+        } catch (error: unknown) {
+          set({ error: error instanceof Error ? error.message : 'Login failed', loading: false });
           return false;
         }
       },
@@ -113,8 +113,8 @@ export const useAuthStore = create<AuthState>()(
             error: 'Please check your email to confirm your account',
           });
           return true;
-        } catch (error: any) {
-          set({ error: error.message || 'Signup failed', loading: false });
+        } catch (error: unknown) {
+          set({ error: error instanceof Error ? error.message : 'Signup failed', loading: false });
           return false;
         }
       },
@@ -129,8 +129,8 @@ export const useAuthStore = create<AuthState>()(
             session: null,
             loading: false,
           });
-        } catch (error: any) {
-          set({ error: error.message, loading: false });
+        } catch (error: unknown) {
+          set({ error: error instanceof Error ? error.message : 'Logout failed', loading: false });
         }
       },
 

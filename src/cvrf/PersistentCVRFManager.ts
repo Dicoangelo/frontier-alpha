@@ -13,13 +13,14 @@ import type {
   TradingDecision,
   WithinEpisodeRiskControl,
   OverEpisodeBeliefAdjustment,
+  EpisodeComparison,
+  ConceptualInsight,
+  MetaPrompt,
 } from './types.js';
 import { DEFAULT_CVRF_CONFIG } from './types.js';
-import { EpisodeManager } from './EpisodeManager.js';
 import { ConceptExtractor } from './ConceptExtractor.js';
 import { BeliefUpdater } from './BeliefUpdater.js';
 import * as persistence from './persistence.js';
-import type { FactorExposure, OptimizationResult } from '../types/index.js';
 import { logger } from '../lib/logger.js';
 
 // ============================================================================
@@ -270,7 +271,7 @@ export class PersistentCVRFManager {
     return result;
   }
 
-  private createEpisodeComparison(previous: Episode, current: Episode): any {
+  private createEpisodeComparison(previous: Episode, current: Episode): EpisodeComparison {
     // Calculate decision overlap (τ)
     const prevDecisions = new Set(previous.decisions.map(d => `${d.symbol}_${d.action}`));
     const currDecisions = current.decisions.map(d => `${d.symbol}_${d.action}`);
@@ -310,7 +311,7 @@ export class PersistentCVRFManager {
       d.action === 'sell' || (d.action === 'hold' && d.confidence <= 0.5)
     );
 
-    return {
+    const result = {
       previousEpisodeId: previous.id,
       currentEpisodeId: current.id,
       previousEpisodeReturn: prevReturn,
@@ -324,12 +325,13 @@ export class PersistentCVRFManager {
       profitableTrades,
       losingTrades,
     };
+    return result as EpisodeComparison;
   }
 
   private generateCycleExplanation(
-    comparison: any,
-    insights: any[],
-    metaPrompt: any,
+    comparison: EpisodeComparison,
+    insights: ConceptualInsight[],
+    metaPrompt: MetaPrompt,
     newBeliefs: BeliefState
   ): string {
     const perfDelta = (comparison.performanceDelta * 100).toFixed(2);

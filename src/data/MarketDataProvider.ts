@@ -90,7 +90,7 @@ export class MarketDataProvider {
     const redisUrl = config.redisUrl || process.env.REDIS_URL;
     if (redisUrl) {
       try {
-        this.redis = new (Redis as any)(redisUrl, {
+        this.redis = new (Redis as unknown as new (url: string, opts: Record<string, unknown>) => RedisClient)(redisUrl, {
           maxRetriesPerRequest: 3,
           lazyConnect: true,
           connectTimeout: 5000,

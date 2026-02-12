@@ -36,7 +36,7 @@ const ALPACA_LIVE_URL = 'https://api.alpaca.markets';
 const ALPACA_DATA_URL = 'https://data.alpaca.markets';
 
 const REQUEST_TIMEOUT = 15000;
-const MAX_RETRIES = 3;
+const _MAX_RETRIES = 3;
 
 // ============================================================================
 // Alpaca Response Types
@@ -192,7 +192,7 @@ export class AlpacaAdapter extends BrokerAdapter {
     // Response interceptor for error handling
     const errorHandler = (error: AxiosError) => {
       if (error.response) {
-        const data = error.response.data as any;
+        const data = error.response.data as Record<string, unknown>;
         logger.error({ status: error.response.status, data }, 'Alpaca API error');
 
         // Throw a more descriptive error
@@ -288,8 +288,8 @@ export class AlpacaAdapter extends BrokerAdapter {
     try {
       const response = await this.client.get<AlpacaPosition>(`/v2/positions/${symbol}`);
       return this.mapPosition(response.data);
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
         return null;
       }
       throw error;
@@ -325,7 +325,7 @@ export class AlpacaAdapter extends BrokerAdapter {
       throw new Error(validation.errors.join(', '));
     }
 
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       symbol: orderReq.symbol.toUpperCase(),
       side: orderReq.side,
       type: orderReq.type,
@@ -389,8 +389,8 @@ export class AlpacaAdapter extends BrokerAdapter {
     try {
       const response = await this.client.get<AlpacaOrder>(`/v2/orders/${orderId}`);
       return this.mapOrder(response.data);
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
         return null;
       }
       throw error;
@@ -398,7 +398,7 @@ export class AlpacaAdapter extends BrokerAdapter {
   }
 
   async getOrders(status?: string): Promise<Order[]> {
-    const params: any = { limit: 100 };
+    const params: Record<string, string | number> = { limit: 100 };
     if (status) {
       params.status = status;
     }
@@ -411,8 +411,8 @@ export class AlpacaAdapter extends BrokerAdapter {
     try {
       await this.client.delete(`/v2/orders/${orderId}`);
       return true;
-    } catch (error: any) {
-      if (error.response?.status === 404 || error.response?.status === 422) {
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && (error.response?.status === 404 || error.response?.status === 422)) {
         return false;
       }
       throw error;
@@ -430,7 +430,7 @@ export class AlpacaAdapter extends BrokerAdapter {
   }
 
   async replaceOrder(orderId: string, updates: Partial<OrderRequest>): Promise<Order> {
-    const payload: any = {};
+    const payload: Record<string, string> = {};
 
     if (updates.qty !== undefined) {
       payload.qty = updates.qty.toString();
@@ -602,8 +602,8 @@ export class AlpacaAdapter extends BrokerAdapter {
     direction?: 'asc' | 'desc',
     pageSize?: number,
     pageToken?: string
-  ): Promise<any[]> {
-    const params: any = {};
+  ): Promise<unknown[]> {
+    const params: Record<string, string | number> = {};
 
     if (activityType) {
       params.activity_type = activityType;
@@ -641,7 +641,7 @@ export class AlpacaAdapter extends BrokerAdapter {
     baseValue: number;
     timeframe: string;
   }> {
-    const params: any = {};
+    const params: Record<string, string | boolean> = {};
 
     if (period) params.period = period;
     if (timeframe) params.timeframe = timeframe;

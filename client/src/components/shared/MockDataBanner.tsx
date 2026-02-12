@@ -11,11 +11,13 @@ import { useLocation } from 'react-router-dom';
 let _isMockMode = false;
 const listeners = new Set<(mock: boolean) => void>();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function setMockMode(isMock: boolean) {
   _isMockMode = isMock;
   listeners.forEach((fn) => fn(isMock));
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function getMockMode(): boolean {
   return _isMockMode;
 }
@@ -34,6 +36,7 @@ export function MockDataBanner() {
 
   // Reset dismissed state on navigation
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset on navigation
     if (isMock) setDismissed(false);
   }, [location.pathname, isMock]);
 

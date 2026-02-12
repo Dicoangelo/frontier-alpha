@@ -69,8 +69,11 @@ export function AlertDropdown() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-lg"
+        aria-label={`Alerts${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
       >
-        <Bell className="w-5 h-5" />
+        <Bell className="w-5 h-5" aria-hidden="true" />
         {unreadCount > 0 && (
           <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -85,8 +88,9 @@ export function AlertDropdown() {
             <button
               onClick={() => setIsOpen(false)}
               className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] rounded"
+              aria-label="Close alerts"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
 

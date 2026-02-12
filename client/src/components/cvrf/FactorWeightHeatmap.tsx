@@ -167,7 +167,7 @@ export function FactorWeightHeatmap() {
       </div>
 
       {/* Heatmap Grid */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" role="img" aria-label={`Factor weight heatmap showing ${factors.length} factors across ${episodes.length} CVRF cycles`}>
         <table className="w-full border-collapse">
           <thead>
             <tr>

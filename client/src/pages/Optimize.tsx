@@ -75,7 +75,7 @@ export function Optimize() {
     },
   });
 
-  const symbols = portfolio?.data?.positions?.map((p: any) => p.symbol) || [];
+  const symbols = portfolio?.data?.positions?.map((p: { symbol: string }) => p.symbol) || [];
 
   const handleOptimize = () => {
     if (symbols.length === 0) return;
@@ -109,12 +109,12 @@ export function Optimize() {
         <div className="lg:col-span-2 space-y-6">
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">Optimization Objective</h2>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {objectives.map((obj) => (
                 <button
                   key={obj.value}
                   onClick={() => setSelectedObjective(obj.value)}
-                  className={`p-4 rounded-lg border-2 text-left transition ${
+                  className={`p-4 min-h-[44px] rounded-lg border-2 text-left transition ${
                     selectedObjective === obj.value
                       ? 'border-blue-500 bg-blue-500/10'
                       : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
@@ -132,7 +132,7 @@ export function Optimize() {
 
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">Constraints</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
                   Max Position Weight
@@ -144,7 +144,7 @@ export function Optimize() {
                   max="1"
                   value={maxWeight}
                   onChange={(e) => setMaxWeight(e.target.value)}
-                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
+                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg"
                 />
                 <p className="text-xs text-[var(--color-text-muted)] mt-1">Max {(parseFloat(maxWeight) * 100).toFixed(0)}% in any position</p>
               </div>
@@ -160,7 +160,7 @@ export function Optimize() {
                     max="0.5"
                     value={targetVol}
                     onChange={(e) => setTargetVol(e.target.value)}
-                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg"
+                    className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg"
                   />
                   <p className="text-xs text-[var(--color-text-muted)] mt-1">Target {(parseFloat(targetVol) * 100).toFixed(0)}% annualized</p>
                 </div>

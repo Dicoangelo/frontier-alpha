@@ -1,0 +1,660 @@
+{
+  "name": "Frontier Alpha Phase 2 — Perfect & Expand",
+  "description": "Two waves: (A) Harden existing platform — fix lint, add tests, polish UX. (B) Expand with ML Engine, Social Features, Options Intelligence, and Tax Optimization. Each story must pass quality gates: npm test, npm run lint, npx tsc --noEmit, and client equivalents.",
+  "branchName": "ralph/phase-2",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Fix all ESLint warnings in server codebase",
+      "description": "As a developer, I want zero lint warnings in the server codebase so that CI is clean and code quality is enforced. There are currently ~165 warnings, mostly unused variables and `any` types in src/ and api/ directories.",
+      "acceptanceCriteria": [
+        "Run `npm run lint` and resolve all warnings in src/ files",
+        "Replace `any` types with proper interfaces in AlpacaAdapter and other files",
+        "Remove unused variables or prefix with underscore if needed for signatures",
+        "Do NOT change any logic — only fix lint issues",
+        "`npm run lint` produces 0 warnings and 0 errors",
+        "`npm test -- --run` still passes all 156 tests",
+        "`npx tsc --noEmit` passes with no errors"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Wave A: Hardening. Focus on src/ and api/ directories only, not client/.",
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-002",
+      "title": "Fix all ESLint warnings in client codebase",
+      "description": "As a developer, I want zero lint warnings in the client codebase so that the full project has clean lint output.",
+      "acceptanceCriteria": [
+        "Run lint in client/ and resolve all warnings",
+        "Fix `no-explicit-any` warnings with proper types",
+        "Remove unused imports and variables",
+        "Do NOT change any logic — only fix lint issues",
+        "Client lint produces 0 warnings and 0 errors",
+        "Client tests still pass: `cd client && npm test -- --run`",
+        "Client TypeScript passes: `cd client && npx tsc --noEmit`"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Wave A: Hardening. Focus on client/src/ only.",
+      "dependsOn": [
+        "US-001"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-003",
+      "title": "Add E2E tests for CVRF dashboard flow",
+      "description": "As a developer, I want comprehensive E2E tests for the CVRF intelligence page covering episode timeline, belief visualization, and meta-prompt generation.",
+      "acceptanceCriteria": [
+        "Create tests/e2e/cvrf.test.ts with 10+ test cases",
+        "Test: CVRF page renders with episode timeline",
+        "Test: Episode cards display correct metrics (return, Sharpe, drawdown)",
+        "Test: Episode comparison view loads correctly",
+        "Test: Belief state heatmap renders factor weights",
+        "Test: Meta-prompt cards display insights",
+        "Test: Error states display properly when API fails",
+        "Test: Loading skeletons show during data fetch",
+        "`npm test -- --run` passes all tests including new ones",
+        "No new lint warnings introduced"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Wave A: Testing. Use existing test patterns from tests/e2e/.",
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-004",
+      "title": "Add E2E tests for earnings and portfolio flows",
+      "description": "As a developer, I want E2E test coverage for the earnings calendar and portfolio optimization flows.",
+      "acceptanceCriteria": [
+        "Create tests/e2e/earnings.test.ts with 8+ test cases",
+        "Create tests/e2e/portfolio.test.ts with 8+ test cases",
+        "Earnings: calendar renders, forecasts display, historical chart loads",
+        "Portfolio: optimization runs, strategy selection works, results display",
+        "Test error states and loading states for both",
+        "`npm test -- --run` passes all tests",
+        "No new lint warnings"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Wave A: Testing. Follow existing test fixture patterns.",
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-005",
+      "title": "Add loading skeletons and error boundaries to all pages",
+      "description": "As a user, I want smooth loading states instead of blank pages and helpful error messages instead of white screens when something fails.",
+      "acceptanceCriteria": [
+        "Create client/src/components/shared/LoadingSkeleton.tsx with variants for cards, charts, tables",
+        "Create client/src/components/shared/ErrorBoundary.tsx with retry button and error details",
+        "Create client/src/components/shared/EmptyState.tsx with icon and CTA",
+        "Add LoadingSkeleton to Dashboard, CVRF, Earnings, Portfolio, Factors pages",
+        "Wrap each page in ErrorBoundary in App.tsx router",
+        "Add EmptyState to pages that can have no data",
+        "All client tests pass",
+        "Client TypeScript passes",
+        "No new lint warnings"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Wave A: UX Polish. Use Tailwind for styling, Lucide for icons.",
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-006",
+      "title": "Mobile responsiveness audit and fixes",
+      "description": "As a mobile user, I want all pages to display properly on phone and tablet screens with no horizontal scrolling or cut-off content.",
+      "acceptanceCriteria": [
+        "Audit all pages at 375px (iPhone SE), 390px (iPhone 14), 768px (iPad) widths",
+        "Fix any horizontal overflow or cut-off content",
+        "Make data tables horizontally scrollable on mobile",
+        "Ensure charts resize properly with container",
+        "Navigation menu works on mobile (hamburger or bottom nav)",
+        "Touch targets are at least 44x44px",
+        "All client tests pass",
+        "No new lint warnings"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Wave A: UX Polish. Use Tailwind responsive utilities.",
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-007",
+      "title": "Add keyboard shortcuts and accessibility improvements",
+      "description": "As a power user, I want keyboard shortcuts for common actions and proper ARIA labels for screen reader accessibility.",
+      "acceptanceCriteria": [
+        "Add '?' shortcut to show keyboard help modal",
+        "Add 'd' for dashboard, 'f' for factors, 'c' for CVRF, 'e' for earnings navigation",
+        "Add ARIA labels to all interactive elements",
+        "Add role attributes to chart containers",
+        "Ensure tab order is logical on all pages",
+        "Add skip-to-content link",
+        "All client tests pass",
+        "No new lint warnings"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Wave A: Accessibility. Follow WCAG 2.1 AA guidelines.",
+      "dependsOn": [],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-008",
+      "title": "Create regime detection engine with HMM model",
+      "description": "As a portfolio manager, I want the system to automatically detect market regimes (bull, bear, sideways, volatile) so that CVRF can adapt strategy accordingly.",
+      "acceptanceCriteria": [
+        "Create src/ml/RegimeDetector.ts with Hidden Markov Model implementation",
+        "Define 4 regimes: bull, bear, sideways, volatile with transition probabilities",
+        "Use rolling returns, volatility, and correlation as observation features",
+        "detectRegime(marketData) returns current regime with confidence score",
+        "getTransitionProbabilities() returns regime-to-regime probabilities",
+        "Add unit tests in tests/ml/regime-detector.test.ts (8+ tests)",
+        "`npm test -- --run` passes",
+        "`npx tsc --noEmit` passes",
+        "No new lint warnings"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Wave B: ML Engine. This is a TypeScript implementation, not Python ML.",
+      "dependsOn": [
+        "US-001"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-009",
+      "title": "Build neural factor model with LSTM momentum predictor",
+      "description": "As a portfolio manager, I want deep learning-enhanced momentum signals that capture non-linear patterns in factor returns.",
+      "acceptanceCriteria": [
+        "Create src/ml/NeuralFactorModel.ts with LSTM-inspired momentum predictor",
+        "Implement sliding window feature extraction from factor time series",
+        "Use exponential weighted moving averages as lightweight LSTM alternative",
+        "predictMomentum(factorHistory) returns 1-month forward signal",
+        "Include confidence intervals on predictions",
+        "Add unit tests in tests/ml/neural-factor.test.ts (6+ tests)",
+        "`npm test -- --run` passes",
+        "`npx tsc --noEmit` passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Wave B: ML Engine. Use pure TypeScript — no TensorFlow.js needed. Implement EWMA-based feature extraction that mimics LSTM behavior.",
+      "dependsOn": [
+        "US-008"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-010",
+      "title": "Add factor importance via gradient-based attribution",
+      "description": "As a portfolio manager, I want to understand which factors drive portfolio performance the most so I can focus on what matters.",
+      "acceptanceCriteria": [
+        "Create src/ml/FactorAttribution.ts with gradient-based feature importance",
+        "Implement Shapley-inspired attribution for factor contributions",
+        "calculateAttribution(portfolio, factorExposures) returns ranked factor importance",
+        "Include positive vs negative contribution breakdown",
+        "Visualize as waterfall chart data structure",
+        "Add unit tests in tests/ml/factor-attribution.test.ts (6+ tests)",
+        "`npm test -- --run` passes",
+        "No new lint warnings"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Wave B: ML Engine. This helps explainability — connects to Cognitive Explainer.",
+      "dependsOn": [
+        "US-008"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-011",
+      "title": "Create ML training pipeline orchestrator",
+      "description": "As a developer, I want a pipeline that trains, validates, and deploys ML models on historical factor data.",
+      "acceptanceCriteria": [
+        "Create src/ml/TrainingPipeline.ts orchestrating regime detection + factor models",
+        "Implement train/validate/test split with walk-forward cross-validation",
+        "Track model performance metrics: accuracy, Sharpe improvement, max drawdown reduction",
+        "Store model state in Supabase (model_versions table)",
+        "Create supabase/migrations/20260209_ml_models.sql with model_versions table",
+        "Add unit tests (6+ tests)",
+        "`npm test -- --run` passes",
+        "`npx tsc --noEmit` passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Wave B: ML Engine. Pipeline runs server-side, stores results in Supabase.",
+      "dependsOn": [
+        "US-008",
+        "US-009",
+        "US-010"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-012",
+      "title": "Build ML dashboard page with model performance and regime indicator",
+      "description": "As a user, I want a dashboard showing current market regime, model confidence, and factor importance so I can understand the ML layer.",
+      "acceptanceCriteria": [
+        "Create client/src/pages/ML.tsx with three sections: Regime, Models, Attribution",
+        "Regime section: current regime badge, transition probability matrix, confidence gauge",
+        "Models section: model version history, accuracy metrics, train/deploy status",
+        "Attribution section: waterfall chart of factor importance, top 5 drivers",
+        "Add ML page to App.tsx router and navigation",
+        "Responsive on mobile",
+        "Client tests pass",
+        "No new lint warnings"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Wave B: ML Engine UI. Use Recharts for charts, Tailwind for layout.",
+      "dependsOn": [
+        "US-011"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-013",
+      "title": "Add ML API endpoints for predictions and model status",
+      "description": "As a developer, I want API endpoints to get regime predictions, factor importance, and model status.",
+      "acceptanceCriteria": [
+        "Create api/v1/ml/regime.ts — GET current regime + confidence",
+        "Create api/v1/ml/attribution.ts — GET factor importance for portfolio",
+        "Create api/v1/ml/models.ts — GET model versions and status",
+        "All endpoints follow existing Fastify patterns with Zod validation",
+        "Add to openapi-spec.yaml documentation",
+        "Add API tests (6+ tests)",
+        "`npm test -- --run` passes",
+        "No new lint warnings"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Wave B: ML Engine API. Follow existing api/v1/ patterns.",
+      "dependsOn": [
+        "US-011"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-014",
+      "title": "Integrate ML predictions into CVRF belief updates",
+      "description": "As a portfolio manager, I want CVRF to incorporate regime detection and factor importance when updating beliefs, making the system smarter over episodes.",
+      "acceptanceCriteria": [
+        "Modify src/cvrf/CVRFManager.ts to accept ML predictions as input",
+        "Regime changes trigger accelerated belief updates (faster learning in new regimes)",
+        "Factor attribution influences which factors CVRF explores vs exploits",
+        "Add regime awareness to ConceptExtractor.ts for richer meta-prompts",
+        "Update src/cvrf/types.ts with ML-enhanced types",
+        "Existing CVRF tests still pass",
+        "Add integration tests for ML+CVRF interaction (4+ tests)",
+        "`npm test -- --run` passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Wave B: ML Engine integration. Key story connecting ML to existing CVRF system.",
+      "dependsOn": [
+        "US-011"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-015",
+      "title": "Create user profiles and follow system with Supabase schema",
+      "description": "As a user, I want to create a profile with display name, avatar, and bio so other users can find and follow me.",
+      "acceptanceCriteria": [
+        "Create supabase/migrations/20260209_social_profiles.sql with profiles, follows tables",
+        "profiles: id, user_id, display_name, avatar_url, bio, is_public, created_at",
+        "follows: id, follower_id, following_id, created_at (unique constraint)",
+        "Add RLS policies: users can read public profiles, update own profile",
+        "Create src/services/ProfileService.ts with CRUD operations",
+        "Add unit tests (6+ tests)",
+        "`npm test -- --run` passes",
+        "`npx tsc --noEmit` passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Wave B: Social Features. Foundation for all social functionality.",
+      "dependsOn": [
+        "US-001"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-016",
+      "title": "Add portfolio sharing with visibility settings and share links",
+      "description": "As a user, I want to share my portfolio with others via a link and control what's visible (holdings, returns, strategy).",
+      "acceptanceCriteria": [
+        "Create supabase/migrations/20260209_shared_portfolios.sql with shared_portfolios table",
+        "shared_portfolios: id, user_id, portfolio_data, visibility (public/followers/private), share_token, created_at",
+        "Create src/services/SharingService.ts with share/unshare/get operations",
+        "Generate unique share tokens for public links",
+        "Visibility options: public (anyone), followers (followers only), private (link only)",
+        "Add API endpoint: POST /api/v1/portfolios/share, GET /api/v1/portfolios/shared/:token",
+        "Add unit tests (6+ tests)",
+        "`npm test -- --run` passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Wave B: Social Features. Depends on profiles for follower-based visibility.",
+      "dependsOn": [
+        "US-015"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-017",
+      "title": "Build leaderboard engine with ranking algorithm",
+      "description": "As a user, I want to see how my portfolio performance compares to others across multiple metrics.",
+      "acceptanceCriteria": [
+        "Create src/services/LeaderboardService.ts with ranking engine",
+        "Rank by: Sharpe ratio, total return, risk-adjusted return, consistency (low drawdown)",
+        "Support time periods: 1 week, 1 month, 3 months, YTD, all-time",
+        "Calculate percentile rank for each user",
+        "Only include users who opted into public leaderboard",
+        "Add API endpoint: GET /api/v1/leaderboard?metric=sharpe&period=1m",
+        "Add unit tests (8+ tests)",
+        "`npm test -- --run` passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Wave B: Social Features. Core ranking algorithm.",
+      "dependsOn": [
+        "US-016"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-018",
+      "title": "Create leaderboard and social UI components",
+      "description": "As a user, I want a leaderboard page showing top performers and a social feed of portfolio updates from people I follow.",
+      "acceptanceCriteria": [
+        "Create client/src/pages/Social.tsx with two tabs: Leaderboard, Feed",
+        "Leaderboard tab: sortable table with rank, user, return, Sharpe, drawdown",
+        "Feed tab: activity cards showing portfolio changes from followed users",
+        "Add user profile card component with follow/unfollow button",
+        "Add Social page to App.tsx router and navigation",
+        "Responsive on mobile — cards stack vertically",
+        "Client tests pass",
+        "No new lint warnings"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Wave B: Social Features UI. Use existing design patterns.",
+      "dependsOn": [
+        "US-017"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-019",
+      "title": "Integrate options chain data provider",
+      "description": "As a user, I want real-time options chain data for my portfolio holdings so I can analyze implied volatility and available strategies.",
+      "acceptanceCriteria": [
+        "Create src/options/OptionsDataProvider.ts with Polygon.io/mock data adapter",
+        "Fetch full options chain: calls and puts by expiration and strike",
+        "Parse: bid, ask, last, volume, open interest, IV for each contract",
+        "Implement caching (5min TTL for chain data)",
+        "Fallback to mock data when API keys not configured",
+        "Add unit tests (6+ tests)",
+        "`npm test -- --run` passes",
+        "`npx tsc --noEmit` passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Wave B: Options Intelligence. Build on existing src/options/ImpliedVolatility.ts which is already excellent.",
+      "dependsOn": [
+        "US-001"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-020",
+      "title": "Build Greeks calculator with full chain analysis",
+      "description": "As a user, I want to see delta, gamma, theta, vega, and rho for any options contract to understand risk and sensitivity.",
+      "acceptanceCriteria": [
+        "Create src/options/GreeksCalculator.ts implementing Black-Scholes Greeks",
+        "Calculate: delta, gamma, theta, vega, rho for individual contracts",
+        "Calculate portfolio-level Greeks (aggregate across positions)",
+        "Support American-style approximation via Bjerksund-Stensland",
+        "Include Greeks heatmap data structure (strike x expiration)",
+        "Add unit tests (8+ tests) with known reference values",
+        "`npm test -- --run` passes",
+        "No new lint warnings"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Wave B: Options Intelligence. Pairs with existing ImpliedVolatility.ts.",
+      "dependsOn": [
+        "US-019"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-021",
+      "title": "Create options strategy builder engine",
+      "description": "As a user, I want to build and analyze multi-leg options strategies like covered calls, spreads, and iron condors.",
+      "acceptanceCriteria": [
+        "Create src/options/StrategyBuilder.ts with strategy definition types",
+        "Support strategies: covered call, protective put, bull/bear spread, iron condor, straddle, strangle",
+        "For each strategy: calculate max profit, max loss, breakeven points, probability of profit",
+        "Generate P&L chart data (price x profit array)",
+        "Recommend strategies based on current IV rank and market regime",
+        "Add unit tests (8+ tests)",
+        "`npm test -- --run` passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Wave B: Options Intelligence. Core strategy analysis engine.",
+      "dependsOn": [
+        "US-020"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-022",
+      "title": "Build volatility surface visualization and options dashboard",
+      "description": "As a user, I want a visual options dashboard with chain view, Greeks table, vol surface, and strategy P&L chart.",
+      "acceptanceCriteria": [
+        "Create client/src/pages/Options.tsx with four sections: Chain, Greeks, Vol Surface, Strategies",
+        "Chain section: interactive options chain table (calls left, puts right, strike center)",
+        "Greeks section: heatmap of delta/gamma by strike and expiration",
+        "Vol Surface section: 3D surface chart (strike x expiration x IV) using D3 or Recharts",
+        "Strategies section: P&L payoff diagram with draggable legs",
+        "Add Options page to App.tsx router and navigation",
+        "Responsive on mobile",
+        "Client tests pass"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Wave B: Options Intelligence UI. Major page — consider splitting if too large.",
+      "dependsOn": [
+        "US-021"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-023",
+      "title": "Add options API endpoints",
+      "description": "As a developer, I want API endpoints for options chain, Greeks, strategies, and vol surface data.",
+      "acceptanceCriteria": [
+        "Create api/v1/options/chain.ts — GET options chain for symbol",
+        "Create api/v1/options/greeks.ts — GET Greeks for contract or portfolio",
+        "Create api/v1/options/strategies.ts — POST analyze strategy, GET recommended strategies",
+        "Create api/v1/options/vol-surface.ts — GET vol surface data",
+        "All endpoints follow existing Fastify patterns with Zod validation",
+        "Add to openapi-spec.yaml",
+        "Add API tests (8+ tests)",
+        "`npm test -- --run` passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Wave B: Options Intelligence API.",
+      "dependsOn": [
+        "US-021"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-024",
+      "title": "Create tax lot tracking schema and engine",
+      "description": "As a user, I want the system to track the cost basis and holding period of every share I own so it can calculate tax implications accurately.",
+      "acceptanceCriteria": [
+        "Create supabase/migrations/20260209_tax_lots.sql with tax_lots, tax_events tables",
+        "tax_lots: id, user_id, symbol, shares, cost_basis, purchase_date, sold_date, is_short_term",
+        "tax_events: id, user_id, tax_year, event_type, symbol, realized_gain, is_wash_sale",
+        "Create src/tax/TaxLotTracker.ts with FIFO, LIFO, specific identification methods",
+        "Track short-term vs long-term holding periods (1 year threshold)",
+        "Calculate unrealized gains/losses for current holdings",
+        "Add unit tests (8+ tests)",
+        "`npm test -- --run` passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Wave B: Tax Optimization. Foundation for all tax features.",
+      "dependsOn": [
+        "US-001"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-025",
+      "title": "Build tax-loss harvesting scanner",
+      "description": "As a user, I want the system to identify positions with unrealized losses that could be sold to offset gains, reducing my tax bill.",
+      "acceptanceCriteria": [
+        "Create src/tax/HarvestingScanner.ts scanning portfolio for harvesting opportunities",
+        "Identify positions with unrealized losses above minimum threshold ($100)",
+        "Estimate tax savings based on short-term vs long-term rates",
+        "Suggest replacement securities (similar sector/factor exposure, different ticker)",
+        "Rank opportunities by tax savings potential",
+        "Add unit tests (6+ tests)",
+        "`npm test -- --run` passes",
+        "No new lint warnings"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Wave B: Tax Optimization. Core harvesting algorithm.",
+      "dependsOn": [
+        "US-024"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-026",
+      "title": "Implement wash sale detection",
+      "description": "As a user, I want the system to detect and warn about wash sales (buying substantially identical securities within 30 days of a loss sale) to avoid IRS penalties.",
+      "acceptanceCriteria": [
+        "Create src/tax/WashSaleDetector.ts scanning transactions for wash sales",
+        "Detect: same ticker bought within 30 days before or after loss sale",
+        "Detect: substantially identical securities (same company, different share class)",
+        "Flag existing wash sales in transaction history",
+        "Warn before executing trades that would create wash sales",
+        "Calculate adjusted cost basis for wash sale lots",
+        "Add unit tests (8+ tests)",
+        "`npm test -- --run` passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Wave B: Tax Optimization. Critical compliance feature.",
+      "dependsOn": [
+        "US-024"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-027",
+      "title": "Create tax-efficient rebalancing algorithm",
+      "description": "As a user, I want the optimizer to consider tax implications when rebalancing so that it minimizes tax drag while achieving target allocation.",
+      "acceptanceCriteria": [
+        "Create src/tax/TaxEfficientRebalancer.ts extending existing optimizer",
+        "Compare tax cost of each potential trade (short-term gain vs long-term gain vs loss)",
+        "Prefer selling long-term positions over short-term when gains are similar",
+        "Defer selling positions close to long-term threshold (e.g., 10 months held)",
+        "Integrate with HarvestingScanner to combine rebalancing with harvesting",
+        "Add unit tests (6+ tests)",
+        "`npm test -- --run` passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Wave B: Tax Optimization. Connects to portfolio optimizer.",
+      "dependsOn": [
+        "US-025",
+        "US-026"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-028",
+      "title": "Build tax report generator",
+      "description": "As a user, I want annual tax reports showing realized gains/losses, harvesting activity, and wash sale adjustments.",
+      "acceptanceCriteria": [
+        "Create src/tax/TaxReportGenerator.ts generating annual tax summaries",
+        "Report includes: total realized gains (short + long term), losses, net gain/loss",
+        "Include wash sale disallowed losses separately",
+        "Include harvesting savings estimate",
+        "Generate data in format compatible with Schedule D / Form 8949",
+        "Export as JSON and CSV",
+        "Add unit tests (4+ tests)",
+        "`npm test -- --run` passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Wave B: Tax Optimization. Reporting layer.",
+      "dependsOn": [
+        "US-027"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-029",
+      "title": "Create tax optimization dashboard UI",
+      "description": "As a user, I want a tax dashboard showing harvesting opportunities, wash sale warnings, and annual tax summary.",
+      "acceptanceCriteria": [
+        "Create client/src/pages/Tax.tsx with four sections: Summary, Harvest, Wash Sales, Report",
+        "Summary section: YTD realized gains/losses, estimated tax liability, savings from harvesting",
+        "Harvest section: table of harvesting opportunities with 'harvest' action button",
+        "Wash Sales section: flagged wash sales with explanation",
+        "Report section: downloadable annual report (CSV/JSON)",
+        "Add Tax page to App.tsx router and navigation",
+        "Responsive on mobile",
+        "Client tests pass"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Wave B: Tax Optimization UI.",
+      "dependsOn": [
+        "US-028"
+      ],
+      "completionNotes": "Completed by agent"
+    },
+    {
+      "id": "US-030",
+      "title": "Add tax API endpoints",
+      "description": "As a developer, I want API endpoints for tax lots, harvesting opportunities, wash sales, and tax reports.",
+      "acceptanceCriteria": [
+        "Create api/v1/tax/lots.ts — GET tax lots for user",
+        "Create api/v1/tax/harvest.ts — GET harvesting opportunities, POST execute harvest",
+        "Create api/v1/tax/wash-sales.ts — GET wash sale warnings",
+        "Create api/v1/tax/report.ts — GET annual tax report",
+        "All endpoints follow existing Fastify patterns with Zod validation",
+        "Add to openapi-spec.yaml",
+        "Add API tests (6+ tests)",
+        "`npm test -- --run` passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Wave B: Tax Optimization API.",
+      "dependsOn": [
+        "US-028"
+      ],
+      "completionNotes": "Completed by agent"
+    }
+  ],
+  "metadata": {
+    "updatedAt": "2026-02-12T20:48:24.040Z"
+  }
+}

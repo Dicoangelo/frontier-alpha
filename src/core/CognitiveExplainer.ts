@@ -22,7 +22,7 @@ import type {
 // EXPLANATION TEMPLATES
 // ============================================================================
 
-const TEMPLATES = {
+const _TEMPLATES = {
   // Position changes
   increase: "Increasing {symbol} position from {oldWeight}% to {newWeight}% because {reasons}",
   decrease: "Reducing {symbol} position from {oldWeight}% to {newWeight}% because {reasons}",

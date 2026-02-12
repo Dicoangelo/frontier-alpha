@@ -62,6 +62,10 @@ export function EarningsForecast({
     );
   }
 
+  // Calculate days to earnings (uses current time, which is inherently impure but necessary)
+  // eslint-disable-next-line react-hooks/purity -- Date.now() needed for time-sensitive calculation
+  const daysToEarnings = Math.max(1, Math.ceil((new Date(forecast.reportDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+
   const DirectionIcon = forecast.expectedDirection === 'up'
     ? TrendingUp
     : forecast.expectedDirection === 'down'
@@ -80,8 +84,9 @@ export function EarningsForecast({
             size="sm"
             onClick={onRefresh}
             disabled={isRefreshing}
+            aria-label="Refresh earnings forecast"
           >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
           </Button>
         )
       }
@@ -111,7 +116,7 @@ export function EarningsForecast({
         {/* Options-Implied Move */}
         <EarningsIV
           symbol={symbol}
-          daysToEarnings={Math.max(1, Math.ceil((new Date(forecast.reportDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))}
+          daysToEarnings={daysToEarnings}
           historicalAvgMove={forecast.expectedMove * 100}
         />
 

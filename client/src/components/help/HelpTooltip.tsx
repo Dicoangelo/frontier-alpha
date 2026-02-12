@@ -67,6 +67,7 @@ export function HelpTooltip({
       }
 
       if (newPosition !== actualPosition) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- position adjustment based on DOM measurement
         setActualPosition(newPosition);
       }
     }

@@ -73,7 +73,7 @@ function useRunBacktest() {
   return useMutation({
     mutationFn: async (config: BacktestRunConfig) => {
       const response = await api.post('/backtest/run', config);
-      return (response as any).data as BacktestResult;
+      return (response as { data: BacktestResult }).data;
     },
     onSuccess: (data) => {
       const returnPct = (data.walkForward.totalReturn * 100).toFixed(1);
@@ -136,14 +136,14 @@ export function Backtest() {
   return (
     <div className="min-h-screen bg-[var(--color-bg-tertiary)]">
       {/* Header */}
-      <div className="bg-[var(--color-bg)] border-b border-[var(--color-border)] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <div className="bg-[var(--color-bg)] border-b border-[var(--color-border)] px-4 sm:px-6 py-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center shrink-0">
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[var(--color-text)]">Walk-Forward Backtest</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-[var(--color-text)]">Walk-Forward Backtest</h1>
               <p className="text-sm text-[var(--color-text-muted)]">
                 CVRF-integrated historical validation
               </p>
@@ -151,7 +151,7 @@ export function Backtest() {
           </div>
           <button
             onClick={() => setShowConfig(!showConfig)}
-            className="px-4 py-2 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-secondary)] rounded-lg flex items-center gap-2 transition-colors"
+            className="px-4 py-2 min-h-[44px] text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-secondary)] rounded-lg flex items-center gap-2 transition-colors"
           >
             <Settings2 className="w-4 h-4" />
             {showConfig ? 'Hide Config' : 'Show Config'}
@@ -159,7 +159,7 @@ export function Backtest() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Configuration Panel */}
         {showConfig && (
           <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
@@ -176,7 +176,7 @@ export function Backtest() {
                   type="text"
                   value={symbolInput}
                   onChange={(e) => setSymbolInput(e.target.value)}
-                  className="w-full p-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
+                  className="w-full p-2 min-h-[44px] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
                   placeholder="AAPL, MSFT, NVDA..."
                 />
               </div>
@@ -190,7 +190,7 @@ export function Backtest() {
                   type="date"
                   value={config.startDate}
                   onChange={(e) => setConfig({ ...config, startDate: e.target.value })}
-                  className="w-full p-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
+                  className="w-full p-2 min-h-[44px] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
                 />
               </div>
 
@@ -203,7 +203,7 @@ export function Backtest() {
                   type="date"
                   value={config.endDate}
                   onChange={(e) => setConfig({ ...config, endDate: e.target.value })}
-                  className="w-full p-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
+                  className="w-full p-2 min-h-[44px] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
                 />
               </div>
 
@@ -216,7 +216,7 @@ export function Backtest() {
                   type="number"
                   value={config.initialCapital}
                   onChange={(e) => setConfig({ ...config, initialCapital: Number(e.target.value) })}
-                  className="w-full p-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
+                  className="w-full p-2 min-h-[44px] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
                 />
               </div>
 
@@ -230,7 +230,7 @@ export function Backtest() {
                   onChange={(e) =>
                     setConfig({ ...config, strategy: e.target.value as BacktestRunConfig['strategy'] })
                   }
-                  className="w-full p-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
+                  className="w-full p-2 min-h-[44px] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
                 >
                   <option value="max_sharpe">Max Sharpe</option>
                   <option value="min_volatility">Min Volatility</option>
@@ -251,7 +251,7 @@ export function Backtest() {
                       rebalanceFrequency: e.target.value as BacktestRunConfig['rebalanceFrequency'],
                     })
                   }
-                  className="w-full p-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
+                  className="w-full p-2 min-h-[44px] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
                 >
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
@@ -268,7 +268,7 @@ export function Backtest() {
                   type="number"
                   value={config.episodeLengthDays}
                   onChange={(e) => setConfig({ ...config, episodeLengthDays: Number(e.target.value) })}
-                  className="w-full p-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
+                  className="w-full p-2 min-h-[44px] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text)]"
                 />
               </div>
             </div>
@@ -278,7 +278,7 @@ export function Backtest() {
               <button
                 onClick={handleRun}
                 disabled={isPending}
-                className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+                className="px-6 py-2.5 min-h-[44px] bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
               >
                 {isPending ? (
                   <>
@@ -315,7 +315,7 @@ export function Backtest() {
         {result && (
           <>
             {/* Metrics Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               <MetricCard
                 label="Total Return"
                 value={`${(result.walkForward.totalReturn * 100).toFixed(2)}%`}
@@ -483,7 +483,7 @@ export function Backtest() {
             {/* Overfit Analysis */}
             <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
               <h3 className="text-lg font-semibold text-[var(--color-text)] mb-3">Overfit Analysis</h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg text-center">
                   <div className="text-xs text-[var(--color-text-muted)]">Overfit Ratio</div>
                   <div

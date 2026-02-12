@@ -11,7 +11,7 @@
  * Validates strategies before live deployment.
  */
 
-import type { Price, FactorExposure, OptimizationConfig } from '../types/index.js';
+import type { Price, OptimizationConfig } from '../types/index.js';
 import { PortfolioOptimizer } from '../optimizer/PortfolioOptimizer.js';
 import { FactorEngine } from '../factors/FactorEngine.js';
 
@@ -451,7 +451,7 @@ export class Backtester {
   private calculatePerformance(
     equityCurve: EquityPoint[],
     trades: Trade[],
-    config: BacktestConfig
+    _config: BacktestConfig
   ): PerformanceMetrics {
     const n = equityCurve.length;
     if (n < 2) {
@@ -540,9 +540,9 @@ export class Backtester {
   }
 
   private async calculateFactorAttribution(
-    equityCurve: EquityPoint[],
-    prices: Map<string, Price[]>,
-    symbols: string[]
+    _equityCurve: EquityPoint[],
+    _prices: Map<string, Price[]>,
+    _symbols: string[]
   ): Promise<FactorAttribution> {
     // Simplified factor attribution
     return {
@@ -587,8 +587,8 @@ export class Backtester {
   }
 
   private analyzeRegimes(
-    equityCurve: EquityPoint[],
-    benchmarkPrices: Price[]
+    _equityCurve: EquityPoint[],
+    _benchmarkPrices: Price[]
   ): RegimeAnalysis {
     // Simplified regime analysis
     return {
@@ -653,7 +653,7 @@ export class Backtester {
    * Generate backtest report
    */
   generateReport(result: BacktestResult): string {
-    const { performance, factorAttribution, monthlyReturns, regime } = result;
+    const { performance, factorAttribution, monthlyReturns: _monthlyReturns, regime } = result;
     
     return `
 ╔══════════════════════════════════════════════════════════════════════════════╗

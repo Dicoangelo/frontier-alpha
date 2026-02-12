@@ -268,7 +268,7 @@ export abstract class BrokerAdapter {
           const qty = order.qty || (order.notional ? order.notional / price : 0);
           estimatedCost = qty * price;
         }
-      } catch (e) {
+      } catch {
         warnings.push('Could not fetch quote for cost estimation');
       }
     }

@@ -10,6 +10,10 @@ import {
   Settings,
   HelpCircle,
   Brain,
+  Cpu,
+  Sigma,
+  Users,
+  Receipt,
 } from 'lucide-react';
 
 const navigation = [
@@ -21,6 +25,10 @@ const navigation = [
   { name: 'Earnings', icon: Calendar, href: '/earnings' },
   { name: 'Alerts', icon: Bell, href: '/alerts' },
   { name: 'CVRF', icon: Brain, href: '/cvrf' },
+  { name: 'ML', icon: Cpu, href: '/ml' },
+  { name: 'Options', icon: Sigma, href: '/options' },
+  { name: 'Social', icon: Users, href: '/social' },
+  { name: 'Tax', icon: Receipt, href: '/tax' },
   { name: 'Settings', icon: Settings, href: '/settings' },
   { name: 'Help', icon: HelpCircle, href: '/help' },
 ];

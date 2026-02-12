@@ -101,6 +101,7 @@ export function TradeExecutor({
   // Update default symbol when prop changes
   useEffect(() => {
     if (defaultSymbol) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing prop to local state
       setSymbol(defaultSymbol);
     }
   }, [defaultSymbol]);
@@ -108,6 +109,7 @@ export function TradeExecutor({
   // Auto-fill limit price from quote
   useEffect(() => {
     if (quote && (orderType === 'limit' || orderType === 'stop_limit') && !limitPrice) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- initializing from external data
       setLimitPrice(side === 'buy' ? quote.ask : quote.bid);
     }
   }, [quote, orderType, side, limitPrice]);
@@ -273,7 +275,7 @@ export function TradeExecutor({
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value.toUpperCase())}
                 placeholder="AAPL"
-                className="flex-1 px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="flex-1 px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
               {quote && (
@@ -327,7 +329,7 @@ export function TradeExecutor({
               value={qty}
               onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
               min="1"
-              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             />
             {estimatedCost > 0 && (
@@ -344,7 +346,7 @@ export function TradeExecutor({
               <select
                 value={orderType}
                 onChange={(e) => setOrderType(e.target.value as typeof orderType)}
-                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {orderTypeOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -359,7 +361,7 @@ export function TradeExecutor({
               <select
                 value={timeInForce}
                 onChange={(e) => setTimeInForce(e.target.value as typeof timeInForce)}
-                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 {timeInForceOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -426,7 +428,7 @@ export function TradeExecutor({
             <div className="flex items-center gap-2 p-3 bg-red-500/10 text-red-400 rounded-lg">
               <AlertCircle className="w-4 h-4" />
               <span className="text-sm">
-                {(submitOrder.error as any)?.response?.data?.error || 'Order submission failed'}
+                {(submitOrder.error as Error)?.message || 'Order submission failed'}
               </span>
             </div>
           )}
@@ -772,7 +774,7 @@ export function TradeExecutorCompact({
       )}
       {submitOrder.isError && (
         <p className="mt-2 text-xs text-red-600">
-          {(submitOrder.error as any)?.response?.data?.error || 'Order failed'}
+          {(submitOrder.error as Error)?.message || 'Order failed'}
         </p>
       )}
       {submitOrder.isSuccess && (

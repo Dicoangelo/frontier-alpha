@@ -262,8 +262,8 @@ export class EpisodeManager {
     worseDecisions: TradingDecision[]
   ): { profitableTrades: TradingDecision[]; losingTrades: TradingDecision[] } {
     // Trades unique to better episode are "profitable patterns"
-    const betterSymbols = new Set(betterDecisions.map(d => d.symbol));
-    const worseSymbols = new Set(worseDecisions.map(d => d.symbol));
+    const _betterSymbols = new Set(betterDecisions.map(d => d.symbol));
+    const _worseSymbols = new Set(worseDecisions.map(d => d.symbol));
 
     // Profitable: Decisions in better episode that contributed to outperformance
     const profitableTrades = betterDecisions.filter(d => {

@@ -188,7 +188,7 @@ export function EarningsHeatmap({ earnings, onSelect, selectedSymbol }: Earnings
               </span>
               {hasEarnings && (
                 <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-0.5">
-                  {dayEarnings.slice(0, 3).map((e, i) => (
+                  {dayEarnings.slice(0, 3).map((_e, i) => (
                     <span
                       key={i}
                       className="w-1 h-1 rounded-full bg-[var(--color-text)]"

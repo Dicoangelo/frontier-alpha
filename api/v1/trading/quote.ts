@@ -6,6 +6,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { methodNotAllowed, badRequest, internalError } from '../../lib/errorHandler.js';
 
 // Demo prices for simulation
 const demoPrices: Record<string, number> = {
@@ -82,10 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'GET') {
-    return res.status(405).json({
-      success: false,
-      error: 'Method not allowed',
-    });
+    return methodNotAllowed(res);
   }
 
   const requestId = `req-${Math.random().toString(36).slice(2, 8)}`;
@@ -95,11 +93,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const symbolList = (symbols as string)?.split(',') || (symbol ? [symbol as string] : []);
 
     if (symbolList.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Symbol(s) required. Use ?symbol=AAPL or ?symbols=AAPL,MSFT',
-        meta: { requestId },
-      });
+      return badRequest(res, 'Symbol(s) required. Use ?symbol=AAPL or ?symbols=AAPL,MSFT');
     }
 
     const alpacaKey = process.env.ALPACA_API_KEY;
@@ -113,12 +107,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         quotes[sym.toUpperCase()] = getDemoQuote(sym);
       }
 
+      res.setHeader('X-Data-Source', 'mock');
       return res.status(200).json({
         success: true,
-        data: {
-          quotes,
-          source: 'demo',
-        },
+        data: { quotes },
+        dataSource: 'mock' as const,
         meta: { requestId },
       });
     }
@@ -151,12 +144,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           timestamp: q.t,
         };
 
+        res.setHeader('X-Data-Source', 'live');
         return res.status(200).json({
           success: true,
           data: {
             quotes: { [symbolList[0].toUpperCase()]: quote },
-            source: 'alpaca',
           },
+          dataSource: 'live' as const,
           meta: { requestId },
         });
       } else {
@@ -187,12 +181,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           };
         }
 
+        res.setHeader('X-Data-Source', 'live');
         return res.status(200).json({
           success: true,
-          data: {
-            quotes,
-            source: 'alpaca',
-          },
+          data: { quotes },
+          dataSource: 'live' as const,
           meta: { requestId },
         });
       }
@@ -205,22 +198,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         quotes[sym.toUpperCase()] = getDemoQuote(sym);
       }
 
+      res.setHeader('X-Data-Source', 'mock');
       return res.status(200).json({
         success: true,
-        data: {
-          quotes,
-          source: 'demo',
-          error: error.response?.data?.message || error.message,
-        },
+        data: { quotes },
+        dataSource: 'mock' as const,
         meta: { requestId },
       });
     }
   } catch (error: any) {
     console.error('[Trading Quote] Error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message || 'Internal server error',
-      meta: { requestId },
-    });
+    return internalError(res);
   }
 }

@@ -16,6 +16,7 @@
 
 import type { Portfolio, FactorExposure, Quote } from '../types/index.js';
 import { supabaseAdmin } from '../lib/supabase.js';
+import { logger } from '../lib/logger.js';
 
 // ============================================================================
 // TYPES
@@ -544,13 +545,13 @@ export class RiskAlertSystem {
       try {
         callback(alert);
       } catch (e) {
-        console.error('Alert subscriber error:', e);
+        logger.error({ err: e }, 'Alert subscriber error');
       }
     }
 
     // Persist to Supabase asynchronously
     this.persistAlert(alert).catch(e => {
-      console.warn('Failed to persist alert:', e);
+      logger.warn({ err: e }, 'Failed to persist alert');
     });
   }
 
@@ -579,7 +580,7 @@ export class RiskAlertSystem {
           created_at: alert.timestamp.toISOString(),
         });
     } catch (e) {
-      console.error('Supabase alert persistence error:', e);
+      logger.error({ err: e }, 'Supabase alert persistence error');
     }
   }
 
@@ -613,7 +614,7 @@ export class RiskAlertSystem {
         actions: row.metadata?.actions || [],
       }));
     } catch (e) {
-      console.error('Failed to load alerts from Supabase:', e);
+      logger.error({ err: e }, 'Failed to load alerts from Supabase');
       return [];
     }
   }
@@ -631,7 +632,7 @@ export class RiskAlertSystem {
           .update({ acknowledged_at: new Date().toISOString() })
           .eq('id', alertId);
       } catch (e) {
-        console.error('Failed to acknowledge alert in Supabase:', e);
+        logger.error({ err: e, alertId }, 'Failed to acknowledge alert in Supabase');
       }
     }
 

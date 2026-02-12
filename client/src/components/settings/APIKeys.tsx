@@ -5,6 +5,7 @@ import { api } from '@/api/client';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
+import { toast } from '@/components/shared/Toast';
 
 // ============================================================================
 // Types
@@ -63,6 +64,10 @@ export function APIKeys() {
       setShowCreateForm(false);
       setNewKeyName('');
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });
+      toast.success('API key created', `"${response.data.name}" is ready to use`);
+    },
+    onError: () => {
+      toast.error('Failed to create API key');
     },
   });
 
@@ -72,6 +77,10 @@ export function APIKeys() {
     onSuccess: () => {
       setRevokeConfirmId(null);
       queryClient.invalidateQueries({ queryKey: ['api-keys'] });
+      toast.warning('API key revoked');
+    },
+    onError: () => {
+      toast.error('Failed to revoke API key');
     },
   });
 

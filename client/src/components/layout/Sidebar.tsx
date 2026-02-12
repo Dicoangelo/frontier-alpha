@@ -41,13 +41,14 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             onClick={onNavigate}
             className={({ isActive }) => `
               flex items-center gap-3 px-4 py-3 rounded-sm transition-all click-feedback
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset
               ${isActive
                 ? 'gradient-brand-subtle text-accent font-medium'
                 : 'text-theme-secondary hover:bg-theme-tertiary'
               }
             `}
           >
-            <item.icon className="w-5 h-5" />
+            <item.icon className="w-5 h-5" aria-hidden="true" />
             <span className="text-sm">{item.name}</span>
           </NavLink>
         ))}

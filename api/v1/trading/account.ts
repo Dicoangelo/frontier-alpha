@@ -5,6 +5,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireAuth } from '../../lib/auth.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
@@ -23,6 +24,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  // Require authentication
+  const user = await requireAuth(req, res);
+  if (!user) {
+    return; // requireAuth already sent 401 response
+  }
+
   const requestId = `req-${Math.random().toString(36).slice(2, 8)}`;
 
   try {
@@ -32,27 +39,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Check if broker is configured
     if (!alpacaKey || !alpacaSecret) {
-      // Return mock account data
-      return res.status(200).json({
-        success: true,
-        data: {
-          account: {
-            id: 'demo-account',
-            status: 'active',
-            currency: 'USD',
-            buyingPower: 100000,
-            cash: 100000,
-            portfolioValue: 100000,
-            dayTradeCount: 0,
-            patternDayTrader: false,
-            tradingBlocked: false,
-            multiplier: 2,
-            equity: 100000,
-          },
-          brokerConnected: false,
-          brokerType: 'demo',
-          paperTrading: true,
-        },
+      res.setHeader('X-Data-Source', 'mock');
+      return res.status(503).json({
+        success: false,
+        error: { code: 'BROKER_UNAVAILABLE', message: 'Broker not configured. Set ALPACA_API_KEY and ALPACA_API_SECRET.' },
         meta: { requestId },
       });
     }
@@ -73,6 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = response.data;
 
+    res.setHeader('X-Data-Source', 'live');
     return res.status(200).json({
       success: true,
       data: {
@@ -103,33 +94,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         brokerType: 'alpaca',
         paperTrading: isPaper,
       },
+      dataSource: 'live' as const,
       meta: { requestId },
     });
   } catch (error: any) {
     console.error('[Trading Account] Error:', error.response?.data || error.message);
 
-    // Return graceful error with mock data
-    return res.status(200).json({
-      success: true,
-      data: {
-        account: {
-          id: 'demo-account',
-          status: 'active',
-          currency: 'USD',
-          buyingPower: 100000,
-          cash: 100000,
-          portfolioValue: 100000,
-          dayTradeCount: 0,
-          patternDayTrader: false,
-          tradingBlocked: false,
-          multiplier: 2,
-          equity: 100000,
-        },
-        brokerConnected: false,
-        brokerType: 'demo',
-        paperTrading: true,
-        error: error.response?.data?.message || error.message,
-      },
+    res.setHeader('X-Data-Source', 'mock');
+    return res.status(503).json({
+      success: false,
+      error: { code: 'BROKER_UNAVAILABLE', message: error.response?.data?.message || error.message },
       meta: { requestId },
     });
   }

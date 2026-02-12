@@ -11,6 +11,7 @@
  */
 
 import axios from 'axios';
+import { logger } from '../lib/logger.js';
 
 // ============================================================================
 // TYPES
@@ -154,9 +155,9 @@ async function loadCIKMappings(): Promise<void> {
     }
 
     cacheLastUpdated = new Date();
-    console.log(`[EdgarMonitor] Loaded ${tickerToCikCache.size} CIK mappings`);
+    logger.info({ count: tickerToCikCache.size }, 'EdgarMonitor loaded CIK mappings');
   } catch (error) {
-    console.error('[EdgarMonitor] Failed to load CIK mappings:', error);
+    logger.error({ err: error }, 'EdgarMonitor failed to load CIK mappings');
     // Keep using existing cache if available
     if (tickerToCikCache.size === 0) {
       // Load fallback mappings for common stocks
@@ -218,7 +219,7 @@ function loadFallbackMappings(): void {
     cikToNameCache.set(cik, name);
   }
 
-  console.log('[EdgarMonitor] Loaded fallback CIK mappings');
+  logger.info('EdgarMonitor loaded fallback CIK mappings');
 }
 
 /**
@@ -297,7 +298,7 @@ export class EdgarMonitor {
 
       return this.parseAtomFeed(response.data);
     } catch (error) {
-      console.error('[EdgarMonitor] Error fetching recent filings:', error);
+      logger.error({ err: error }, 'EdgarMonitor error fetching recent filings');
       return [];
     }
   }
@@ -347,7 +348,7 @@ export class EdgarMonitor {
 
       return filings;
     } catch (error) {
-      console.error(`[EdgarMonitor] Error fetching filings for CIK ${cik}:`, error);
+      logger.error({ err: error, cik }, 'EdgarMonitor error fetching filings');
       return [];
     }
   }
@@ -361,7 +362,7 @@ export class EdgarMonitor {
   } = {}): Promise<EdgarFiling[]> {
     const cik = await getCIKForTicker(symbol);
     if (!cik) {
-      console.warn(`[EdgarMonitor] Could not find CIK for symbol: ${symbol}`);
+      logger.warn({ symbol }, 'EdgarMonitor could not find CIK for symbol');
       return [];
     }
 
@@ -391,7 +392,7 @@ export class EdgarMonitor {
         // Rate limiting: SEC allows 10 requests/second
         await this.delay(120);
       } catch (error) {
-        console.error(`[EdgarMonitor] Error fetching filings for ${symbol}:`, error);
+        logger.error({ err: error, symbol }, 'EdgarMonitor error fetching filings');
       }
     }
 
@@ -440,7 +441,7 @@ export class EdgarMonitor {
         // Rate limit
         await this.delay(120);
       } catch (error) {
-        console.error(`[EdgarMonitor] Error checking ${symbol}:`, error);
+        logger.error({ err: error, symbol }, 'EdgarMonitor error checking symbol');
       }
     }
 
@@ -468,7 +469,7 @@ export class EdgarMonitor {
       this.checkForNewFilings(symbols);
     }, intervalMs);
 
-    console.log(`[EdgarMonitor] Started polling for ${symbols.length} symbols every ${intervalMs / 1000}s`);
+    logger.info({ symbolCount: symbols.length, intervalSec: intervalMs / 1000 }, 'EdgarMonitor started polling');
   }
 
   /**
@@ -478,7 +479,7 @@ export class EdgarMonitor {
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
       this.pollingInterval = null;
-      console.log('[EdgarMonitor] Stopped polling');
+      logger.info('EdgarMonitor stopped polling');
     }
   }
 
@@ -569,7 +570,7 @@ export class EdgarMonitor {
         }
       }
     } catch (error) {
-      console.error('[EdgarMonitor] Error parsing Atom feed:', error);
+      logger.error({ err: error }, 'EdgarMonitor error parsing Atom feed');
     }
 
     return filings;

@@ -48,6 +48,7 @@ export function createRateLimiter(config: RateLimitConfig) {
 
   return function checkRateLimit(req: VercelRequest): {
     allowed: boolean;
+    limit: number;
     remaining: number;
     resetAt: number;
     retryAfter?: number;
@@ -75,6 +76,7 @@ export function createRateLimiter(config: RateLimitConfig) {
 
     return {
       allowed,
+      limit: maxRequests,
       remaining,
       resetAt: entry.resetAt,
       retryAfter,
@@ -123,14 +125,15 @@ export function withRateLimit(
   return async (req: VercelRequest, res: VercelResponse): Promise<void> => {
     const result = limiter(req);
 
-    // Set rate limit headers
-    res.setHeader('X-RateLimit-Limit', result.remaining + (result.allowed ? 1 : 0));
-    res.setHeader('X-RateLimit-Remaining', result.remaining);
-    res.setHeader('X-RateLimit-Reset', Math.ceil(result.resetAt / 1000));
+    // Set standard rate limit headers (RFC draft-ietf-httpapi-ratelimit-headers)
+    res.setHeader('RateLimit-Limit', result.limit);
+    res.setHeader('RateLimit-Remaining', result.remaining);
+    res.setHeader('RateLimit-Reset', Math.ceil(result.resetAt / 1000));
 
     if (!result.allowed) {
-      res.setHeader('Retry-After', result.retryAfter || 60);
-      throw AppError.rateLimited(result.retryAfter);
+      const retryAfterSeconds = result.retryAfter || 60;
+      res.setHeader('Retry-After', retryAfterSeconds);
+      throw AppError.rateLimited(retryAfterSeconds);
     }
 
     await handler(req, res);

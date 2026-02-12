@@ -6,6 +6,7 @@
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createPersistentCVRFManager } from '../../../src/cvrf/PersistentCVRFManager.js';
+import { methodNotAllowed, internalError } from '../../lib/errorHandler.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -17,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'GET') {
-    return res.status(405).json({ success: false, error: { code: 'METHOD_NOT_ALLOWED', message: 'Use GET' } });
+    return methodNotAllowed(res);
   }
 
   const start = Date.now();
@@ -70,10 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         persistent: true,
       },
     });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      error: { code: 'CVRF_ERROR', message: error.message },
-    });
+  } catch (_error: any) {
+    return internalError(res);
   }
 }

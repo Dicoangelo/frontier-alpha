@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Sparkles, TrendingUp, Shield, Target, Info } from 'lucide-react';
-import { api } from '@/api/client';
+import { api, getErrorMessage } from '@/api/client';
+import { toast } from '@/components/shared/Toast';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
@@ -65,6 +66,13 @@ export function Optimize() {
 
   const optimizeMutation = useMutation<{ data: OptimizationResult }, Error, { symbols: string[]; config: OptimizationConfig }>({
     mutationFn: (data) => api.post('/portfolio/optimize', data),
+    onSuccess: (response) => {
+      const sharpe = response.data.sharpeRatio.toFixed(2);
+      toast.success('Optimization complete', `Sharpe ratio: ${sharpe}`);
+    },
+    onError: (error) => {
+      toast.error('Optimization failed', getErrorMessage(error));
+    },
   });
 
   const symbols = portfolio?.data?.positions?.map((p: any) => p.symbol) || [];

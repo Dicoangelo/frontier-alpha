@@ -6,6 +6,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { methodNotAllowed, validationError, unauthorized, internalError } from '../../lib/errorHandler.js';
 
 interface ConnectRequest {
   broker: 'alpaca' | 'mock';
@@ -25,10 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({
-      success: false,
-      error: 'Method not allowed',
-    });
+    return methodNotAllowed(res);
   }
 
   const requestId = `req-${Math.random().toString(36).slice(2, 8)}`;
@@ -57,15 +55,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (!key || !secret) {
-      return res.status(400).json({
-        success: false,
-        error: 'API key and secret are required for Alpaca connection',
-        data: {
-          connected: false,
-          broker: 'alpaca',
-          paperTrading: isPaper,
-        },
-        meta: { requestId },
+      return validationError(res, 'API key and secret are required for Alpaca connection', {
+        broker: 'alpaca',
+        paperTrading: isPaper,
       });
     }
 
@@ -108,25 +100,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         meta: { requestId },
       });
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message;
-
-      return res.status(401).json({
-        success: false,
-        error: `Failed to connect to Alpaca: ${errorMessage}`,
-        data: {
-          connected: false,
-          broker: 'alpaca',
-          paperTrading: isPaper,
-        },
-        meta: { requestId },
-      });
+      return unauthorized(res, 'Failed to connect to Alpaca. Check your API credentials.');
     }
   } catch (error: any) {
     console.error('[Trading Connect] Error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message || 'Internal server error',
-      meta: { requestId },
-    });
+    return internalError(res);
   }
 }

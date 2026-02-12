@@ -12,6 +12,7 @@
  */
 
 import axios from 'axios';
+import { logger } from '../lib/logger.js';
 
 interface OptionData {
   strike: number;
@@ -302,7 +303,7 @@ export class ImpliedVolatilityService {
 
       return prices;
     } catch (error) {
-      console.error(`[IV] Error fetching historical prices for ${symbol}:`, error);
+      logger.error({ err: error, symbol }, 'IV error fetching historical prices');
       return [];
     }
   }
@@ -348,7 +349,7 @@ export class ImpliedVolatilityService {
 
       return ivData;
     } catch (error) {
-      console.error(`[IV] Error fetching IV data for ${symbol}:`, error);
+      logger.error({ err: error, symbol }, 'IV error fetching IV data');
       return this.getDefaultIVData(symbol);
     }
   }
@@ -430,7 +431,7 @@ export class ImpliedVolatilityService {
         puts,
       };
     } catch (error) {
-      console.error(`[IV] Error fetching options chain for ${symbol}:`, error);
+      logger.error({ err: error, symbol }, 'IV error fetching options chain');
       return null;
     }
   }

@@ -212,11 +212,11 @@ export async function rateLimiterMiddleware(
 
   const result = limiter.check(identifier, limit);
 
-  // Always set rate limit headers
+  // Always set standard rate limit headers (RFC draft-ietf-httpapi-ratelimit-headers)
   const resetAtSeconds = Math.ceil(result.resetAt / 1000);
-  reply.header('X-RateLimit-Limit', result.limit);
-  reply.header('X-RateLimit-Remaining', Math.max(0, result.remaining));
-  reply.header('X-RateLimit-Reset', resetAtSeconds);
+  reply.header('RateLimit-Limit', result.limit);
+  reply.header('RateLimit-Remaining', Math.max(0, result.remaining));
+  reply.header('RateLimit-Reset', resetAtSeconds);
 
   if (!result.allowed) {
     const retryAfterSeconds = Math.ceil((result.resetAt - Date.now()) / 1000);
@@ -265,9 +265,9 @@ export function createRateLimiter(config: Partial<RateLimitConfig> = {}) {
     const result = customStore.check(identifier, limit);
 
     const resetAtSeconds = Math.ceil(result.resetAt / 1000);
-    reply.header('X-RateLimit-Limit', result.limit);
-    reply.header('X-RateLimit-Remaining', Math.max(0, result.remaining));
-    reply.header('X-RateLimit-Reset', resetAtSeconds);
+    reply.header('RateLimit-Limit', result.limit);
+    reply.header('RateLimit-Remaining', Math.max(0, result.remaining));
+    reply.header('RateLimit-Reset', resetAtSeconds);
 
     if (!result.allowed) {
       const retryAfterSeconds = Math.ceil((result.resetAt - Date.now()) / 1000);

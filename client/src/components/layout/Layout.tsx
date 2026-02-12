@@ -5,6 +5,8 @@ import { Sidebar } from './Sidebar';
 import { MobileNav } from './MobileNav';
 import { SkipToMain } from '@/components/shared/VisuallyHidden';
 import { HelpPanel, useHelpPanel, FloatingHelpButton } from '@/components/help';
+import { ConnectionStatus } from '@/components/shared/ConnectionStatus';
+import { MockDataBanner } from '@/components/shared/MockDataBanner';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -45,6 +47,8 @@ export function Layout({ children }: LayoutProps) {
       <SkipToMain />
 
       <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} onHelpClick={() => openHelp()} />
+      <MockDataBanner />
+      <ConnectionStatus />
 
       {/* Desktop Sidebar */}
       <aside className="hidden lg:block" aria-label="Main navigation">

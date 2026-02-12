@@ -10,7 +10,8 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/api/client';
+import { api, getErrorMessage } from '@/api/client';
+import { toast } from '@/components/shared/Toast';
 
 // ============================================================================
 // Types
@@ -208,10 +209,14 @@ export function useSubmitOrder() {
         paperTrading: boolean;
       };
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['trading', 'orders'] });
       queryClient.invalidateQueries({ queryKey: ['trading', 'account'] });
       queryClient.invalidateQueries({ queryKey: ['trading', 'positions'] });
+      toast.success('Order submitted', `${variables.side.toUpperCase()} ${variables.qty ?? ''} ${variables.symbol}`);
+    },
+    onError: (error) => {
+      toast.error('Order failed', getErrorMessage(error));
     },
   });
 }
@@ -226,6 +231,10 @@ export function useCancelOrder() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trading', 'orders'] });
+      toast.success('Order canceled');
+    },
+    onError: (error) => {
+      toast.error('Failed to cancel order', getErrorMessage(error));
     },
   });
 }
@@ -238,8 +247,12 @@ export function useCancelAllOrders() {
       const response = await api.delete('/trading/orders?cancelAll=true');
       return response.data as { canceled: number };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['trading', 'orders'] });
+      toast.success('All orders canceled', `${data.canceled} order${data.canceled !== 1 ? 's' : ''} canceled`);
+    },
+    onError: (error) => {
+      toast.error('Failed to cancel orders', getErrorMessage(error));
     },
   });
 }
@@ -336,8 +349,12 @@ export function useConnectBroker() {
         message: string;
       };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['trading'] });
+      toast.success('Broker connected', data.message);
+    },
+    onError: (error) => {
+      toast.error('Broker connection failed', getErrorMessage(error));
     },
   });
 }

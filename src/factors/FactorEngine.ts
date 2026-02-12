@@ -14,6 +14,7 @@
 
 import type { Factor, FactorExposure, FactorCategory, Price } from '../types/index.js';
 import { supabaseAdmin } from '../lib/supabase.js';
+import { logger } from '../lib/logger.js';
 
 // ============================================================================
 // FACTOR DEFINITIONS (80+ FACTORS)
@@ -61,6 +62,55 @@ export const FACTOR_DEFINITIONS: Factor[] = [
   { name: 'dollar_beta', category: 'macro', description: 'USD strength sensitivity', halfLife: 63 },
   { name: 'oil_beta', category: 'macro', description: 'Oil price sensitivity', halfLife: 63 },
   { name: 'vix_beta', category: 'macro', description: 'VIX sensitivity', halfLife: 21 },
+
+  // Growth Factors
+  { name: 'revenue_growth', category: 'quality', description: 'Revenue growth rate (YoY)', halfLife: 63 },
+  { name: 'earnings_growth', category: 'quality', description: 'Earnings growth rate (YoY)', halfLife: 63 },
+  { name: 'fcf_yield', category: 'quality', description: 'Free cash flow yield', halfLife: 63 },
+  { name: 'dividend_yield', category: 'quality', description: 'Dividend yield', halfLife: 126 },
+  { name: 'buyback_yield', category: 'quality', description: 'Share buyback yield', halfLife: 126 },
+  { name: 'capex_intensity', category: 'quality', description: 'Capital expenditure to revenue', halfLife: 126 },
+  { name: 'rd_intensity', category: 'quality', description: 'R&D spending to revenue', halfLife: 126 },
+
+  // Valuation Factors
+  { name: 'pe_ratio', category: 'style', description: 'Price-to-earnings ratio', halfLife: 63 },
+  { name: 'pb_ratio', category: 'style', description: 'Price-to-book ratio', halfLife: 126 },
+  { name: 'ps_ratio', category: 'style', description: 'Price-to-sales ratio', halfLife: 63 },
+  { name: 'ev_ebitda', category: 'style', description: 'Enterprise value to EBITDA', halfLife: 63 },
+  { name: 'peg_ratio', category: 'style', description: 'PEG ratio (PE / growth)', halfLife: 63 },
+  { name: 'earnings_yield', category: 'style', description: 'Earnings yield (inverse PE)', halfLife: 63 },
+
+  // Technical Factors
+  { name: 'rsi_14', category: 'style', description: 'Relative Strength Index (14-day)', halfLife: 5 },
+  { name: 'macd_signal', category: 'style', description: 'MACD signal line crossover', halfLife: 5 },
+  { name: 'bollinger_width', category: 'volatility', description: 'Bollinger Band width', halfLife: 21 },
+  { name: 'atr_normalized', category: 'volatility', description: 'Average True Range (normalized)', halfLife: 21 },
+  { name: 'volume_ratio', category: 'sentiment', description: 'Volume relative to 20-day average', halfLife: 5 },
+  { name: 'price_gap', category: 'style', description: 'Overnight price gap frequency', halfLife: 21 },
+  { name: 'mean_reversion_5d', category: 'style', description: '5-day mean reversion signal', halfLife: 5 },
+
+  // Liquidity Factors
+  { name: 'bid_ask_spread', category: 'quality', description: 'Average bid-ask spread', halfLife: 21 },
+  { name: 'turnover_ratio', category: 'quality', description: 'Share turnover ratio', halfLife: 21 },
+  { name: 'amihud_illiquidity', category: 'quality', description: 'Amihud illiquidity measure', halfLife: 63 },
+
+  // Earnings & Events
+  { name: 'earnings_surprise', category: 'sentiment', description: 'Recent earnings surprise', halfLife: 21 },
+  { name: 'guidance_revision', category: 'sentiment', description: 'Management guidance revision', halfLife: 21 },
+  { name: 'insider_activity', category: 'sentiment', description: 'Net insider buying/selling', halfLife: 63 },
+  { name: 'institutional_flow', category: 'sentiment', description: 'Institutional ownership change', halfLife: 63 },
+
+  // Macro (additional)
+  { name: 'yield_curve_slope', category: 'macro', description: '10Y-2Y yield curve slope', halfLife: 63 },
+  { name: 'gold_beta', category: 'macro', description: 'Gold price sensitivity', halfLife: 63 },
+  { name: 'real_rate_sens', category: 'macro', description: 'Real interest rate sensitivity', halfLife: 126 },
+  { name: 'pmi_beta', category: 'macro', description: 'PMI (manufacturing) sensitivity', halfLife: 63 },
+  { name: 'consumer_confidence_beta', category: 'macro', description: 'Consumer confidence sensitivity', halfLife: 63 },
+
+  // Cross-asset
+  { name: 'equity_bond_corr', category: 'macro', description: 'Equity-bond correlation regime', halfLife: 63 },
+  { name: 'risk_on_off', category: 'macro', description: 'Risk-on/risk-off regime signal', halfLife: 21 },
+  { name: 'cross_asset_momentum', category: 'macro', description: 'Cross-asset momentum signal', halfLife: 21 },
 
   // Sector Factors (GICS Level 1)
   { name: 'sector_tech', category: 'sector', description: 'Technology sector exposure', halfLife: 252 },
@@ -310,7 +360,7 @@ export class FactorEngine {
           await this.delay(12000);  // 12 seconds between calls
         }
       } catch (e) {
-        console.warn(`Failed to fetch fundamentals for ${symbol}:`, e);
+        logger.warn({ err: e, symbol }, 'Failed to fetch fundamentals');
       }
     }
 
@@ -333,7 +383,7 @@ export class FactorEngine {
 
       const data = await response.json();
       if (!data || data['Note'] || data['Error Message']) {
-        console.warn(`Alpha Vantage rate limit or error for ${symbol}`);
+        logger.warn({ symbol }, 'Alpha Vantage rate limit or error');
         return null;
       }
 
@@ -358,7 +408,7 @@ export class FactorEngine {
         fetchedAt: new Date(),
       };
     } catch (e) {
-      console.error(`Error fetching fundamentals for ${symbol}:`, e);
+      logger.error({ err: e, symbol }, 'Error fetching fundamentals');
       return null;
     }
   }

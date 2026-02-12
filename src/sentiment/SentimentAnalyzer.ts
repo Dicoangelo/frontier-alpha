@@ -11,6 +11,7 @@
  */
 
 import type { SentimentScore, SentimentLabel } from '../types/index.js';
+import { logger } from '../lib/logger.js';
 
 // ============================================================================
 // TYPES
@@ -98,7 +99,7 @@ export class SentimentAnalyzer {
         const mlResult = await this.callFinBERT(text);
         if (mlResult) return mlResult;
       } catch (e) {
-        console.warn('FinBERT fallback to keyword analysis:', e);
+        logger.warn({ err: e }, 'FinBERT fallback to keyword analysis');
       }
     }
 

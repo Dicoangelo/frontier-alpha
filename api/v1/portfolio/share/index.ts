@@ -1,9 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { requireAuth } from '../../../lib/auth.js';
+import { validationError, notFound, methodNotAllowed, internalError } from '../../../lib/errorHandler.js';
 import * as crypto from 'crypto';
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://rqidgeittsjkpkykmdrz.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('SUPABASE_URL and SUPABASE_SERVICE_KEY must be set');
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -40,28 +46,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(204).end();
   }
 
-  const start = Date.now();
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Missing authorization header' },
-    });
+  // Require authentication
+  const user = await requireAuth(req, res);
+  if (!user) {
+    return; // requireAuth already sent 401 response
   }
 
-  const token = authHeader.substring(7);
+  const start = Date.now();
 
   try {
-    // Verify the user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Invalid token' },
-      });
-    }
 
     // POST - Create a new share
     if (req.method === 'POST') {
@@ -69,17 +62,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Validate input
       if (!portfolioId) {
-        return res.status(400).json({
-          success: false,
-          error: { code: 'VALIDATION_ERROR', message: 'Portfolio ID is required' },
-        });
+        return validationError(res, 'Portfolio ID is required', { portfolioId: 'Required' });
       }
 
       if (!permissions || !['view', 'edit'].includes(permissions)) {
-        return res.status(400).json({
-          success: false,
-          error: { code: 'VALIDATION_ERROR', message: 'Valid permissions (view or edit) are required' },
-        });
+        return validationError(res, 'Valid permissions (view or edit) are required', { permissions: 'Must be "view" or "edit"' });
       }
 
       // Verify user owns the portfolio
@@ -91,10 +78,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .single();
 
       if (portfolioError || !portfolio) {
-        return res.status(404).json({
-          success: false,
-          error: { code: 'NOT_FOUND', message: 'Portfolio not found or access denied' },
-        });
+        return notFound(res, 'Portfolio');
       }
 
       // Generate share token and expiration
@@ -132,10 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (shareError) {
         console.error('Share creation error:', shareError);
-        return res.status(500).json({
-          success: false,
-          error: { code: 'DB_ERROR', message: 'Failed to create share' },
-        });
+        return internalError(res, 'Failed to create share');
       }
 
       // Build share URL
@@ -234,15 +215,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    return res.status(405).json({
-      success: false,
-      error: { code: 'METHOD_NOT_ALLOWED', message: 'Method not allowed' },
-    });
-  } catch (error: any) {
+    return methodNotAllowed(res);
+  } catch (error) {
     console.error('Portfolio share error:', error);
-    return res.status(500).json({
-      success: false,
-      error: { code: 'SERVER_ERROR', message: error.message },
-    });
+    return internalError(res);
   }
 }

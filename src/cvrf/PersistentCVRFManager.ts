@@ -20,6 +20,7 @@ import { ConceptExtractor } from './ConceptExtractor.js';
 import { BeliefUpdater } from './BeliefUpdater.js';
 import * as persistence from './persistence.js';
 import type { FactorExposure, OptimizationResult } from '../types/index.js';
+import { logger } from '../lib/logger.js';
 
 // ============================================================================
 // PERSISTENT CVRF MANAGER
@@ -74,7 +75,7 @@ export class PersistentCVRFManager {
 
       this.initialized = true;
     } catch (error) {
-      console.error('Failed to initialize CVRF from Supabase:', error);
+      logger.error({ err: error }, 'Failed to initialize CVRF from Supabase');
       // Continue with defaults
       this.initialized = true;
     }
@@ -215,7 +216,7 @@ export class PersistentCVRFManager {
    */
   async runCVRFCycle(): Promise<CVRFCycleResult | null> {
     if (this.recentEpisodes.length < 2) {
-      console.log('CVRF: Insufficient episodes for comparison. Need at least 2.');
+      logger.info('CVRF: Insufficient episodes for comparison, need at least 2');
       return null;
     }
 

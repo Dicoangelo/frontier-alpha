@@ -34,6 +34,7 @@ import { EpisodeManager } from './EpisodeManager.js';
 import { ConceptExtractor } from './ConceptExtractor.js';
 import { BeliefUpdater } from './BeliefUpdater.js';
 import type { FactorExposure, OptimizationResult } from '../types/index.js';
+import { logger } from '../lib/logger.js';
 
 // ============================================================================
 // CVRF MANAGER
@@ -67,14 +68,14 @@ export class CVRFManager {
   async runCVRFCycle(): Promise<CVRFCycleResult | null> {
     // Check if we have enough episodes
     if (!this.episodeManager.hasEnoughEpisodesForCVRF()) {
-      console.log('CVRF: Insufficient episodes for comparison. Need at least 2.');
+      logger.info('CVRF: Insufficient episodes for comparison, need at least 2');
       return null;
     }
 
     // Step 1: Get latest episode comparison
     const comparison = this.episodeManager.getLatestComparison();
     if (!comparison) {
-      console.log('CVRF: Could not generate episode comparison.');
+      logger.info('CVRF: Could not generate episode comparison');
       return null;
     }
 

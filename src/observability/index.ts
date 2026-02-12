@@ -8,6 +8,8 @@
  * - Health check monitoring
  */
 
+import { logger } from '../lib/logger.js';
+
 // Sentry configuration
 interface SentryConfig {
   dsn: string;
@@ -144,7 +146,7 @@ export class Observability {
    */
   init(config: SentryConfig): void {
     if (this.initialized) {
-      console.warn('[Observability] Already initialized');
+      logger.warn('Observability already initialized');
       return;
     }
 
@@ -161,7 +163,7 @@ export class Observability {
     //   tracesSampleRate: config.tracesSampleRate || 0.1,
     // });
 
-    console.log(`[Observability] Initialized - env: ${this.environment}, release: ${this.release}`);
+    logger.info({ environment: this.environment, release: this.release }, 'Observability initialized');
     this.initialized = true;
   }
 
@@ -174,12 +176,7 @@ export class Observability {
     const eventId = `err_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
     // Log the error
-    console.error('[Observability] Error captured:', {
-      eventId,
-      message: error.message,
-      stack: error.stack,
-      context,
-    });
+    logger.error({ eventId, name: error.name, message: error.message, stack: error.stack, context }, 'Observability error captured');
 
     // In production with Sentry:
     // Sentry.withScope((scope) => {
@@ -206,7 +203,7 @@ export class Observability {
    * Capture a message (non-error event)
    */
   captureMessage(message: string, level: 'info' | 'warning' | 'error' = 'info'): void {
-    console.log(`[Observability] [${level.toUpperCase()}] ${message}`);
+    logger.info({ level, data: undefined }, message);
 
     // Sentry.captureMessage(message, level);
 
@@ -236,7 +233,7 @@ export class Observability {
   endSpan(spanId: string, status: 'ok' | 'error' = 'ok'): number {
     const span = this.activeSpans.get(spanId);
     if (!span) {
-      console.warn(`[Observability] Span not found: ${spanId}`);
+      logger.warn({ spanId }, 'Observability span not found');
       return 0;
     }
 
@@ -354,7 +351,7 @@ export class Observability {
    */
   setUser(user: { id: string; email?: string; username?: string }): void {
     // Sentry.setUser(user);
-    console.log('[Observability] User context set:', user.id);
+    logger.info('Observability user context set');
   }
 
   /**
@@ -362,7 +359,7 @@ export class Observability {
    */
   clearUser(): void {
     // Sentry.setUser(null);
-    console.log('[Observability] User context cleared');
+    logger.info('Observability user context cleared');
   }
 
   /**
@@ -376,7 +373,7 @@ export class Observability {
     //   level: 'info',
     // });
 
-    console.log(`[Observability] Breadcrumb: [${category}] ${message}`, data || '');
+    logger.debug({ category, data }, message);
   }
 }
 

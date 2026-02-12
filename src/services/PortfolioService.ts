@@ -1,5 +1,6 @@
 import { supabaseAdmin, FrontierPortfolio, FrontierPosition } from '../lib/supabase.js';
 import type { Portfolio, Position } from '../types/index.js';
+import { logger } from '../lib/logger.js';
 
 export interface PortfolioWithPositions extends FrontierPortfolio {
   positions: FrontierPosition[];
@@ -24,7 +25,7 @@ export class PortfolioService {
       .order('symbol');
 
     if (positionsError) {
-      console.error('Error fetching positions:', positionsError);
+      logger.error({ err: positionsError, userId }, 'Error fetching positions');
     }
 
     return {
@@ -50,7 +51,7 @@ export class PortfolioService {
       .single();
 
     if (error) {
-      console.error('Error updating cash balance:', error);
+      logger.error({ err: error, userId }, 'Error updating cash balance');
       return null;
     }
 
@@ -96,7 +97,7 @@ export class PortfolioService {
         .single();
 
       if (error) {
-        console.error('Error updating position:', error);
+        logger.error({ err: error, userId, symbol }, 'Error updating existing position');
         return null;
       }
 
@@ -116,7 +117,7 @@ export class PortfolioService {
       .single();
 
     if (error) {
-      console.error('Error adding position:', error);
+      logger.error({ err: error, userId, symbol }, 'Error adding position');
       return null;
     }
 
@@ -155,7 +156,7 @@ export class PortfolioService {
       .single();
 
     if (error) {
-      console.error('Error updating position:', error);
+      logger.error({ err: error, userId, positionId }, 'Error updating position');
       return null;
     }
 
@@ -179,7 +180,7 @@ export class PortfolioService {
       .eq('portfolio_id', portfolio.id);
 
     if (error) {
-      console.error('Error deleting position:', error);
+      logger.error({ err: error, userId, positionId }, 'Error deleting position');
       return false;
     }
 

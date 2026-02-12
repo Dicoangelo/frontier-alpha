@@ -17,6 +17,7 @@ import type {
   FactorExposure,
   CognitiveExplanation,
 } from '../types/index.js';
+import { logger } from '../lib/logger.js';
 
 // ============================================================================
 // CVRF-ENHANCED COGNITIVE EXPLAINER
@@ -259,8 +260,8 @@ export async function runCVRFEnhancedTradingLoop(
   const decisions: TradingDecision[] = [];
   let cumulativeReturn = 1;
 
-  console.log(`\n🚀 Starting CVRF-enhanced trading episode: ${episode.id}`);
-  console.log(`Current beliefs: ${cvrfManager.getCurrentBeliefs().currentRegime} regime`);
+  logger.info({ episodeId: episode.id }, 'Starting CVRF-enhanced trading episode');
+  logger.info({ regime: cvrfManager.getCurrentBeliefs().currentRegime }, 'Current beliefs');
 
   // Simulate trading days
   for (let day = 0; day < tradingDays; day++) {
@@ -297,7 +298,7 @@ export async function runCVRFEnhancedTradingLoop(
       );
 
       if (riskCheck.triggered) {
-        console.log(`⚠️ Day ${day + 1}: Risk control triggered - ${riskCheck.adjustment.type}`);
+        logger.warn({ day: day + 1, adjustmentType: riskCheck.adjustment.type }, 'Risk control triggered');
       }
     }
   }
@@ -319,11 +320,7 @@ export async function runCVRFEnhancedTradingLoop(
   const { cvrfResult } = await cvrfManager.closeEpisode();
 
   if (cvrfResult) {
-    console.log(`\n✅ CVRF Cycle Complete`);
-    console.log(`- Performance delta: ${(cvrfResult.episodeComparison.performanceDelta * 100).toFixed(2)}%`);
-    console.log(`- Insights extracted: ${cvrfResult.extractedInsights.length}`);
-    console.log(`- Belief updates: ${cvrfResult.beliefUpdates.length}`);
-    console.log(`- New regime: ${cvrfResult.newBeliefState.currentRegime}`);
+    logger.info({ performanceDelta: (cvrfResult.episodeComparison.performanceDelta * 100).toFixed(2), insightsExtracted: cvrfResult.extractedInsights.length, beliefUpdates: cvrfResult.beliefUpdates.length, newRegime: cvrfResult.newBeliefState.currentRegime }, 'CVRF cycle complete');
   }
 
   return {

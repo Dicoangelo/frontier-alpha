@@ -180,7 +180,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   let sentiment: SentimentScore;
-  let source = 'mock';
+  let dataSource: 'mock' | 'live' = 'mock';
 
   // Try Alpha Vantage first
   const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
@@ -188,7 +188,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const realSentiment = await fetchAlphaVantageSentiment(symbol, apiKey);
     if (realSentiment) {
       sentiment = realSentiment;
-      source = 'alpha_vantage';
+      dataSource = 'live';
     } else {
       sentiment = generateMockSentiment(symbol);
     }
@@ -196,14 +196,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     sentiment = generateMockSentiment(symbol);
   }
 
+  res.setHeader('X-Data-Source', dataSource);
   return res.status(200).json({
     success: true,
     data: sentiment,
+    dataSource,
     meta: {
       timestamp: new Date().toISOString(),
       requestId: `req-${Math.random().toString(36).slice(2, 8)}`,
       latencyMs: Date.now() - start,
-      source,
     },
   });
 }

@@ -96,7 +96,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const upperSymbol = symbol.toUpperCase();
   let forecast: EarningsForecast;
-  let source = 'mock';
+  let dataSource: 'mock' | 'live' = 'mock';
 
   // Try real Oracle if API keys available
   const alphaVantageKey = process.env.ALPHA_VANTAGE_API_KEY;
@@ -112,7 +112,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
       forecast = await oracle.generateForecast(upperSymbol, forecastDate);
-      source = 'oracle';
+      dataSource = 'live';
     } catch (error) {
       console.warn('Failed to generate Oracle forecast, using mock:', error);
       forecast = generateMockForecast(upperSymbol);
@@ -121,14 +121,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     forecast = generateMockForecast(upperSymbol);
   }
 
+  res.setHeader('X-Data-Source', dataSource);
   return res.status(200).json({
     success: true,
     data: forecast,
+    dataSource,
     meta: {
       timestamp: new Date().toISOString(),
       requestId: `req-${Math.random().toString(36).slice(2, 8)}`,
       latencyMs: Date.now() - start,
-      source,
     },
   });
 }

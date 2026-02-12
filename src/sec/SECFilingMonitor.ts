@@ -6,6 +6,7 @@
  */
 
 import axios from 'axios';
+import { logger } from '../lib/logger.js';
 
 interface SECFiling {
   id: string;
@@ -90,7 +91,7 @@ export class SECFilingMonitor {
 
       return this.parseAtomFeed(response.data, cik);
     } catch (error) {
-      console.error(`[SECFilingMonitor] Error fetching filings for CIK ${cik}:`, error);
+      logger.error({ err: error, cik }, 'SECFilingMonitor error fetching filings');
       return [];
     }
   }
@@ -101,7 +102,7 @@ export class SECFilingMonitor {
   async fetchFilingsForSymbol(symbol: string): Promise<SECFiling[]> {
     const cik = await this.getCIKForSymbol(symbol);
     if (!cik) {
-      console.warn(`[SECFilingMonitor] Could not find CIK for symbol: ${symbol}`);
+      logger.warn({ symbol }, 'SECFilingMonitor could not find CIK for symbol');
       return [];
     }
 
@@ -129,7 +130,7 @@ export class SECFilingMonitor {
         // Rate limit: SEC allows 10 requests/second
         await this.delay(150);
       } catch (error) {
-        console.error(`[SECFilingMonitor] Error checking ${symbol}:`, error);
+        logger.error({ err: error, symbol }, 'SECFilingMonitor error checking symbol');
       }
     }
 
@@ -172,7 +173,7 @@ export class SECFilingMonitor {
 
       return null;
     } catch (error) {
-      console.error(`[SECFilingMonitor] Error getting CIK for ${symbol}:`, error);
+      logger.error({ err: error, symbol }, 'SECFilingMonitor error getting CIK');
       return null;
     }
   }
@@ -224,7 +225,7 @@ export class SECFilingMonitor {
         }
       }
     } catch (error) {
-      console.error('[SECFilingMonitor] Error parsing Atom feed:', error);
+      logger.error({ err: error }, 'SECFilingMonitor error parsing Atom feed');
     }
 
     return filings;

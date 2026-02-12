@@ -21,7 +21,22 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    // Check rate limit headers on every successful response
+    const limit = Number(response.headers['ratelimit-limit']);
+    const remaining = Number(response.headers['ratelimit-remaining']);
+
+    if (limit > 0 && remaining >= 0) {
+      const usagePct = remaining / limit;
+      if (usagePct < 0.1) {
+        console.warn(
+          `[Rate Limit] ${remaining}/${limit} requests remaining (${Math.round(usagePct * 100)}%). Consider slowing down.`
+        );
+      }
+    }
+
+    return response.data;
+  },
   (error) => {
     // Log API errors but don't auto-logout (let components handle auth errors gracefully)
     console.error('API Error:', error.response?.data || error.message);
@@ -66,8 +81,15 @@ export function getErrorMessage(error: unknown): string {
   if (isTimeoutError(error)) {
     return 'The request timed out. Please try again.';
   }
-  if (error instanceof AxiosError && error.response?.data?.message) {
-    return error.response.data.message;
+  if (error instanceof AxiosError && error.response?.data) {
+    // Standardized format: { success: false, error: { code, message } }
+    if (error.response.data.error?.message) {
+      return error.response.data.error.message;
+    }
+    // Legacy fallback
+    if (error.response.data.message) {
+      return error.response.data.message;
+    }
   }
   if (error instanceof Error) {
     return error.message;

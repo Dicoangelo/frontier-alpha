@@ -8,6 +8,7 @@ import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
 import { NotificationSettings } from '@/components/notifications/NotificationSettings';
 import { APIKeys } from '@/components/settings/APIKeys';
+import { toast } from '@/components/shared/Toast';
 
 interface UserSettings {
   display_name: string | null;
@@ -50,6 +51,10 @@ export function Settings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
       setHasChanges(false);
+      toast.success('Settings saved');
+    },
+    onError: () => {
+      toast.error('Failed to save settings', 'Please try again');
     },
   });
 
@@ -63,7 +68,9 @@ export function Settings() {
   };
 
   const handleLogout = async () => {
-    await logout();
+    if (window.confirm('Are you sure you want to sign out?')) {
+      await logout();
+    }
   };
 
   if (isLoading) {

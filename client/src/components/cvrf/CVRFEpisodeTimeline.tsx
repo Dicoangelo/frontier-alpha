@@ -1,12 +1,13 @@
 /**
  * CVRF Episode Timeline Component
  *
- * Displays trading episodes with their decisions and performance
+ * Displays trading episodes with their decisions and performance.
+ * Uses paginated fetching with a "Load More" button.
  */
 
 import { useState } from 'react';
-import { Clock, TrendingUp, TrendingDown, Play, Square, ChevronDown, ChevronUp } from 'lucide-react';
-import { useCVRFEpisodes } from '@/hooks/useCVRF';
+import { Clock, TrendingUp, TrendingDown, Play, Square, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { useCVRFEpisodesPaginated } from '@/hooks/useCVRF';
 import type { CVRFEpisode } from '@/types/cvrf';
 
 interface EpisodeCardProps {
@@ -130,7 +131,14 @@ function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
 }
 
 export function CVRFEpisodeTimeline() {
-  const { data, isLoading, isError } = useCVRFEpisodes();
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useCVRFEpisodesPaginated();
 
   if (isLoading) {
     return (
@@ -158,13 +166,21 @@ export function CVRFEpisodeTimeline() {
     );
   }
 
-  const hasEpisodes = data.current || data.completed.length > 0;
+  // First page has the current episode and total count
+  const firstPage = data.pages[0];
+  const currentEpisode = firstPage?.current;
+  const totalEpisodes = firstPage?.totalEpisodes ?? 0;
+
+  // Flatten completed episodes from all pages
+  const allCompleted = data.pages.flatMap((page) => page.completed);
+
+  const hasEpisodes = currentEpisode || allCompleted.length > 0;
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-[var(--color-text)]">Episode Timeline</h3>
-        <span className="text-xs text-[var(--color-text-muted)]">{data.totalEpisodes} total</span>
+        <span className="text-xs text-[var(--color-text-muted)]">{totalEpisodes} total</span>
       </div>
 
       {!hasEpisodes ? (
@@ -176,10 +192,27 @@ export function CVRFEpisodeTimeline() {
         </div>
       ) : (
         <div className="space-y-2">
-          {data.current && <EpisodeCard episode={data.current} isActive />}
-          {data.completed.map((episode) => (
+          {currentEpisode && <EpisodeCard episode={currentEpisode} isActive />}
+          {allCompleted.map((episode) => (
             <EpisodeCard key={episode.id} episode={episode} />
           ))}
+
+          {hasNextPage && (
+            <button
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="w-full py-3 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text)] bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] transition-colors disabled:opacity-50"
+            >
+              {isFetchingNextPage ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading...
+                </span>
+              ) : (
+                'Load More Episodes'
+              )}
+            </button>
+          )}
         </div>
       )}
     </div>

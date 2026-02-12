@@ -1,8 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { requireAuth } from '../../../lib/auth.js';
+import { methodNotAllowed, internalError } from '../../../lib/errorHandler.js';
+import { validateBody, schemas } from '../../../lib/validation.js';
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://rqidgeittsjkpkykmdrz.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('SUPABASE_URL and SUPABASE_SERVICE_KEY must be set');
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -50,54 +57,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(204).end();
   }
 
-  const start = Date.now();
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Missing authorization header' },
-    });
+  // Require authentication
+  const user = await requireAuth(req, res);
+  if (!user) {
+    return; // requireAuth already sent 401 response
   }
 
-  const token = authHeader.substring(7);
+  const start = Date.now();
 
   try {
-    // Verify the user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      return res.status(401).json({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Invalid token' },
-      });
-    }
 
     // POST - Add new position
     if (req.method === 'POST') {
-      const { symbol, shares, avgCost } = req.body as AddPositionRequest;
+      // Validate & parse input with Zod
+      const body = validateBody(req, res, schemas.addPosition);
+      if (!body) return;
 
-      // Validate input
-      if (!symbol || typeof symbol !== 'string') {
-        return res.status(400).json({
-          success: false,
-          error: { code: 'VALIDATION_ERROR', message: 'Symbol is required' },
-        });
-      }
-
-      if (!shares || typeof shares !== 'number' || shares <= 0) {
-        return res.status(400).json({
-          success: false,
-          error: { code: 'VALIDATION_ERROR', message: 'Shares must be a positive number' },
-        });
-      }
-
-      if (!avgCost || typeof avgCost !== 'number' || avgCost <= 0) {
-        return res.status(400).json({
-          success: false,
-          error: { code: 'VALIDATION_ERROR', message: 'Average cost must be a positive number' },
-        });
-      }
+      const { symbol, shares, avgCost } = body;
 
       // Get or create portfolio
       const portfolio = await getOrCreatePortfolio(user.id);
@@ -201,15 +177,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    return res.status(405).json({
-      success: false,
-      error: { code: 'METHOD_NOT_ALLOWED', message: 'Method not allowed' },
-    });
-  } catch (error: any) {
+    return methodNotAllowed(res);
+  } catch (error) {
     console.error('Portfolio positions error:', error);
-    return res.status(500).json({
-      success: false,
-      error: { code: 'SERVER_ERROR', message: error.message },
-    });
+    return internalError(res);
   }
 }

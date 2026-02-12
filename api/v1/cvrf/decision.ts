@@ -3,6 +3,8 @@
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createPersistentCVRFManager } from '../../../src/cvrf/PersistentCVRFManager.js';
+import { methodNotAllowed, badRequest } from '../../lib/errorHandler.js';
+import { validateBody, schemas } from '../../lib/validation.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,18 +16,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, error: { code: 'METHOD_NOT_ALLOWED', message: 'Use POST' } });
+    return methodNotAllowed(res);
   }
 
   const start = Date.now();
-  const { symbol, action, weightBefore, weightAfter, reason, confidence, factors } = req.body || {};
 
-  if (!symbol || !action) {
-    return res.status(400).json({
-      success: false,
-      error: { code: 'VALIDATION_ERROR', message: 'symbol and action are required' },
-    });
-  }
+  // Validate & parse input with Zod
+  const body = validateBody(req, res, schemas.recordDecision);
+  if (!body) return;
+
+  const { symbol, action, weightBefore, weightAfter, reason, confidence, factors } = body;
 
   try {
     const manager = await createPersistentCVRFManager();
@@ -49,10 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         persistent: true,
       },
     });
-  } catch (error: any) {
-    return res.status(400).json({
-      success: false,
-      error: { code: 'DECISION_ERROR', message: error.message },
-    });
+  } catch (_error: any) {
+    return badRequest(res, 'Failed to record decision');
   }
 }

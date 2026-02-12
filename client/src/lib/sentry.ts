@@ -100,9 +100,11 @@ export function initSentry(): Promise<void> {
 
         // Scrub sensitive headers before sending
         beforeSend(event: Record<string, unknown>, hint: Record<string, unknown>) {
-          if (event.request?.headers) {
-            delete event.request.headers['authorization'];
-            delete event.request.headers['cookie'];
+          const request = event.request as Record<string, unknown> | undefined;
+          const headers = request?.headers as Record<string, unknown> | undefined;
+          if (headers) {
+            delete headers['authorization'];
+            delete headers['cookie'];
           }
 
           // Drop transient network errors

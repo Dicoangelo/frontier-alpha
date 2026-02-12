@@ -7,6 +7,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // ============================================================================
+// Set env vars before any handler imports (positions/index.ts validates at load)
+// vi.hoisted runs before module imports
+// ============================================================================
+vi.hoisted(() => {
+  process.env.SUPABASE_URL ??= 'http://localhost:54321';
+  process.env.SUPABASE_SERVICE_KEY ??= 'test-service-key';
+});
+
+// ============================================================================
 // Mock dependencies so handlers can be imported
 // ============================================================================
 

@@ -143,6 +143,106 @@ flowchart TB
 
 <br/>
 
+## Modular Architecture
+
+Every subsystem is a **module** — swap implementations with a config change, zero code changes.
+
+```
+75+ modules · 67 API routes · 205 tests · 22 subsystems · 10 migrations · Pluggable everything
+```
+
+| Subsystem | Module | Ships with | Extend |
+|-----------|--------|------------|--------|
+| **Factor Analysis** | `FactorEngine` | 80+ factors across 6 categories (momentum, value, quality, volatility, size, sentiment), Fama-French + custom | Custom factor plugins via `factors/` |
+| **CVRF Intelligence** | `CVRFManager` | Belief updater, concept extractor, episode manager, persistent storage, conviction tracking | Custom belief models via `cvrf/` |
+| **Cognitive Explainer** | `ExplanationService` | GPT-4o + template dual-mode, confidence scores, source attribution | Any OpenAI-compatible LLM |
+| **Portfolio Optimization** | `PortfolioOptimizer` | Monte Carlo simulation, max Sharpe, min variance, risk parity, CVRF-weighted | Custom objective functions |
+| **Backtesting** | `WalkForwardEngine` | Walk-forward engine, CVRF integration, historical data loader, episode replay | Custom strategies via `backtest/` |
+| **Earnings Oracle** | `EarningsOracle` | Calendar, consensus estimates, beat rates, expected moves, historical reactions | Custom data sources |
+| **Risk System** | `RiskAlertSystem` | 11 alert types (drawdown, volatility, concentration, factor drift, stop loss, take profit + 5 more) | Custom alert types |
+| **Market Data** | `MarketDataProvider` | Polygon.io (WebSocket streaming), Alpha Vantage (fundamentals), Ken French Library | Any data provider |
+| **Trading** | `BrokerAdapter` | Alpaca (paper + live), order management, preview, market clock, position tracking | Any broker API |
+| **Options** | `GreeksCalculator` | Implied volatility surface, Greeks calculation, strategy builder, chain analysis | Custom pricing models |
+| **ML Engine** | `NeuralFactorModel` | Regime detection, factor attribution, neural models, training pipeline | Custom models via `ml/` |
+| **Tax Optimization** | `TaxLotTracker` | Lot tracking, loss harvesting, wash sale detection, efficient rebalancer, reporting | Custom tax rules |
+| **SEC Monitoring** | `SECFilingMonitor` | Edgar filings, real-time filing alerts, SEC document parsing | Custom filing types |
+| **Sentiment** | `SentimentAnalyzer` | News sentiment scoring, social signal processing | Custom sentiment sources |
+| **Notifications** | `PushService` | VAPID Web Push, SSE streaming, alert delivery, browser push | Custom channels |
+| **Analytics** | `PerformanceAttribution` | Return attribution, factor decomposition, Brinson-style analysis | Custom attribution models |
+| **Cache** | `RedisCache` | Redis-backed caching with LRU eviction | Any cache backend |
+| **Auth** | `AuthMiddleware` | JWT + API key authentication, Supabase Row Level Security, rate limiting | Custom auth providers |
+| **Social** | `SharingService` | Portfolio sharing, leaderboards, public profiles, social discovery | Custom social features |
+| **Multi-Currency** | `MultiCurrency` | Currency conversion, international market support | Custom currency providers |
+| **Observability** | `MetricsCollector` | Structured logging (Pino), performance metrics, error tracking | Prometheus, OTel (planned) |
+
+### Platform Support
+
+- ✅ **Vercel** — Serverless + static deployment (production)
+- ✅ **Docker** — Full-stack containerized (`docker-compose.yml`)
+- ✅ **Railway** — Auto-deploy from git (`railway.toml`)
+- ✅ **Render** — Alternative PaaS deployment (`render.yaml`)
+- ✅ **Local** — `npm run dev:all` (API port 3000, client port 5173)
+- 🚧 **Python ML** — Optional uvicorn engine (port 8000)
+
+### CVRF Engine (Full-Stack Belief System)
+
+All custom, zero external ML dependencies — no scikit-learn, no TensorFlow, no framework lock-in:
+
+| Layer | Implementation |
+|-------|---------------|
+| **Concept Extraction** | `ConceptExtractor.ts` — extract investment beliefs from factor analysis |
+| **Belief Management** | `CVRFManager.ts` — orchestrate belief lifecycle, conviction tracking |
+| **Reinforcement** | `BeliefUpdater.ts` — reinforce correct beliefs, weaken incorrect ones |
+| **Episode Tracking** | `EpisodeManager.ts` — temporal windows, regime change detection |
+| **Persistence** | `PersistentCVRFManager.ts` — Supabase-backed survival across restarts |
+| **Integration** | `integration.ts` — connect beliefs to optimizer and backtest runner |
+
+The system automatically learns, reinforces, and manages beliefs via episodes.
+
+```env
+# CVRF Configuration
+CVRF_LEARNING_RATE=0.1
+CVRF_DECAY_RATE=0.05
+CVRF_MIN_CONVICTION=0.1
+CVRF_MAX_CONVICTION=1.0
+CVRF_EPISODE_WINDOW=30
+```
+
+### ML Pipeline (Neural Factor Intelligence)
+
+| Layer | Implementation |
+|-------|---------------|
+| **Regime Detection** | `RegimeDetector.ts` — identify bull, bear, and transitional market regimes |
+| **Neural Factors** | `NeuralFactorModel.ts` — learned factor representations beyond Fama-French |
+| **Attribution** | `FactorAttribution.ts` — decompose returns into factor contributions |
+| **Training** | `TrainingPipeline.ts` — walk-forward training with out-of-sample validation |
+| **Python Bridge** | `ml/main.py` — optional uvicorn FastAPI engine for heavy compute |
+
+```env
+# ML Configuration
+ML_ENGINE_URL=http://localhost:8000
+ML_REGIME_LOOKBACK=252
+ML_RETRAIN_INTERVAL=30
+```
+
+### Client Architecture
+
+| Layer | Implementation |
+|-------|---------------|
+| **Pages** | 19 views — Dashboard, Portfolio, Factors, CVRF, Earnings, Options, Tax, Trading, Backtest, ML, Social, Settings |
+| **Components** | 68 React 19 components across 18 domains (portfolio, charts, cvrf, trading, risk, earnings, options + more) |
+| **State** | 5 Zustand stores — `portfolioStore`, `quotesStore`, `alertsStore`, `authStore`, `themeStore` |
+| **Data Fetching** | React Query + custom hooks — `useQuotes`, `useTrading`, `useNotifications` + 6 more |
+| **Real-time** | WebSocket → SSE → Polling progressive fallback via `wsClient` |
+| **API Layer** | 7 typed API modules — `client`, `cvrf`, `earnings`, `factors`, `portfolio`, `websocket` + trading hooks |
+| **PWA** | Service Worker, Web Push API, offline caching, installable |
+
+<br/>
+
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="100%"/>
+
+<br/>
+
 ## Core Systems
 
 <div align="center">

@@ -438,7 +438,7 @@ function ChainSection({ contracts }: { contracts: ChainContract[] }) {
     <Card>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <Layers className="w-5 h-5 text-indigo-500" />
+          <Layers className="w-5 h-5 text-[var(--color-accent)]" />
           Options Chain
           <span className="text-sm font-normal text-[var(--color-text-muted)]">
             {UNDERLYING_SYMBOL} @ ${UNDERLYING_PRICE.toFixed(2)}
@@ -451,7 +451,7 @@ function ChainSection({ contracts }: { contracts: ChainContract[] }) {
               id="chain-exp"
               value={selectedExp}
               onChange={(e) => setSelectedExp(e.target.value)}
-              className="appearance-none bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-3 py-2 pr-8 text-sm text-[var(--color-text)] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="appearance-none bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-3 py-2 pr-8 text-sm text-[var(--color-text)] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             >
               {EXPIRATIONS.map((exp) => (
                 <option key={exp} value={exp}>
@@ -464,17 +464,17 @@ function ChainSection({ contracts }: { contracts: ChainContract[] }) {
         </div>
       </div>
 
-      <div className="overflow-x-auto -mx-6 px-6">
+      <div className="overflow-x-auto -mx-6 px-6 animate-fade-in">
         <table className="w-full text-sm" aria-label={`Options chain for ${UNDERLYING_SYMBOL}`}>
           <thead>
             <tr className="border-b border-[var(--color-border)]">
-              <th colSpan={5} className="text-center text-green-600 text-xs font-semibold pb-2 border-r border-[var(--color-border)]">
+              <th colSpan={5} className="text-center text-[var(--color-positive)] text-xs font-semibold pb-2 border-r border-[var(--color-border)]">
                 CALLS
               </th>
               <th className="text-center text-xs font-semibold pb-2 text-[var(--color-text)] border-r border-[var(--color-border)]">
                 STRIKE
               </th>
-              <th colSpan={5} className="text-center text-red-500 text-xs font-semibold pb-2">
+              <th colSpan={5} className="text-center text-[var(--color-negative)] text-xs font-semibold pb-2">
                 PUTS
               </th>
             </tr>
@@ -503,48 +503,77 @@ function ChainSection({ contracts }: { contracts: ChainContract[] }) {
               return (
                 <tr
                   key={strike}
-                  className={`border-b border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)] transition-colors ${
-                    isATM ? 'bg-indigo-500/5' : ''
-                  }`}
+                  className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                  style={isATM ? { backgroundColor: 'rgba(123, 44, 255, 0.05)' } : undefined}
                 >
                   {/* Call side */}
-                  <td className={`text-right px-2 py-2 font-mono text-xs ${isITMCall ? 'bg-green-500/5' : ''}`}>
+                  <td
+                    className="text-right px-2 py-2 font-mono text-xs"
+                    style={isITMCall ? { backgroundColor: 'rgba(16, 185, 129, 0.05)' } : undefined}
+                  >
                     {call?.bid.toFixed(2)}
                   </td>
-                  <td className={`text-right px-2 py-2 font-mono text-xs ${isITMCall ? 'bg-green-500/5' : ''}`}>
+                  <td
+                    className="text-right px-2 py-2 font-mono text-xs"
+                    style={isITMCall ? { backgroundColor: 'rgba(16, 185, 129, 0.05)' } : undefined}
+                  >
                     {call?.ask.toFixed(2)}
                   </td>
-                  <td className={`text-right px-2 py-2 font-mono text-xs font-medium ${isITMCall ? 'bg-green-500/5' : ''}`}>
+                  <td
+                    className="text-right px-2 py-2 font-mono text-xs font-medium"
+                    style={isITMCall ? { backgroundColor: 'rgba(16, 185, 129, 0.05)' } : undefined}
+                  >
                     {call?.last.toFixed(2)}
                   </td>
-                  <td className={`text-right px-2 py-2 font-mono text-xs text-[var(--color-text-muted)] ${isITMCall ? 'bg-green-500/5' : ''}`}>
+                  <td
+                    className="text-right px-2 py-2 font-mono text-xs text-[var(--color-text-muted)]"
+                    style={isITMCall ? { backgroundColor: 'rgba(16, 185, 129, 0.05)' } : undefined}
+                  >
                     {call ? formatVolume(call.volume) : ''}
                   </td>
-                  <td className={`text-right px-2 py-2 font-mono text-xs text-[var(--color-text-muted)] border-r border-[var(--color-border)] ${isITMCall ? 'bg-green-500/5' : ''}`}>
+                  <td
+                    className="text-right px-2 py-2 font-mono text-xs text-[var(--color-text-muted)] border-r border-[var(--color-border)]"
+                    style={isITMCall ? { backgroundColor: 'rgba(16, 185, 129, 0.05)' } : undefined}
+                  >
                     {call ? formatVolume(call.openInterest) : ''}
                   </td>
 
                   {/* Strike */}
                   <td className={`text-center px-3 py-2 font-mono text-xs font-bold border-r border-[var(--color-border)] ${
-                    isATM ? 'text-indigo-600' : 'text-[var(--color-text)]'
+                    isATM ? 'text-[var(--color-accent)]' : 'text-[var(--color-text)]'
                   }`}>
                     {strike.toFixed(1)}
                   </td>
 
                   {/* Put side */}
-                  <td className={`text-right px-2 py-2 font-mono text-xs ${isITMPut ? 'bg-red-500/5' : ''}`}>
+                  <td
+                    className="text-right px-2 py-2 font-mono text-xs"
+                    style={isITMPut ? { backgroundColor: 'rgba(239, 68, 68, 0.05)' } : undefined}
+                  >
                     {put?.bid.toFixed(2)}
                   </td>
-                  <td className={`text-right px-2 py-2 font-mono text-xs ${isITMPut ? 'bg-red-500/5' : ''}`}>
+                  <td
+                    className="text-right px-2 py-2 font-mono text-xs"
+                    style={isITMPut ? { backgroundColor: 'rgba(239, 68, 68, 0.05)' } : undefined}
+                  >
                     {put?.ask.toFixed(2)}
                   </td>
-                  <td className={`text-right px-2 py-2 font-mono text-xs font-medium ${isITMPut ? 'bg-red-500/5' : ''}`}>
+                  <td
+                    className="text-right px-2 py-2 font-mono text-xs font-medium"
+                    style={isITMPut ? { backgroundColor: 'rgba(239, 68, 68, 0.05)' } : undefined}
+                  >
                     {put?.last.toFixed(2)}
                   </td>
-                  <td className={`text-right px-2 py-2 font-mono text-xs text-[var(--color-text-muted)] ${isITMPut ? 'bg-red-500/5' : ''}`}>
+                  <td
+                    className="text-right px-2 py-2 font-mono text-xs text-[var(--color-text-muted)]"
+                    style={isITMPut ? { backgroundColor: 'rgba(239, 68, 68, 0.05)' } : undefined}
+                  >
                     {put ? formatVolume(put.volume) : ''}
                   </td>
-                  <td className={`text-right px-2 py-2 font-mono text-xs text-[var(--color-text-muted)] ${isITMPut ? 'bg-red-500/5' : ''}`}>
+                  <td
+                    className="text-right px-2 py-2 font-mono text-xs text-[var(--color-text-muted)]"
+                    style={isITMPut ? { backgroundColor: 'rgba(239, 68, 68, 0.05)' } : undefined}
+                  >
                     {put ? formatVolume(put.openInterest) : ''}
                   </td>
                 </tr>
@@ -556,15 +585,24 @@ function ChainSection({ contracts }: { contracts: ChainContract[] }) {
 
       <div className="mt-3 flex items-center gap-4 text-xs text-[var(--color-text-muted)]">
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-green-500/20 border border-green-500/30" />
+          <span
+            className="w-3 h-3 rounded"
+            style={{ backgroundColor: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.3)' }}
+          />
           ITM Calls
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-red-500/20 border border-red-500/30" />
+          <span
+            className="w-3 h-3 rounded"
+            style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+          />
           ITM Puts
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded bg-indigo-500/20 border border-indigo-500/30" />
+          <span
+            className="w-3 h-3 rounded"
+            style={{ backgroundColor: 'rgba(123, 44, 255, 0.2)', border: '1px solid rgba(123, 44, 255, 0.3)' }}
+          />
           ATM
         </span>
       </div>
@@ -630,7 +668,7 @@ function GreeksSection({ cells }: { cells: GreeksHeatmapCell[] }) {
     <Card>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-indigo-500" />
+          <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
           Greeks Heatmap
         </h2>
         <div className="flex items-center gap-2">
@@ -642,11 +680,16 @@ function GreeksSection({ cells }: { cells: GreeksHeatmapCell[] }) {
                 aria-pressed={optionSide === side}
                 className={`px-3 py-2 text-xs font-medium min-h-[44px] transition-colors ${
                   optionSide === side
-                    ? side === 'call'
-                      ? 'bg-green-500/10 text-green-600'
-                      : 'bg-red-500/10 text-red-500'
+                    ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text)]'
                     : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
                 }`}
+                style={
+                  optionSide === side
+                    ? side === 'call'
+                      ? { backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--color-positive)' }
+                      : { backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-negative)' }
+                    : undefined
+                }
               >
                 {side === 'call' ? 'Calls' : 'Puts'}
               </button>
@@ -660,9 +703,14 @@ function GreeksSection({ cells }: { cells: GreeksHeatmapCell[] }) {
                 aria-pressed={selectedGreek === greek}
                 className={`px-2.5 py-2 text-xs font-medium min-h-[44px] transition-colors ${
                   selectedGreek === greek
-                    ? 'bg-indigo-500/10 text-indigo-600'
+                    ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text)]'
                     : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
                 }`}
+                style={
+                  selectedGreek === greek
+                    ? { backgroundColor: 'rgba(123, 44, 255, 0.1)', color: 'var(--color-accent)' }
+                    : undefined
+                }
               >
                 {greekLabels[greek]}
               </button>
@@ -671,7 +719,7 @@ function GreeksSection({ cells }: { cells: GreeksHeatmapCell[] }) {
         </div>
       </div>
 
-      <div className="overflow-x-auto -mx-6 px-6">
+      <div className="overflow-x-auto -mx-6 px-6 animate-fade-in">
         <table
           className="w-full text-xs"
           role="img"
@@ -695,7 +743,7 @@ function GreeksSection({ cells }: { cells: GreeksHeatmapCell[] }) {
               return (
                 <tr key={strike} className="border-b border-[var(--color-border)]">
                   <td className={`px-2 py-2 font-mono font-medium sticky left-0 bg-[var(--color-bg)] z-10 ${
-                    isATM ? 'text-indigo-600 font-bold' : 'text-[var(--color-text)]'
+                    isATM ? 'text-[var(--color-accent)] font-bold' : 'text-[var(--color-text)]'
                   }`}>
                     {strike.toFixed(1)}
                   </td>
@@ -987,7 +1035,7 @@ function VolSurfaceSection({ points }: { points: VolSurfacePoint[] }) {
     <Card>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <Activity className="w-5 h-5 text-indigo-500" />
+          <Activity className="w-5 h-5 text-[var(--color-accent)]" />
           Volatility Surface
         </h2>
         <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
@@ -998,7 +1046,7 @@ function VolSurfaceSection({ points }: { points: VolSurfacePoint[] }) {
 
       <div
         ref={containerRef}
-        className="relative cursor-grab active:cursor-grabbing select-none"
+        className="relative cursor-grab active:cursor-grabbing select-none animate-fade-in"
         role="img"
         aria-label={`3D implied volatility surface for ${UNDERLYING_SYMBOL} showing IV across strikes and expirations`}
         onMouseDown={handleMouseDown}
@@ -1022,7 +1070,7 @@ function VolSurfaceSection({ points }: { points: VolSurfacePoint[] }) {
 
 function StatMini({ label, value }: { label: string; value: string }) {
   return (
-    <div className="px-3 py-2 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
+    <div className="px-3 py-2 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] hover:shadow-lg transition-shadow duration-200">
       <div className="text-xs text-[var(--color-text-muted)]">{label}</div>
       <div className="text-sm font-bold font-mono text-[var(--color-text)]">{value}</div>
     </div>
@@ -1096,14 +1144,14 @@ function StrategiesSection() {
     <Card>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <Target className="w-5 h-5 text-indigo-500" />
+          <Target className="w-5 h-5 text-[var(--color-accent)]" />
           Strategy P&L
         </h2>
         <div className="relative">
           <select
             value={selectedStrategy}
             onChange={(e) => setSelectedStrategy(e.target.value as StrategyType)}
-            className="appearance-none bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-3 py-2 pr-8 text-sm text-[var(--color-text)] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="appearance-none bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-3 py-2 pr-8 text-sm text-[var(--color-text)] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
             aria-label="Select options strategy"
           >
             {STRATEGY_LIST.map((s) => (
@@ -1117,20 +1165,36 @@ function StrategiesSection() {
       </div>
 
       {/* Strategy Info */}
-      <div className="mb-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
+      <div className="mb-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
         <div className="text-sm text-[var(--color-text)]">{strategy.description}</div>
         <div className="mt-2 flex flex-wrap gap-2 text-xs">
-          <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 border border-indigo-500/20">
+          <span
+            className="px-2 py-0.5 rounded-full transition-colors duration-200"
+            style={{
+              backgroundColor: 'rgba(123, 44, 255, 0.1)',
+              color: 'var(--color-accent)',
+              border: '1px solid rgba(123, 44, 255, 0.2)',
+            }}
+          >
             {strategy.outlook}
           </span>
           {strategy.legs.map((leg, i) => (
             <span
               key={i}
-              className={`px-2 py-0.5 rounded-full border ${
+              className="px-2 py-0.5 rounded-full border transition-colors duration-200"
+              style={
                 leg.quantity > 0
-                  ? 'bg-green-500/10 text-green-600 border-green-500/20'
-                  : 'bg-red-500/10 text-red-500 border-red-500/20'
-              }`}
+                  ? {
+                      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                      color: 'var(--color-positive)',
+                      borderColor: 'rgba(16, 185, 129, 0.2)',
+                    }
+                  : {
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      color: 'var(--color-negative)',
+                      borderColor: 'rgba(239, 68, 68, 0.2)',
+                    }
+              }
             >
               {leg.quantity > 0 ? 'Long' : 'Short'}{' '}
               {leg.type === 'stock' ? '100 shares' : `${leg.strike} ${leg.type.toUpperCase()}`}
@@ -1141,7 +1205,7 @@ function StrategiesSection() {
       </div>
 
       {/* P&L Chart */}
-      <div className="h-64 mb-4" role="img" aria-label={`P&L payoff diagram for ${strategy.name} strategy`}>
+      <div className="h-64 mb-4 animate-fade-in" role="img" aria-label={`P&L payoff diagram for ${strategy.name} strategy`}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={pnlData} margin={{ top: 10, right: 10, bottom: 5, left: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, #e5e7eb)" vertical={false} />
@@ -1177,9 +1241,9 @@ function StrategiesSection() {
               <ReferenceLine
                 key={i}
                 x={be}
-                stroke="#f59e0b"
+                stroke="var(--color-warning)"
                 strokeDasharray="4 4"
-                label={{ value: `BE: $${be.toFixed(0)}`, position: 'top', fill: '#f59e0b', fontSize: 10 }}
+                label={{ value: `BE: $${be.toFixed(0)}`, position: 'top', fill: 'var(--color-warning)', fontSize: 10 }}
               />
             ))}
             <Legend />
@@ -1187,10 +1251,10 @@ function StrategiesSection() {
               type="monotone"
               dataKey="profit"
               name="P&L at Expiry"
-              stroke="#6366f1"
+              stroke="var(--color-accent)"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: '#6366f1' }}
+              activeDot={{ r: 4, fill: 'var(--color-accent)' }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -1200,13 +1264,13 @@ function StrategiesSection() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="px-3 py-2 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
           <div className="text-xs text-[var(--color-text-muted)]">Max Profit</div>
-          <div className="text-sm font-bold font-mono text-green-600">
+          <div className="text-sm font-bold font-mono text-[var(--color-positive)]">
             {maxProfit >= 1e6 ? 'Unlimited' : `$${maxProfit.toFixed(0)}`}
           </div>
         </div>
         <div className="px-3 py-2 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
           <div className="text-xs text-[var(--color-text-muted)]">Max Loss</div>
-          <div className="text-sm font-bold font-mono text-red-500">
+          <div className="text-sm font-bold font-mono text-[var(--color-negative)]">
             ${maxLoss.toFixed(0)}
           </div>
         </div>
@@ -1218,7 +1282,7 @@ function StrategiesSection() {
         </div>
         <div className="px-3 py-2 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
           <div className="text-xs text-[var(--color-text-muted)]">Net Debit</div>
-          <div className={`text-sm font-bold font-mono ${netDebit > 0 ? 'text-red-500' : 'text-green-600'}`}>
+          <div className={`text-sm font-bold font-mono ${netDebit > 0 ? 'text-[var(--color-negative)]' : 'text-[var(--color-positive)]'}`}>
             {netDebit > 0 ? `-$${netDebit.toFixed(2)}` : `+$${Math.abs(netDebit).toFixed(2)}`}
           </div>
         </div>
@@ -1243,7 +1307,10 @@ export function Options() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up"
+        style={{ animationDelay: '0ms', animationFillMode: 'both' }}
+      >
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)]">Options</h1>
           <p className="text-[var(--color-text-muted)] mt-1">
@@ -1264,18 +1331,21 @@ export function Options() {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up"
+        style={{ animationDelay: '50ms', animationFillMode: 'both' }}
+      >
         <MetricCard
           label="ATM IV"
           value={`${(getATMIV(MOCK_VOL_SURFACE) * 100).toFixed(1)}%`}
           icon={<Activity className="w-4 h-4" />}
-          color="text-indigo-600"
+          color="text-[var(--color-accent)]"
         />
         <MetricCard
           label="IV Skew"
           value={`${(getIVSkew(MOCK_VOL_SURFACE) * 100).toFixed(1)}%`}
           icon={<TrendingDown className="w-4 h-4" />}
-          color="text-amber-600"
+          color="text-[var(--color-warning)]"
         />
         <MetricCard
           label="Put/Call Ratio"
@@ -1288,12 +1358,17 @@ export function Options() {
           value={`±$${(UNDERLYING_PRICE * getATMIV(MOCK_VOL_SURFACE) * Math.sqrt(8 / 365) * 100 / 100).toFixed(2)}`}
           subtitle="Weekly"
           icon={<TrendingUp className="w-4 h-4" />}
-          color="text-green-600"
+          color="text-[var(--color-positive)]"
         />
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex overflow-x-auto border-b border-[var(--color-border)]" role="tablist" aria-label="Options sections">
+      <div
+        className="flex overflow-x-auto border-b border-[var(--color-border)] animate-fade-in-up"
+        style={{ animationDelay: '100ms', animationFillMode: 'both' }}
+        role="tablist"
+        aria-label="Options sections"
+      >
         {TABS.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -1305,7 +1380,7 @@ export function Options() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors min-h-[44px] ${
                 activeTab === tab.id
-                  ? 'border-indigo-500 text-indigo-600'
+                  ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
                   : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-border)]'
               }`}
             >
@@ -1317,7 +1392,13 @@ export function Options() {
       </div>
 
       {/* Tab Panels */}
-      <div id={`panel-${activeTab}`} role="tabpanel" aria-labelledby={activeTab}>
+      <div
+        id={`panel-${activeTab}`}
+        role="tabpanel"
+        aria-labelledby={activeTab}
+        className="animate-fade-in-up"
+        style={{ animationDelay: '150ms', animationFillMode: 'both' }}
+      >
         {activeTab === 'chain' && <ChainSection contracts={MOCK_CHAIN} />}
         {activeTab === 'greeks' && <GreeksSection cells={MOCK_HEATMAP} />}
         {activeTab === 'surface' && <VolSurfaceSection points={MOCK_VOL_SURFACE} />}
@@ -1339,7 +1420,7 @@ interface MetricCardProps {
 
 function MetricCard({ label, value, subtitle, icon, color = 'text-[var(--color-text)]' }: MetricCardProps) {
   return (
-    <div className="p-4 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)]">
+    <div className="p-4 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] hover:shadow-lg transition-shadow duration-200">
       <div className="flex items-center gap-2 text-[var(--color-text-muted)] mb-2">
         {icon}
         <span className="text-xs">{label}</span>

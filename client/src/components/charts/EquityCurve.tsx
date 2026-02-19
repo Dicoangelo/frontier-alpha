@@ -495,7 +495,7 @@ export function EquityCurve({
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 bg-[var(--color-info)] dark:bg-[var(--color-info)]" />
+          <div className="w-4 h-0.5 bg-[var(--color-info)]" />
           <span className="text-[var(--color-text-secondary)]">Portfolio</span>
         </div>
         <div className="flex items-center gap-2">

@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   TrendingUp,
@@ -62,6 +62,10 @@ interface SharedPortfolioData {
 
 export function SharedPortfolio() {
   const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+
+  // Old base64 links used /shared?data=<base64> — detect and show expired message
+  const isOldBase64Link = !token && !!searchParams.get('data');
 
   const { data, isLoading, error } = useQuery<{ data: SharedPortfolioData }>({
     queryKey: ['shared-portfolio', token],
@@ -77,6 +81,29 @@ export function SharedPortfolio() {
     enabled: !!token,
     retry: false,
   });
+
+  if (isOldBase64Link) {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-4">
+        <Card className="max-w-md w-full p-8 text-center">
+          <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center bg-yellow-500/10">
+            <Clock className="w-8 h-8 text-yellow-600" />
+          </div>
+          <h1 className="mt-6 text-xl font-semibold text-[var(--color-text)]">This link has expired</h1>
+          <p className="mt-2 text-[var(--color-text-muted)]">
+            This share link is no longer valid. Please ask the owner to generate a new link.
+          </p>
+          <Link
+            to="/landing"
+            className="mt-6 inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Go to Frontier Alpha
+          </Link>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

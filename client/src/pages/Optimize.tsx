@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Sparkles, TrendingUp, Shield, Target, Info } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
-import { toast } from '@/components/shared/Toast';
+import { useToast } from '@/hooks/useToast';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
@@ -58,6 +58,7 @@ export function Optimize() {
   const [selectedObjective, setSelectedObjective] = useState<OptimizationObjective>('max_sharpe');
   const [targetVol, setTargetVol] = useState('0.15');
   const [maxWeight, setMaxWeight] = useState('0.25');
+  const { toastSuccess, toastError } = useToast();
 
   const { data: portfolio } = useQuery({
     queryKey: ['portfolio'],
@@ -68,10 +69,10 @@ export function Optimize() {
     mutationFn: (data) => api.post('/portfolio/optimize', data),
     onSuccess: (response) => {
       const sharpe = response.data.sharpeRatio.toFixed(2);
-      toast.success('Optimization complete', `Sharpe ratio: ${sharpe}`);
+      toastSuccess('Optimization complete', { message: `Sharpe ratio: ${sharpe}` });
     },
     onError: (error) => {
-      toast.error('Optimization failed', getErrorMessage(error));
+      toastError('Optimization failed', { message: getErrorMessage(error) });
     },
   });
 

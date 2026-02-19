@@ -1,6 +1,7 @@
 type MessageHandler = (data: unknown) => void;
 
 export type ConnectionState = 'connected' | 'reconnecting' | 'disconnected';
+export type TransportType = 'websocket' | 'sse' | 'polling' | null;
 
 /**
  * Real-time quote client.
@@ -9,6 +10,13 @@ export type ConnectionState = 'connected' | 'reconnecting' | 'disconnected';
  * 1. WebSocket → ws://server:port/ws/quotes (persistent, <20ms latency)
  * 2. SSE → /api/v1/quotes/stream?sse=true (30s timeout, auto-reconnect)
  * 3. Polling → /api/v1/quotes/stream (10s interval fallback)
+ *
+ * US-028: Hardened reconnection with:
+ * - Jittered exponential backoff
+ * - Page visibility API (pause when tab hidden)
+ * - Heartbeat ping/pong (30s interval, 5s timeout)
+ * - Max 10 attempts before polling fallback
+ * - Reconnect countdown emitted on each attempt
  */
 class QuoteStreamClient {
   private ws: WebSocket | null = null;
@@ -16,12 +24,42 @@ class QuoteStreamClient {
   private pollingInterval: ReturnType<typeof setInterval> | null = null;
   private handlers: Map<string, Set<MessageHandler>> = new Map();
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private baseReconnectDelay = 1000; // 1s base → 1s, 2s, 4s, 8s, 16s
+  private maxReconnectAttempts = 10; // US-028: increased from 5
+  private baseReconnectDelay = 1000; // 1s base
   private subscribedSymbols: string[] = [];
   private isConnected = false;
   private _connectionState: ConnectionState = 'disconnected';
-  private transport: 'websocket' | 'sse' | 'polling' | null = null;
+  private transport: TransportType = null;
+
+  // US-028: Heartbeat state
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+  private heartbeatTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  // US-028: Reconnect countdown timer
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // US-028: Page visibility
+  private _visibilityHandler: (() => void) | null = null;
+  private pendingReconnectAt: number | null = null;
+
+  constructor() {
+    if (typeof document !== 'undefined') {
+      this._visibilityHandler = () => {
+        if (!document.hidden && this._connectionState === 'reconnecting' && this.pendingReconnectAt !== null) {
+          // Tab became visible — reconnect immediately instead of waiting
+          const remaining = this.pendingReconnectAt - Date.now();
+          if (remaining > 0) {
+            // Still waiting — let timer fire naturally
+          }
+          // If tab was hidden for a long time and we had no pending reconnect, try now
+          if (this.reconnectTimer === null && !this.isConnected) {
+            this.connect();
+          }
+        }
+      };
+      document.addEventListener('visibilitychange', this._visibilityHandler);
+    }
+  }
 
   /**
    * Connect to the quote stream.
@@ -70,16 +108,22 @@ class QuoteStreamClient {
         this.reconnectAttempts = 0;
         this.notifyHandlers('connected', { connected: true });
 
-        // Subscribe to any pending symbols
+        // Re-subscribe all tracked symbols after reconnect (US-028: AC#3)
         if (this.subscribedSymbols.length > 0) {
           this.sendWsSubscribe(this.subscribedSymbols);
         }
+
+        // US-028: Start heartbeat
+        this.startHeartbeat();
       };
 
       this.ws.onmessage = (event) => {
         try {
-          const message = JSON.parse(event.data);
-          if (message.type === 'quote' && message.data) {
+          const message = JSON.parse(event.data as string) as Record<string, unknown>;
+          if (message.type === 'pong') {
+            // Heartbeat pong received — clear pong timeout
+            this.clearHeartbeatTimeout();
+          } else if (message.type === 'quote' && message.data) {
             this.notifyHandlers('quote', message.data);
           }
         } catch (e) {
@@ -90,6 +134,7 @@ class QuoteStreamClient {
       this.ws.onclose = () => {
         this.isConnected = false;
         this.ws = null;
+        this.stopHeartbeat();
         this.setConnectionState('reconnecting');
         this.notifyHandlers('connected', { connected: false });
         this.attemptReconnect();
@@ -100,6 +145,7 @@ class QuoteStreamClient {
         this.ws?.close();
         this.ws = null;
         this.transport = null;
+        this.stopHeartbeat();
 
         // Fall back to SSE
         if (typeof EventSource !== 'undefined') {
@@ -120,6 +166,38 @@ class QuoteStreamClient {
   private sendWsSubscribe(symbols: string[]) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: 'subscribe', symbols }));
+    }
+  }
+
+  /**
+   * US-028: Heartbeat — ping every 30s, reconnect if no pong within 5s
+   */
+  private startHeartbeat() {
+    this.stopHeartbeat();
+    this.heartbeatInterval = setInterval(() => {
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({ type: 'ping' }));
+        // Expect pong within 5s
+        this.heartbeatTimeout = setTimeout(() => {
+          console.warn('WebSocket heartbeat timeout — reconnecting');
+          this.ws?.close();
+        }, 5000);
+      }
+    }, 30000);
+  }
+
+  private stopHeartbeat() {
+    if (this.heartbeatInterval !== null) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+    this.clearHeartbeatTimeout();
+  }
+
+  private clearHeartbeatTimeout() {
+    if (this.heartbeatTimeout !== null) {
+      clearTimeout(this.heartbeatTimeout);
+      this.heartbeatTimeout = null;
     }
   }
 
@@ -145,10 +223,10 @@ class QuoteStreamClient {
 
     this.eventSource.onmessage = (event) => {
       try {
-        const message = JSON.parse(event.data);
+        const message = JSON.parse(event.data as string) as Record<string, unknown>;
 
         if (message.type === 'quotes' && Array.isArray(message.data)) {
-          for (const quote of message.data) {
+          for (const quote of message.data as unknown[]) {
             this.notifyHandlers('quote', quote);
           }
         } else if (message.type === 'complete') {
@@ -185,7 +263,7 @@ class QuoteStreamClient {
         const response = await fetch(`${apiUrl}/api/v1/quotes/stream?symbols=${symbolsParam}`);
 
         if (response.ok) {
-          const result = await response.json();
+          const result = await response.json() as { success: boolean; data?: unknown[] };
           if (result.success && Array.isArray(result.data)) {
             this.isConnected = true;
             this.notifyHandlers('connected', { connected: true });
@@ -260,6 +338,14 @@ class QuoteStreamClient {
     this.handlers.get(type)?.forEach((handler) => handler(data));
   }
 
+  /**
+   * US-028: Jittered exponential backoff
+   * delay = baseDelay * 2^attempt * (0.5 + Math.random() * 0.5)
+   */
+  computeReconnectDelay(attempt: number): number {
+    return this.baseReconnectDelay * Math.pow(2, attempt) * (0.5 + Math.random() * 0.5);
+  }
+
   private attemptReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       this.setConnectionState('disconnected');
@@ -268,20 +354,41 @@ class QuoteStreamClient {
       return;
     }
 
-    this.reconnectAttempts++;
-    // Exponential backoff: 1s, 2s, 4s, 8s, 16s
-    const delay = this.baseReconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-    this.setConnectionState('reconnecting');
-    this.notifyHandlers('connectionState', { state: this._connectionState, attempt: this.reconnectAttempts, nextRetryMs: delay });
+    // US-028: Pause reconnection when tab is hidden
+    if (typeof document !== 'undefined' && document.hidden) {
+      // Tab is hidden — defer reconnection to visibilitychange
+      this.setConnectionState('reconnecting');
+      const onVisible = () => {
+        document.removeEventListener('visibilitychange', onVisible);
+        this.attemptReconnect();
+      };
+      document.addEventListener('visibilitychange', onVisible);
+      return;
+    }
 
-    setTimeout(() => {
+    this.reconnectAttempts++;
+
+    // US-028: Jittered exponential backoff
+    const delay = this.computeReconnectDelay(this.reconnectAttempts - 1);
+    this.setConnectionState('reconnecting');
+    this.pendingReconnectAt = Date.now() + delay;
+    this.notifyHandlers('connectionState', {
+      state: this._connectionState,
+      attempt: this.reconnectAttempts,
+      nextRetryMs: delay,
+      transport: this.transport,
+    });
+
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      this.pendingReconnectAt = null;
       this.connect();
     }, delay);
   }
 
   private setConnectionState(state: ConnectionState) {
     this._connectionState = state;
-    this.notifyHandlers('connectionState', { state });
+    this.notifyHandlers('connectionState', { state, transport: this.transport });
   }
 
   private reconnect() {
@@ -292,7 +399,7 @@ class QuoteStreamClient {
   }
 
   /**
-   * Disconnect from the stream
+   * Disconnect from the stream and clean up ALL timers (US-028: AC#7)
    */
   disconnect() {
     this.isConnected = false;
@@ -313,8 +420,28 @@ class QuoteStreamClient {
       this.pollingInterval = null;
     }
 
+    // US-028: Clean up all timers
+    this.stopHeartbeat();
+
+    if (this.reconnectTimer !== null) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
+    this.pendingReconnectAt = null;
     this.transport = null;
     this.notifyHandlers('connected', { connected: false });
+  }
+
+  /**
+   * Remove page visibility event listener and clean up
+   */
+  destroy() {
+    this.disconnect();
+    if (this._visibilityHandler && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this._visibilityHandler);
+      this._visibilityHandler = null;
+    }
   }
 
   get connected(): boolean {
@@ -325,12 +452,17 @@ class QuoteStreamClient {
     return [...this.subscribedSymbols];
   }
 
-  get activeTransport(): string | null {
+  get activeTransport(): TransportType {
     return this.transport;
   }
 
   get connectionState(): ConnectionState {
     return this._connectionState;
+  }
+
+  get nextRetryMs(): number | null {
+    if (this.pendingReconnectAt === null) return null;
+    return Math.max(0, this.pendingReconnectAt - Date.now());
   }
 }
 

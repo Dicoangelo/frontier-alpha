@@ -9,7 +9,7 @@ import { Spinner } from '@/components/shared/Spinner';
 // TYPES
 // ============================================================================
 
-type FactorCategory = 'style' | 'macro' | 'sector' | 'volatility' | 'sentiment';
+type FactorCategory = 'style' | 'quality' | 'volatility' | 'sentiment' | 'macro' | 'sector';
 
 interface FactorNode extends d3.SimulationNodeDatum {
   id: string;
@@ -18,6 +18,9 @@ interface FactorNode extends d3.SimulationNodeDatum {
   confidence: number;
   category: FactorCategory;
   radius: number;
+  lastUpdated?: string;
+  beliefText?: string;
+  history?: Array<{ value: number; ts: string }>;
 }
 
 interface FactorLink extends d3.SimulationLinkDatum<FactorNode> {
@@ -28,20 +31,23 @@ interface FactorLink extends d3.SimulationLinkDatum<FactorNode> {
 // CONSTANTS
 // ============================================================================
 
+// Colors per spec: style=blue, quality=green, volatility=red, sentiment=purple, macro=amber, sector=cyan
 const CATEGORY_COLORS: Record<FactorCategory, string> = {
-  style: '#7B2CFF',      // amethyst
-  macro: '#18E6FF',       // cyan
-  sector: '#00FFC6',      // teal
-  volatility: '#FF6B35',  // orange
-  sentiment: '#FFD700',   // gold
+  style: '#3B82F6',       // blue
+  quality: '#22C55E',     // green
+  volatility: '#EF4444',  // red
+  sentiment: '#A855F7',   // purple
+  macro: '#F59E0B',       // amber
+  sector: '#06B6D4',      // cyan
 };
 
 const CATEGORY_LABELS: Record<FactorCategory, string> = {
   style: 'Style',
-  macro: 'Macro',
-  sector: 'Sector',
+  quality: 'Quality',
   volatility: 'Volatility',
   sentiment: 'Sentiment',
+  macro: 'Macro',
+  sector: 'Sector',
 };
 
 const MIN_NODE_RADIUS = 8;
@@ -53,7 +59,8 @@ const MAX_NODE_RADIUS = 32;
 
 function categorizeFactor(name: string): FactorCategory {
   const n = name.toLowerCase();
-  if (['momentum', 'value', 'quality', 'size', 'growth'].some(f => n.includes(f))) return 'style';
+  if (['quality', 'roe', 'roa', 'margin', 'earnings_quality', 'profitability'].some(f => n.includes(f))) return 'quality';
+  if (['momentum', 'value', 'size', 'growth'].some(f => n.includes(f))) return 'style';
   if (['rate', 'inflation', 'credit', 'gdp', 'yield'].some(f => n.includes(f))) return 'macro';
   if (['tech', 'health', 'finance', 'energy', 'consumer', 'industrial'].some(f => n.includes(f))) return 'sector';
   if (['vol', 'volatility', 'vix', 'variance'].some(f => n.includes(f))) return 'volatility';
@@ -82,7 +89,7 @@ function DetailPanel({ node, onClose }: DetailPanelProps) {
   const isPositive = node.weight >= 0;
 
   return (
-    <div className="absolute top-4 right-4 w-64 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl shadow-lg z-10 overflow-hidden">
+    <div className="absolute top-4 right-4 w-72 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl shadow-lg z-10 overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)]">
         <div className="flex items-center gap-2">
           <div
@@ -102,6 +109,12 @@ function DetailPanel({ node, onClose }: DetailPanelProps) {
         </button>
       </div>
       <div className="px-4 py-3 space-y-3">
+        {/* Belief text */}
+        {node.beliefText && (
+          <div className="p-2 bg-[var(--color-bg-tertiary)] rounded-lg">
+            <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">{node.beliefText}</p>
+          </div>
+        )}
         <div className="flex justify-between items-center">
           <span className="text-xs text-[var(--color-text-muted)]">Category</span>
           <span
@@ -115,20 +128,19 @@ function DetailPanel({ node, onClose }: DetailPanelProps) {
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-xs text-[var(--color-text-muted)]">Weight</span>
+          <span className="text-xs text-[var(--color-text-muted)]">Conviction</span>
           <span className={`text-sm font-mono font-medium ${isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {isPositive ? '+' : ''}{(node.weight * 100).toFixed(1)}%
           </span>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-xs text-[var(--color-text-muted)]">Confidence</span>
-          <span className="text-sm font-mono text-[var(--color-text)]">
-            {(node.confidence * 100).toFixed(0)}%
-          </span>
-        </div>
         <div>
-          <span className="text-xs text-[var(--color-text-muted)]">Confidence</span>
-          <div className="mt-1 h-1.5 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-xs text-[var(--color-text-muted)]">Confidence</span>
+            <span className="text-xs font-mono text-[var(--color-text)]">
+              {(node.confidence * 100).toFixed(0)}%
+            </span>
+          </div>
+          <div className="h-1.5 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all"
               style={{
@@ -144,6 +156,37 @@ function DetailPanel({ node, onClose }: DetailPanelProps) {
             {isPositive ? 'Bullish' : 'Bearish'}
           </span>
         </div>
+        {/* History sparkline */}
+        {node.history && node.history.length > 1 && (
+          <div>
+            <span className="text-xs text-[var(--color-text-muted)]">History</span>
+            <div className="mt-1 flex items-end gap-0.5 h-8">
+              {node.history.slice(-8).map((h, i) => {
+                const maxAbs = Math.max(...node.history!.map(x => Math.abs(x.value)), 0.01);
+                const pct = Math.abs(h.value) / maxAbs;
+                return (
+                  <div
+                    key={i}
+                    className="flex-1 rounded-sm"
+                    style={{
+                      height: `${Math.max(10, pct * 100)}%`,
+                      backgroundColor: h.value >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
+                      opacity: 0.4 + pct * 0.6,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {node.lastUpdated && (
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-[var(--color-text-muted)]">Last Updated</span>
+            <span className="text-xs text-[var(--color-text-muted)]">
+              {new Date(node.lastUpdated).toLocaleDateString()}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -157,6 +200,8 @@ export function BeliefConstellation() {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const simulationRef = useRef<d3.Simulation<FactorNode, FactorLink> | null>(null);
+  const pulseRafRef = useRef<number | null>(null);
+  const prevBeliefsRef = useRef<string | null>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height: 500 });
   const [selectedNode, setSelectedNode] = useState<FactorNode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<FactorNode | null>(null);
@@ -237,6 +282,32 @@ export function BeliefConstellation() {
     return () => observer.disconnect();
   }, []);
 
+  // Pulse animation via requestAnimationFrame (no D3 transitions > 300ms)
+  const triggerPulse = useCallback((nodeSelection: d3.Selection<SVGGElement, FactorNode, SVGGElement, unknown>) => {
+    const startTime = performance.now();
+    const duration = 300;
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out: sin curve
+      const scale = 1 + Math.sin(progress * Math.PI) * 0.3;
+
+      nodeSelection.select('circle:first-child')
+        .attr('r', (d: FactorNode) => d.radius * scale);
+
+      if (progress < 1) {
+        pulseRafRef.current = requestAnimationFrame(animate);
+      } else {
+        // Reset to base radius
+        nodeSelection.select('circle:first-child')
+          .attr('r', (d: FactorNode) => d.radius);
+      }
+    };
+
+    pulseRafRef.current = requestAnimationFrame(animate);
+  }, []);
+
   // D3 force simulation
   const renderGraph = useCallback(() => {
     const svg = d3.select(svgRef.current);
@@ -246,6 +317,11 @@ export function BeliefConstellation() {
 
     // Clear previous
     svg.selectAll('*').remove();
+
+    // Cancel any active pulse RAF
+    if (pulseRafRef.current !== null) {
+      cancelAnimationFrame(pulseRafRef.current);
+    }
 
     // Defs for glow filter
     const defs = svg.append('defs');
@@ -257,7 +333,7 @@ export function BeliefConstellation() {
 
     const g = svg.append('g');
 
-    // Zoom
+    // Zoom + pan behavior
     const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.3, 3])
       .on('zoom', (event) => {
@@ -284,7 +360,7 @@ export function BeliefConstellation() {
 
     simulationRef.current = simulation;
 
-    // Links
+    // Links — opacity by correlation (strength)
     const link = g.append('g')
       .selectAll('line')
       .data(links)
@@ -296,11 +372,11 @@ export function BeliefConstellation() {
     // Node groups
     const node = g.append('g')
       .selectAll<SVGGElement, FactorNode>('g')
-      .data(nodes)
+      .data(nodes, d => d.id)
       .join('g')
       .style('cursor', 'pointer');
 
-    // Circles
+    // Outer circle — sized by conviction strength, colored by category
     node.append('circle')
       .attr('r', d => d.radius)
       .attr('fill', d => CATEGORY_COLORS[d.category])
@@ -310,12 +386,12 @@ export function BeliefConstellation() {
       .attr('stroke-dasharray', d => d.weight < 0 ? '4,2' : 'none')
       .attr('filter', 'url(#glow)');
 
-    // Inner dot showing weight direction
+    // Inner dot showing conviction direction
     node.append('circle')
       .attr('r', d => Math.max(2, d.radius * 0.25))
       .attr('fill', d => d.weight >= 0 ? 'var(--color-positive)' : 'var(--color-negative)');
 
-    // Labels (only for larger nodes)
+    // Labels
     node.append('text')
       .attr('dy', d => d.radius + 14)
       .attr('text-anchor', 'middle')
@@ -324,10 +400,11 @@ export function BeliefConstellation() {
       .attr('pointer-events', 'none')
       .text(d => d.label);
 
-    // Hover + click events
+    // Hover tooltip: name, conviction (0-1), last updated
     node
       .on('mouseenter', function (_event, d) {
         setHoveredNode(d);
+        // Short D3 transition (<= 200ms, well under 300ms limit)
         d3.select(this).select('circle')
           .transition().duration(200)
           .attr('r', d.radius * 1.2)
@@ -344,7 +421,7 @@ export function BeliefConstellation() {
         setSelectedNode(prev => prev?.id === d.id ? null : d);
       });
 
-    // Drag
+    // Drag behavior
     const drag = d3.drag<SVGGElement, FactorNode>()
       .on('start', (event, d) => {
         if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -363,7 +440,7 @@ export function BeliefConstellation() {
 
     node.call(drag);
 
-    // Tick
+    // Tick handler
     simulation.on('tick', () => {
       link
         .attr('x1', d => (d.source as FactorNode).x || 0)
@@ -374,10 +451,21 @@ export function BeliefConstellation() {
       node.attr('transform', d => `translate(${d.x || 0},${d.y || 0})`);
     });
 
+    // Pulse on first render (simulates belief update animation)
+    const beliefKey = JSON.stringify(Object.keys(beliefs?.factorWeights || {}).sort());
+    if (prevBeliefsRef.current && prevBeliefsRef.current !== beliefKey) {
+      // Beliefs changed — trigger pulse on all nodes
+      triggerPulse(node);
+    }
+    prevBeliefsRef.current = beliefKey;
+
     return () => {
       simulation.stop();
+      if (pulseRafRef.current !== null) {
+        cancelAnimationFrame(pulseRafRef.current);
+      }
     };
-  }, [nodes, links, dimensions]);
+  }, [nodes, links, dimensions, beliefs, triggerPulse]);
 
   useEffect(() => {
     const cleanup = renderGraph();
@@ -447,7 +535,7 @@ export function BeliefConstellation() {
         {/* Detail Panel */}
         <DetailPanel node={selectedNode} onClose={() => setSelectedNode(null)} />
 
-        {/* Hover Tooltip */}
+        {/* Hover Tooltip: name, conviction 0-1, last updated */}
         {hoveredNode && !selectedNode && (
           <div className="absolute bottom-4 left-4 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2 shadow-lg pointer-events-none z-10">
             <div className="flex items-center gap-2">
@@ -456,15 +544,31 @@ export function BeliefConstellation() {
                 style={{ backgroundColor: CATEGORY_COLORS[hoveredNode.category] }}
               />
               <span className="text-sm font-medium text-[var(--color-text)]">{hoveredNode.label}</span>
+              <span
+                className="text-xs px-1.5 py-0.5 rounded"
+                style={{
+                  backgroundColor: CATEGORY_COLORS[hoveredNode.category] + '20',
+                  color: CATEGORY_COLORS[hoveredNode.category],
+                }}
+              >
+                {CATEGORY_LABELS[hoveredNode.category]}
+              </span>
             </div>
             <div className="flex gap-3 mt-1 text-xs text-[var(--color-text-muted)]">
               <span>
-                Weight: <span className={hoveredNode.weight >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}>
-                  {hoveredNode.weight >= 0 ? '+' : ''}{(hoveredNode.weight * 100).toFixed(1)}%
+                Conviction: <span className="text-[var(--color-text)] font-mono">
+                  {hoveredNode.confidence.toFixed(2)}
                 </span>
               </span>
-              <span>Confidence: {(hoveredNode.confidence * 100).toFixed(0)}%</span>
+              <span className={hoveredNode.weight >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}>
+                {hoveredNode.weight >= 0 ? '+' : ''}{(hoveredNode.weight * 100).toFixed(1)}%
+              </span>
             </div>
+            {hoveredNode.lastUpdated && (
+              <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">
+                Updated {new Date(hoveredNode.lastUpdated).toLocaleDateString()}
+              </div>
+            )}
           </div>
         )}
       </div>

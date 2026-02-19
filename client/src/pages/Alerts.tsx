@@ -5,6 +5,8 @@ import { Button } from '@/components/shared/Button';
 import { AlertList } from '@/components/alerts/AlertCard';
 import { FactorDriftAlert } from '@/components/alerts/FactorDriftAlert';
 import { SECFilingAlert } from '@/components/alerts/SECFilingAlert';
+import { SkeletonCard } from '@/components/shared/Skeleton';
+import { DataLoadError, EmptyAlerts } from '@/components/shared/EmptyState';
 import { api } from '@/api/client';
 import type { RiskAlert } from '@/types';
 
@@ -18,6 +20,7 @@ type SeverityFilter = 'all' | 'critical' | 'high' | 'medium' | 'low';
 export function Alerts() {
   const [alerts, setAlerts] = useState<RiskAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>('all');
   const [showAcknowledged, setShowAcknowledged] = useState(false);
   const [factorExposures, setFactorExposures] = useState<FactorExposure[]>([]);
@@ -25,12 +28,14 @@ export function Alerts() {
 
   const loadAlerts = useCallback(async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
       const response = await api.get('/alerts');
       const alertsData = response.data?.alerts || response.data || [];
       setAlerts(alertsData);
     } catch (error) {
       console.error('Failed to load alerts:', error);
+      setLoadError('Failed to load alerts');
       // Use demo alerts for testing
       setAlerts(getDemoAlerts());
     } finally {
@@ -169,8 +174,35 @@ export function Alerts() {
     return acc;
   }, {} as Record<string, number>);
 
+  // Show skeleton while loading
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Bell className="w-6 h-6 text-[var(--color-text-secondary)]" />
+            <h1 className="text-2xl font-bold text-[var(--color-text)]">Alerts</h1>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
+        </div>
+        <SkeletonCard />
+        <SkeletonCard />
+      </div>
+    );
+  }
+
+  // Show error state — still show demo data below
+  const errorBanner = loadError ? (
+    <div className="mb-4">
+      <DataLoadError onRetry={loadAlerts} error={loadError} />
+    </div>
+  ) : null;
+
   return (
     <div className="space-y-6">
+      {errorBanner}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Bell className="w-6 h-6 text-[var(--color-text-secondary)]" />
@@ -262,12 +294,16 @@ export function Alerts() {
 
       {/* Alert List */}
       <Card>
-        <AlertList
-          alerts={filteredAlerts}
-          onAcknowledge={handleAcknowledge}
-          onAction={handleAction}
-          maxVisible={10}
-        />
+        {filteredAlerts.length === 0 ? (
+          <EmptyAlerts />
+        ) : (
+          <AlertList
+            alerts={filteredAlerts}
+            onAcknowledge={handleAcknowledge}
+            onAction={handleAction}
+            maxVisible={10}
+          />
+        )}
       </Card>
     </div>
   );

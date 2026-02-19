@@ -3,6 +3,7 @@ import type { EarningsEvent, EarningsImpactForecast } from '@/types';
 
 export interface EarningsCalendarItem extends EarningsEvent {
   id: string;
+  companyName?: string;
   fiscalQuarter: string;
   estimatedEps?: number;
   actualEps?: number;

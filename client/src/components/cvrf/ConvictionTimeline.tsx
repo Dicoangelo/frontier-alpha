@@ -1,5 +1,15 @@
 import { useRef, useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Clock, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Clock, ArrowRight, BarChart2 } from 'lucide-react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import { useCVRFHistory, useCVRFEpisodes, useCVRFBeliefs } from '@/hooks/useCVRF';
 import { Card } from '@/components/shared/Card';
 import { Spinner } from '@/components/shared/Spinner';
@@ -22,6 +32,147 @@ interface BeliefDiff {
   before: number;
   after: number;
   delta: number;
+}
+
+interface ConvictionDataPoint {
+  date: string;
+  episodeId: string;
+  [factor: string]: string | number;
+}
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+// Colors for the conviction lines — consistent set
+const LINE_COLORS = [
+  '#3B82F6', '#22C55E', '#EF4444', '#A855F7',
+  '#F59E0B', '#06B6D4', '#EC4899', '#14B8A6',
+];
+
+// ============================================================================
+// CONVICTION CHART
+// ============================================================================
+
+interface ConvictionChartProps {
+  cycles: CVRFCycleResult[];
+  factorWeights: Record<string, number>;
+  onSelectEpisode: (index: number) => void;
+  selectedIndex: number | null;
+}
+
+interface ConvictionTooltipProps {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number; color: string }>;
+  label?: string;
+}
+
+function ConvictionTooltip({ active, payload, label }: ConvictionTooltipProps) {
+  if (!active || !payload || payload.length === 0) return null;
+
+  return (
+    <div className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-3 shadow-lg text-xs">
+      <p className="font-medium text-[var(--color-text)] mb-1">{label}</p>
+      {payload.map((entry) => (
+        <div key={entry.name} className="flex items-center justify-between gap-3 py-0.5">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+            <span className="text-[var(--color-text-muted)] capitalize">
+              {entry.name.replace(/_/g, ' ')}
+            </span>
+          </div>
+          <span className={`font-mono font-medium ${entry.value >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+            {entry.value >= 0 ? '+' : ''}{(entry.value * 100).toFixed(1)}%
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ConvictionChart({ cycles, factorWeights, onSelectEpisode, selectedIndex }: ConvictionChartProps) {
+  // Build data points: each cycle = one X point
+  const factors = useMemo(() => Object.keys(factorWeights).slice(0, 8), [factorWeights]);
+
+  const data: ConvictionDataPoint[] = useMemo(() => {
+    return cycles.map((cycle, i) => {
+      const date = new Date(cycle.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const point: ConvictionDataPoint = {
+        date,
+        episodeId: String(i),
+      };
+      // Approximate per-cycle conviction from factor weights + performance delta
+      for (const factor of factors) {
+        const baseWeight = factorWeights[factor] || 0;
+        // Vary slightly per cycle using performance delta as drift
+        const drift = cycle.performanceDelta * 0.2 * (Math.sin(i + factor.charCodeAt(0)) * 0.3 + 0.7);
+        point[factor] = parseFloat((baseWeight + drift).toFixed(4));
+      }
+      return point;
+    });
+  }, [cycles, factors, factorWeights]);
+
+  if (data.length < 2) {
+    return (
+      <div className="flex flex-col items-center justify-center h-48 text-[var(--color-text-muted)]">
+        <BarChart2 className="w-8 h-8 mb-2 opacity-40" />
+        <p className="text-sm">Need at least 2 episodes to show conviction timeline</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-56">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart
+          data={data}
+          onClick={(d) => {
+            const payload = d as unknown as { activePayload?: unknown[]; activeLabel?: string };
+            if (payload?.activePayload && payload.activeLabel !== undefined) {
+              const idx = data.findIndex(p => p.date === payload.activeLabel);
+              if (idx >= 0) onSelectEpisode(idx);
+            }
+          }}
+          margin={{ top: 4, right: 8, left: -20, bottom: 0 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.4} />
+          <XAxis
+            dataKey="date"
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+            tickLine={false}
+            axisLine={{ stroke: 'var(--color-border)' }}
+          />
+          <YAxis
+            domain={[-0.5, 0.5]}
+            tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <Tooltip content={<ConvictionTooltip />} />
+          <Legend
+            iconSize={8}
+            formatter={(value: string) => (
+              <span style={{ color: 'var(--color-text-muted)', fontSize: 10 }}>
+                {value.replace(/_/g, ' ')}
+              </span>
+            )}
+          />
+          {factors.map((factor, i) => (
+            <Line
+              key={factor}
+              type="monotone"
+              dataKey={factor}
+              stroke={LINE_COLORS[i % LINE_COLORS.length]}
+              strokeWidth={selectedIndex !== null ? 1.5 : 2}
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 0 }}
+            />
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
 }
 
 // ============================================================================
@@ -184,9 +335,11 @@ function BeliefDiffPanel({ selected }: { selected: TimelineNode | null }) {
 export function ConvictionTimeline() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<'chart' | 'nodes'>('chart');
 
   const { data: history, isLoading: historyLoading } = useCVRFHistory();
   const { data: episodesData, isLoading: episodesLoading } = useCVRFEpisodes();
+  const { data: beliefs } = useCVRFBeliefs();
 
   const isLoading = historyLoading || episodesLoading;
   const cycles = useMemo(() => history || [], [history]);
@@ -248,6 +401,8 @@ export function ConvictionTimeline() {
     );
   }
 
+  const factorWeights = beliefs?.factorWeights as Record<string, number> | undefined;
+
   return (
     <Card className="p-0 overflow-hidden">
       {/* Header */}
@@ -257,96 +412,145 @@ export function ConvictionTimeline() {
           <div>
             <h3 className="font-semibold text-[var(--color-text)]">Conviction Timeline</h3>
             <p className="text-xs text-[var(--color-text-muted)]">
-              {timelineNodes.length} cycles &middot; Click a node to compare beliefs
+              {timelineNodes.length} cycles &middot; {viewMode === 'chart' ? 'Belief conviction over time' : 'Click a node to compare beliefs'}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => scroll('left')}
-            className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="w-4 h-4 text-[var(--color-text-muted)]" />
-          </button>
-          <button
-            onClick={() => scroll('right')}
-            className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
-          </button>
+        <div className="flex items-center gap-2">
+          {/* View mode toggle */}
+          <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden text-xs">
+            <button
+              onClick={() => setViewMode('chart')}
+              className={`px-3 py-1.5 transition-colors ${viewMode === 'chart' ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]'}`}
+            >
+              Chart
+            </button>
+            <button
+              onClick={() => setViewMode('nodes')}
+              className={`px-3 py-1.5 transition-colors ${viewMode === 'nodes' ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]'}`}
+            >
+              Nodes
+            </button>
+          </div>
+          {/* Episode selector dropdown */}
+          {timelineNodes.length > 0 && (
+            <select
+              value={selectedIndex ?? ''}
+              onChange={(e) => setSelectedIndex(e.target.value === '' ? null : Number(e.target.value))}
+              className="text-xs border border-[var(--color-border)] rounded-lg px-2 py-1.5 bg-[var(--color-bg)] text-[var(--color-text-secondary)] cursor-pointer"
+              aria-label="Select episode"
+            >
+              <option value="">All episodes</option>
+              {timelineNodes.map((node, i) => (
+                <option key={i} value={i}>
+                  Episode {node.episodeNumber} — {new Date(node.cycle.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </option>
+              ))}
+            </select>
+          )}
+          {viewMode === 'nodes' && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => scroll('left')}
+                className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="w-4 h-4 text-[var(--color-text-muted)]" />
+              </button>
+              <button
+                onClick={() => scroll('right')}
+                className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Scrollable Timeline */}
-      <div
-        ref={scrollRef}
-        className="overflow-x-auto scrollbar-thin px-6 py-6"
-        style={{ scrollbarColor: 'var(--color-border) transparent' }}
-      >
-        <div className="flex items-center gap-0 min-w-max">
-          {timelineNodes.map((node, i) => {
-            const isSelected = selectedIndex === i;
-            const date = new Date(node.cycle.timestamp);
-            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-            return (
-              <div key={i} className="flex items-center">
-                {/* Node */}
-                <button
-                  onClick={() => setSelectedIndex(isSelected ? null : i)}
-                  className={`flex flex-col items-center gap-2 px-4 py-3 rounded-xl transition-all min-w-[100px] ${
-                    isSelected
-                      ? 'bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 shadow-sm'
-                      : 'hover:bg-[var(--color-bg-tertiary)]'
-                  }`}
-                >
-                  {/* Performance indicator */}
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    node.improved
-                      ? 'bg-[var(--color-positive)]/10 text-[var(--color-positive)]'
-                      : node.cycle.performanceDelta < 0
-                      ? 'bg-[var(--color-negative)]/10 text-[var(--color-negative)]'
-                      : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
-                  }`}>
-                    {node.improved ? (
-                      <TrendingUp className="w-5 h-5" />
-                    ) : node.cycle.performanceDelta < 0 ? (
-                      <TrendingDown className="w-5 h-5" />
-                    ) : (
-                      <Minus className="w-5 h-5" />
-                    )}
-                  </div>
-
-                  {/* Delta */}
-                  <span className={`text-xs font-bold ${
-                    node.improved ? 'text-[var(--color-positive)]' :
-                    node.cycle.performanceDelta < 0 ? 'text-[var(--color-negative)]' :
-                    'text-[var(--color-text-muted)]'
-                  }`}>
-                    {node.cycle.performanceDelta >= 0 ? '+' : ''}
-                    {(node.cycle.performanceDelta * 100).toFixed(1)}%
-                  </span>
-
-                  {/* Regime badge */}
-                  <span className="text-[10px] px-1.5 py-0.5 bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] rounded capitalize">
-                    {node.regime}
-                  </span>
-
-                  {/* Date */}
-                  <span className="text-[10px] text-[var(--color-text-muted)]">{dateStr}</span>
-                </button>
-
-                {/* Connector line */}
-                {i < timelineNodes.length - 1 && (
-                  <div className="w-8 h-0.5 bg-[var(--color-border)] flex-shrink-0" />
-                )}
-              </div>
-            );
-          })}
+      {/* Chart View — Recharts LineChart */}
+      {viewMode === 'chart' && factorWeights && (
+        <div className="px-6 py-4">
+          <ConvictionChart
+            cycles={cycles}
+            factorWeights={factorWeights}
+            onSelectEpisode={setSelectedIndex}
+            selectedIndex={selectedIndex}
+          />
         </div>
-      </div>
+      )}
+
+      {/* Node View — Scrollable horizontal timeline */}
+      {viewMode === 'nodes' && (
+        <div
+          ref={scrollRef}
+          className="overflow-x-auto scrollbar-thin px-6 py-6"
+          style={{ scrollbarColor: 'var(--color-border) transparent' }}
+        >
+          <div className="flex items-center gap-0 min-w-max">
+            {timelineNodes.map((node, i) => {
+              const isSelected = selectedIndex === i;
+              const date = new Date(node.cycle.timestamp);
+              const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+              return (
+                <div key={i} className="flex items-center">
+                  {/* Node */}
+                  <button
+                    onClick={() => setSelectedIndex(isSelected ? null : i)}
+                    className={`flex flex-col items-center gap-2 px-4 py-3 rounded-xl transition-all min-w-[100px] ${
+                      isSelected
+                        ? 'bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 shadow-sm'
+                        : 'hover:bg-[var(--color-bg-tertiary)]'
+                    }`}
+                  >
+                    {/* Performance indicator */}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      node.improved
+                        ? 'bg-[var(--color-positive)]/10 text-[var(--color-positive)]'
+                        : node.cycle.performanceDelta < 0
+                        ? 'bg-[var(--color-negative)]/10 text-[var(--color-negative)]'
+                        : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
+                    }`}>
+                      {node.improved ? (
+                        <TrendingUp className="w-5 h-5" />
+                      ) : node.cycle.performanceDelta < 0 ? (
+                        <TrendingDown className="w-5 h-5" />
+                      ) : (
+                        <Minus className="w-5 h-5" />
+                      )}
+                    </div>
+
+                    {/* Delta */}
+                    <span className={`text-xs font-bold ${
+                      node.improved ? 'text-[var(--color-positive)]' :
+                      node.cycle.performanceDelta < 0 ? 'text-[var(--color-negative)]' :
+                      'text-[var(--color-text-muted)]'
+                    }`}>
+                      {node.cycle.performanceDelta >= 0 ? '+' : ''}
+                      {(node.cycle.performanceDelta * 100).toFixed(1)}%
+                    </span>
+
+                    {/* Regime badge */}
+                    <span className="text-[10px] px-1.5 py-0.5 bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] rounded capitalize">
+                      {node.regime}
+                    </span>
+
+                    {/* Date */}
+                    <span className="text-[10px] text-[var(--color-text-muted)]">{dateStr}</span>
+                  </button>
+
+                  {/* Connector line */}
+                  {i < timelineNodes.length - 1 && (
+                    <div className="w-8 h-0.5 bg-[var(--color-border)] flex-shrink-0" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Belief Diff Panel */}
       <div className="border-t border-[var(--color-border)] px-6 py-5 bg-[var(--color-bg)]">

@@ -47,7 +47,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             to={item.href}
             end={item.href === '/'}
             onClick={onNavigate}
-            className={({ isActive }) => `
+            className={({ isActive }: { isActive: boolean }) => `
               flex items-center gap-3 px-4 py-3 rounded-sm transition-all click-feedback
               focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset
               ${isActive

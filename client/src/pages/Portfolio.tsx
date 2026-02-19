@@ -12,7 +12,7 @@ import { DataLoadError, NetworkError, EmptyPortfolio } from '@/components/shared
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { BottomSheet, useBottomSheet } from '@/components/shared/BottomSheet';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { toast } from '@/components/shared/Toast';
+import { useToast } from '@/hooks/useToast';
 import { TradeReasoning, WhyButton } from '@/components/explainer/TradeReasoning';
 
 interface Position {
@@ -37,6 +37,7 @@ export function Portfolio() {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const addPositionSheet = useBottomSheet();
+  const { toastSuccess, toastError } = useToast();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -56,10 +57,10 @@ export function Portfolio() {
       setShowAddForm(false);
       addPositionSheet.close();
       setFormData({ symbol: '', shares: '', avgCost: '' });
-      toast.success('Position added', `${formData.symbol.toUpperCase()} added to portfolio`);
+      toastSuccess('Position added', { message: `${formData.symbol.toUpperCase()} added to portfolio` });
     },
     onError: (error) => {
-      toast.error('Failed to add position', getErrorMessage(error));
+      toastError('Failed to add position', { message: getErrorMessage(error) });
     },
   });
 
@@ -69,11 +70,11 @@ export function Portfolio() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolio'] });
       setEditingId(null);
-      toast.success('Position updated');
+      toastSuccess('Position updated');
       setFormData({ symbol: '', shares: '', avgCost: '' });
     },
     onError: (error) => {
-      toast.error('Failed to update position', getErrorMessage(error));
+      toastError('Failed to update position', { message: getErrorMessage(error) });
     },
   });
 
@@ -81,10 +82,10 @@ export function Portfolio() {
     mutationFn: (id: string) => api.delete(`/portfolio/positions/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolio'] });
-      toast.success('Position removed');
+      toastSuccess('Position removed');
     },
     onError: (error) => {
-      toast.error('Failed to remove position', getErrorMessage(error));
+      toastError('Failed to remove position', { message: getErrorMessage(error) });
     },
   });
 

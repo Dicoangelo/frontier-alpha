@@ -1,0 +1,459 @@
+{
+  "name": "frontier-alpha-v2-completion",
+  "description": "Complete the remaining 16 stories from the v2 world-class upgrade. All components partially exist — this PRD focuses on wiring, interactivity, polish, accessibility, and test coverage. Build must pass after every story. 756 existing tests must remain green.",
+  "project": "~/projects/products/frontier-alpha",
+  "stack": {
+    "server": "Fastify 4 + TypeScript 5.3 + Supabase + PostgreSQL",
+    "client": "React 19 + Vite 7 + Tailwind 4 + Zustand + TanStack Query + Recharts + D3",
+    "test": "Vitest (37 files, 756 tests)",
+    "deploy": "Vercel (frontier-alpha.metaventionsai.com)"
+  },
+  "verification": {
+    "after_each_story": [
+      "cd ~/projects/products/frontier-alpha && npx vitest run",
+      "cd ~/projects/products/frontier-alpha && npm run build",
+      "cd ~/projects/products/frontier-alpha/client && npx tsc -b --noEmit"
+    ]
+  },
+  "lanes": {
+    "A_backend_infra": {
+      "agent": "backend-engineer",
+      "stories": ["US-010", "US-028"]
+    },
+    "B_ui_foundation": {
+      "agent": "ui-foundation",
+      "stories": ["US-007", "US-009", "US-020"]
+    },
+    "C_page_ux": {
+      "agent": "page-ux",
+      "stories": ["US-015", "US-016", "US-017", "US-018", "US-019", "US-021"]
+    },
+    "D_cvrf_intelligence": {
+      "agent": "cvrf-specialist",
+      "stories": ["US-023", "US-024", "US-025", "US-026", "US-027"]
+    }
+  },
+  "userStories": [
+    {
+      "id": "US-010",
+      "lane": "A",
+      "title": "Encrypt portfolio sharing mechanism",
+      "description": "Replace btoa(JSON.stringify(positions)) URL sharing with server-side token-based sharing. Portfolio data must never appear in URLs.",
+      "files_to_modify": [
+        "client/src/components/portfolio/PortfolioExport.tsx",
+        "client/src/pages/SharedPortfolio.tsx",
+        "src/services/SharingService.ts",
+        "src/index.ts"
+      ],
+      "acceptanceCriteria": [
+        "POST /api/v1/portfolio/share generates a random 32-char hex token via crypto.randomBytes(16).toString('hex')",
+        "Portfolio snapshot stored in Supabase portfolio_shares table (id, token, user_id, snapshot_json, created_at, expires_at)",
+        "Share URL format: ${origin}/shared/${token} — no portfolio data in URL",
+        "GET /api/v1/portfolio/shared/:token retrieves snapshot, returns 404 if expired or not found",
+        "Tokens expire after 30 days (expires_at = now + 30d)",
+        "PortfolioExport.tsx calls POST /api/v1/portfolio/share instead of btoa encoding",
+        "SharedPortfolio.tsx fetches from API via token instead of decoding URL params",
+        "Old base64 share links show friendly 'This link has expired' message",
+        "Test: POST /api/v1/portfolio/share returns { token, shareUrl, expiresAt }",
+        "Test: GET /api/v1/portfolio/shared/:invalid returns 404",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "dependsOn": []
+    },
+    {
+      "id": "US-028",
+      "lane": "A",
+      "title": "Harden WebSocket reconnection with jitter and state sync",
+      "description": "The QuoteStreamClient in client/src/api/websocket.ts has basic reconnection but lacks jitter (thundering herd), page visibility handling, and state recovery after reconnect.",
+      "files_to_modify": [
+        "client/src/api/websocket.ts",
+        "client/src/components/shared/ConnectionStatus.tsx"
+      ],
+      "acceptanceCriteria": [
+        "Exponential backoff with jitter: delay = baseDelay * 2^attempt * (0.5 + Math.random() * 0.5)",
+        "Page visibility API: pause reconnection when document.hidden, resume on visibilitychange",
+        "After reconnect: re-subscribe all symbols from subscribedSymbols array (already partial — verify it works)",
+        "ConnectionStatus component shows transport type (WS/SSE/Poll) and reconnect countdown",
+        "Max reconnect attempts increased from 5 to 10 before falling to polling",
+        "Add heartbeat ping every 30s on WebSocket, reconnect if no pong within 5s",
+        "Test: QuoteStreamClient.attemptReconnect uses jittered delay",
+        "Test: disconnect cleans up all timers and event listeners",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "dependsOn": []
+    },
+    {
+      "id": "US-007",
+      "lane": "B",
+      "title": "Complete toast notification system with useToast hook",
+      "description": "Toast.tsx exists (200 lines) with success/error/warning/info variants. Needs a useToast() hook and ToastProvider context so any component can trigger toasts. ToastContainer is already in App.tsx.",
+      "files_to_modify": [
+        "client/src/components/shared/Toast.tsx",
+        "client/src/hooks/useToast.ts"
+      ],
+      "acceptanceCriteria": [
+        "useToast() hook created that returns { toast, toastSuccess, toastError, toastWarning, toastInfo }",
+        "Toasts auto-dismiss after 4s (configurable via duration prop)",
+        "Multiple toasts stack vertically (max 5 visible, newest on top)",
+        "Toasts have role='alert' and aria-live='polite' for screen readers",
+        "Toast animations: slide-in from top-right, fade-out on dismiss",
+        "Optional action button works (e.g., 'Undo' with onClick callback)",
+        "Test: useToast().toastSuccess('msg') adds toast to container",
+        "Test: toast auto-dismisses after duration",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "dependsOn": []
+    },
+    {
+      "id": "US-009",
+      "lane": "B",
+      "title": "Wire mock data banner to API dataSource field",
+      "description": "MockDataBanner.tsx exists (63 lines). Needs to read X-Data-Source header from API responses and show/hide accordingly. Should use a global Zustand store or context.",
+      "files_to_modify": [
+        "client/src/components/shared/MockDataBanner.tsx",
+        "client/src/api/client.ts",
+        "client/src/stores/dataSourceStore.ts"
+      ],
+      "acceptanceCriteria": [
+        "Zustand store dataSourceStore tracks isUsingMockData boolean",
+        "API client interceptor reads X-Data-Source header and updates store",
+        "MockDataBanner renders when isUsingMockData === true",
+        "Banner text: 'Demo Mode — Using simulated data. Connect API keys for live market data.'",
+        "Banner has amber/yellow background matching theme",
+        "Banner is dismissible per-session (returns on page reload if still mock)",
+        "Banner does not render when all data is live",
+        "Test: dataSourceStore.setMockData(true) makes banner visible",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "dependsOn": ["US-007"]
+    },
+    {
+      "id": "US-020",
+      "lane": "B",
+      "title": "Accessibility audit and fixes across all components",
+      "description": "Add ARIA attributes, keyboard navigation, focus management, and screen reader support to core components. Follow WCAG 2.1 AA.",
+      "files_to_modify": [
+        "client/src/components/layout/Sidebar.tsx",
+        "client/src/components/layout/Header.tsx",
+        "client/src/components/layout/MobileNav.tsx",
+        "client/src/components/shared/Button.tsx",
+        "client/src/components/shared/Card.tsx",
+        "client/src/components/shared/BottomSheet.tsx",
+        "client/src/components/alerts/AlertDropdown.tsx",
+        "client/src/components/portfolio/PositionList.tsx"
+      ],
+      "acceptanceCriteria": [
+        "All interactive elements (buttons, links, inputs) have visible focus indicators (2px outline, --color-primary)",
+        "Sidebar nav items have aria-current='page' on active route",
+        "AlertDropdown has aria-expanded, aria-haspopup, keyboard dismiss (Escape)",
+        "BottomSheet traps focus when open, returns focus on close",
+        "PositionList table has proper <thead>/<tbody>, scope='col' on headers",
+        "All images/icons have aria-hidden='true' or meaningful alt text",
+        "Color contrast meets WCAG AA (4.5:1 for text, 3:1 for large text) — verify with existing CSS vars",
+        "Skip-to-content link added to Layout.tsx",
+        "MobileNav hamburger button has aria-label='Toggle navigation'",
+        "Test: Sidebar renders aria-current on active link",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "dependsOn": []
+    },
+    {
+      "id": "US-015",
+      "lane": "C",
+      "title": "Polish landing page hero and CTA",
+      "description": "Landing.tsx has functional hero but needs visual polish: gradient refinement, animated entry, clearer value proposition, and stronger CTA. Keep existing quick-portfolio presets.",
+      "files_to_modify": [
+        "client/src/pages/Landing.tsx"
+      ],
+      "acceptanceCriteria": [
+        "Hero headline: 'AI-Powered Portfolio Intelligence' with gradient text (--color-primary to --color-accent)",
+        "Subtitle clearly states value: '80+ factors. Self-improving beliefs. Explainable AI.'",
+        "Primary CTA button: 'Analyze Your Portfolio' with hover animation (scale 1.02, shadow increase)",
+        "Secondary CTA: 'View Demo' that loads Mag 7 preset",
+        "Quick portfolio presets rendered as pill buttons below CTA",
+        "Entry animation: fade-in-up on hero content (CSS @keyframes, no JS animation library)",
+        "Hero section is vertically centered on viewport",
+        "Responsive: stacks cleanly on mobile (< 768px), no horizontal scroll",
+        "Lighthouse performance score >= 90 (lazy-loaded images, no render-blocking)",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "dependsOn": []
+    },
+    {
+      "id": "US-016",
+      "lane": "C",
+      "title": "Make portfolio table mobile-responsive",
+      "description": "PositionList.tsx renders a table that breaks on mobile. Convert to responsive card layout on small screens.",
+      "files_to_modify": [
+        "client/src/components/portfolio/PositionList.tsx"
+      ],
+      "acceptanceCriteria": [
+        "Desktop (>= 768px): full table with columns: Symbol, Shares, Price, Value, P&L, Weight, Actions",
+        "Mobile (< 768px): card layout — each position as a card with symbol + P&L prominent, other fields in grid",
+        "Use Tailwind responsive classes (md:table-cell, md:hidden) — no JS media queries",
+        "Swipe-to-reveal actions on mobile cards (edit, delete) or tap-to-expand",
+        "Sorting preserved on mobile (sort by tapping column header → sort by dropdown on mobile)",
+        "P&L color coding (green/red) works in both layouts",
+        "Table/card transitions are smooth (no layout shift)",
+        "Test: PositionList renders correct layout based on viewport mock",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "dependsOn": []
+    },
+    {
+      "id": "US-017",
+      "lane": "C",
+      "title": "Add loading, error, and empty states to Dashboard and Portfolio pages",
+      "description": "Dashboard.tsx and Portfolio.tsx need proper skeleton loading states, error boundaries with retry, and empty states when no positions exist. SkeletonDashboard and EmptyPortfolio components exist — wire them in with proper data fetching states.",
+      "files_to_modify": [
+        "client/src/pages/Dashboard.tsx",
+        "client/src/pages/Portfolio.tsx"
+      ],
+      "acceptanceCriteria": [
+        "Dashboard: shows SkeletonDashboard while data is loading (TanStack Query isLoading)",
+        "Dashboard: shows DataLoadError with retry button on fetch failure (isError + refetch)",
+        "Dashboard: shows EmptyPortfolio with 'Add your first position' CTA when positions.length === 0",
+        "Portfolio: same pattern — skeleton → error → empty → loaded",
+        "Error state shows user-friendly message, not raw error object",
+        "Retry button calls refetch() and shows loading state",
+        "Skeleton matches actual layout shape (card sizes, spacing)",
+        "No flash of empty state when transitioning from loading to loaded",
+        "Test: Dashboard renders skeleton when isLoading",
+        "Test: Dashboard renders error state with retry on failure",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "dependsOn": []
+    },
+    {
+      "id": "US-018",
+      "lane": "C",
+      "title": "Add loading, error, and empty states to secondary pages",
+      "description": "Apply the same loading/error/empty pattern from US-017 to: Factors, Earnings, Alerts, CVRF, Backtest, ML, Options, Tax, Social pages.",
+      "files_to_modify": [
+        "client/src/pages/Factors.tsx",
+        "client/src/pages/Earnings.tsx",
+        "client/src/pages/Alerts.tsx",
+        "client/src/pages/CVRF.tsx",
+        "client/src/pages/Backtest.tsx",
+        "client/src/pages/ML.tsx",
+        "client/src/pages/Options.tsx",
+        "client/src/pages/Tax.tsx",
+        "client/src/pages/Social.tsx"
+      ],
+      "acceptanceCriteria": [
+        "Each page shows appropriate skeleton while loading (LoadingSkeleton with matching shape)",
+        "Each page shows error state with retry button on failure",
+        "Each page shows relevant empty state when no data (EmptyState component with custom variant)",
+        "Factors: 'No factor data available' empty state",
+        "Earnings: 'No upcoming earnings' empty state",
+        "Alerts: 'No alerts configured' with 'Create Alert' CTA",
+        "CVRF: 'No episodes recorded' with 'Start First Episode' CTA",
+        "All pages handle transition from loading → loaded without layout shift",
+        "Test: at least 3 pages verified with loading/error/empty states",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "dependsOn": ["US-017"]
+    },
+    {
+      "id": "US-019",
+      "lane": "C",
+      "title": "Fix risk metrics thresholds and add contextual guidance",
+      "description": "RiskMetrics.tsx shows raw numbers without context. Add threshold-based coloring (green/yellow/red) and tooltips explaining what each metric means and whether the current value is healthy.",
+      "files_to_modify": [
+        "client/src/components/risk/RiskMetrics.tsx"
+      ],
+      "acceptanceCriteria": [
+        "Sharpe Ratio: green >= 1.0, yellow 0.5-1.0, red < 0.5",
+        "Volatility: green <= 15%, yellow 15-25%, red > 25%",
+        "Max Drawdown: green >= -10%, yellow -10% to -20%, red < -20%",
+        "Beta: green 0.8-1.2, yellow 0.5-0.8 or 1.2-1.5, red outside range",
+        "VaR 95%: green <= 2%, yellow 2-4%, red > 4%",
+        "Each metric has an info icon tooltip explaining: what it measures, current value interpretation, benchmark comparison",
+        "Colors use CSS variables (--color-positive, --color-warning, --color-danger) from theme",
+        "Thresholds are configurable via constants object (not hardcoded in JSX)",
+        "Test: RiskMetrics renders green color for healthy sharpe ratio",
+        "Test: RiskMetrics renders red for dangerous drawdown",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "dependsOn": []
+    },
+    {
+      "id": "US-021",
+      "lane": "C",
+      "title": "Wire toast notifications to all user mutations",
+      "description": "Every user action (add/edit/delete position, change settings, run optimization, etc.) should trigger a toast notification confirming success or explaining failure.",
+      "files_to_modify": [
+        "client/src/pages/Portfolio.tsx",
+        "client/src/pages/Settings.tsx",
+        "client/src/pages/Optimize.tsx",
+        "client/src/pages/Alerts.tsx",
+        "client/src/pages/CVRF.tsx"
+      ],
+      "acceptanceCriteria": [
+        "Add position: toastSuccess('Position added: {symbol}')",
+        "Delete position: toastSuccess('Position removed: {symbol}')",
+        "Update position: toastSuccess('Position updated: {symbol}')",
+        "Optimization complete: toastSuccess('Portfolio optimized — Sharpe: {value}')",
+        "Settings saved: toastSuccess('Settings saved')",
+        "Alert created: toastSuccess('Alert created for {symbol}')",
+        "CVRF episode started: toastSuccess('Episode started')",
+        "Any mutation failure: toastError(userFriendlyMessage)",
+        "Toasts do NOT fire during initial page load (only on explicit user actions)",
+        "Test: adding position triggers success toast",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "dependsOn": ["US-007"]
+    },
+    {
+      "id": "US-023",
+      "lane": "D",
+      "title": "Make CVRF Belief Constellation interactive",
+      "description": "BeliefConstellation.tsx exists (500 lines) with D3 visualization. Add interactivity: click to select belief node, hover tooltips with belief details, zoom/pan, and belief strength animation.",
+      "files_to_modify": [
+        "client/src/components/cvrf/BeliefConstellation.tsx",
+        "client/src/components/cvrf/CVRFDashboard.tsx"
+      ],
+      "acceptanceCriteria": [
+        "Click on belief node: opens detail panel showing belief text, confidence, history",
+        "Hover: tooltip with belief name, current conviction (0-1), last updated date",
+        "Belief nodes sized by conviction strength (stronger = larger radius)",
+        "Belief nodes colored by category (style=blue, quality=green, volatility=red, sentiment=purple, macro=amber, sector=cyan)",
+        "Connected beliefs (same factor category) linked with lines, opacity by correlation strength",
+        "Zoom/pan via D3 zoom behavior (scroll to zoom, drag to pan)",
+        "Animation: nodes pulse when belief updates (new episode recorded)",
+        "Responsive: scales to container width, min-height 400px",
+        "Performance: requestAnimationFrame for animations, no D3 transitions over 300ms",
+        "Test: BeliefConstellation renders SVG with correct number of nodes",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "dependsOn": []
+    },
+    {
+      "id": "US-024",
+      "lane": "D",
+      "title": "Add conviction timeline and belief diff view",
+      "description": "ConvictionTimeline.tsx exists (362 lines). Enhance with belief diff between episodes — show what changed, why, and by how much. Add time-series chart of conviction evolution.",
+      "files_to_modify": [
+        "client/src/components/cvrf/ConvictionTimeline.tsx",
+        "client/src/components/cvrf/CVRFDashboard.tsx"
+      ],
+      "acceptanceCriteria": [
+        "Timeline chart: X-axis = episode dates, Y-axis = conviction level (0-1), one line per tracked belief",
+        "Hovering over a point shows: episode ID, date, conviction delta, trigger (what caused the change)",
+        "Belief diff panel: side-by-side comparison of two selected episodes",
+        "Diff shows: beliefs added, removed, strengthened (↑), weakened (↓) with delta values",
+        "Color coding: green for strengthened, red for weakened, blue for new, gray for removed",
+        "Episode selector: dropdown or click-on-timeline to select comparison episodes",
+        "Chart uses Recharts LineChart (consistent with rest of app — not raw D3 for charts)",
+        "Responsive: chart width adapts, labels truncate on mobile",
+        "Test: ConvictionTimeline renders with mock episode data",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "dependsOn": []
+    },
+    {
+      "id": "US-025",
+      "lane": "D",
+      "title": "Add 'Why This Trade' chain-of-thought traces",
+      "description": "Create a new component that shows the reasoning chain for trade recommendations: factor signals → belief influence → optimization constraint → final recommendation. Uses the CognitiveExplainer and CVRF belief state.",
+      "files_to_modify": [
+        "client/src/components/explainer/TradeReasoning.tsx",
+        "client/src/api/portfolio.ts",
+        "src/services/ExplanationService.ts"
+      ],
+      "acceptanceCriteria": [
+        "New 'Why This Trade' expandable section on each position in PositionList",
+        "Chain-of-thought format: Step 1 (Factor Signal) → Step 2 (Belief State) → Step 3 (Optimization) → Step 4 (Recommendation)",
+        "Each step shows: title, explanation text, confidence score, data points used",
+        "GET /api/v1/explain/trade/:symbol endpoint returns chain-of-thought JSON",
+        "ExplanationService.explainTrade(symbol) composes: factor scores + CVRF beliefs + optimizer weights",
+        "Caches explanations per symbol per day (same cache as existing explain endpoint)",
+        "Loading state: skeleton with 4 step placeholders",
+        "Collapsed by default, expand with 'Why this trade?' button",
+        "Test: ExplanationService.explainTrade returns valid chain with all 4 steps",
+        "Test: TradeReasoning renders 4 steps from mock data",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 4,
+      "dependsOn": ["US-023"]
+    },
+    {
+      "id": "US-026",
+      "lane": "D",
+      "title": "Add CVRF belief impact panel to earnings page",
+      "description": "BeliefImpactPanel.tsx exists (198 lines). Wire it into the Earnings page to show how CVRF beliefs should influence positioning around earnings events.",
+      "files_to_modify": [
+        "client/src/components/earnings/BeliefImpactPanel.tsx",
+        "client/src/pages/Earnings.tsx",
+        "client/src/api/cvrf.ts"
+      ],
+      "acceptanceCriteria": [
+        "BeliefImpactPanel renders on Earnings page below the earnings calendar",
+        "Shows: current CVRF conviction for the selected stock, historical belief accuracy around earnings",
+        "Compares: CVRF recommendation vs consensus estimate direction",
+        "Visual: conviction gauge (0-1) with color coding (low=red, medium=yellow, high=green)",
+        "Data: fetches from GET /api/v1/cvrf/beliefs and GET /api/v1/earnings/forecast/:symbol",
+        "If no CVRF beliefs exist for symbol, shows 'No belief history — record decisions to build conviction'",
+        "Panel collapses on mobile to save space, expandable via tap",
+        "Test: BeliefImpactPanel renders conviction gauge for mock data",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 4,
+      "dependsOn": []
+    },
+    {
+      "id": "US-027",
+      "lane": "D",
+      "title": "Build earnings calendar heatmap visualization",
+      "description": "EarningsHeatmap.tsx exists (278 lines). Enhance to show a calendar grid where each cell is colored by expected move magnitude. Click a cell to see earnings details.",
+      "files_to_modify": [
+        "client/src/components/earnings/EarningsHeatmap.tsx",
+        "client/src/pages/Earnings.tsx"
+      ],
+      "acceptanceCriteria": [
+        "Calendar grid: 5 columns (Mon-Fri) x 4 rows (weeks), current month view",
+        "Cell color: intensity by expected move % (lighter=small move, darker=large move)",
+        "Cell shows: stock ticker(s) reporting that day, time indicator (BMO/AMC)",
+        "Click cell: expands to show full earnings details (EPS estimate, revenue, beat/miss history)",
+        "Header: month navigation (prev/next) and legend (color scale)",
+        "Empty days: gray/neutral cell",
+        "Today's cell: highlighted border (--color-primary)",
+        "Data source: GET /api/v1/earnings/upcoming with date range filter",
+        "Responsive: on mobile, show list view instead of grid",
+        "Test: EarningsHeatmap renders correct number of cells for current month",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 4,
+      "dependsOn": []
+    }
+  ]
+}

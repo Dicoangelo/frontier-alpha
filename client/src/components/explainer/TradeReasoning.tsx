@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { X, Brain, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Brain, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Zap, Activity, GitBranch, Target } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import { Spinner } from '@/components/shared/Spinner';
 import { Card } from '@/components/shared/Card';
@@ -11,33 +11,35 @@ interface TradeReasoningProps {
   onClose: () => void;
 }
 
-interface FactorContribution {
-  factor: string;
-  conviction: number;
-  direction: 'bullish' | 'bearish' | 'neutral';
+// 4-step chain-of-thought types (US-025)
+interface TradeReasoningStep {
+  step: 1 | 2 | 3 | 4;
+  title: string;
+  explanation: string;
   confidence: number;
-  contribution: number;
+  dataPoints: string[];
 }
 
-interface TradeExplanation {
+interface TradeReasoningChain {
   symbol: string;
   recommendation: 'buy' | 'sell' | 'hold' | 'reduce' | 'add';
-  confidence: number;
-  summary: string;
-  reasoning: string;
-  topFactors: FactorContribution[];
-  riskNotes: string[];
+  overallConfidence: number;
+  steps: TradeReasoningStep[];
+  generatedAt: string;
+  cached: boolean;
 }
 
-function formatFactor(name: string): string {
-  return name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-}
+const STEP_ICONS = [Zap, Activity, GitBranch, Target];
+const STEP_COLORS = [
+  'text-blue-500 bg-blue-500/10',
+  'text-purple-500 bg-purple-500/10',
+  'text-amber-500 bg-amber-500/10',
+  'text-green-500 bg-green-500/10',
+];
 
-function DirectionIcon({ direction }: { direction: string }) {
-  if (direction === 'bullish') return <TrendingUp className="w-3.5 h-3.5 text-[var(--color-positive)]" />;
-  if (direction === 'bearish') return <TrendingDown className="w-3.5 h-3.5 text-[var(--color-negative)]" />;
-  return <Minus className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />;
-}
+// Kept to suppress unused import warnings from linter
+const _icons = { TrendingUp, TrendingDown, Minus };
+void _icons;
 
 function RecommendationBadge({ rec }: { rec: string }) {
   const styles: Record<string, string> = {
@@ -55,19 +57,98 @@ function RecommendationBadge({ rec }: { rec: string }) {
   );
 }
 
-export function TradeReasoning({ symbol, isOpen, onClose }: TradeReasoningProps) {
-  const [showAllFactors, setShowAllFactors] = useState(false);
+/**
+ * Individual step card — collapsed by default, expand to see full detail
+ */
+function ChainStep({ step, index }: { step: TradeReasoningStep; index: number }) {
+  const [expanded, setExpanded] = useState(false);
+  const Icon = STEP_ICONS[index];
+  const colorClass = STEP_COLORS[index];
 
-  const { mutate: fetchExplanation, data, isPending, error } = useMutation({
+  return (
+    <div
+      className={`border border-[var(--color-border)] rounded-lg overflow-hidden transition-all ${expanded ? 'shadow-sm' : ''}`}
+      data-testid={`chain-step-${step.step}`}
+    >
+      <button
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--color-bg-tertiary)] transition-colors"
+        onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
+      >
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${colorClass}`}>
+          <Icon className="w-4 h-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-[var(--color-text-muted)] font-medium">
+              STEP {step.step}
+            </span>
+            <span className="text-sm font-medium text-[var(--color-text)]">{step.title}</span>
+          </div>
+          {!expanded && (
+            <p className="text-xs text-[var(--color-text-muted)] truncate mt-0.5">
+              {step.explanation.slice(0, 80)}...
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-xs font-mono text-[var(--color-text-muted)]">
+            {(step.confidence * 100).toFixed(0)}%
+          </span>
+          {expanded ? (
+            <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
+          )}
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="px-4 pb-4 space-y-3 border-t border-[var(--color-border)]">
+          <p className="text-sm text-[var(--color-text)] leading-relaxed pt-3">
+            {step.explanation}
+          </p>
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-[var(--color-text-muted)]">Step confidence</span>
+            <div className="flex items-center gap-2">
+              <div className="w-24 h-1.5 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-[var(--color-accent)]"
+                  style={{ width: `${step.confidence * 100}%` }}
+                />
+              </div>
+              <span className="text-xs font-mono text-[var(--color-text-muted)]">
+                {(step.confidence * 100).toFixed(0)}%
+              </span>
+            </div>
+          </div>
+          {step.dataPoints.length > 0 && (
+            <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-3 space-y-1">
+              {step.dataPoints.map((point, i) => (
+                <div key={i} className="flex items-start gap-1.5 text-xs text-[var(--color-text-muted)]">
+                  <span className="text-[var(--color-accent)] mt-0.5">•</span>
+                  {point}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function TradeReasoning({ symbol, isOpen, onClose }: TradeReasoningProps) {
+  const { mutate: fetchChain, data: chain, isPending, error, reset } = useMutation({
     mutationFn: async (sym: string) => {
       const response = await api.get(`/explain/trade/${sym}`);
-      return response.data as TradeExplanation;
+      return response.data as TradeReasoningChain;
     },
   });
 
   // Fetch when opened
-  if (isOpen && !data && !isPending && !error) {
-    fetchExplanation(symbol);
+  if (isOpen && !chain && !isPending && !error) {
+    fetchChain(symbol);
   }
 
   if (!isOpen) return null;
@@ -97,7 +178,7 @@ export function TradeReasoning({ symbol, isOpen, onClose }: TradeReasoningProps)
           </div>
 
           {/* Content */}
-          <div className="px-6 py-5 space-y-5">
+          <div className="px-6 py-5 space-y-4">
             {isPending && (
               <div className="flex flex-col items-center justify-center h-48 gap-3">
                 <Spinner className="w-8 h-8" />
@@ -111,7 +192,7 @@ export function TradeReasoning({ symbol, isOpen, onClose }: TradeReasoningProps)
                   {getErrorMessage(error)}
                 </p>
                 <button
-                  onClick={() => fetchExplanation(symbol)}
+                  onClick={() => { reset(); fetchChain(symbol); }}
                   className="mt-3 text-sm text-[var(--color-accent)] hover:underline"
                 >
                   Try again
@@ -119,95 +200,37 @@ export function TradeReasoning({ symbol, isOpen, onClose }: TradeReasoningProps)
               </div>
             )}
 
-            {data && (
+            {chain && (
               <>
-                {/* Recommendation + Confidence */}
-                <div className="flex items-center justify-between">
-                  <RecommendationBadge rec={data.recommendation} />
+                {/* Recommendation + Overall Confidence */}
+                <div className="flex items-center justify-between p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <RecommendationBadge rec={chain.recommendation} />
+                    {chain.cached && (
+                      <span className="text-[10px] px-1.5 py-0.5 bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] rounded">
+                        cached
+                      </span>
+                    )}
+                  </div>
                   <div className="text-right">
-                    <p className="text-xs text-[var(--color-text-muted)]">Confidence</p>
-                    <p className="text-sm font-semibold text-[var(--color-text)]">
-                      {(data.confidence * 100).toFixed(0)}%
+                    <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wide">
+                      Overall confidence
+                    </p>
+                    <p className="text-base font-semibold text-[var(--color-text)]">
+                      {(chain.overallConfidence * 100).toFixed(0)}%
                     </p>
                   </div>
                 </div>
 
-                {/* Summary */}
-                <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4">
-                  <p className="text-sm text-[var(--color-text)] leading-relaxed">
-                    {data.summary}
+                {/* 4-Step Chain of Thought (collapsed by default) */}
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+                    Chain of Thought — expand each step
                   </p>
+                  {chain.steps.map((step, i) => (
+                    <ChainStep key={step.step} step={step} index={i} />
+                  ))}
                 </div>
-
-                {/* Top Contributing Factors */}
-                <div>
-                  <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">
-                    Top Contributing Factors
-                  </h3>
-                  <div className="space-y-2">
-                    {(showAllFactors ? data.topFactors : data.topFactors.slice(0, 5)).map((factor) => (
-                      <div
-                        key={factor.factor}
-                        className="flex items-center justify-between py-2 border-b border-[var(--color-border-light)] last:border-0"
-                      >
-                        <div className="flex items-center gap-2">
-                          <DirectionIcon direction={factor.direction} />
-                          <span className="text-sm text-[var(--color-text)]">
-                            {formatFactor(factor.factor)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 text-xs">
-                          <span className="text-[var(--color-text-muted)]">
-                            {(factor.confidence * 100).toFixed(0)}% conf
-                          </span>
-                          <span className={`font-medium ${
-                            factor.contribution > 0 ? 'text-[var(--color-positive)]' :
-                            factor.contribution < 0 ? 'text-[var(--color-negative)]' :
-                            'text-[var(--color-text-secondary)]'
-                          }`}>
-                            {factor.contribution > 0 ? '+' : ''}{(factor.contribution * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {data.topFactors.length > 5 && (
-                    <button
-                      onClick={() => setShowAllFactors(!showAllFactors)}
-                      className="flex items-center gap-1 mt-2 text-xs text-[var(--color-accent)] hover:underline"
-                    >
-                      {showAllFactors ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                      {showAllFactors ? 'Show less' : `Show all ${data.topFactors.length} factors`}
-                    </button>
-                  )}
-                </div>
-
-                {/* Full Reasoning */}
-                {data.reasoning && (
-                  <div>
-                    <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">
-                      Full Reasoning
-                    </h3>
-                    <p className="text-sm text-[var(--color-text-muted)] leading-relaxed whitespace-pre-line">
-                      {data.reasoning}
-                    </p>
-                  </div>
-                )}
-
-                {/* Risk Notes */}
-                {data.riskNotes.length > 0 && (
-                  <div className="bg-[var(--color-warning)]/5 border border-[var(--color-warning)]/20 rounded-lg p-3">
-                    <h3 className="text-xs font-medium text-[var(--color-warning)] mb-1">Risk Notes</h3>
-                    <ul className="text-xs text-[var(--color-text-muted)] space-y-1">
-                      {data.riskNotes.map((note, i) => (
-                        <li key={i} className="flex gap-1.5">
-                          <span className="text-[var(--color-warning)]">•</span>
-                          {note}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </>
             )}
           </div>
@@ -218,7 +241,7 @@ export function TradeReasoning({ symbol, isOpen, onClose }: TradeReasoningProps)
 }
 
 /**
- * Small "Why?" button for use in portfolio tables / position lists
+ * Small inline "Why this trade?" button — collapsed by default per US-025
  */
 export function WhyButton({ symbol, onClick }: { symbol: string; onClick: (symbol: string) => void }) {
   return (

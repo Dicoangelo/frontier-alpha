@@ -1,5 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
+import { useDataSourceStore } from '@/stores/dataSourceStore';
+import { setMockMode } from '@/components/shared/MockDataBanner';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -22,6 +24,14 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => {
+    // Check X-Data-Source header to detect mock/simulated data mode
+    const dataSource = response.headers['x-data-source'];
+    if (dataSource !== undefined) {
+      const isMock = dataSource === 'mock' || dataSource === 'simulated';
+      useDataSourceStore.getState().setMockData(isMock);
+      setMockMode(isMock);
+    }
+
     // Check rate limit headers on every successful response
     const limit = Number(response.headers['ratelimit-limit']);
     const remaining = Number(response.headers['ratelimit-remaining']);

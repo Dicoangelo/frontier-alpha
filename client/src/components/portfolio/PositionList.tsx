@@ -267,7 +267,7 @@ export function PositionList({ positions, quotes }: PositionListProps) {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+                    className="w-9 h-9 bg-[var(--color-accent)] rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
                     aria-hidden="true"
                   >
                     {position.symbol.slice(0, 2)}
@@ -359,7 +359,7 @@ export function PositionList({ positions, quotes }: PositionListProps) {
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+                        className="w-9 h-9 bg-[var(--color-accent)] rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
                         aria-hidden="true"
                       >
                         {position.symbol.slice(0, 2)}

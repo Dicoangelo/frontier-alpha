@@ -64,7 +64,7 @@ export function WelcomeModal({ isOpen, onClose, onStartTour, onTryDemo }: Welcom
         </button>
 
         {/* Header with gradient */}
-        <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 px-8 py-10 text-white">
+        <div className="px-8 py-10 text-white" style={{ background: 'linear-gradient(to bottom right, var(--color-accent), var(--color-info))' }}>
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 bg-[var(--color-bg)]/20 rounded-xl flex items-center justify-center">
               <TrendingUp className="w-6 h-6" />

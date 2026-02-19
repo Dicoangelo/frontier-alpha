@@ -440,13 +440,13 @@ export function Dashboard() {
               className={`inline-block w-2 h-2 rounded-full ${
                 isConnected
                   ? 'bg-[var(--color-positive)] animate-pulse-green'
-                  : 'bg-[var(--color-danger)] animate-pulse-subtle'
+                  : 'bg-[var(--color-text-muted)]'
               }`}
             />
-            <span className={`text-xs font-medium ${isConnected ? 'text-[var(--color-positive)]' : 'text-[var(--color-danger)]'}`}>
-              {isConnected ? 'Live' : 'Reconnecting...'}
+            <span className={`text-xs font-medium ${isConnected ? 'text-[var(--color-positive)]' : 'text-[var(--color-text-muted)]'}`}>
+              {isConnected ? 'Live' : 'Offline'}
             </span>
-            {lastUpdate && isConnected && (
+            {lastUpdate && (
               <span className="text-xs text-[var(--color-text-muted)] border-l border-[var(--color-border-light)] pl-2 ml-0.5">
                 {lastUpdate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </span>

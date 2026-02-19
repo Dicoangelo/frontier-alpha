@@ -246,7 +246,7 @@ export function APIKeys() {
                   onClick={() => setNewKeyPermissions('read')}
                   className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm transition ${
                     newKeyPermissions === 'read'
-                      ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)] dark:text-[var(--color-info)]'
+                      ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)]'
                       : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                   }`}
                 >
@@ -256,7 +256,7 @@ export function APIKeys() {
                   onClick={() => setNewKeyPermissions('readwrite')}
                   className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm transition ${
                     newKeyPermissions === 'readwrite'
-                      ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)] dark:text-[var(--color-info)]'
+                      ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)]'
                       : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                   }`}
                 >
@@ -303,7 +303,7 @@ export function APIKeys() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-[var(--color-text)]">{key.name}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)] dark:text-[var(--color-positive)]">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)]">
                     Active
                   </span>
                 </div>

@@ -25,8 +25,8 @@ const variants = {
     focus:ring-2 focus:ring-brand-amethyst/40 focus:ring-offset-2 dark:focus:ring-offset-surface-dark
   `,
   danger: `
-    bg-[var(--color-negative)] text-white dark:bg-[var(--color-negative)]
-    hover:bg-[var(--color-negative)] active:bg-[var(--color-negative)] dark:hover:bg-[var(--color-negative)]
+    bg-[var(--color-negative)] text-white
+    hover:bg-[var(--color-negative)] active:bg-[var(--color-negative)]
     shadow-md hover:shadow-lg active:shadow-sm
     focus:ring-2 focus:ring-[var(--color-negative)] focus:ring-offset-2 dark:focus:ring-offset-surface-dark
   `,

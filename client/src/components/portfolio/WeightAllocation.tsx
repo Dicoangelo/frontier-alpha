@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/shared/Card';
-import { useCountUp } from '@/components/portfolio/PortfolioOverview';
 import type { Position } from '@/types';
 
 const SEGMENT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
@@ -17,15 +16,12 @@ interface Segment {
   color: string;
   dashArray: string;
   dashOffset: number;
-  circumference: number;
 }
 
 function buildSegments(positions: Position[], _totalValue: number): Segment[] {
-  // Radius and circumference for the donut
   const r = 54;
   const circumference = 2 * Math.PI * r;
 
-  // Sort by weight descending, take top 6 and group rest as "Other"
   const sorted = [...positions].sort((a, b) => b.weight - a.weight);
   const top = sorted.slice(0, 6);
   const rest = sorted.slice(6);
@@ -37,7 +33,6 @@ function buildSegments(positions: Position[], _totalValue: number): Segment[] {
     items.push({ symbol: 'Other', shares: 0, weight: otherWeight, costBasis: 0, currentPrice: 0, unrealizedPnL: 0, value: otherValue } as Position & { value: number });
   }
 
-  // Normalize weights (in case they don't sum exactly to 1)
   const totalWeight = items.reduce((acc, p) => acc + p.weight, 0) || 1;
 
   let offset = 0;
@@ -52,7 +47,6 @@ function buildSegments(positions: Position[], _totalValue: number): Segment[] {
       color: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
       dashArray: `${dash.toFixed(3)} ${gap.toFixed(3)}`,
       dashOffset: -offset,
-      circumference,
     };
     offset += dash;
     return seg;
@@ -64,16 +58,12 @@ export function WeightAllocation({ positions, totalValue }: WeightAllocationProp
   const [isVisible, setIsVisible] = useState(false);
   const hasAnimated = useRef(false);
 
-  // Trigger draw-in animation on mount
   useEffect(() => {
     if (hasAnimated.current) return;
     hasAnimated.current = true;
-    // Small delay to allow DOM paint before animation
     const frame = requestAnimationFrame(() => setIsVisible(true));
     return () => cancelAnimationFrame(frame);
   }, []);
-
-  const centerCountRef = useCountUp(totalValue, 900);
 
   if (positions.length === 0) return null;
 
@@ -85,8 +75,11 @@ export function WeightAllocation({ positions, totalValue }: WeightAllocationProp
   const strokeWidth = 20;
 
   const segments = buildSegments(positions, totalValue);
-
   const hovered = hoveredSymbol ? segments.find(s => s.symbol === hoveredSymbol) : null;
+
+  const formattedTotal = totalValue >= 1000
+    ? `$${(totalValue / 1000).toFixed(0)}k`
+    : `$${totalValue.toFixed(0)}`;
 
   return (
     <Card title="Weight Allocation">
@@ -174,36 +167,19 @@ export function WeightAllocation({ positions, totalValue }: WeightAllocationProp
               </>
             ) : (
               <>
-                {/* Center total with countUp — increased font size */}
-                <foreignObject x={cx - 35} y={cy - 14} width="70" height="20">
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                    <span
-                      ref={centerCountRef}
-                      style={{
-                        fontSize: '16px',
-                        fontWeight: 700,
-                        color: 'var(--color-text)',
-                        fontFamily: 'inherit',
-                      }}
-                    >
-                      0
-                    </span>
-                  </div>
-                </foreignObject>
-                {/* We prepend the $ sign separately for better alignment */}
                 <text
-                  x={cx - 28}
-                  y={cy + 2}
+                  x={cx}
+                  y={cy - 2}
                   textAnchor="middle"
-                  fontSize="10"
+                  fontSize="16"
                   fontWeight="700"
                   fill="var(--color-text)"
                 >
-                  $
+                  {formattedTotal}
                 </text>
                 <text
                   x={cx}
-                  y={cy + 18}
+                  y={cy + 14}
                   textAnchor="middle"
                   fontSize="9"
                   fill="var(--color-text-muted)"

@@ -126,14 +126,14 @@ export function CVRFCycleHistory() {
       {/* Summary Stats */}
       {cycles.length > 0 && (
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg">
+          <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(to right, rgba(123, 44, 255, 0.08), rgba(123, 44, 255, 0.04))' }}>
             <div className="flex items-center gap-1.5 text-[var(--color-accent)] mb-1">
               <Lightbulb className="w-4 h-4" />
               <span className="text-xs">Total Insights</span>
             </div>
             <div className="text-2xl font-bold text-[var(--color-accent)]">{totalInsights}</div>
           </div>
-          <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+          <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(to right, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.04))' }}>
             <div className="flex items-center gap-1.5 text-[var(--color-positive)] mb-1">
               <TrendingUp className="w-4 h-4" />
               <span className="text-xs">Avg Improvement</span>

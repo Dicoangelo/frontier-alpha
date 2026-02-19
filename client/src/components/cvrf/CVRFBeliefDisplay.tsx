@@ -106,7 +106,7 @@ export function CVRFBeliefDisplay() {
       </div>
 
       {/* Market Regime */}
-      <div className="mb-6 p-4 bg-gradient-to-r from-[var(--color-bg-tertiary)] to-indigo-50 rounded-lg">
+      <div className="mb-6 p-4 rounded-lg" style={{ background: 'linear-gradient(to right, var(--color-bg-tertiary), rgba(123, 44, 255, 0.06))' }}>
         <div className="text-xs text-[var(--color-text-muted)] mb-1">Market Regime</div>
         <div className="flex items-center gap-3">
           <span className="text-2xl">{regime.icon}</span>

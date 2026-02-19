@@ -108,7 +108,7 @@ export function MetaPromptCard() {
   const hasFactorAdjustments = Object.keys(metaPrompt.factorAdjustments).length > 0;
 
   return (
-    <div className="bg-gradient-to-br from-[var(--color-bg)] to-indigo-50/30 rounded-xl border border-[rgba(99, 102, 241,0.2)] p-6">
+    <div className="rounded-xl border border-[rgba(123, 44, 255, 0.2)] p-6" style={{ background: 'linear-gradient(to bottom right, var(--color-bg), rgba(123, 44, 255, 0.04))' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">

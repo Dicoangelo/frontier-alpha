@@ -91,7 +91,7 @@ export function FloatingHelpButton({
         fixed ${positionClasses[position]} z-40
         w-12 h-12
         flex items-center justify-center
-        bg-gradient-to-r from-blue-600 to-purple-600
+        bg-[var(--color-accent)]
         text-white
         rounded-full shadow-lg hover:shadow-xl
         transition-all duration-200

@@ -1,0 +1,123 @@
+{
+  "name": "Trading Tab UI/UX Upgrade",
+  "version": "1.0.0",
+  "goal": "Upgrade Trading tab from 14/25 to 24/25 — Bloomberg-grade execution terminal with polished chrome, animations, price visualization, and CSS variable compliance",
+  "currentScore": "14/25 — Visual:3 Responsive:3 Interactive:3 DataViz:2 States:3",
+  "targetScore": "24/25 — Visual:5 Responsive:5 Interactive:5 DataViz:4 States:5",
+  "lanes": {
+    "A": {
+      "name": "trading-chrome",
+      "agent": "trading-chrome",
+      "description": "Icon polish, CSS variable compliance, animations, market status, position sparklines",
+      "files_owned": [
+        "client/src/pages/Trading.tsx"
+      ]
+    },
+    "B": {
+      "name": "trading-dataviz",
+      "agent": "trading-dataviz",
+      "description": "Price chart widget, order history timeline polish",
+      "files_owned": [
+        "client/src/components/trading/PriceChart.tsx",
+        "client/src/components/trading/TradeExecutor.tsx"
+      ]
+    }
+  },
+  "stories": [
+    {
+      "id": "TRADE-001",
+      "title": "Replace hardcoded colors + icon polish",
+      "lane": "A",
+      "priority": "P0",
+      "description": "Replace all hardcoded Tailwind colors with CSS variables. Replace * asterisk bullets in Trading Tips with Lucide CheckCircle2 icons. Replace &times; HTML entity in ConnectionSettingsModal close button with Lucide X icon.",
+      "files_to_modify": ["client/src/pages/Trading.tsx"],
+      "acceptanceCriteria": [
+        "Zero hardcoded green-500/red-500/blue-600/amber-600/indigo-600/purple-600 etc in Trading.tsx",
+        "All colors use var(--color-*) CSS variables or opacity variants of them",
+        "Trading Tips bullets use Lucide icons not asterisks",
+        "ConnectionSettingsModal close button uses Lucide X icon",
+        "All external link colors use var(--color-info) or var(--color-accent)"
+      ]
+    },
+    {
+      "id": "TRADE-002",
+      "title": "Staggered entry animations + skeleton loading",
+      "lane": "A",
+      "priority": "P0",
+      "description": "Add skeleton loading state for initial page render. Add staggered fade-in-up animations on all Card sections. Modal should animate in with scale-in + backdrop fade.",
+      "files_to_modify": ["client/src/pages/Trading.tsx"],
+      "acceptanceCriteria": [
+        "Page shows skeleton placeholders while useTrading loads",
+        "Each Card section has animate-fade-in-up with staggered delays (50ms increments)",
+        "ConnectionSettingsModal backdrop fades in, card scales in",
+        "Content visible transition matches Dashboard pattern"
+      ]
+    },
+    {
+      "id": "TRADE-003",
+      "title": "Mini price chart widget",
+      "lane": "B",
+      "priority": "P1",
+      "description": "Create a pure SVG mini price chart that shows intraday price movement for the selected symbol. Uses seeded random data for demo mode. Placed in sidebar above positions.",
+      "files_to_modify": [
+        "client/src/components/trading/PriceChart.tsx",
+        "client/src/pages/Trading.tsx"
+      ],
+      "acceptanceCriteria": [
+        "New PriceChart.tsx component with pure SVG (no external libs)",
+        "Shows 20-point sparkline with gradient fill below the line",
+        "Green line/fill when price up, red when down",
+        "Hover shows crosshair with price tooltip",
+        "Uses CSS variables for all colors",
+        "Responsive — fills container width",
+        "Integrated into Trading.tsx sidebar"
+      ]
+    },
+    {
+      "id": "TRADE-004",
+      "title": "Market status progress bar + countdown",
+      "lane": "A",
+      "priority": "P1",
+      "description": "Upgrade MarketStatusDisplay with a progress bar showing trading day elapsed and a countdown timer to market close/open.",
+      "files_to_modify": ["client/src/pages/Trading.tsx"],
+      "acceptanceCriteria": [
+        "Progress bar shows % of trading day elapsed (9:30 AM - 4:00 PM ET)",
+        "Countdown timer shows HH:MM:SS to next market event (open or close)",
+        "Pre-market (4:00-9:30) and after-hours (4:00-8:00) phases labeled",
+        "Progress bar uses CSS variable colors with gradient fill",
+        "Timer updates every second via setInterval"
+      ]
+    },
+    {
+      "id": "TRADE-005",
+      "title": "Position sparklines + hover polish",
+      "lane": "A",
+      "priority": "P1",
+      "description": "Add mini SVG sparklines to each position card in the sidebar. Add hover:shadow-lg transition and active scale feedback on position buttons.",
+      "files_to_modify": ["client/src/pages/Trading.tsx"],
+      "acceptanceCriteria": [
+        "Each position card shows a 40x16 SVG sparkline (same pattern as Dashboard PositionList)",
+        "Sparklines use seeded random data per symbol for consistent display",
+        "Position cards have hover:shadow-lg transition-shadow duration-200",
+        "Position cards have click-feedback (active:scale-[0.98])",
+        "Selected position has animate-pulse-subtle on border"
+      ]
+    },
+    {
+      "id": "TRADE-006",
+      "title": "Order history timeline polish",
+      "lane": "B",
+      "priority": "P2",
+      "description": "Polish the orders list in TradeExecutor with timeline-style layout, timestamp display, staggered animations on each order row.",
+      "files_to_modify": ["client/src/components/trading/TradeExecutor.tsx"],
+      "acceptanceCriteria": [
+        "Order rows have staggered fade-in-up animation (50ms delay per row)",
+        "Each order shows relative timestamp (e.g. '2m ago', '1h ago')",
+        "Timeline dot connector between orders (vertical line with dots)",
+        "Replace all hardcoded colors in TradeExecutor.tsx with CSS variables",
+        "Hover effect on order rows: shadow-lg transition",
+        "Empty state icon is properly sized and animated"
+      ]
+    }
+  ]
+}

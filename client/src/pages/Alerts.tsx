@@ -174,6 +174,8 @@ export function Alerts() {
     return acc;
   }, {} as Record<string, number>);
 
+  const totalActive = Object.values(severityCounts).reduce((a, b) => a + b, 0);
+
   // Show skeleton while loading
   if (isLoading) {
     return (
@@ -203,13 +205,21 @@ export function Alerts() {
   return (
     <div className="space-y-6">
       {errorBanner}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+
+      {/* Header — delay 0ms */}
+      <div
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up"
+        style={{ animationDelay: '0ms' }}
+      >
         <div className="flex items-center gap-3">
           <Bell className="w-6 h-6 text-[var(--color-text-secondary)]" />
           <h1 className="text-2xl font-bold text-[var(--color-text)]">Alerts</h1>
-          {Object.values(severityCounts).reduce((a, b) => a + b, 0) > 0 && (
-            <span className="px-2 py-1 text-sm font-medium bg-red-500/10 text-red-400 rounded-full">
-              {Object.values(severityCounts).reduce((a, b) => a + b, 0)} active
+          {totalActive > 0 && (
+            <span
+              className="px-2 py-1 text-sm font-medium rounded-full text-[var(--color-negative)]"
+              style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+            >
+              {totalActive} active
             </span>
           )}
         </div>
@@ -219,13 +229,16 @@ export function Alerts() {
         </Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Summary Cards — delay 50ms */}
+      <div
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up"
+        style={{ animationDelay: '50ms' }}
+      >
         <SummaryCard
           label="Critical"
           count={severityCounts.critical || 0}
           indicator="🔴"
-          color="bg-red-500/10 border-red-500/20"
+          bgStyle={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)' }}
           onClick={() => setSeverityFilter(severityFilter === 'critical' ? 'all' : 'critical')}
           active={severityFilter === 'critical'}
         />
@@ -233,7 +246,7 @@ export function Alerts() {
           label="High"
           count={severityCounts.high || 0}
           indicator="🟠"
-          color="bg-orange-500/10 border-orange-500/20"
+          bgStyle={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', borderColor: 'rgba(249, 115, 22, 0.2)' }}
           onClick={() => setSeverityFilter(severityFilter === 'high' ? 'all' : 'high')}
           active={severityFilter === 'high'}
         />
@@ -241,7 +254,7 @@ export function Alerts() {
           label="Medium"
           count={severityCounts.medium || 0}
           indicator="🟡"
-          color="bg-yellow-500/10 border-yellow-500/20"
+          bgStyle={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.2)' }}
           onClick={() => setSeverityFilter(severityFilter === 'medium' ? 'all' : 'medium')}
           active={severityFilter === 'medium'}
         />
@@ -249,14 +262,17 @@ export function Alerts() {
           label="Low"
           count={severityCounts.low || 0}
           indicator="🔵"
-          color="bg-blue-500/10 border-blue-500/20"
+          bgStyle={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: 'rgba(59, 130, 246, 0.2)' }}
           onClick={() => setSeverityFilter(severityFilter === 'low' ? 'all' : 'low')}
           active={severityFilter === 'low'}
         />
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4">
+      {/* Filters — delay 100ms */}
+      <div
+        className="flex flex-wrap items-center gap-4 animate-fade-in-up"
+        style={{ animationDelay: '100ms' }}
+      >
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-[var(--color-text-muted)]" />
           <span className="text-sm text-[var(--color-text-secondary)]">Filter:</span>
@@ -273,38 +289,53 @@ export function Alerts() {
         {severityFilter !== 'all' && (
           <button
             onClick={() => setSeverityFilter('all')}
-            className="text-sm text-blue-600 hover:text-blue-700 min-h-[44px] px-2"
+            className="text-sm min-h-[44px] px-2 text-[var(--color-accent)] hover:opacity-80"
           >
             Clear filter
           </button>
         )}
       </div>
 
-      {/* Factor Drift Monitor */}
-      <FactorDriftAlert
-        exposures={factorExposures}
-        onAlertGenerated={handleFactorDriftAlerts}
-      />
+      {/* Factor Drift Monitor — delay 150ms */}
+      <div
+        className="animate-fade-in-up"
+        style={{ animationDelay: '150ms' }}
+      >
+        <FactorDriftAlert
+          exposures={factorExposures}
+          onAlertGenerated={handleFactorDriftAlerts}
+        />
+      </div>
 
-      {/* SEC Filing Alerts */}
-      <SECFilingAlert
-        symbols={portfolioSymbols}
-        maxAlerts={5}
-      />
+      {/* SEC Filing Alerts — delay 200ms */}
+      <div
+        className="animate-fade-in-up"
+        style={{ animationDelay: '200ms' }}
+      >
+        <SECFilingAlert
+          symbols={portfolioSymbols}
+          maxAlerts={5}
+        />
+      </div>
 
-      {/* Alert List */}
-      <Card>
-        {filteredAlerts.length === 0 ? (
-          <EmptyAlerts />
-        ) : (
-          <AlertList
-            alerts={filteredAlerts}
-            onAcknowledge={handleAcknowledge}
-            onAction={handleAction}
-            maxVisible={10}
-          />
-        )}
-      </Card>
+      {/* Alert List — delay 250ms */}
+      <div
+        className="animate-fade-in-up"
+        style={{ animationDelay: '250ms' }}
+      >
+        <Card>
+          {filteredAlerts.length === 0 ? (
+            <EmptyAlerts />
+          ) : (
+            <AlertList
+              alerts={filteredAlerts}
+              onAcknowledge={handleAcknowledge}
+              onAction={handleAction}
+              maxVisible={10}
+            />
+          )}
+        </Card>
+      </div>
     </div>
   );
 }
@@ -313,23 +344,25 @@ function SummaryCard({
   label,
   count,
   indicator,
-  color,
+  bgStyle,
   onClick,
   active,
 }: {
   label: string;
   count: number;
   indicator: string;
-  color: string;
+  bgStyle: React.CSSProperties;
   onClick: () => void;
   active: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`p-4 min-h-[44px] rounded-lg border transition-all ${color} ${
-        active ? 'ring-2 ring-blue-500' : ''
-      } hover:shadow-md`}
+      className="p-4 min-h-[44px] rounded-lg border transition-all duration-200 hover:shadow-md"
+      style={{
+        ...bgStyle,
+        ...(active ? { boxShadow: '0 0 0 2px var(--color-accent)' } : {}),
+      }}
     >
       <div className="flex items-center justify-between mb-2">
         <span className="text-lg">{indicator}</span>

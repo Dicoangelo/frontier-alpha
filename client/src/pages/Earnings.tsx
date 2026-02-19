@@ -80,7 +80,7 @@ export function Earnings() {
   const content = (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)]">Earnings Calendar</h1>
           <p className="text-[var(--color-text-muted)] mt-1">
@@ -101,24 +101,30 @@ export function Earnings() {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-[var(--color-bg)] p-4 rounded-lg border">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '50ms' }}>
+        <div className="bg-[var(--color-bg)] p-4 rounded-lg border hover:shadow-md transition-shadow duration-200">
           <p className="text-sm text-[var(--color-text-muted)]">Total Upcoming</p>
           <p className="text-2xl font-bold text-[var(--color-text)]">{earnings.length}</p>
         </div>
-        <div className={`p-4 rounded-lg border ${earningsToday > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-[var(--color-bg)]'}`}>
+        <div
+          className="p-4 rounded-lg border hover:shadow-md transition-shadow duration-200"
+          style={earningsToday > 0 ? { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)' } : undefined}
+        >
           <p className="text-sm text-[var(--color-text-muted)]">Reporting Today</p>
-          <p className={`text-2xl font-bold ${earningsToday > 0 ? 'text-red-600' : 'text-[var(--color-text)]'}`}>
+          <p className={`text-2xl font-bold ${earningsToday > 0 ? 'text-[var(--color-negative)]' : 'text-[var(--color-text)]'}`}>
             {earningsToday}
           </p>
         </div>
-        <div className={`p-4 rounded-lg border ${earningsThisWeek > 0 ? 'bg-yellow-500/10 border-yellow-500/20' : 'bg-[var(--color-bg)]'}`}>
+        <div
+          className="p-4 rounded-lg border hover:shadow-md transition-shadow duration-200"
+          style={earningsThisWeek > 0 ? { backgroundColor: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.2)' } : undefined}
+        >
           <p className="text-sm text-[var(--color-text-muted)]">This Week</p>
-          <p className={`text-2xl font-bold ${earningsThisWeek > 0 ? 'text-yellow-600' : 'text-[var(--color-text)]'}`}>
+          <p className={`text-2xl font-bold ${earningsThisWeek > 0 ? 'text-[var(--color-warning)]' : 'text-[var(--color-text)]'}`}>
             {earningsThisWeek}
           </p>
         </div>
-        <div className="bg-[var(--color-bg)] p-4 rounded-lg border">
+        <div className="bg-[var(--color-bg)] p-4 rounded-lg border hover:shadow-md transition-shadow duration-200">
           <p className="text-sm text-[var(--color-text-muted)]">Positions Tracked</p>
           <p className="text-2xl font-bold text-[var(--color-text)]">{symbols.length}</p>
         </div>
@@ -126,13 +132,16 @@ export function Earnings() {
 
       {/* Alert for imminent earnings */}
       {earningsToday > 0 && (
-        <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+        <div
+          className="flex items-center gap-3 p-4 rounded-lg border animate-fade-in-up"
+          style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)', animationDelay: '100ms' }}
+        >
+          <AlertCircle className="w-5 h-5 text-[var(--color-negative)] flex-shrink-0" />
           <div>
-            <p className="font-medium text-red-400">
+            <p className="font-medium text-[var(--color-negative)]">
               {earningsToday} position{earningsToday > 1 ? 's' : ''} reporting today
             </p>
-            <p className="text-sm text-red-400">
+            <p className="text-sm text-[var(--color-negative)]">
               Review forecasts and consider adjusting positions before market close
             </p>
           </div>
@@ -152,16 +161,18 @@ export function Earnings() {
 
       {/* Heatmap */}
       {symbols.length > 0 && earnings.length > 0 && (
-        <EarningsHeatmap
-          earnings={earnings}
-          onSelect={setSelectedSymbol}
-          selectedSymbol={selectedSymbol}
-        />
+        <div className="animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+          <EarningsHeatmap
+            earnings={earnings}
+            onSelect={setSelectedSymbol}
+            selectedSymbol={selectedSymbol}
+          />
+        </div>
       )}
 
       {/* Main Content - Calendar + Forecast */}
       {symbols.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
           <EarningsCalendar
             earnings={earnings}
             isLoading={isLoading}
@@ -180,16 +191,21 @@ export function Earnings() {
 
       {/* CVRF Belief Impact */}
       {symbols.length > 0 && (
-        <BeliefImpactPanel
-          earnings={earnings}
-          selectedSymbol={selectedSymbol}
-        />
+        <div className="animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+          <BeliefImpactPanel
+            earnings={earnings}
+            selectedSymbol={selectedSymbol}
+          />
+        </div>
       )}
 
       {/* No upcoming earnings message */}
       {!isLoading && symbols.length > 0 && earnings.length === 0 && (
-        <div className="bg-blue-500/10 p-4 rounded-lg border border-blue-500/20">
-          <p className="text-blue-400">
+        <div
+          className="p-4 rounded-lg border"
+          style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: 'rgba(59, 130, 246, 0.2)' }}
+        >
+          <p className="text-[var(--color-info)]">
             None of your {symbols.length} positions have earnings scheduled in the next {daysAhead} days.
           </p>
         </div>

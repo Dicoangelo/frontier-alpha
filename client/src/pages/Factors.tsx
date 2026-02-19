@@ -34,10 +34,10 @@ function FactorCategoryCard({ category, factors }: FactorCategoryCardProps) {
   }
 
   return (
-    <Card>
+    <Card className="hover:shadow-lg transition-shadow duration-200">
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-blue-500/10 rounded-lg">
-          <Icon className="w-5 h-5 text-blue-600" />
+        <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(123, 44, 255, 0.1)' }}>
+          <Icon className="w-5 h-5 text-[var(--color-accent)]" />
         </div>
         <div>
           <h3 className="font-semibold text-[var(--color-text)]">{FACTOR_CATEGORY_LABELS[category]}</h3>
@@ -108,7 +108,7 @@ export function Factors() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)]">Factor Analysis</h1>
           <p className="text-[var(--color-text-muted)] mt-1">
@@ -125,20 +125,20 @@ export function Factors() {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-[var(--color-bg)] p-4 rounded-lg border">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '50ms' }}>
+        <div className="bg-[var(--color-bg)] p-4 rounded-lg border hover:shadow-md transition-shadow duration-200">
           <p className="text-sm text-[var(--color-text-muted)]">Total Factors</p>
           <p className="text-2xl font-bold text-[var(--color-text)]">{totalFactors}</p>
         </div>
-        <div className="bg-[var(--color-bg)] p-4 rounded-lg border">
+        <div className="bg-[var(--color-bg)] p-4 rounded-lg border hover:shadow-md transition-shadow duration-200">
           <p className="text-sm text-[var(--color-text-muted)]">Significant (|t| &gt; 1.96)</p>
-          <p className="text-2xl font-bold text-blue-600">{significantFactors}</p>
+          <p className="text-2xl font-bold text-[var(--color-accent)]">{significantFactors}</p>
         </div>
-        <div className="bg-[var(--color-bg)] p-4 rounded-lg border">
+        <div className="bg-[var(--color-bg)] p-4 rounded-lg border hover:shadow-md transition-shadow duration-200">
           <p className="text-sm text-[var(--color-text-muted)]">Positions Analyzed</p>
           <p className="text-2xl font-bold text-[var(--color-text)]">{symbols.length}</p>
         </div>
-        <div className="bg-[var(--color-bg)] p-4 rounded-lg border">
+        <div className="bg-[var(--color-bg)] p-4 rounded-lg border hover:shadow-md transition-shadow duration-200">
           <p className="text-sm text-[var(--color-text-muted)]">Last Updated</p>
           <p className="text-sm font-medium text-[var(--color-text)]">
             {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'Never'}
@@ -147,7 +147,7 @@ export function Factors() {
       </div>
 
       {/* Category Filters */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
         <Button
           variant={selectedCategory === null ? 'primary' : 'outline'}
           size="sm"
@@ -202,7 +202,7 @@ export function Factors() {
 
       {/* Factor Categories Grid */}
       {!isLoading && symbols.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
           {displayCategories.map(category => (
             <FactorCategoryCard
               key={category}
@@ -215,9 +215,16 @@ export function Factors() {
 
       {/* AI Insight */}
       {insight && (
-        <div className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
-          <p className="text-sm font-medium text-blue-400 mb-2">AI Insight</p>
-          <p className="text-sm text-blue-500">{insight}</p>
+        <div
+          className="p-4 rounded-lg border animate-fade-in-up"
+          style={{
+            background: 'linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(123, 44, 255, 0.1))',
+            borderColor: 'rgba(59, 130, 246, 0.2)',
+            animationDelay: '200ms',
+          }}
+        >
+          <p className="text-sm font-medium text-[var(--color-accent)] mb-2">AI Insight</p>
+          <p className="text-sm text-[var(--color-accent)]">{insight}</p>
         </div>
       )}
     </div>

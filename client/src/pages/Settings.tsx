@@ -88,7 +88,8 @@ export function Settings() {
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="flex items-center justify-between">
+      {/* Header — delay 0ms */}
+      <div className="flex items-center justify-between animate-fade-in-up" style={{ animationDelay: '0ms' }}>
         <h1 className="text-2xl font-bold text-[var(--color-text)]">Settings</h1>
         {hasChanges && (
           <Button onClick={handleSave} disabled={updateMutation.isPending}>
@@ -98,7 +99,8 @@ export function Settings() {
         )}
       </div>
 
-      <Card className="p-6">
+      {/* Profile card — delay 50ms */}
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '50ms' }}>
         <div className="flex items-center gap-3 mb-6">
           <User className="w-5 h-5 text-[var(--color-text-muted)]" />
           <h2 className="text-lg font-semibold">Profile</h2>
@@ -122,13 +124,14 @@ export function Settings() {
               value={settings.display_name || ''}
               onChange={(e) => handleChange('display_name', e.target.value)}
               placeholder="Your name"
-              className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-accent)]"
             />
           </div>
         </div>
       </Card>
 
-      <Card className="p-6">
+      {/* Risk preferences card — delay 100ms */}
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '100ms' }}>
         <div className="flex items-center gap-3 mb-6">
           <Shield className="w-5 h-5 text-[var(--color-text-muted)]" />
           <h2 className="text-lg font-semibold">Risk Preferences</h2>
@@ -142,11 +145,18 @@ export function Settings() {
                 <button
                   key={level}
                   onClick={() => handleChange('risk_tolerance', level)}
-                  className={`flex-1 py-3 px-4 min-h-[44px] rounded-lg border-2 capitalize transition ${
+                  className="flex-1 py-3 px-4 min-h-[44px] rounded-lg border-2 capitalize transition hover:shadow-sm transition-all duration-200"
+                  style={
                     settings.risk_tolerance === level
-                      ? 'border-blue-500 bg-blue-500/10 text-blue-700'
-                      : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
-                  }`}
+                      ? {
+                          borderColor: 'var(--color-accent)',
+                          backgroundColor: 'rgba(123, 44, 255, 0.1)',
+                          color: 'var(--color-accent)',
+                        }
+                      : {
+                          borderColor: 'var(--color-border)',
+                        }
+                  }
                 >
                   {level}
                 </button>
@@ -167,7 +177,7 @@ export function Settings() {
                   step="5"
                   value={settings.max_position_pct}
                   onChange={(e) => handleChange('max_position_pct', parseFloat(e.target.value))}
-                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg pr-8"
+                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg pr-8 focus:ring-2 focus:ring-[var(--color-accent)]"
                 />
                 <span className="absolute right-3 top-2 text-[var(--color-text-muted)]">%</span>
               </div>
@@ -185,7 +195,7 @@ export function Settings() {
                   step="1"
                   value={settings.stop_loss_pct}
                   onChange={(e) => handleChange('stop_loss_pct', parseFloat(e.target.value))}
-                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg pr-8"
+                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg pr-8 focus:ring-2 focus:ring-[var(--color-accent)]"
                 />
                 <span className="absolute right-3 top-2 text-[var(--color-text-muted)]">%</span>
               </div>
@@ -203,7 +213,7 @@ export function Settings() {
                   step="5"
                   value={settings.take_profit_pct}
                   onChange={(e) => handleChange('take_profit_pct', parseFloat(e.target.value))}
-                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg pr-8"
+                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg pr-8 focus:ring-2 focus:ring-[var(--color-accent)]"
                 />
                 <span className="absolute right-3 top-2 text-[var(--color-text-muted)]">%</span>
               </div>
@@ -212,7 +222,8 @@ export function Settings() {
         </div>
       </Card>
 
-      <Card className="p-6">
+      {/* Notifications card — delay 150ms */}
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '150ms' }}>
         <div className="flex items-center gap-3 mb-6">
           <Bell className="w-5 h-5 text-[var(--color-text-muted)]" />
           <h2 className="text-lg font-semibold">Notifications</h2>
@@ -232,13 +243,14 @@ export function Settings() {
               type="checkbox"
               checked={settings.email_alerts}
               onChange={(e) => handleChange('email_alerts', e.target.checked)}
-              className="w-5 h-5 rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
+              className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
             />
           </label>
         </div>
       </Card>
 
-      <Card className="p-6">
+      {/* Subscription card — delay 200ms */}
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '200ms' }}>
         <div className="flex items-center gap-3 mb-6">
           <CreditCard className="w-5 h-5 text-[var(--color-text-muted)]" />
           <h2 className="text-lg font-semibold">Subscription</h2>
@@ -283,7 +295,8 @@ export function Settings() {
         </div>
       </Card>
 
-      <Card className="p-6">
+      {/* API Keys card — delay 250ms */}
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '250ms' }}>
         <div className="flex items-center gap-3 mb-6">
           <Key className="w-5 h-5 text-[var(--color-text-muted)]" />
           <h2 className="text-lg font-semibold">API Keys</h2>
@@ -291,10 +304,14 @@ export function Settings() {
         <APIKeys />
       </Card>
 
-      <Card className="p-6 border-red-500/20">
+      {/* Danger zone card — delay 300ms */}
+      <Card
+        className="p-6 hover:shadow-md transition-shadow animate-fade-in-up"
+        style={{ borderColor: 'rgba(239, 68, 68, 0.2)', animationDelay: '300ms' }}
+      >
         <div className="flex items-center gap-3 mb-6">
-          <AlertTriangle className="w-5 h-5 text-red-500" />
-          <h2 className="text-lg font-semibold text-red-400">Danger Zone</h2>
+          <AlertTriangle className="w-5 h-5 text-[var(--color-negative)]" />
+          <h2 className="text-lg font-semibold text-[var(--color-negative)]">Danger Zone</h2>
         </div>
 
         <div className="flex items-center justify-between">

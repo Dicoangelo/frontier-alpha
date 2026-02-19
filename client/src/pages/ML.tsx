@@ -75,11 +75,34 @@ interface WaterfallBar {
 
 const REGIMES: MarketRegime[] = ['bull', 'bear', 'sideways', 'volatile'];
 
-const REGIME_CONFIG: Record<MarketRegime, { label: string; color: string; bgColor: string; icon: typeof TrendingUp }> = {
-  bull: { label: 'Bull', color: 'text-green-600', bgColor: 'bg-green-500/10', icon: TrendingUp },
-  bear: { label: 'Bear', color: 'text-red-600', bgColor: 'bg-red-500/10', icon: AlertTriangle },
-  sideways: { label: 'Sideways', color: 'text-yellow-600', bgColor: 'bg-yellow-500/10', icon: Activity },
-  volatile: { label: 'Volatile', color: 'text-purple-600', bgColor: 'bg-purple-500/10', icon: Zap },
+const REGIME_CONFIG: Record<
+  MarketRegime,
+  { label: string; color: string; bgColor: string; icon: typeof TrendingUp }
+> = {
+  bull: {
+    label: 'Bull',
+    color: 'var(--color-positive)',
+    bgColor: 'rgba(16, 185, 129, 0.1)',
+    icon: TrendingUp,
+  },
+  bear: {
+    label: 'Bear',
+    color: 'var(--color-negative)',
+    bgColor: 'rgba(239, 68, 68, 0.1)',
+    icon: AlertTriangle,
+  },
+  sideways: {
+    label: 'Sideways',
+    color: 'var(--color-warning)',
+    bgColor: 'rgba(245, 158, 11, 0.1)',
+    icon: Activity,
+  },
+  volatile: {
+    label: 'Volatile',
+    color: 'var(--color-accent)',
+    bgColor: 'rgba(123, 44, 255, 0.1)',
+    icon: Zap,
+  },
 };
 
 const MOCK_REGIME: RegimeState = {
@@ -180,29 +203,58 @@ interface MetricCardProps {
   color?: string;
 }
 
-function MetricCard({ label, value, subtitle, icon, color = 'text-[var(--color-text)]' }: MetricCardProps) {
+function MetricCard({ label, value, subtitle, icon, color }: MetricCardProps) {
   return (
-    <div className="p-4 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)]">
+    <div
+      className="p-4 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] hover:shadow-lg transition-shadow duration-200"
+      style={{ color: color ?? 'var(--color-text)' }}
+    >
       <div className="flex items-center gap-2 text-[var(--color-text-muted)] mb-2">
         {icon}
         <span className="text-xs">{label}</span>
       </div>
-      <div className={`text-2xl font-bold ${color}`}>{value}</div>
+      <div className="text-2xl font-bold" style={{ color: color ?? 'var(--color-text)' }}>
+        {value}
+      </div>
       {subtitle && <div className="text-xs text-[var(--color-text-muted)] mt-1">{subtitle}</div>}
     </div>
   );
 }
 
 function StatusBadge({ status }: { status: ModelStatus }) {
-  const config: Record<ModelStatus, { label: string; className: string }> = {
-    deployed: { label: 'Deployed', className: 'bg-green-500/10 text-green-600 border-green-500/20' },
-    validated: { label: 'Validated', className: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
-    training: { label: 'Training', className: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' },
-    archived: { label: 'Archived', className: 'bg-gray-500/10 text-gray-500 border-gray-500/20' },
+  type StatusStyle = { label: string; color: string; bgColor: string; borderColor: string };
+  const config: Record<ModelStatus, StatusStyle> = {
+    deployed: {
+      label: 'Deployed',
+      color: 'var(--color-positive)',
+      bgColor: 'rgba(16, 185, 129, 0.1)',
+      borderColor: 'rgba(16, 185, 129, 0.2)',
+    },
+    validated: {
+      label: 'Validated',
+      color: 'var(--color-info)',
+      bgColor: 'rgba(59, 130, 246, 0.1)',
+      borderColor: 'rgba(59, 130, 246, 0.2)',
+    },
+    training: {
+      label: 'Training',
+      color: 'var(--color-warning)',
+      bgColor: 'rgba(245, 158, 11, 0.1)',
+      borderColor: 'rgba(245, 158, 11, 0.2)',
+    },
+    archived: {
+      label: 'Archived',
+      color: 'var(--color-text-muted)',
+      bgColor: 'rgba(107, 114, 128, 0.1)',
+      borderColor: 'rgba(107, 114, 128, 0.2)',
+    },
   };
   const c = config[status];
   return (
-    <span className={`px-2 py-0.5 text-xs font-medium rounded-full border ${c.className}`}>
+    <span
+      className="px-2 py-0.5 text-xs font-medium rounded-full border"
+      style={{ color: c.color, backgroundColor: c.bgColor, borderColor: c.borderColor }}
+    >
       {c.label}
     </span>
   );
@@ -221,12 +273,12 @@ function RegimeSection({ regime }: { regime: RegimeState }) {
     <Card>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <Gauge className="w-5 h-5 text-indigo-500" />
+          <Gauge className="w-5 h-5 text-[var(--color-accent)]" />
           Market Regime
         </h2>
         <button
           onClick={() => setShowMatrix(!showMatrix)}
-          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] flex items-center gap-1 transition-colors"
+          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] flex items-center gap-1 transition-colors hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors"
           aria-expanded={showMatrix}
           aria-label="Toggle transition probability matrix"
         >
@@ -237,11 +289,14 @@ function RegimeSection({ regime }: { regime: RegimeState }) {
 
       {/* Current Regime Badge */}
       <div className="flex items-center gap-4 mb-6">
-        <div className={`p-3 rounded-xl ${currentConfig.bgColor}`}>
-          <RegimeIcon className={`w-8 h-8 ${currentConfig.color}`} />
+        <div
+          className="p-3 rounded-xl"
+          style={{ backgroundColor: currentConfig.bgColor }}
+        >
+          <RegimeIcon className="w-8 h-8" style={{ color: currentConfig.color }} />
         </div>
         <div>
-          <div className={`text-2xl font-bold ${currentConfig.color}`}>
+          <div className="text-2xl font-bold" style={{ color: currentConfig.color }}>
             {currentConfig.label}
           </div>
           <div className="text-sm text-[var(--color-text-muted)]">
@@ -258,8 +313,11 @@ function RegimeSection({ regime }: { regime: RegimeState }) {
         </div>
         <div className="relative h-4 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
           <div
-            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
-            style={{ width: `${confidencePercent}%` }}
+            className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
+            style={{
+              width: `${confidencePercent}%`,
+              background: 'linear-gradient(to right, var(--color-accent), #a855f7)',
+            }}
           />
         </div>
       </div>
@@ -273,26 +331,41 @@ function RegimeSection({ regime }: { regime: RegimeState }) {
           return (
             <div
               key={r}
-              className={`p-3 rounded-lg border transition-colors ${
+              className="p-3 rounded-lg border transition-colors"
+              style={
                 isActive
-                  ? `${rc.bgColor} border-current ${rc.color}`
-                  : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]'
-              }`}
+                  ? {
+                      backgroundColor: rc.bgColor,
+                      borderColor: rc.color,
+                    }
+                  : {
+                      backgroundColor: 'var(--color-bg-secondary)',
+                      borderColor: 'var(--color-border)',
+                    }
+              }
             >
               <div className="flex items-center justify-between">
-                <span className={`text-sm font-medium ${isActive ? rc.color : 'text-[var(--color-text)]'}`}>
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: isActive ? rc.color : 'var(--color-text)' }}
+                >
                   {rc.label}
                 </span>
-                <span className={`text-sm font-mono font-bold ${isActive ? rc.color : 'text-[var(--color-text-muted)]'}`}>
+                <span
+                  className="text-sm font-mono font-bold"
+                  style={{ color: isActive ? rc.color : 'var(--color-text-muted)' }}
+                >
                   {(prob * 100).toFixed(0)}%
                 </span>
               </div>
               <div className="mt-1 h-1.5 bg-[var(--color-bg)] rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all duration-300 ${
-                    isActive ? 'bg-current' : 'bg-[var(--color-text-muted)]'
-                  }`}
-                  style={{ width: `${prob * 100}%`, opacity: isActive ? 1 : 0.3 }}
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{
+                    width: `${prob * 100}%`,
+                    backgroundColor: isActive ? rc.color : 'var(--color-text-muted)',
+                    opacity: isActive ? 1 : 0.3,
+                  }}
                 />
               </div>
             </div>
@@ -308,7 +381,7 @@ function RegimeSection({ regime }: { regime: RegimeState }) {
               <tr>
                 <th className="text-left p-2 text-[var(--color-text-muted)]">From \ To</th>
                 {REGIMES.map((r) => (
-                  <th key={r} className={`p-2 text-center ${REGIME_CONFIG[r].color}`}>
+                  <th key={r} className="p-2 text-center" style={{ color: REGIME_CONFIG[r].color }}>
                     {REGIME_CONFIG[r].label}
                   </th>
                 ))}
@@ -317,7 +390,7 @@ function RegimeSection({ regime }: { regime: RegimeState }) {
             <tbody>
               {regime.transitionMatrix.map((row) => (
                 <tr key={row.from} className="border-t border-[var(--color-border)]">
-                  <td className={`p-2 font-medium ${REGIME_CONFIG[row.from].color}`}>
+                  <td className="p-2 font-medium" style={{ color: REGIME_CONFIG[row.from].color }}>
                     {REGIME_CONFIG[row.from].label}
                   </td>
                   {REGIMES.map((to) => {
@@ -357,7 +430,7 @@ function ModelsSection({ models }: { models: ModelVersion[] }) {
     <Card>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <Cpu className="w-5 h-5 text-indigo-500" />
+          <Cpu className="w-5 h-5 text-[var(--color-accent)]" />
           Model Performance
         </h2>
         <span className="text-sm text-[var(--color-text-muted)]">
@@ -370,7 +443,8 @@ function ModelsSection({ models }: { models: ModelVersion[] }) {
         {displayModels.map((model) => (
           <div
             key={model.id}
-            className="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)]"
+            className="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:shadow-md transition-all duration-200 hover:border-[var(--color-accent)]"
+            style={{ '--tw-border-opacity': '0.3' } as React.CSSProperties}
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
@@ -401,13 +475,13 @@ function ModelsSection({ models }: { models: ModelVersion[] }) {
               </div>
               <div>
                 <div className="text-xs text-[var(--color-text-muted)]">Sharpe +</div>
-                <div className="text-sm font-bold text-green-600">
+                <div className="text-sm font-bold text-[var(--color-positive)]">
                   +{(model.sharpeImprovement * 100).toFixed(0)}%
                 </div>
               </div>
               <div>
                 <div className="text-xs text-[var(--color-text-muted)]">DD Reduction</div>
-                <div className="text-sm font-bold text-blue-600">
+                <div className="text-sm font-bold text-[var(--color-info)]">
                   -{(model.maxDrawdownReduction * 100).toFixed(0)}%
                 </div>
               </div>
@@ -416,8 +490,11 @@ function ModelsSection({ models }: { models: ModelVersion[] }) {
             {/* Accuracy Bar */}
             <div className="mt-3 h-1.5 bg-[var(--color-bg)] rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300"
-                style={{ width: `${model.accuracy * 100}%` }}
+                className="h-full rounded-full transition-all duration-300"
+                style={{
+                  width: `${model.accuracy * 100}%`,
+                  background: 'linear-gradient(to right, var(--color-accent), #a855f7)',
+                }}
               />
             </div>
           </div>
@@ -427,7 +504,7 @@ function ModelsSection({ models }: { models: ModelVersion[] }) {
       {models.length > 3 && (
         <button
           onClick={() => setShowAll(!showAll)}
-          className="mt-3 w-full py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center justify-center gap-1"
+          className="mt-3 w-full py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center justify-center gap-1 hover:bg-[var(--color-bg-secondary)] rounded-lg"
         >
           {showAll ? (
             <>Show less <ChevronUp className="w-4 h-4" /></>
@@ -463,16 +540,16 @@ function AttributionSection({
   }, [waterfall]);
 
   const barColors: Record<string, string> = {
-    positive: '#22c55e',
-    negative: '#ef4444',
-    total: '#6366f1',
+    positive: 'var(--color-positive)',
+    negative: 'var(--color-negative)',
+    total: 'var(--color-accent)',
     residual: '#a855f7',
   };
 
   return (
     <Card>
       <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2 mb-4">
-        <Target className="w-5 h-5 text-indigo-500" />
+        <Target className="w-5 h-5 text-[var(--color-accent)]" />
         Factor Attribution
       </h2>
 
@@ -525,17 +602,20 @@ function AttributionSection({
           {topDrivers.map((driver) => {
             const isPositive = driver.direction === 'positive';
             return (
-              <div key={driver.factor} className="flex items-center justify-between">
+              <div
+                key={driver.factor}
+                className="flex items-center justify-between hover:bg-[var(--color-bg-secondary)] rounded-lg px-2 -mx-2 transition-colors duration-150"
+              >
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-2 h-6 rounded-full ${isPositive ? 'bg-green-500' : 'bg-red-500'}`}
+                    className="w-2 h-6 rounded-full"
+                    style={{ backgroundColor: isPositive ? 'var(--color-positive)' : 'var(--color-negative)' }}
                   />
                   <span className="text-sm text-[var(--color-text)]">{driver.factor}</span>
                 </div>
                 <span
-                  className={`text-sm font-mono font-bold ${
-                    isPositive ? 'text-green-600' : 'text-red-600'
-                  }`}
+                  className="text-sm font-mono font-bold"
+                  style={{ color: isPositive ? 'var(--color-positive)' : 'var(--color-negative)' }}
                 >
                   {driver.contribution >= 0 ? '+' : ''}
                   {(driver.contribution * 100).toFixed(2)}%
@@ -567,7 +647,10 @@ export function ML() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up"
+        style={{ animationDelay: '0ms', animationFillMode: 'both' }}
+      >
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)]">Machine Learning</h1>
           <p className="text-[var(--color-text-muted)] mt-1">
@@ -581,7 +664,10 @@ export function ML() {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up"
+        style={{ animationDelay: '50ms', animationFillMode: 'both' }}
+      >
         <MetricCard
           label="Current Regime"
           value={REGIME_CONFIG[regime.regime].label}
@@ -594,14 +680,14 @@ export function ML() {
           value={`${(bestAccuracy * 100).toFixed(1)}%`}
           subtitle="Deployed model"
           icon={<Target className="w-4 h-4" />}
-          color="text-indigo-600"
+          color="var(--color-accent)"
         />
         <MetricCard
           label="Sharpe Improvement"
           value={`+${(avgSharpeImprovement * 100).toFixed(0)}%`}
           subtitle="Avg deployed"
           icon={<TrendingUp className="w-4 h-4" />}
-          color="text-green-600"
+          color="var(--color-positive)"
         />
         <MetricCard
           label="Last Trained"
@@ -614,17 +700,26 @@ export function ML() {
       {/* Three-section grid: Regime | Models | Attribution */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Regime Section */}
-        <div className="lg:col-span-4">
+        <div
+          className="lg:col-span-4 animate-fade-in-up"
+          style={{ animationDelay: '100ms', animationFillMode: 'both' }}
+        >
           <RegimeSection regime={regime} />
         </div>
 
         {/* Models Section */}
-        <div className="lg:col-span-4">
+        <div
+          className="lg:col-span-4 animate-fade-in-up"
+          style={{ animationDelay: '150ms', animationFillMode: 'both' }}
+        >
           <ModelsSection models={models} />
         </div>
 
         {/* Attribution Section */}
-        <div className="lg:col-span-4">
+        <div
+          className="lg:col-span-4 animate-fade-in-up"
+          style={{ animationDelay: '200ms', animationFillMode: 'both' }}
+        >
           <AttributionSection waterfall={waterfall} topDrivers={topDrivers} />
         </div>
       </div>

@@ -96,7 +96,7 @@ interface MetricCardProps {
 
 function MetricCard({ label, value, subtitle, icon, color = 'text-[var(--color-text)]' }: MetricCardProps) {
   return (
-    <div className="p-4 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)]">
+    <div className="p-4 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] hover:shadow-lg transition-shadow duration-200">
       <div className="flex items-center gap-2 text-[var(--color-text-muted)] mb-2">
         {icon}
         <span className="text-xs">{label}</span>
@@ -137,10 +137,16 @@ export function Backtest() {
   return (
     <div className="min-h-screen bg-[var(--color-bg-tertiary)]">
       {/* Header */}
-      <div className="bg-[var(--color-bg)] border-b border-[var(--color-border)] px-4 sm:px-6 py-4">
+      <div
+        className="bg-[var(--color-bg)] border-b border-[var(--color-border)] px-4 sm:px-6 py-4 animate-fade-in-up"
+        style={{ animationDelay: '0ms' }}
+      >
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center shrink-0">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: 'var(--color-accent)' }}
+            >
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -163,7 +169,10 @@ export function Backtest() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Configuration Panel */}
         {showConfig && (
-          <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
+          <div
+            className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6 hover:shadow-sm transition-shadow animate-fade-in-up"
+            style={{ animationDelay: '50ms' }}
+          >
             <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">
               Backtest Configuration
             </h3>
@@ -279,7 +288,8 @@ export function Backtest() {
               <button
                 onClick={handleRun}
                 disabled={isPending}
-                className="px-6 py-2.5 min-h-[44px] bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+                className="px-6 py-2.5 min-h-[44px] text-white rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 hover:opacity-90"
+                style={{ backgroundColor: 'var(--color-accent)' }}
               >
                 {isPending ? (
                   <>
@@ -304,7 +314,14 @@ export function Backtest() {
 
         {/* Error */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-2 text-red-700">
+          <div
+            className="rounded-xl p-4 flex items-center gap-2 border"
+            style={{
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              borderColor: 'rgba(239, 68, 68, 0.2)',
+              color: 'var(--color-negative)',
+            }}
+          >
             <AlertTriangle className="w-5 h-5 shrink-0" />
             <span className="text-sm">
               Backtest failed: {(error as Error).message}
@@ -316,37 +333,40 @@ export function Backtest() {
         {result && (
           <>
             {/* Metrics Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 animate-fade-in-up"
+              style={{ animationDelay: '100ms' }}
+            >
               <MetricCard
                 label="Total Return"
                 value={`${(result.walkForward.totalReturn * 100).toFixed(2)}%`}
                 icon={<TrendingUp className="w-4 h-4" />}
-                color={result.walkForward.totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}
+                color={result.walkForward.totalReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}
               />
               <MetricCard
                 label="Annualized"
                 value={`${(result.walkForward.annualizedReturn * 100).toFixed(2)}%`}
                 icon={<Activity className="w-4 h-4" />}
-                color={result.walkForward.annualizedReturn >= 0 ? 'text-green-600' : 'text-red-600'}
+                color={result.walkForward.annualizedReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}
               />
               <MetricCard
                 label="Sharpe Ratio"
                 value={result.walkForward.sharpe.toFixed(2)}
                 icon={<Target className="w-4 h-4" />}
-                color="text-indigo-600"
+                color="text-[var(--color-accent)]"
               />
               <MetricCard
                 label="Max Drawdown"
                 value={`${(result.walkForward.maxDrawdown * 100).toFixed(2)}%`}
                 icon={<AlertTriangle className="w-4 h-4" />}
-                color="text-red-600"
+                color="text-[var(--color-negative)]"
               />
               <MetricCard
                 label="Alpha"
                 value={`${(result.alpha * 100).toFixed(2)}%`}
                 subtitle="vs benchmark"
                 icon={<TrendingUp className="w-4 h-4" />}
-                color={result.alpha >= 0 ? 'text-green-600' : 'text-red-600'}
+                color={result.alpha >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}
               />
               <MetricCard
                 label="Duration"
@@ -358,9 +378,12 @@ export function Backtest() {
 
             {/* Equity Curve */}
             {result.equityCurve.length > 0 && (
-              <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
+              <div
+                className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6 animate-fade-in-up"
+                style={{ animationDelay: '150ms' }}
+              >
                 <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-purple-500" />
+                  <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
                   Equity Curve
                 </h3>
                 <div className="h-80">
@@ -388,16 +411,16 @@ export function Backtest() {
                       <Area
                         type="monotone"
                         dataKey="value"
-                        stroke="#7c3aed"
-                        fill="#7c3aed"
+                        stroke="var(--color-accent)"
+                        fill="var(--color-accent)"
                         fillOpacity={0.1}
                         strokeWidth={2}
                       />
                       <ReferenceLine
                         y={config.initialCapital}
-                        stroke="#9ca3af"
+                        stroke="var(--color-text-muted)"
                         strokeDasharray="3 3"
-                        label={{ value: 'Initial', position: 'left', fill: '#9ca3af', fontSize: 11 }}
+                        label={{ value: 'Initial', position: 'left', fill: 'var(--color-text-muted)', fontSize: 11 }}
                       />
                     </ComposedChart>
                   </ResponsiveContainer>
@@ -406,7 +429,10 @@ export function Backtest() {
             )}
 
             {/* Episode Returns + Factor Attribution */}
-            <div className="grid grid-cols-12 gap-6">
+            <div
+              className="grid grid-cols-12 gap-6 animate-fade-in-up"
+              style={{ animationDelay: '200ms' }}
+            >
               {/* Episode Returns */}
               <div className="col-span-12 lg:col-span-7">
                 <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
@@ -432,10 +458,10 @@ export function Backtest() {
                             name === 'return' ? 'OOS Return' : 'Sharpe',
                           ]}
                         />
-                        <ReferenceLine y={0} stroke="#9ca3af" strokeDasharray="2 2" />
-                        <Bar dataKey="return" fill="#818cf8" opacity={0.6} radius={[4, 4, 0, 0]} />
-                        <Line type="monotone" dataKey="sharpe" stroke="#f59e0b" strokeWidth={2} dot={false} yAxisId="right" />
-                        <YAxis yAxisId="right" orientation="right" tick={{ fill: '#f59e0b', fontSize: 11 }} />
+                        <ReferenceLine y={0} stroke="var(--color-text-muted)" strokeDasharray="2 2" />
+                        <Bar dataKey="return" fill="var(--color-accent)" opacity={0.6} radius={[4, 4, 0, 0]} />
+                        <Line type="monotone" dataKey="sharpe" stroke="var(--color-warning)" strokeWidth={2} dot={false} yAxisId="right" />
+                        <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-warning)', fontSize: 11 }} />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>
@@ -450,12 +476,18 @@ export function Backtest() {
                   </h3>
                   <div className="space-y-3">
                     {result.factorExposures.map((factor) => (
-                      <div key={factor.factor} className="flex items-center justify-between">
+                      <div
+                        key={factor.factor}
+                        className="flex items-center justify-between hover:bg-[var(--color-bg-secondary)] rounded-lg px-2 -mx-2 transition-colors duration-150"
+                      >
                         <div className="flex items-center gap-2">
                           <div
-                            className={`w-2 h-8 rounded-full ${
-                              factor.contribution >= 0 ? 'bg-green-500' : 'bg-red-500'
-                            }`}
+                            className="w-2 h-8 rounded-full"
+                            style={{
+                              backgroundColor: factor.contribution >= 0
+                                ? 'var(--color-positive)'
+                                : 'var(--color-negative)',
+                            }}
                           />
                           <div>
                             <div className="text-sm font-medium text-[var(--color-text)] capitalize">
@@ -468,7 +500,9 @@ export function Backtest() {
                         </div>
                         <div
                           className={`font-mono text-sm font-bold ${
-                            factor.contribution >= 0 ? 'text-green-600' : 'text-red-600'
+                            factor.contribution >= 0
+                              ? 'text-[var(--color-positive)]'
+                              : 'text-[var(--color-negative)]'
                           }`}
                         >
                           {factor.contribution >= 0 ? '+' : ''}
@@ -482,14 +516,19 @@ export function Backtest() {
             </div>
 
             {/* Overfit Analysis */}
-            <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
+            <div
+              className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6 animate-fade-in-up"
+              style={{ animationDelay: '250ms' }}
+            >
               <h3 className="text-lg font-semibold text-[var(--color-text)] mb-3">Overfit Analysis</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg text-center">
                   <div className="text-xs text-[var(--color-text-muted)]">Overfit Ratio</div>
                   <div
                     className={`text-xl font-bold ${
-                      result.walkForward.overfitRatio < 1.5 ? 'text-green-600' : 'text-red-600'
+                      result.walkForward.overfitRatio < 1.5
+                        ? 'text-[var(--color-positive)]'
+                        : 'text-[var(--color-negative)]'
                     }`}
                   >
                     {result.walkForward.overfitRatio.toFixed(2)}x
@@ -507,7 +546,7 @@ export function Backtest() {
                 <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg text-center">
                   <div className="text-xs text-[var(--color-text-muted)]">Strategy Alpha</div>
                   <div
-                    className={`text-xl font-bold ${result.alpha >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                    className={`text-xl font-bold ${result.alpha >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}
                   >
                     {result.alpha >= 0 ? '+' : ''}
                     {(result.alpha * 100).toFixed(2)}%
@@ -520,7 +559,10 @@ export function Backtest() {
 
         {/* Empty State */}
         {!result && !isPending && !error && (
-          <div className="text-center py-16">
+          <div
+            className="text-center py-16 animate-fade-in-up"
+            style={{ animationDelay: '100ms' }}
+          >
             <BarChart3 className="w-16 h-16 text-[var(--color-text-muted)] mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-[var(--color-text)] mb-2">
               Configure and run a backtest

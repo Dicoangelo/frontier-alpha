@@ -128,11 +128,12 @@ const COLUMNS: ColumnDef[] = [
 
 // ── Feed Event Config ──────────────────────────────────────────
 
+// SOC-001: color/bgColor use CSS variables and rgba values (no hardcoded Tailwind color classes)
 const FEED_EVENT_CONFIG: Record<FeedEventType, { icon: typeof TrendingUp; color: string; bgColor: string }> = {
-  rebalance: { icon: ArrowUpDown, color: 'text-indigo-600', bgColor: 'bg-indigo-500/10' },
-  new_position: { icon: TrendingUp, color: 'text-green-600', bgColor: 'bg-green-500/10' },
-  close_position: { icon: TrendingDown, color: 'text-red-600', bgColor: 'bg-red-500/10' },
-  milestone: { icon: Star, color: 'text-yellow-600', bgColor: 'bg-yellow-500/10' },
+  rebalance:     { icon: ArrowUpDown,  color: 'var(--color-accent)',   bgColor: 'rgba(123, 44, 255, 0.1)' },
+  new_position:  { icon: TrendingUp,   color: 'var(--color-positive)', bgColor: 'rgba(16, 185, 129, 0.1)' },
+  close_position:{ icon: TrendingDown, color: 'var(--color-negative)', bgColor: 'rgba(239, 68, 68, 0.1)'  },
+  milestone:     { icon: Star,         color: 'var(--color-warning)',  bgColor: 'rgba(245, 158, 11, 0.1)' },
 };
 
 // ── Helper: get metric value from entry ────────────────────────
@@ -154,7 +155,8 @@ function UserProfileCard({ profile, onToggleFollow }: {
   onToggleFollow: (userId: string) => void;
 }) {
   return (
-    <Card>
+    // SOC-003: hover shadow polish
+    <Card className="hover:shadow-lg transition-shadow duration-200">
       <div className="flex flex-col sm:flex-row items-start gap-4">
         {/* Avatar */}
         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-magenta to-brand-cyan flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
@@ -192,13 +194,13 @@ function UserProfileCard({ profile, onToggleFollow }: {
           {/* Stats */}
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1">
-              <TrendingUp className="w-4 h-4 text-green-600" aria-hidden="true" />
-              <span className="text-green-600 font-bold">{(profile.total_return * 100).toFixed(1)}%</span>
+              <TrendingUp className="w-4 h-4 text-[var(--color-positive)]" aria-hidden="true" />
+              <span className="text-[var(--color-positive)] font-bold">{(profile.total_return * 100).toFixed(1)}%</span>
               <span className="text-[var(--color-text-muted)]">return</span>
             </div>
             <div className="flex items-center gap-1">
-              <Shield className="w-4 h-4 text-indigo-600" aria-hidden="true" />
-              <span className="text-indigo-600 font-bold">{profile.sharpe_ratio.toFixed(2)}</span>
+              <Shield className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
+              <span className="text-[var(--color-accent)] font-bold">{profile.sharpe_ratio.toFixed(2)}</span>
               <span className="text-[var(--color-text-muted)]">Sharpe</span>
             </div>
           </div>
@@ -273,14 +275,14 @@ function LeaderboardTab({ entries, onToggleFollow }: {
             {sorted.map((entry) => (
               <tr
                 key={entry.user_id}
-                className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-secondary)] transition-colors"
+                className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-secondary)] transition-all duration-150"
               >
                 {/* Rank */}
                 <td className="px-4 py-3">
                   <span className={`font-bold font-mono ${
-                    entry.rank <= 3 ? 'text-yellow-600' : 'text-[var(--color-text-muted)]'
+                    entry.rank <= 3 ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-muted)]'
                   }`}>
-                    {entry.rank <= 3 ? <Trophy className="w-4 h-4 inline mr-1 text-yellow-500" aria-hidden="true" /> : null}
+                    {entry.rank <= 3 ? <Trophy className="w-4 h-4 inline mr-1 text-[var(--color-warning)]" aria-hidden="true" /> : null}
                     {entry.rank}
                   </span>
                 </td>
@@ -297,7 +299,7 @@ function LeaderboardTab({ entries, onToggleFollow }: {
                         onClick={() => onToggleFollow(entry.user_id)}
                         className={`flex-shrink-0 p-1 rounded-full transition-colors min-h-[28px] min-w-[28px] flex items-center justify-center ${
                           entry.is_following
-                            ? 'text-[var(--color-accent)] hover:text-red-500'
+                            ? 'text-[var(--color-accent)] hover:text-[var(--color-negative)]'
                             : 'text-[var(--color-text-muted)] hover:text-[var(--color-accent)]'
                         }`}
                         aria-label={entry.is_following ? `Unfollow ${entry.display_name}` : `Follow ${entry.display_name}`}
@@ -312,7 +314,10 @@ function LeaderboardTab({ entries, onToggleFollow }: {
 
                 {/* Return */}
                 <td className="px-4 py-3">
-                  <span className={`font-mono font-bold ${entry.total_return >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span
+                    className="font-mono font-bold"
+                    style={{ color: entry.total_return >= 0 ? 'var(--color-positive)' : 'var(--color-negative)' }}
+                  >
                     {COLUMNS[2].format!(entry.total_return)}
                   </span>
                 </td>
@@ -324,7 +329,7 @@ function LeaderboardTab({ entries, onToggleFollow }: {
 
                 {/* Max DD */}
                 <td className="px-4 py-3">
-                  <span className="font-mono text-red-500">
+                  <span className="font-mono" style={{ color: 'var(--color-negative)' }}>
                     {COLUMNS[4].format!(entry.max_drawdown)}
                   </span>
                 </td>
@@ -339,8 +344,11 @@ function LeaderboardTab({ entries, onToggleFollow }: {
                   <div className="flex items-center gap-2">
                     <div className="w-16 h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
-                        style={{ width: `${entry.consistency_score * 100}%` }}
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${entry.consistency_score * 100}%`,
+                          background: 'linear-gradient(to right, var(--color-accent), #a855f7)',
+                        }}
                       />
                     </div>
                     <span className="font-mono text-xs text-[var(--color-text-muted)]">
@@ -368,11 +376,15 @@ function FeedTab({ items }: { items: FeedItem[] }) {
         const relativeTime = formatRelativeTime(item.timestamp);
 
         return (
-          <Card key={item.id}>
+          // SOC-003: hover shadow on feed cards
+          <Card key={item.id} className="hover:shadow-md transition-shadow duration-200">
             <div className="flex gap-3">
-              {/* Event icon */}
-              <div className={`w-10 h-10 rounded-xl ${config.bgColor} flex items-center justify-center flex-shrink-0`}>
-                <EventIcon className={`w-5 h-5 ${config.color}`} aria-hidden="true" />
+              {/* Event icon — SOC-001: bgColor and color applied via inline style */}
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: config.bgColor }}
+              >
+                <EventIcon className="w-5 h-5" style={{ color: config.color }} aria-hidden="true" />
               </div>
 
               <div className="flex-1 min-w-0">
@@ -479,8 +491,11 @@ export function Social() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header — SOC-002: staggered entry animation delay 0ms */}
+      <div
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up"
+        style={{ animationDelay: '0ms', animationFillMode: 'both' }}
+      >
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)]">Social</h1>
           <p className="text-[var(--color-text-muted)] mt-1">
@@ -493,40 +508,56 @@ export function Social() {
         </div>
       </div>
 
-      {/* Featured Profile Card */}
-      {selectedProfile ? (
-        <UserProfileCard profile={selectedProfile} onToggleFollow={handleToggleFollow} />
-      ) : (
-        <UserProfileCard profile={profile} onToggleFollow={handleToggleFollow} />
-      )}
-
-      {/* Tab Selector */}
-      <div className="flex gap-1 p-1 bg-[var(--color-bg-secondary)] rounded-lg w-fit" role="tablist" aria-label="Social tabs">
-        {tabs.map((tab) => {
-          const TabIcon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={isActive}
-              aria-controls={`tabpanel-${tab.id}`}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all min-h-[44px] ${
-                isActive
-                  ? 'bg-[var(--color-bg)] text-[var(--color-text)] shadow-sm'
-                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
-              }`}
-            >
-              <TabIcon className="w-4 h-4" aria-hidden="true" />
-              {tab.label}
-            </button>
-          );
-        })}
+      {/* Featured Profile Card — SOC-002: staggered delay 50ms */}
+      <div
+        className="animate-fade-in-up"
+        style={{ animationDelay: '50ms', animationFillMode: 'both' }}
+      >
+        {selectedProfile ? (
+          <UserProfileCard profile={selectedProfile} onToggleFollow={handleToggleFollow} />
+        ) : (
+          <UserProfileCard profile={profile} onToggleFollow={handleToggleFollow} />
+        )}
       </div>
 
-      {/* Tab Content */}
-      <div id={`tabpanel-${activeTab}`} role="tabpanel" aria-labelledby={activeTab}>
+      {/* Tab Selector — SOC-002: staggered delay 100ms */}
+      <div
+        className="animate-fade-in-up"
+        style={{ animationDelay: '100ms', animationFillMode: 'both' }}
+      >
+        <div className="flex gap-1 p-1 bg-[var(--color-bg-secondary)] rounded-lg w-fit" role="tablist" aria-label="Social tabs">
+          {tabs.map((tab) => {
+            const TabIcon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`tabpanel-${tab.id}`}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all min-h-[44px] ${
+                  isActive
+                    ? 'bg-[var(--color-bg)] text-[var(--color-text)] shadow-sm'
+                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+                }`}
+              >
+                <TabIcon className="w-4 h-4" aria-hidden="true" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Tab Content — SOC-002: staggered delay 150ms */}
+      <div
+        id={`tabpanel-${activeTab}`}
+        role="tabpanel"
+        aria-labelledby={activeTab}
+        className="animate-fade-in-up"
+        style={{ animationDelay: '150ms', animationFillMode: 'both' }}
+      >
         {activeTab === 'leaderboard' ? (
           <LeaderboardTab entries={leaderboard} onToggleFollow={handleToggleFollow} />
         ) : (

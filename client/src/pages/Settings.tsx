@@ -89,8 +89,11 @@ export function Settings() {
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header — delay 0ms */}
-      <div className="flex items-center justify-between animate-fade-in-up" style={{ animationDelay: '0ms' }}>
-        <h1 className="text-2xl font-bold text-[var(--color-text)]">Settings</h1>
+      <div className="flex items-center justify-between animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Settings</h1>
+          <p className="text-[var(--color-text-muted)] mt-1">Account preferences, risk parameters, and integrations</p>
+        </div>
         {hasChanges && (
           <Button onClick={handleSave} disabled={updateMutation.isPending}>
             {updateMutation.isPending ? <Spinner className="w-4 h-4" /> : <Save className="w-4 h-4 mr-2" />}
@@ -100,9 +103,11 @@ export function Settings() {
       </div>
 
       {/* Profile card — delay 50ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '50ms' }}>
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
         <div className="flex items-center gap-3 mb-6">
-          <User className="w-5 h-5 text-[var(--color-text-muted)]" />
+          <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(123, 44, 255, 0.08)' }}>
+            <User className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+          </div>
           <h2 className="text-lg font-semibold">Profile</h2>
         </div>
 
@@ -131,9 +136,11 @@ export function Settings() {
       </Card>
 
       {/* Risk preferences card — delay 100ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
         <div className="flex items-center gap-3 mb-6">
-          <Shield className="w-5 h-5 text-[var(--color-text-muted)]" />
+          <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)' }}>
+            <Shield className="w-5 h-5" style={{ color: 'var(--color-positive)' }} />
+          </div>
           <h2 className="text-lg font-semibold">Risk Preferences</h2>
         </div>
 
@@ -223,9 +230,11 @@ export function Settings() {
       </Card>
 
       {/* Notifications card — delay 150ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
         <div className="flex items-center gap-3 mb-6">
-          <Bell className="w-5 h-5 text-[var(--color-text-muted)]" />
+          <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(245, 158, 11, 0.08)' }}>
+            <Bell className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
+          </div>
           <h2 className="text-lg font-semibold">Notifications</h2>
         </div>
 
@@ -250,9 +259,11 @@ export function Settings() {
       </Card>
 
       {/* Subscription card — delay 200ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
         <div className="flex items-center gap-3 mb-6">
-          <CreditCard className="w-5 h-5 text-[var(--color-text-muted)]" />
+          <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(59, 130, 246, 0.08)' }}>
+            <CreditCard className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
+          </div>
           <h2 className="text-lg font-semibold">Subscription</h2>
         </div>
 
@@ -296,9 +307,11 @@ export function Settings() {
       </Card>
 
       {/* API Keys card — delay 250ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
         <div className="flex items-center gap-3 mb-6">
-          <Key className="w-5 h-5 text-[var(--color-text-muted)]" />
+          <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(123, 44, 255, 0.08)' }}>
+            <Key className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+          </div>
           <h2 className="text-lg font-semibold">API Keys</h2>
         </div>
         <APIKeys />
@@ -307,10 +320,12 @@ export function Settings() {
       {/* Danger zone card — delay 300ms */}
       <Card
         className="p-6 hover:shadow-md transition-shadow animate-fade-in-up"
-        style={{ borderColor: 'rgba(239, 68, 68, 0.2)', animationDelay: '300ms' }}
+        style={{ borderColor: 'rgba(239, 68, 68, 0.2)', animationDelay: '300ms', animationFillMode: 'both' }}
       >
         <div className="flex items-center gap-3 mb-6">
-          <AlertTriangle className="w-5 h-5 text-[var(--color-negative)]" />
+          <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)' }}>
+            <AlertTriangle className="w-5 h-5" style={{ color: 'var(--color-negative)' }} />
+          </div>
           <h2 className="text-lg font-semibold text-[var(--color-negative)]">Danger Zone</h2>
         </div>
 

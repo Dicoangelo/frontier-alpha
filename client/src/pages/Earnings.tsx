@@ -82,7 +82,7 @@ export function Earnings() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Earnings Calendar</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Earnings Calendar</h1>
           <p className="text-[var(--color-text-muted)] mt-1">
             Track upcoming earnings and their expected impact on your portfolio
           </p>

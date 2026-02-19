@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuotes } from '@/hooks/useQuotes';
 import { PortfolioOverview } from '@/components/portfolio/PortfolioOverview';
 import { PositionList } from '@/components/portfolio/PositionList';
@@ -6,6 +7,7 @@ import { FactorExposures } from '@/components/factors/FactorExposures';
 import { RiskMetrics } from '@/components/risk/RiskMetrics';
 import { CognitiveInsight } from '@/components/explainer/CognitiveInsight';
 import { EquityCurve } from '@/components/charts/EquityCurve';
+import { WeightAllocation } from '@/components/portfolio/WeightAllocation';
 import { SkeletonDashboard } from '@/components/shared/Skeleton';
 import { EmptyPortfolio, DataLoadError } from '@/components/shared/EmptyState';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
@@ -253,12 +255,14 @@ function getDemoFactors(): FactorExposure[] {
 }
 
 export function Dashboard() {
+  const navigate = useNavigate();
   const [portfolio, setPortfolio] = useState<Portfolio>(EMPTY_PORTFOLIO);
   const [factors, setFactors] = useState<FactorExposure[]>(EMPTY_FACTORS);
   const [metrics, setMetrics] = useState<RiskMetricsData>(EMPTY_METRICS);
   const [insight, setInsight] = useState<string>('Loading portfolio data...');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [contentVisible, setContentVisible] = useState(false);
 
   // Real-time quote streaming via useQuotes hook
   const symbols = portfolio.positions.map(p => p.symbol);
@@ -295,6 +299,8 @@ export function Dashboard() {
       setFactors(getDemoFactors());
     } finally {
       setIsLoading(false);
+      // Trigger fade-in after a tick to allow DOM paint
+      requestAnimationFrame(() => setContentVisible(true));
     }
   }, []);
 
@@ -341,13 +347,17 @@ export function Dashboard() {
 
   // Show skeleton while loading
   if (isLoading) {
-    return <SkeletonDashboard />;
+    return (
+      <div className="animate-fade-in">
+        <SkeletonDashboard />
+      </div>
+    );
   }
 
   // Show error state with retry
   if (error) {
     return (
-      <div className="min-h-[400px] flex items-center justify-center">
+      <div className="min-h-[400px] flex items-center justify-center animate-fade-in">
         <DataLoadError onRetry={loadPortfolioData} error={error} />
       </div>
     );
@@ -356,20 +366,29 @@ export function Dashboard() {
   // Show empty state if no positions
   if (portfolio.positions.length === 0 && portfolio.id !== 'demo') {
     return (
-      <div className="min-h-[400px] flex items-center justify-center bg-[var(--color-bg)] rounded-xl shadow-lg">
-        <EmptyPortfolio onAddPosition={() => window.location.href = '/portfolio'} />
+      <div className="min-h-[400px] flex items-center justify-center bg-[var(--color-bg)] rounded-xl shadow-lg animate-fade-in">
+        <EmptyPortfolio onAddPosition={() => navigate('/portfolio')} />
       </div>
     );
   }
 
   return (
     <PullToRefresh onRefresh={loadPortfolioData} className="min-h-screen">
-      <div className="space-y-6 animate-fade-in">
+      <div
+        className="space-y-6 transition-opacity duration-300 ease-out"
+        style={{ opacity: contentVisible ? 1 : 0 }}
+      >
 
         {/* Live data status bar */}
         <div className="flex items-center justify-between text-xs text-[var(--color-text-secondary)] px-1">
           <div className="flex items-center gap-2">
-            <span className={`inline-block w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+            <span
+              className={`inline-block w-2 h-2 rounded-full ${
+                isConnected
+                  ? 'bg-[var(--color-positive)] animate-pulse-green'
+                  : 'bg-[var(--color-danger)]'
+              }`}
+            />
             <span>{isConnected ? 'Live' : 'Disconnected'}</span>
           </div>
           {lastUpdate && (
@@ -377,15 +396,19 @@ export function Dashboard() {
           )}
         </div>
 
-        <div data-tour="portfolio-overview">
+        <div data-tour="portfolio-overview" className="animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
           <PortfolioOverview portfolio={portfolio} />
         </div>
 
-        <div data-tour="equity-curve">
+        <div data-tour="equity-curve" className="animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
           <EquityCurve portfolioValue={portfolio.totalValue} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div data-tour="weight-allocation" className="animate-fade-in-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+          <WeightAllocation positions={portfolio.positions} totalValue={portfolio.totalValue} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
           <div data-tour="positions">
             <PositionList positions={portfolio.positions} quotes={quotes} />
           </div>
@@ -394,7 +417,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
           <div data-tour="risk-metrics">
             <RiskMetrics metrics={metrics} />
           </div>

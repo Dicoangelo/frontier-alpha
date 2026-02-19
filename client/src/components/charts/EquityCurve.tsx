@@ -128,6 +128,7 @@ export function EquityCurve({
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState(timeframe);
   const [hoveredPoint, setHoveredPoint] = useState<DataPoint | null>(null);
+  const [hoveredX, setHoveredX] = useState<number | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [animationProgress, setAnimationProgress] = useState(0);
   const animationRef = useRef<number | null>(null);
@@ -341,27 +342,67 @@ export function EquityCurve({
       ctx.fillText(label, xScale(i), dimensions.height - 8);
     }
 
-  }, [data, dimensions, animationProgress, isDark]);
+    // Draw crosshair at hovered position
+    if (hoveredX !== null && hoveredX >= padding.left && hoveredX <= dimensions.width - padding.right) {
+      ctx.save();
+      ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(hoveredX, padding.top);
+      ctx.lineTo(hoveredX, dimensions.height - padding.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
 
-  // Mouse handling for hover
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  }, [data, dimensions, animationProgress, isDark, hoveredX]);
+
+  // Shared logic for updating hovered state from a canvas X coordinate
+  const updateHoverFromX = (clientX: number) => {
     if (!canvasRef.current || data.length === 0) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
+    const x = clientX - rect.left;
     const padding = { left: 60, right: 20 };
     const chartWidth = dimensions.width - padding.left - padding.right;
 
     const relativeX = x - padding.left;
     const index = Math.round((relativeX / chartWidth) * (data.length - 1));
 
+    setHoveredX(x);
+
     if (index >= 0 && index < data.length) {
       setHoveredPoint(data[index]);
     }
   };
 
+  // Mouse handling for hover
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    updateHoverFromX(e.clientX);
+  };
+
   const handleMouseLeave = () => {
     setHoveredPoint(null);
+    setHoveredX(null);
+  };
+
+  // Touch handling — mirrors mouse hover behavior
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (touch) updateHoverFromX(touch.clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (touch) updateHoverFromX(touch.clientX);
+  };
+
+  const handleTouchEnd = () => {
+    setHoveredPoint(null);
+    setHoveredX(null);
   };
 
   return (
@@ -411,14 +452,44 @@ export function EquityCurve({
       </div>
 
       {/* Chart */}
-      <div ref={containerRef} className="h-64 w-full" role="img" aria-label={`Portfolio equity curve showing ${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(1)}% total return over ${selectedTimeframe} timeframe`}>
+      <div ref={containerRef} className="h-64 w-full relative" role="img" aria-label={`Portfolio equity curve showing ${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(1)}% total return over ${selectedTimeframe} timeframe`}>
         <canvas
           ref={canvasRef}
-          className="w-full h-full cursor-crosshair"
+          className="w-full h-full cursor-crosshair touch-none"
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           aria-hidden="true"
         />
+        {/* Tooltip near cursor */}
+        {hoveredPoint && hoveredX !== null && (() => {
+          const padding = { left: 60, right: 20 };
+          const tooltipWidth = 160;
+          // Clamp tooltip to canvas bounds
+          const rawLeft = hoveredX + 12;
+          const clampedLeft = Math.min(
+            Math.max(rawLeft, padding.left),
+            dimensions.width - padding.right - tooltipWidth
+          );
+          const dailyChange = data.length > 1
+            ? ((hoveredPoint.portfolio - data[0].portfolio) / data[0].portfolio) * 100
+            : 0;
+          return (
+            <div
+              className="pointer-events-none absolute top-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg shadow-lg px-3 py-2 text-xs z-10"
+              style={{ left: clampedLeft, width: tooltipWidth }}
+            >
+              <p className="text-[var(--color-text-muted)] mb-1">{new Date(hoveredPoint.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+              <p className="font-semibold text-[var(--color-text)]">${hoveredPoint.portfolio.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+              <p className="text-[var(--color-text-muted)]">Benchmark: ${hoveredPoint.benchmark.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+              <p className={dailyChange >= 0 ? 'text-green-500' : 'text-red-500'}>
+                {dailyChange >= 0 ? '+' : ''}{dailyChange.toFixed(2)}%
+              </p>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Legend */}

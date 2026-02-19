@@ -41,11 +41,16 @@ export default {
         'bounce-in': 'bounce-in 0.5s ease-out',
         'pulse-subtle': 'pulse-subtle 2s infinite',
         'glow': 'glow 2s ease-in-out infinite alternate',
+        'pulse-green': 'pulse-green 2s ease-in-out infinite',
       },
       keyframes: {
         shimmer: {
           '0%': { backgroundPosition: '200% 0' },
           '100%': { backgroundPosition: '-200% 0' },
+        },
+        'pulse-green': {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(16, 185, 129, 0.7)' },
+          '50%': { boxShadow: '0 0 0 4px rgba(16, 185, 129, 0)' },
         },
         'fade-in': {
           '0%': { opacity: '0' },

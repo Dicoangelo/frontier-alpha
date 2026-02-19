@@ -3,6 +3,80 @@ import { Card } from '@/components/shared/Card';
 import { Badge } from '@/components/shared/Badge';
 import type { Position, Quote } from '@/types';
 
+// Seeded pseudo-random for deterministic sparkline data
+function seededRandom(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 16807 + 0) % 2147483647;
+    return s / 2147483647;
+  };
+}
+
+// Hash a string to a numeric seed
+function symbolSeed(symbol: string): number {
+  let hash = 0;
+  for (let i = 0; i < symbol.length; i++) {
+    hash = (hash * 31 + symbol.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+// Generate 7 mock data points for sparkline
+function getSparklinePoints(symbol: string, unrealizedPnL: number): number[] {
+  const rand = seededRandom(symbolSeed(symbol));
+  const points: number[] = [100];
+  for (let i = 1; i < 7; i++) {
+    points.push(points[i - 1] * (1 + (rand() - 0.48) * 0.04));
+  }
+  // Bias last point direction to match pnl sign
+  if (unrealizedPnL > 0 && points[6] < points[0]) {
+    const factor = points[0] / points[6] * (1 + rand() * 0.03);
+    return points.map((p, i) => p * (1 + (i / 6) * (factor - 1)));
+  } else if (unrealizedPnL < 0 && points[6] > points[0]) {
+    const factor = points[0] / points[6] * (1 - rand() * 0.03);
+    return points.map((p, i) => p * (1 - (i / 6) * (1 - factor)));
+  }
+  return points;
+}
+
+// Pure SVG sparkline component
+function Sparkline({ symbol, unrealizedPnL }: { symbol: string; unrealizedPnL: number }) {
+  const points = getSparklinePoints(symbol, unrealizedPnL);
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = max - min || 1;
+  const W = 40;
+  const H = 16;
+
+  const coords = points.map((v, i) => {
+    const x = (i / (points.length - 1)) * W;
+    const y = H - ((v - min) / range) * H;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+
+  const isUp = points[points.length - 1] >= points[0];
+  const color = isUp ? '#10b981' : '#ef4444';
+
+  return (
+    <svg
+      width={W}
+      height={H}
+      viewBox={`0 0 ${W} ${H}`}
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      <polyline
+        points={coords.join(' ')}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 type SortField = 'symbol' | 'shares' | 'currentPrice' | 'value' | 'unrealizedPnL' | 'weight';
 type SortDir = 'asc' | 'desc';
 
@@ -194,6 +268,12 @@ export function PositionList({ positions, quotes }: PositionListProps) {
               <SortTh field="shares" label="Shares" />
               <SortTh field="currentPrice" label="Price" />
               <SortTh field="value" label="Value" />
+              <th
+                scope="col"
+                className="py-3 px-4 text-right font-medium text-xs uppercase tracking-wider text-[var(--color-text-muted)]"
+              >
+                7D
+              </th>
               <SortTh field="unrealizedPnL" label="P&L" />
               <SortTh field="weight" label="Weight" />
               <th
@@ -235,6 +315,11 @@ export function PositionList({ positions, quotes }: PositionListProps) {
                   </td>
                   <td className="py-3 px-4 text-right text-[var(--color-text)]">
                     ${positionValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    <div className="flex justify-end">
+                      <Sparkline symbol={position.symbol} unrealizedPnL={position.unrealizedPnL} />
+                    </div>
                   </td>
                   <td className={`py-3 px-4 text-right font-semibold ${pnlColor(position.unrealizedPnL)}`}>
                     {pnlSign(position.unrealizedPnL)}$

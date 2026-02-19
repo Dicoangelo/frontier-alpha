@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, AlertTriangle, TrendingUp, TrendingDown, Shield, Zap, RefreshCw } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
@@ -212,10 +212,17 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
   };
 
   const insightTypeStyles = {
-    risk: 'border-l-amber-500 bg-amber-500/10',
-    opportunity: 'border-l-green-500 bg-green-500/10',
-    action: 'border-l-blue-500 bg-blue-500/10',
-    factor: 'border-l-purple-500 bg-purple-500/10',
+    risk: 'border-l-[var(--color-warning)]',
+    opportunity: 'border-l-[var(--color-positive)]',
+    action: 'border-l-[var(--color-info)]',
+    factor: 'border-l-[var(--color-primary)]',
+  };
+
+  const insightTypeBg: Record<string, React.CSSProperties> = {
+    risk: { backgroundColor: 'rgba(245, 158, 11, 0.08)' },
+    opportunity: { backgroundColor: 'rgba(16, 185, 129, 0.08)' },
+    action: { backgroundColor: 'rgba(59, 130, 246, 0.08)' },
+    factor: { backgroundColor: 'rgba(123, 44, 255, 0.08)' },
   };
 
   return (
@@ -241,7 +248,12 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
           {insights.map((insight, index) => (
             <div
               key={index}
-              className={`p-4 rounded-lg border-l-4 ${insightTypeStyles[insight.type]}`}
+              className={`p-4 rounded-lg border-l-4 animate-slide-in-left transition-shadow duration-200 hover:shadow-lg ${insightTypeStyles[insight.type]}`}
+              style={{
+                animationDelay: `${index * 50}ms`,
+                animationFillMode: 'both',
+                ...insightTypeBg[insight.type],
+              }}
             >
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 mt-0.5">{insight.icon}</div>

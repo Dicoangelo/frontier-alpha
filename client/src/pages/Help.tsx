@@ -186,7 +186,7 @@ export function Help() {
   return (
     <div className="max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
         <div className="flex items-center gap-3 mb-2">
           <BookOpen className="w-8 h-8 text-[var(--color-info)]" />
           <h1 className="text-3xl font-bold text-[var(--color-text)]">Help Center</h1>
@@ -197,7 +197,7 @@ export function Help() {
       </div>
 
       {/* Search */}
-      <div className="mb-8">
+      <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
         <div className="relative max-w-xl">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
           <input
@@ -323,7 +323,7 @@ export function Help() {
       {!searchQuery && !selectedTopic && (
         <>
           {/* Quick Start Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
             <QuickStartCard
               icon={Rocket}
               title="Getting Started"
@@ -354,7 +354,7 @@ export function Help() {
           </div>
 
           {/* Help Sections */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             {/* Left Column - Topics */}
             <div className="lg:col-span-2 space-y-4" id="topics">
               <h2 className="text-xl font-bold text-[var(--color-text)] mb-4">Help Topics</h2>
@@ -490,7 +490,7 @@ export function Help() {
           </div>
 
           {/* Contact Section */}
-          <div className="mt-12 mb-8" id="contact">
+          <div className="mt-12 mb-8 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }} id="contact">
             <Card className="p-8 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-[rgba(59, 130, 246,0.2)]">
               <div className="text-center max-w-xl mx-auto">
                 <MessageCircle className="w-12 h-12 text-[var(--color-info)] mx-auto mb-4" />
@@ -521,7 +521,7 @@ export function Help() {
           </div>
 
           {/* Keyboard Shortcuts */}
-          <Card className="p-6 mb-8">
+          <Card className="p-6 mb-8 animate-fade-in-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
             <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">Keyboard Shortcuts</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <KeyboardShortcut keys={['?']} description="Open/close help panel" />

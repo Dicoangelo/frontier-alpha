@@ -177,11 +177,11 @@ export function SharedPortfolio() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Shared Portfolio Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+      <div className="text-white" style={{ background: 'linear-gradient(to right, var(--color-accent), var(--color-info))' }}>
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-lg">
+              <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}>
                 <Share2 className="w-5 h-5" />
               </div>
               <div>
@@ -190,12 +190,12 @@ export function SharedPortfolio() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/20 rounded-full text-sm">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}>
                 <Eye className="w-4 h-4" />
                 {share?.permissions === 'edit' ? 'Can Edit' : 'View Only'}
               </span>
               {share?.expiresAt && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-white/20 rounded-full text-sm">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}>
                   <Clock className="w-4 h-4" />
                   Expires {new Date(share.expiresAt).toLocaleDateString()}
                 </span>
@@ -217,7 +217,7 @@ export function SharedPortfolio() {
 
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         {/* Overview Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
           <Card className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-[rgba(59, 130, 246,0.1)] rounded-lg">
@@ -282,7 +282,7 @@ export function SharedPortfolio() {
         </div>
 
         {/* Positions Table */}
-        <Card>
+        <Card className="animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
           <div className="px-6 py-4 border-b border-[var(--color-border-light)]">
             <h2 className="text-lg font-semibold text-[var(--color-text)]">Holdings</h2>
           </div>
@@ -290,12 +290,12 @@ export function SharedPortfolio() {
             <table className="w-full">
               <thead>
                 <tr className="border-b bg-[var(--color-bg-tertiary)]">
-                  <th className="text-left py-3 px-6 font-medium text-[var(--color-text-secondary)]">Symbol</th>
-                  <th className="text-right py-3 px-6 font-medium text-[var(--color-text-secondary)]">Shares</th>
-                  <th className="text-right py-3 px-6 font-medium text-[var(--color-text-secondary)]">Weight</th>
-                  <th className="text-right py-3 px-6 font-medium text-[var(--color-text-secondary)]">Price</th>
-                  <th className="text-right py-3 px-6 font-medium text-[var(--color-text-secondary)]">Value</th>
-                  <th className="text-right py-3 px-6 font-medium text-[var(--color-text-secondary)]">P&L</th>
+                  <th className="text-left py-3 px-6 text-xs font-medium uppercase tracking-wider text-[var(--color-text-muted)]">Symbol</th>
+                  <th className="text-right py-3 px-6 text-xs font-medium uppercase tracking-wider text-[var(--color-text-muted)]">Shares</th>
+                  <th className="text-right py-3 px-6 text-xs font-medium uppercase tracking-wider text-[var(--color-text-muted)]">Weight</th>
+                  <th className="text-right py-3 px-6 text-xs font-medium uppercase tracking-wider text-[var(--color-text-muted)]">Price</th>
+                  <th className="text-right py-3 px-6 text-xs font-medium uppercase tracking-wider text-[var(--color-text-muted)]">Value</th>
+                  <th className="text-right py-3 px-6 text-xs font-medium uppercase tracking-wider text-[var(--color-text-muted)]">P&L</th>
                 </tr>
               </thead>
               <tbody>
@@ -366,7 +366,7 @@ export function SharedPortfolio() {
 
         {/* Factor Exposures (if available) */}
         {factorExposures.length > 0 && (
-          <Card>
+          <Card className="animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
             <div className="px-6 py-4 border-b border-[var(--color-border-light)]">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-[var(--color-text-muted)]" />
@@ -390,7 +390,7 @@ export function SharedPortfolio() {
         )}
 
         {/* Footer */}
-        <div className="text-center text-sm text-[var(--color-text-muted)] py-8">
+        <div className="text-center text-sm text-[var(--color-text-muted)] py-8 animate-fade-in-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <p>
             Powered by{' '}
             <Link to="/landing" className="text-[var(--color-info)] hover:text-[var(--color-info)] font-medium">

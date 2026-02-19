@@ -497,7 +497,7 @@ export function Social() {
         style={{ animationDelay: '0ms', animationFillMode: 'both' }}
       >
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Social</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Social</h1>
           <p className="text-[var(--color-text-muted)] mt-1">
             Top performers &amp; portfolio updates from the community
           </p>

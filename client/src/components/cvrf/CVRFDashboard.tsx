@@ -44,7 +44,7 @@ export function CVRFDashboard() {
               <Brain className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg sm:text-xl font-bold text-[var(--color-text)]">CVRF Dashboard</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--color-text)]">CVRF Dashboard</h1>
               <p className="text-sm text-[var(--color-text-muted)]">
                 Conceptual Verbal Reinforcement Framework
               </p>

@@ -270,7 +270,7 @@ export function useRegimeDisplay(regime?: string, confidence?: number) {
   };
 
   return {
-    color: regime ? regimeColors[regime] || 'text-gray-500' : 'text-gray-500',
+    color: regime ? regimeColors[regime] || 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-muted)]',
     icon: regime ? regimeIcons[regime] || '❓' : '❓',
     label: regime ? regime.charAt(0).toUpperCase() + regime.slice(1) : 'Unknown',
     confidence: confidence ? `${(confidence * 100).toFixed(0)}%` : 'N/A',

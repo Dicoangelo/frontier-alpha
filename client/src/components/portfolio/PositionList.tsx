@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card } from '@/components/shared/Card';
 import { Badge } from '@/components/shared/Badge';
 import type { Position, Quote } from '@/types';
@@ -93,9 +93,64 @@ function pnlSign(pnl: number) {
   return pnl >= 0 ? '+' : '';
 }
 
+// Track previous prices to detect changes for flash animation
+function useQuoteFlash(quotes: Map<string, Quote> | undefined) {
+  const prevPrices = useRef<Map<string, number>>(new Map());
+  const [flashMap, setFlashMap] = useState<Map<string, 'up' | 'down'>>(new Map());
+  const timerRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+
+  const clearFlash = useCallback((symbol: string) => {
+    setFlashMap(prev => {
+      const next = new Map(prev);
+      next.delete(symbol);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!quotes || quotes.size === 0) return;
+
+    const newFlashes = new Map<string, 'up' | 'down'>();
+
+    for (const [symbol, quote] of quotes) {
+      const prevPrice = prevPrices.current.get(symbol);
+      if (prevPrice !== undefined && quote.last !== prevPrice) {
+        const direction = quote.last > prevPrice ? 'up' : 'down';
+        newFlashes.set(symbol, direction);
+
+        // Clear existing timer for this symbol
+        const existing = timerRefs.current.get(symbol);
+        if (existing) clearTimeout(existing);
+
+        // Auto-clear flash after animation completes
+        timerRefs.current.set(symbol, setTimeout(() => clearFlash(symbol), 650));
+      }
+      prevPrices.current.set(symbol, quote.last);
+    }
+
+    if (newFlashes.size > 0) {
+      setFlashMap(prev => {
+        const merged = new Map(prev);
+        for (const [s, d] of newFlashes) merged.set(s, d);
+        return merged;
+      });
+    }
+  }, [quotes, clearFlash]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      for (const t of timerRefs.current.values()) clearTimeout(t);
+    };
+  }, []);
+
+  return flashMap;
+}
+
 export function PositionList({ positions, quotes }: PositionListProps) {
   const [sortField, setSortField] = useState<SortField>('value');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const flashMap = useQuoteFlash(quotes);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -200,10 +255,13 @@ export function PositionList({ positions, quotes }: PositionListProps) {
           const changePercent = quote?.changePercent ?? 0;
           const positionValue = position.shares * position.currentPrice;
 
+          const flash = flashMap.get(position.symbol);
+          const flashClass = flash === 'up' ? 'quote-flash-up' : flash === 'down' ? 'quote-flash-down' : '';
+
           return (
             <div
-              key={position.symbol}
-              className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border-light)]"
+              key={`${position.symbol}-${flash ?? 'none'}`}
+              className={`p-3 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border-light)] ${flashClass}`}
             >
               {/* Top row: symbol + P&L prominent */}
               <div className="flex items-center justify-between mb-2">
@@ -290,10 +348,13 @@ export function PositionList({ positions, quotes }: PositionListProps) {
               const changePercent = quote?.changePercent ?? 0;
               const positionValue = position.shares * position.currentPrice;
 
+              const flash = flashMap.get(position.symbol);
+              const flashClass = flash === 'up' ? 'quote-flash-up' : flash === 'down' ? 'quote-flash-down' : '';
+
               return (
                 <tr
-                  key={position.symbol}
-                  className="border-b border-[var(--color-border-light)] last:border-0 hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                  key={`${position.symbol}-${flash ?? 'none'}`}
+                  className={`border-b border-[var(--color-border-light)] last:border-0 hover:bg-[var(--color-bg-tertiary)] transition-colors ${flashClass}`}
                 >
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">

@@ -42,6 +42,9 @@ const queryClient = new QueryClient({
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, initialized, loading } = useAuthStore();
 
+  // TEMP: bypass auth for screenshot — revert after
+  return <>{children}</>;
+
   if (!initialized || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

@@ -369,7 +369,7 @@ export function Help() {
                       onClick={() => toggleSection(section.id)}
                       className="w-full flex items-center gap-4 p-5 hover:bg-[var(--color-bg-tertiary)] transition text-left"
                     >
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center flex-shrink-0">
                         <Icon className="w-6 h-6 text-[var(--color-info)]" />
                       </div>
                       <div className="flex-1">
@@ -491,7 +491,7 @@ export function Help() {
 
           {/* Contact Section */}
           <div className="mt-12 mb-8 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }} id="contact">
-            <Card className="p-8 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-[rgba(59, 130, 246,0.2)]">
+            <Card className="p-8 border-[rgba(123, 44, 255, 0.2)]" style={{ background: 'linear-gradient(to right, rgba(123, 44, 255, 0.06), rgba(59, 130, 246, 0.06))' }}>
               <div className="text-center max-w-xl mx-auto">
                 <MessageCircle className="w-12 h-12 text-[var(--color-info)] mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Still need help?</h2>
@@ -552,7 +552,7 @@ function QuickStartCard({
       onClick={onClick}
       className="p-6 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] hover:border-[rgba(59, 130, 246,0.3)] hover:shadow-lg transition-all text-left group"
     >
-      <div className="w-12 h-12 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+      <div className="w-12 h-12 bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
         <Icon className="w-6 h-6 text-[var(--color-info)]" />
       </div>
       <h3 className="font-semibold text-[var(--color-text)] mb-1">{title}</h3>

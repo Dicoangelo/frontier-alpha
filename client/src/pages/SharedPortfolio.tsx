@@ -86,8 +86,8 @@ export function SharedPortfolio() {
     return (
       <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-4">
         <Card className="max-w-md w-full p-8 text-center">
-          <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center bg-yellow-500/10">
-            <Clock className="w-8 h-8 text-yellow-600" />
+          <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center bg-[rgba(234, 179, 8,0.1)]">
+            <Clock className="w-8 h-8 text-[var(--color-warning)]" />
           </div>
           <h1 className="mt-6 text-xl font-semibold text-[var(--color-text)]">This link has expired</h1>
           <p className="mt-2 text-[var(--color-text-muted)]">
@@ -95,7 +95,7 @@ export function SharedPortfolio() {
           </p>
           <Link
             to="/landing"
-            className="mt-6 inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
+            className="mt-6 inline-flex items-center gap-2 text-[var(--color-info)] hover:text-[var(--color-info)]"
           >
             <ArrowLeft className="w-4 h-4" />
             Go to Frontier Alpha
@@ -125,12 +125,12 @@ export function SharedPortfolio() {
       <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-4">
         <Card className="max-w-md w-full p-8 text-center">
           <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center ${
-            isExpired ? 'bg-yellow-500/10' : 'bg-red-500/10'
+            isExpired ? 'bg-[rgba(234, 179, 8,0.1)]' : 'bg-[rgba(239, 68, 68,0.1)]'
           }`}>
             {isExpired ? (
-              <Clock className="w-8 h-8 text-yellow-600" />
+              <Clock className="w-8 h-8 text-[var(--color-warning)]" />
             ) : (
-              <AlertTriangle className="w-8 h-8 text-red-600" />
+              <AlertTriangle className="w-8 h-8 text-[var(--color-negative)]" />
             )}
           </div>
           <h1 className="mt-6 text-xl font-semibold text-[var(--color-text)]">
@@ -145,7 +145,7 @@ export function SharedPortfolio() {
           </p>
           <Link
             to="/landing"
-            className="mt-6 inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
+            className="mt-6 inline-flex items-center gap-2 text-[var(--color-info)] hover:text-[var(--color-info)]"
           >
             <ArrowLeft className="w-4 h-4" />
             Go to Frontier Alpha
@@ -220,8 +220,8 @@ export function SharedPortfolio() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-500/10 rounded-lg">
-                <DollarSign className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-[rgba(59, 130, 246,0.1)] rounded-lg">
+                <DollarSign className="w-6 h-6 text-[var(--color-info)]" />
               </div>
               <div>
                 <p className="text-sm text-[var(--color-text-muted)]">Total Value</p>
@@ -234,16 +234,16 @@ export function SharedPortfolio() {
 
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-lg ${totalPnL >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+              <div className={`p-3 rounded-lg ${totalPnL >= 0 ? 'bg-[rgba(16, 185, 129,0.1)]' : 'bg-[rgba(239, 68, 68,0.1)]'}`}>
                 {totalPnL >= 0 ? (
-                  <TrendingUp className="w-6 h-6 text-green-600" />
+                  <TrendingUp className="w-6 h-6 text-[var(--color-positive)]" />
                 ) : (
-                  <TrendingDown className="w-6 h-6 text-red-600" />
+                  <TrendingDown className="w-6 h-6 text-[var(--color-negative)]" />
                 )}
               </div>
               <div>
                 <p className="text-sm text-[var(--color-text-muted)]">Unrealized P&L</p>
-                <p className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <p className={`text-2xl font-bold ${totalPnL >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
                   {totalPnL >= 0 ? '+' : ''}${totalPnL.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </p>
               </div>
@@ -252,16 +252,16 @@ export function SharedPortfolio() {
 
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-lg ${pnlPercent >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+              <div className={`p-3 rounded-lg ${pnlPercent >= 0 ? 'bg-[rgba(16, 185, 129,0.1)]' : 'bg-[rgba(239, 68, 68,0.1)]'}`}>
                 {pnlPercent >= 0 ? (
-                  <TrendingUp className="w-6 h-6 text-green-600" />
+                  <TrendingUp className="w-6 h-6 text-[var(--color-positive)]" />
                 ) : (
-                  <TrendingDown className="w-6 h-6 text-red-600" />
+                  <TrendingDown className="w-6 h-6 text-[var(--color-negative)]" />
                 )}
               </div>
               <div>
                 <p className="text-sm text-[var(--color-text-muted)]">Return</p>
-                <p className={`text-2xl font-bold ${pnlPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <p className={`text-2xl font-bold ${pnlPercent >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
                   {pnlPercent >= 0 ? '+' : ''}{pnlPercent.toFixed(2)}%
                 </p>
               </div>
@@ -270,8 +270,8 @@ export function SharedPortfolio() {
 
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-purple-500/10 rounded-lg">
-                <PieChart className="w-6 h-6 text-purple-600" />
+              <div className="p-3 bg-[rgba(123, 44, 255,0.1)] rounded-lg">
+                <PieChart className="w-6 h-6 text-[var(--color-accent)]" />
               </div>
               <div>
                 <p className="text-sm text-[var(--color-text-muted)]">Positions</p>
@@ -311,7 +311,7 @@ export function SharedPortfolio() {
                       <div className="flex items-center justify-end gap-2">
                         <div className="w-16 bg-[var(--color-border)] rounded-full h-2">
                           <div
-                            className="bg-blue-600 h-2 rounded-full"
+                            className="bg-[var(--color-info)] h-2 rounded-full"
                             style={{ width: `${Math.min(position.weight * 100, 100)}%` }}
                           />
                         </div>
@@ -327,7 +327,7 @@ export function SharedPortfolio() {
                       ${(position.shares * position.currentPrice).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
                     <td className={`py-4 px-6 text-right font-medium ${
-                      position.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'
+                      position.unrealizedPnL >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'
                     }`}>
                       {position.unrealizedPnL >= 0 ? '+' : ''}
                       ${position.unrealizedPnL.toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -344,7 +344,7 @@ export function SharedPortfolio() {
                     <div className="flex items-center justify-end gap-2">
                       <div className="w-16 bg-[var(--color-border)] rounded-full h-2">
                         <div
-                          className="bg-gray-400 h-2 rounded-full"
+                          className="bg-[var(--color-bg-tertiary)] h-2 rounded-full"
                           style={{ width: `${Math.min((portfolio.cash / portfolio.totalValue) * 100, 100)}%` }}
                         />
                       </div>
@@ -379,7 +379,7 @@ export function SharedPortfolio() {
                   <div key={factor.factor} className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
                     <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wide">{factor.category}</p>
                     <p className="font-medium text-[var(--color-text)]">{factor.factor}</p>
-                    <p className={`text-lg font-bold ${factor.exposure >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`text-lg font-bold ${factor.exposure >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
                       {factor.exposure >= 0 ? '+' : ''}{factor.exposure.toFixed(3)}
                     </p>
                   </div>
@@ -393,7 +393,7 @@ export function SharedPortfolio() {
         <div className="text-center text-sm text-[var(--color-text-muted)] py-8">
           <p>
             Powered by{' '}
-            <Link to="/landing" className="text-blue-600 hover:text-blue-700 font-medium">
+            <Link to="/landing" className="text-[var(--color-info)] hover:text-[var(--color-info)] font-medium">
               Frontier Alpha
             </Link>
           </p>

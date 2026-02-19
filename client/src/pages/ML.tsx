@@ -557,21 +557,21 @@ function AttributionSection({
       <div className="h-64 mb-6" role="img" aria-label="Factor attribution waterfall chart showing contribution of each factor to total return">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 10, right: 10, bottom: 5, left: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, #e5e7eb)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fill: 'var(--color-text-muted, #9ca3af)', fontSize: 11 }}
-              axisLine={{ stroke: 'var(--color-border, #e5e7eb)' }}
+              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
+              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
             />
             <YAxis
-              tick={{ fill: 'var(--color-text-muted, #9ca3af)', fontSize: 11 }}
+              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
               tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
-              axisLine={{ stroke: 'var(--color-border, #e5e7eb)' }}
+              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
             />
             <Tooltip
               contentStyle={{
                 backgroundColor: 'var(--color-bg, #fff)',
-                border: '1px solid var(--color-border, #e5e7eb)',
+                border: '1px solid var(--color-border, var(--color-border))',
                 borderRadius: '8px',
                 fontSize: '12px',
               }}
@@ -582,7 +582,7 @@ function AttributionSection({
                 return [`${raw >= 0 ? '+' : ''}${(raw * 100).toFixed(2)}%`, p.payload.type === 'total' ? 'Total Return' : 'Contribution'];
               }}
             />
-            <ReferenceLine y={0} stroke="var(--color-text-muted, #9ca3af)" strokeDasharray="2 2" />
+            <ReferenceLine y={0} stroke="var(--color-text-muted, var(--color-text-muted))" strokeDasharray="2 2" />
             {/* Invisible base bar */}
             <Bar dataKey="base" stackId="waterfall" fill="transparent" />
             {/* Visible value bar */}

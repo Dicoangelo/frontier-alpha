@@ -389,20 +389,20 @@ export function Backtest() {
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={result.equityCurve} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, #e5e7eb)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" />
                       <XAxis
                         dataKey="date"
-                        tick={{ fill: 'var(--color-text-muted, #9ca3af)', fontSize: 11 }}
+                        tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
                         tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}
                       />
                       <YAxis
-                        tick={{ fill: 'var(--color-text-muted, #9ca3af)', fontSize: 11 }}
+                        tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
                         tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                       />
                       <Tooltip
                         contentStyle={{
                           backgroundColor: 'var(--color-bg, #fff)',
-                          border: '1px solid var(--color-border, #e5e7eb)',
+                          border: '1px solid var(--color-border, var(--color-border))',
                           borderRadius: '8px',
                         }}
                         formatter={(value: number | undefined) => [`$${(value ?? 0).toLocaleString()}`, 'Portfolio Value']}
@@ -442,14 +442,14 @@ export function Backtest() {
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={result.episodeReturns} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, #e5e7eb)" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" />
                         <XAxis
                           dataKey="episode"
-                          tick={{ fill: 'var(--color-text-muted, #9ca3af)', fontSize: 11 }}
+                          tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
                           label={{ value: 'Episode', position: 'bottom', offset: -5 }}
                         />
                         <YAxis
-                          tick={{ fill: 'var(--color-text-muted, #9ca3af)', fontSize: 11 }}
+                          tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
                           tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
                         />
                         <Tooltip

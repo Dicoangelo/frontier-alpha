@@ -1,0 +1,24 @@
+{
+  "name": "Options Tab UI/UX Upgrade",
+  "version": "1.0.0",
+  "goal": "Upgrade Options tab — 37 hardcoded colors to CSS variables, add animations, skeleton loading, hover polish",
+  "currentScore": "15/25 — Visual:3 Responsive:3 Interactive:3 DataViz:4 States:2",
+  "targetScore": "24/25 — Visual:5 Responsive:5 Interactive:5 DataViz:4 States:5",
+  "stories": [
+    {
+      "id": "OPT-001",
+      "title": "CSS variable compliance — all 37 hardcoded colors",
+      "priority": "P0"
+    },
+    {
+      "id": "OPT-002",
+      "title": "Staggered entry animations + skeleton loading",
+      "priority": "P0"
+    },
+    {
+      "id": "OPT-003",
+      "title": "Hover polish + micro-interactions",
+      "priority": "P1"
+    }
+  ]
+}

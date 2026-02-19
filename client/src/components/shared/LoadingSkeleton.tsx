@@ -21,4 +21,6 @@ export {
   SkeletonEarningsPage,
   SkeletonFactorsPage,
   SkeletonCVRFPage,
+  SkeletonSettingsPage,
+  SkeletonSharedPortfolioPage,
 } from './Skeleton';

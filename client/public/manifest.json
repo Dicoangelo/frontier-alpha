@@ -4,8 +4,8 @@
   "description": "💎 AI-Powered Cognitive Factor Intelligence Platform — Institutional-grade portfolio analytics with AI-powered explanations.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#0284c7",
+  "background_color": "#0F1219",
+  "theme_color": "#7B2CFF",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [

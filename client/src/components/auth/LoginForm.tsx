@@ -21,7 +21,7 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="email" className="block text-[10px] mono tracking-[0.3em] uppercase text-white/40 mb-2">
+        <label htmlFor="email" className="block text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-2">
           Email
         </label>
         <input
@@ -30,13 +30,13 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-sm text-white placeholder-white/20 focus:outline-none focus:border-[#7B2CFF] transition-all mono text-sm"
+          className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all mono text-sm"
           placeholder="you@example.com"
         />
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-[10px] mono tracking-[0.3em] uppercase text-white/40 mb-2">
+        <label htmlFor="password" className="block text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-2">
           Password
         </label>
         <input
@@ -46,14 +46,14 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
-          className="block w-full px-4 py-3 bg-white/5 border border-white/10 rounded-sm text-white placeholder-white/20 focus:outline-none focus:border-[#7B2CFF] transition-all mono text-sm"
+          className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all mono text-sm"
           placeholder="••••••••"
         />
       </div>
 
       {error && (
-        <div className="p-3 bg-[#FF6B8A]/10 border border-[#FF6B8A]/20 rounded-sm">
-          <p className="text-sm text-[#FF6B8A] mono">{error}</p>
+        <div className="p-3 rounded-sm" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: '1px', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+          <p className="text-sm text-[var(--color-negative)] mono">{error}</p>
         </div>
       )}
 
@@ -61,12 +61,12 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         {loading ? <Spinner className="w-5 h-5" /> : 'Sign In'}
       </Button>
 
-      <p className="text-center text-sm text-white/40">
+      <p className="text-center text-sm text-[var(--color-text-muted)]">
         Don't have an account?{' '}
         <button
           type="button"
           onClick={onSwitchToSignup}
-          className="text-[#18E6FF] hover:text-[#7B2CFF] font-medium transition-colors"
+          className="text-[var(--color-accent-secondary)] hover:text-[var(--color-accent)] font-medium transition-colors"
         >
           Sign up
         </button>

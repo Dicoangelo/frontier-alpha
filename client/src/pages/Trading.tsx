@@ -135,9 +135,9 @@ export default function Trading() {
     <div className="min-h-screen bg-[var(--color-bg)]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[var(--color-text)]">Trade</h1>
-          <p className="text-[var(--color-text-secondary)] mt-1">
+        <div className="mb-8 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Trade</h1>
+          <p className="text-[var(--color-text-muted)] mt-1">
             Execute orders and manage your positions
           </p>
         </div>

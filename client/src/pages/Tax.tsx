@@ -146,14 +146,23 @@ function MetricCard({ label, value, subtext, color, icon: Icon }: {
   color?: string;
   icon: typeof DollarSign;
 }) {
+  // Extract CSS variable for icon background
+  const colorMatch = color?.match(/var\(([^)]+)\)/);
+  const cssColor = colorMatch ? `var(${colorMatch[1]})` : 'var(--color-text-muted)';
+
   return (
-    <div className="p-4 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] hover:shadow-lg transition-shadow duration-200">
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className={`w-4 h-4 ${color ?? 'text-[var(--color-text-muted)]'}`} aria-hidden="true" />
-        <span className="text-xs font-medium uppercase tracking-wider text-[var(--color-text-muted)]">{label}</span>
+    <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)] hover:shadow-lg transition-shadow duration-200">
+      <div
+        className="p-2.5 rounded-lg flex-shrink-0"
+        style={{ backgroundColor: `color-mix(in srgb, ${cssColor} 12%, transparent)` }}
+      >
+        <Icon className="w-5 h-5" style={{ color: cssColor }} aria-hidden="true" />
       </div>
-      <p className={`text-xl font-bold font-mono ${color ?? 'text-[var(--color-text)]'}`}>{value}</p>
-      {subtext && <p className="text-xs text-[var(--color-text-muted)] mt-1">{subtext}</p>}
+      <div className="min-w-0">
+        <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">{label}</p>
+        <p className={`text-xl font-bold font-mono mt-0.5 ${color ?? 'text-[var(--color-text)]'}`}>{value}</p>
+        {subtext && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{subtext}</p>}
+      </div>
     </div>
   );
 }
@@ -692,7 +701,7 @@ export function Tax() {
         style={{ animationDelay: '0ms', animationFillMode: 'both' }}
       >
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Tax Optimization</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Tax Optimization</h1>
           <p className="text-[var(--color-text-muted)] mt-1">
             Harvesting opportunities, wash sale compliance &amp; annual reporting
           </p>

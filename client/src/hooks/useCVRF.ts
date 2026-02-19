@@ -254,11 +254,11 @@ export function useCVRFEpisodeManager() {
  */
 export function useRegimeDisplay(regime?: string, confidence?: number) {
   const regimeColors: Record<string, string> = {
-    bull: 'text-green-500',
-    bear: 'text-red-500',
-    sideways: 'text-yellow-500',
-    volatile: 'text-orange-500',
-    recovery: 'text-blue-500',
+    bull: 'text-[var(--color-positive)]',
+    bear: 'text-[var(--color-negative)]',
+    sideways: 'text-[var(--color-warning)]',
+    volatile: 'text-[var(--color-warning)]',
+    recovery: 'text-[var(--color-info)]',
   };
 
   const regimeIcons: Record<string, string> = {

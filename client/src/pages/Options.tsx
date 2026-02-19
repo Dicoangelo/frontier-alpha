@@ -953,7 +953,7 @@ function VolSurfaceSection({ points }: { points: VolSurfacePoint[] }) {
 
     // Axis labels
     const labelStyle = {
-      fill: 'var(--color-text-muted, #9ca3af)',
+      fill: 'var(--color-text-muted, var(--color-text-muted))',
       fontSize: '11px',
       fontFamily: 'monospace',
     };
@@ -1208,34 +1208,34 @@ function StrategiesSection() {
       <div className="h-64 mb-4 animate-fade-in" role="img" aria-label={`P&L payoff diagram for ${strategy.name} strategy`}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={pnlData} margin={{ top: 10, right: 10, bottom: 5, left: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, #e5e7eb)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" vertical={false} />
             <XAxis
               dataKey="price"
-              tick={{ fill: 'var(--color-text-muted, #9ca3af)', fontSize: 11 }}
+              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
               tickFormatter={(v: number) => `$${v.toFixed(0)}`}
-              axisLine={{ stroke: 'var(--color-border, #e5e7eb)' }}
+              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
             />
             <YAxis
-              tick={{ fill: 'var(--color-text-muted, #9ca3af)', fontSize: 11 }}
+              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
               tickFormatter={(v: number) => `$${v.toFixed(0)}`}
-              axisLine={{ stroke: 'var(--color-border, #e5e7eb)' }}
+              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
             />
             <Tooltip
               contentStyle={{
                 backgroundColor: 'var(--color-bg, #fff)',
-                border: '1px solid var(--color-border, #e5e7eb)',
+                border: '1px solid var(--color-border, var(--color-border))',
                 borderRadius: '8px',
                 fontSize: '12px',
               }}
               formatter={(value: unknown) => [`$${Number(value).toFixed(2)}`, 'P&L']}
               labelFormatter={(label: unknown) => `Price: $${Number(label).toFixed(2)}`}
             />
-            <ReferenceLine y={0} stroke="var(--color-text-muted, #9ca3af)" strokeDasharray="2 2" />
+            <ReferenceLine y={0} stroke="var(--color-text-muted, var(--color-text-muted))" strokeDasharray="2 2" />
             <ReferenceLine
               x={UNDERLYING_PRICE}
-              stroke="var(--color-text-muted, #9ca3af)"
+              stroke="var(--color-text-muted, var(--color-text-muted))"
               strokeDasharray="2 2"
-              label={{ value: 'Current', position: 'top', fill: 'var(--color-text-muted, #9ca3af)', fontSize: 10 }}
+              label={{ value: 'Current', position: 'top', fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 10 }}
             />
             {breakevens.map((be, i) => (
               <ReferenceLine

@@ -166,7 +166,7 @@ export function Portfolio() {
           value={formData.symbol}
           onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
           required
-          className="w-full px-3 py-3 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
+          className="w-full px-3 py-3 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-info)] text-base"
           placeholder="AAPL"
         />
       </div>
@@ -179,7 +179,7 @@ export function Portfolio() {
           value={formData.shares}
           onChange={(e) => setFormData({ ...formData, shares: e.target.value })}
           required
-          className="w-full px-3 py-3 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
+          className="w-full px-3 py-3 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-info)] text-base"
           placeholder="100"
         />
       </div>
@@ -192,7 +192,7 @@ export function Portfolio() {
           value={formData.avgCost}
           onChange={(e) => setFormData({ ...formData, avgCost: e.target.value })}
           required
-          className="w-full px-3 py-3 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
+          className="w-full px-3 py-3 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-info)] text-base"
           placeholder="150.00"
         />
       </div>
@@ -284,7 +284,7 @@ export function Portfolio() {
                 value={formData.symbol}
                 onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
                 required
-                className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-info)]"
                 placeholder="AAPL"
               />
             </div>
@@ -296,7 +296,7 @@ export function Portfolio() {
                 value={formData.shares}
                 onChange={(e) => setFormData({ ...formData, shares: e.target.value })}
                 required
-                className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-info)]"
                 placeholder="100"
               />
             </div>
@@ -308,7 +308,7 @@ export function Portfolio() {
                 value={formData.avgCost}
                 onChange={(e) => setFormData({ ...formData, avgCost: e.target.value })}
                 required
-                className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-info)]"
                 placeholder="150.00"
               />
             </div>

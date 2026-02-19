@@ -188,7 +188,7 @@ export function Help() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <BookOpen className="w-8 h-8 text-blue-600" />
+          <BookOpen className="w-8 h-8 text-[var(--color-info)]" />
           <h1 className="text-3xl font-bold text-[var(--color-text)]">Help Center</h1>
         </div>
         <p className="text-[var(--color-text-muted)]">
@@ -205,7 +205,7 @@ export function Help() {
             placeholder="Search help topics, metrics, or features..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 text-lg border border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+            className="w-full pl-12 pr-4 py-3 text-lg border border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-[var(--color-info)] focus:border-[var(--color-info)] shadow-sm"
           />
         </div>
       </div>
@@ -229,7 +229,7 @@ export function Help() {
                       <button
                         key={topic.id}
                         onClick={() => selectTopic(topic)}
-                        className="w-full flex items-center gap-3 p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-blue-500/10 hover:border-blue-500/20 border border-transparent transition text-left"
+                        className="w-full flex items-center gap-3 p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-[rgba(59, 130, 246,0.1)] hover:border-[rgba(59, 130, 246,0.2)] border border-transparent transition text-left"
                       >
                         <div className="flex-1">
                           <p className="font-medium text-[var(--color-text)]">{topic.title}</p>
@@ -275,7 +275,7 @@ export function Help() {
         <div className="mb-8">
           <button
             onClick={clearTopic}
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4"
+            className="flex items-center gap-2 text-[var(--color-info)] hover:text-[var(--color-info)] mb-4"
           >
             <ChevronRight className="w-4 h-4 rotate-180" />
             Back to all topics
@@ -302,7 +302,7 @@ export function Help() {
                       <button
                         key={topicId}
                         onClick={() => selectTopic(result.topic)}
-                        className="flex items-center gap-3 p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-blue-500/10 transition text-left"
+                        className="flex items-center gap-3 p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-[rgba(59, 130, 246,0.1)] transition text-left"
                       >
                         <div className="flex-1">
                           <p className="font-medium text-[var(--color-text)]">{result.topic.title}</p>
@@ -370,7 +370,7 @@ export function Help() {
                       className="w-full flex items-center gap-4 p-5 hover:bg-[var(--color-bg-tertiary)] transition text-left"
                     >
                       <div className="w-12 h-12 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-6 h-6 text-blue-600" />
+                        <Icon className="w-6 h-6 text-[var(--color-info)]" />
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-[var(--color-text)]">{section.title}</h3>
@@ -456,7 +456,7 @@ export function Help() {
                       const result = getTopicById('sharpe-volatility');
                       if (result) selectTopic(result.topic);
                     }}
-                    className="w-full mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="w-full mt-4 text-sm text-[var(--color-info)] hover:text-[var(--color-info)] font-medium"
                   >
                     View all metrics
                   </button>
@@ -480,7 +480,7 @@ export function Help() {
                       const result = getTopicById('what-are-factors');
                       if (result) selectTopic(result.topic);
                     }}
-                    className="w-full mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    className="w-full mt-4 text-sm text-[var(--color-info)] hover:text-[var(--color-info)] font-medium"
                   >
                     Learn about factors
                   </button>
@@ -491,9 +491,9 @@ export function Help() {
 
           {/* Contact Section */}
           <div className="mt-12 mb-8" id="contact">
-            <Card className="p-8 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20">
+            <Card className="p-8 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-[rgba(59, 130, 246,0.2)]">
               <div className="text-center max-w-xl mx-auto">
-                <MessageCircle className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+                <MessageCircle className="w-12 h-12 text-[var(--color-info)] mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Still need help?</h2>
                 <p className="text-[var(--color-text-secondary)] mb-6">
                   Our support team is here to help. Reach out and we will get back to you as soon as possible.
@@ -501,7 +501,7 @@ export function Help() {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <a
                     href="mailto:support@frontieralpha.com"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-info)] text-white rounded-lg hover:bg-[var(--color-info)] transition"
                   >
                     <Mail className="w-5 h-5" />
                     Email Support
@@ -550,10 +550,10 @@ function QuickStartCard({
   return (
     <button
       onClick={onClick}
-      className="p-6 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] hover:border-blue-500/30 hover:shadow-lg transition-all text-left group"
+      className="p-6 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] hover:border-[rgba(59, 130, 246,0.3)] hover:shadow-lg transition-all text-left group"
     >
       <div className="w-12 h-12 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-        <Icon className="w-6 h-6 text-blue-600" />
+        <Icon className="w-6 h-6 text-[var(--color-info)]" />
       </div>
       <h3 className="font-semibold text-[var(--color-text)] mb-1">{title}</h3>
       <p className="text-sm text-[var(--color-text-muted)]">{description}</p>

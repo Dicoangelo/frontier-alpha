@@ -63,11 +63,11 @@ export function getReportTimeLabel(time?: string): string {
 export function getDirectionColor(direction: EarningsImpactForecast['expectedDirection']): string {
   switch (direction) {
     case 'up':
-      return 'text-green-600';
+      return 'text-[var(--color-positive)]';
     case 'down':
-      return 'text-red-600';
+      return 'text-[var(--color-negative)]';
     default:
-      return 'text-gray-600';
+      return 'text-[var(--color-text-muted)]';
   }
 }
 
@@ -77,14 +77,14 @@ export function getRecommendationBadge(recommendation: EarningsImpactForecast['r
 } {
   switch (recommendation) {
     case 'add':
-      return { color: 'bg-green-100 text-green-800', label: 'Add' };
+      return { color: 'bg-[rgba(16,185,129,0.1)] text-[var(--color-positive)]', label: 'Add' };
     case 'hold':
-      return { color: 'bg-blue-100 text-blue-800', label: 'Hold' };
+      return { color: 'bg-[rgba(59,130,246,0.1)] text-[var(--color-info)]', label: 'Hold' };
     case 'reduce':
-      return { color: 'bg-yellow-100 text-yellow-800', label: 'Reduce' };
+      return { color: 'bg-[rgba(245,158,11,0.1)] text-[var(--color-warning)]', label: 'Reduce' };
     case 'hedge':
-      return { color: 'bg-purple-100 text-purple-800', label: 'Hedge' };
+      return { color: 'bg-[rgba(123,44,255,0.1)] text-[var(--color-accent)]', label: 'Hedge' };
     default:
-      return { color: 'bg-gray-100 text-gray-800', label: recommendation };
+      return { color: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]', label: recommendation };
   }
 }

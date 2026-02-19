@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus, HelpCircle } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
@@ -58,6 +58,34 @@ function NetExposureIndicator({ value }: { value: number }) {
     <span className="flex items-center gap-1 text-red-500">
       <TrendingDown className="w-3 h-3" /> {value.toFixed(2)}
     </span>
+  );
+}
+
+function AccordionContent({ isExpanded, children }: { isExpanded: boolean; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    if (isExpanded) {
+      setHeight(ref.current.scrollHeight);
+    } else {
+      setHeight(0);
+    }
+  }, [isExpanded]);
+
+  return (
+    <div
+      style={{
+        height: `${height}px`,
+        overflow: 'hidden',
+        transition: 'height 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+      }}
+    >
+      <div ref={ref}>
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -137,7 +165,7 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
         </div>
       ) : viewMode === 'grouped' ? (
         <div className="space-y-4">
-          {CATEGORY_ORDER.map((category) => {
+          {CATEGORY_ORDER.map((category, idx) => {
             const categoryFactors = groupedFactors[category];
             if (!categoryFactors || categoryFactors.length === 0) return null;
 
@@ -145,7 +173,11 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
             const netExposure = categoryNetExposure[category];
 
             return (
-              <div key={category} className="border border-[var(--color-border)] rounded-lg overflow-hidden">
+              <div
+                key={category}
+                className="border border-[var(--color-border)] rounded-lg overflow-hidden transition-shadow duration-200 hover:shadow-lg animate-fade-in-up"
+                style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}
+              >
                 <button
                   onClick={() => toggleCategory(category)}
                   className="w-full flex items-center justify-between p-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
@@ -164,21 +196,27 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
                   </div>
                 </button>
 
-                {isExpanded && (
+                <AccordionContent isExpanded={isExpanded}>
                   <div className="p-3 space-y-4 bg-[var(--color-bg)]">
                     {categoryFactors.map((factor) => (
                       <FactorBar key={factor.factor} factor={factor} showCategory={false} />
                     ))}
                   </div>
-                )}
+                </AccordionContent>
               </div>
             );
           })}
         </div>
       ) : (
         <div className="space-y-4">
-          {sortedFactors.slice(0, 10).map((factor) => (
-            <FactorBar key={factor.factor} factor={factor} />
+          {sortedFactors.slice(0, 10).map((factor, idx) => (
+            <div
+              key={factor.factor}
+              className="animate-fade-in-up"
+              style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}
+            >
+              <FactorBar factor={factor} />
+            </div>
           ))}
           {sortedFactors.length > 10 && (
             <p className="text-xs text-[var(--color-text-muted)] text-center">

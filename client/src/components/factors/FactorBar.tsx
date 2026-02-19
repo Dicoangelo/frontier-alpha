@@ -105,9 +105,9 @@ export function FactorBar({ factor, showCategory = true }: FactorBarProps) {
               <Info className="w-3.5 h-3.5" />
             </button>
             {showTooltip && (
-              <div className="absolute left-0 bottom-full mb-2 w-64 p-2.5 bg-[var(--color-bg)] dark:bg-[#1a1f2e] text-[var(--color-text)] text-xs rounded-lg shadow-lg border border-[var(--color-border)] z-20">
+              <div className="absolute left-0 bottom-full mb-2 w-64 p-2.5 bg-[var(--color-bg)] text-[var(--color-text)] text-xs rounded-lg shadow-lg border border-[var(--color-border)] z-20">
                 <p>{info.description}</p>
-                <div className="absolute left-2 top-full w-2 h-2 bg-[var(--color-bg)] dark:bg-[#1a1f2e] border-b border-r border-[var(--color-border)] transform rotate-45 -translate-y-1" />
+                <div className="absolute left-2 top-full w-2 h-2 bg-[var(--color-bg)] border-b border-r border-[var(--color-border)] transform rotate-45 -translate-y-1" />
               </div>
             )}
           </div>

@@ -8,6 +8,7 @@ import { api } from '@/api/client';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
+import { SkeletonSettingsPage } from '@/components/shared/Skeleton';
 import { NotificationSettings } from '@/components/notifications/NotificationSettings';
 import { APIKeys } from '@/components/settings/APIKeys';
 import { useToast } from '@/hooks/useToast';
@@ -80,11 +81,7 @@ export function Settings() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Spinner className="w-8 h-8" />
-      </div>
-    );
+    return <SkeletonSettingsPage />;
   }
 
   return (

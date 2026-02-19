@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 // Note: api is not used here since shared portfolios are accessed via public endpoint
 import { Card } from '@/components/shared/Card';
-import { Spinner } from '@/components/shared/Spinner';
+import { SkeletonSharedPortfolioPage } from '@/components/shared/Skeleton';
 
 interface SharedPosition {
   id: string;
@@ -106,14 +106,7 @@ export function SharedPortfolio() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="mt-4 text-[var(--color-text-muted)]">Loading shared portfolio...</p>
-        </div>
-      </div>
-    );
+    return <SkeletonSharedPortfolioPage />;
   }
 
   if (error) {

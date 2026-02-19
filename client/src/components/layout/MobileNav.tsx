@@ -35,7 +35,7 @@ export function MobileNav() {
               touch-manipulation
               transition-all duration-150 ease-out
               active:scale-95 click-feedback
-              focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7B2CFF] focus-visible:ring-inset
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset
               ${isActive
                 ? 'text-accent'
                 : 'text-theme-muted hover:text-theme-secondary'

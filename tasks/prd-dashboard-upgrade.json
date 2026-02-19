@@ -1,0 +1,95 @@
+{
+  "name": "frontier-alpha-dashboard-upgrade",
+  "description": "Upgrade Dashboard tab from 20/25 to 25/25 (Bloomberg/Stripe standard). Focus: pulse animations, responsive overview cards, delta indicators, sparklines, weight allocation chart, router fix, CSS variable consistency, touch support.",
+  "project": "~/projects/products/frontier-alpha",
+  "target": "client/src/pages/Dashboard.tsx and its sub-components",
+  "verification": [
+    "cd ~/projects/products/frontier-alpha && npx vitest run",
+    "cd ~/projects/products/frontier-alpha && npm run build"
+  ],
+  "stories": [
+    {
+      "id": "DASH-001",
+      "title": "Status bar pulse animation + router navigate fix",
+      "files": ["client/src/pages/Dashboard.tsx"],
+      "criteria": [
+        "Connected status dot has CSS pulse animation (animate-pulse or custom @keyframes with green glow)",
+        "Disconnected dot has no pulse (static red)",
+        "Replace window.location.href = '/portfolio' with useNavigate() from react-router-dom",
+        "Add fade transition between loading/error/loaded states (opacity + transform)",
+        "Tests pass, build passes"
+      ]
+    },
+    {
+      "id": "DASH-002",
+      "title": "PortfolioOverview: delta indicators + responsive grid",
+      "files": ["client/src/components/portfolio/PortfolioOverview.tsx"],
+      "criteria": [
+        "Each stat card shows daily change: +$X,XXX (+X.XX%) in smaller text below the main value",
+        "Daily change colored green (positive) or red (negative) with up/down arrow",
+        "Grid stacks on mobile: grid-cols-1 sm:grid-cols-3 (currently grid-cols-3 always)",
+        "Replace hardcoded bg-blue-500, bg-green-500, bg-red-500 with CSS variables (--color-primary, --color-positive, --color-danger)",
+        "Add number count-up animation on initial load (CSS counter or requestAnimationFrame, ~800ms)",
+        "Tests pass, build passes"
+      ]
+    },
+    {
+      "id": "DASH-003",
+      "title": "EquityCurve: touch support + crosshair tooltip",
+      "files": ["client/src/components/charts/EquityCurve.tsx"],
+      "criteria": [
+        "Touch events: onTouchStart/onTouchMove trigger the same hover behavior as mouse",
+        "Crosshair: vertical line at hovered X position (thin, dashed, --color-border color)",
+        "Tooltip: positioned near cursor showing date, portfolio value, benchmark value, and daily change",
+        "Tooltip doesn't overflow canvas bounds (clamp to edges)",
+        "Tests pass, build passes"
+      ]
+    },
+    {
+      "id": "DASH-004",
+      "title": "Position sparklines in PositionList",
+      "files": ["client/src/components/portfolio/PositionList.tsx"],
+      "criteria": [
+        "Each position row shows a mini sparkline (40x16px SVG) between symbol and P&L columns on desktop",
+        "Sparkline shows last 7 data points (mock seeded data if no real history)",
+        "Sparkline colored green if up, red if down (based on first vs last point)",
+        "Sparkline hidden on mobile card layout (too small to be useful)",
+        "No external charting library — pure SVG polyline",
+        "Tests pass, build passes"
+      ]
+    },
+    {
+      "id": "DASH-005",
+      "title": "Weight allocation donut chart",
+      "files": ["client/src/components/portfolio/WeightAllocation.tsx"],
+      "criteria": [
+        "New component: WeightAllocation renders a donut chart of position weights",
+        "Pure SVG — no Recharts or D3 (keep it lightweight for dashboard)",
+        "Center shows total value formatted as $XXXk",
+        "Hover segment: shows position name + weight % + value",
+        "Colors: 5-6 distinct colors from a fixed palette using CSS variables or branded colors",
+        "Responsive: donut scales to container, min 200px",
+        "Placed on Dashboard below EquityCurve, above the grid",
+        "Tests pass, build passes"
+      ]
+    },
+    {
+      "id": "DASH-006",
+      "title": "Micro-interaction polish pass",
+      "files": [
+        "client/src/pages/Dashboard.tsx",
+        "client/src/components/portfolio/PortfolioOverview.tsx",
+        "client/src/components/factors/FactorExposures.tsx",
+        "client/src/components/explainer/CognitiveInsight.tsx"
+      ],
+      "criteria": [
+        "Cards have subtle hover:shadow-lg transition (200ms ease) on desktop",
+        "Staggered fade-in animation on dashboard cards (each card delays 50ms more than previous)",
+        "Factor category accordion has smooth height transition (max-height + overflow hidden, not display:none toggle)",
+        "CognitiveInsight cards have slide-in-left animation on appear",
+        "All hardcoded Tailwind colors (text-green-500, bg-blue-500/10, etc.) replaced with CSS variable equivalents where theme vars exist",
+        "Tests pass, build passes"
+      ]
+    }
+  ]
+}

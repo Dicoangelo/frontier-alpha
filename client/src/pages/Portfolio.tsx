@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Edit2, X, Check, Share2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, X, Check, Share2, DollarSign, TrendingUp, TrendingDown, BarChart3, Wallet } from 'lucide-react';
 import { api, isNetworkError, getErrorMessage } from '@/api/client';
+import { useCountUp } from '@/components/portfolio/PortfolioOverview';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
@@ -156,6 +157,15 @@ export function Portfolio() {
   const cashBalance = portfolio?.data?.cash || 0;
   const totalValue = portfolio?.data?.totalValue || 0;
 
+  const totalPnL = useMemo(
+    () => positions.reduce((sum, p) => sum + (p.unrealizedPnL || 0), 0),
+    [positions]
+  );
+
+  const totalValueRef = useCountUp(totalValue, 800);
+  const pnlRef = useCountUp(Math.abs(totalPnL), 800);
+  const cashRef = useCountUp(cashBalance, 800);
+
   // Add Position Form (reused in both inline and bottom sheet)
   const renderAddPositionForm = (onCancel: () => void) => (
     <form onSubmit={handleAdd} className="space-y-4">
@@ -214,8 +224,11 @@ export function Portfolio() {
 
   const content = (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-[var(--color-text)]">Portfolio Management</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Portfolio Management</h1>
+          <p className="text-sm text-[var(--color-text-muted)] mt-1">Manage positions, track performance, and rebalance</p>
+        </div>
         <div className="flex items-center gap-3">
           {portfolio?.data && (
             <>
@@ -253,28 +266,60 @@ export function Portfolio() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-4">
-          <p className="text-sm text-[var(--color-text-muted)]">Total Value</p>
-          <p className="text-2xl font-bold text-[var(--color-text)]">
-            ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-          </p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-[var(--color-text-muted)]">Positions</p>
-          <p className="text-2xl font-bold text-[var(--color-text)]">{positions.length}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-[var(--color-text-muted)]">Cash Balance</p>
-          <p className="text-2xl font-bold text-[var(--color-text)]">
-            ${cashBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-          </p>
-        </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)]">
+          <div className="p-3 rounded-lg flex-shrink-0" style={{ backgroundColor: 'var(--color-accent-light)' }}>
+            <DollarSign className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Total Value</p>
+            <p className="text-xl font-bold text-[var(--color-text)] mt-0.5">
+              $<span ref={totalValueRef}>0</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)]">
+          <div className="p-3 rounded-lg flex-shrink-0" style={{ backgroundColor: totalPnL >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)' }}>
+            {totalPnL >= 0
+              ? <TrendingUp className="w-5 h-5" style={{ color: 'var(--color-positive)' }} />
+              : <TrendingDown className="w-5 h-5" style={{ color: 'var(--color-negative)' }} />
+            }
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Unrealized P&L</p>
+            <p className="text-xl font-bold mt-0.5" style={{ color: totalPnL >= 0 ? 'var(--color-positive)' : 'var(--color-negative)' }}>
+              {totalPnL >= 0 ? '+$' : '-$'}<span ref={pnlRef}>0</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)]">
+          <div className="p-3 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+            <BarChart3 className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Positions</p>
+            <p className="text-xl font-bold text-[var(--color-text)] mt-0.5">{positions.length}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)]">
+          <div className="p-3 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+            <Wallet className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Cash Balance</p>
+            <p className="text-xl font-bold text-[var(--color-text)] mt-0.5">
+              $<span ref={cashRef}>0</span>
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Inline Add Form (desktop only) */}
       {showAddForm && !isMobile && (
-        <Card className="p-6">
+        <Card className="p-6 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
           <h2 className="text-lg font-semibold mb-4">Add New Position</h2>
           <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
@@ -333,7 +378,7 @@ export function Portfolio() {
 
       {/* Mobile: Card layout */}
       {isMobile ? (
-        <div className="space-y-3">
+        <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
           {positions.length === 0 ? (
             <Card className="p-6">
               <EmptyPortfolio onAddPosition={handleAddPositionClick} />
@@ -428,17 +473,17 @@ export function Portfolio() {
         </div>
       ) : (
         /* Desktop: Table layout */
-        <Card>
+        <Card className="animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
           <div className="overflow-x-auto">
             <table className="w-full" role="table">
               <thead>
-                <tr className="border-b">
-                  <th scope="col" className="text-left py-3 px-4 font-medium text-[var(--color-text-secondary)]">Symbol</th>
-                  <th scope="col" className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Shares</th>
-                  <th scope="col" className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Avg Cost</th>
-                  <th scope="col" className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Current</th>
-                  <th scope="col" className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">P&L</th>
-                  <th scope="col" className="text-right py-3 px-4 font-medium text-[var(--color-text-secondary)]">Actions</th>
+                <tr className="border-b border-[var(--color-border-light)]">
+                  <th scope="col" className="text-left py-3 px-4 font-medium text-xs uppercase tracking-wider text-[var(--color-text-muted)]">Symbol</th>
+                  <th scope="col" className="text-right py-3 px-4 font-medium text-xs uppercase tracking-wider text-[var(--color-text-muted)]">Shares</th>
+                  <th scope="col" className="text-right py-3 px-4 font-medium text-xs uppercase tracking-wider text-[var(--color-text-muted)]">Avg Cost</th>
+                  <th scope="col" className="text-right py-3 px-4 font-medium text-xs uppercase tracking-wider text-[var(--color-text-muted)]">Current</th>
+                  <th scope="col" className="text-right py-3 px-4 font-medium text-xs uppercase tracking-wider text-[var(--color-text-muted)]">P&L</th>
+                  <th scope="col" className="text-right py-3 px-4 font-medium text-xs uppercase tracking-wider text-[var(--color-text-muted)]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -450,7 +495,7 @@ export function Portfolio() {
                   </tr>
                 ) : (
                   positions.map((position) => (
-                    <tr key={position.id} className="border-b hover:bg-[var(--color-bg-tertiary)]">
+                    <tr key={position.id} className="border-b border-[var(--color-border-light)] last:border-0 hover:bg-[var(--color-bg-tertiary)] transition-colors">
                       {editingId === position.id ? (
                         <>
                           <td className="py-3 px-4 font-medium">{position.symbol}</td>
@@ -461,7 +506,7 @@ export function Portfolio() {
                               inputMode="decimal"
                               value={formData.shares}
                               onChange={(e) => setFormData({ ...formData, shares: e.target.value })}
-                              className="w-24 px-2 py-2 min-h-[44px] border rounded text-right"
+                              className="w-24 px-2 py-2 min-h-[44px] border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] rounded-lg text-right focus:ring-2 focus:ring-[var(--color-info)] focus:outline-none"
                             />
                           </td>
                           <td className="py-3 px-4">
@@ -471,7 +516,7 @@ export function Portfolio() {
                               inputMode="decimal"
                               value={formData.avgCost}
                               onChange={(e) => setFormData({ ...formData, avgCost: e.target.value })}
-                              className="w-24 px-2 py-2 min-h-[44px] border rounded text-right"
+                              className="w-24 px-2 py-2 min-h-[44px] border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] rounded-lg text-right focus:ring-2 focus:ring-[var(--color-info)] focus:outline-none"
                             />
                           </td>
                           <td className="py-3 px-4 text-right">-</td>

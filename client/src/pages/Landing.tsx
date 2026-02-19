@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const MAG7_SYMBOLS = 'AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA';
+
 export function Landing() {
   const navigate = useNavigate();
   const [tickers, setTickers] = useState('');
@@ -35,6 +37,10 @@ export function Landing() {
     }, 500);
   }, [tickers, navigate]);
 
+  const handleViewDemo = useCallback(() => {
+    setTickers(MAG7_SYMBOLS);
+  }, []);
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleAnalyze();
@@ -42,7 +48,7 @@ export function Landing() {
   }, [handleAnalyze]);
 
   const quickPortfolios = [
-    { name: 'Mag 7', symbols: 'AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA' },
+    { name: 'Mag 7', symbols: MAG7_SYMBOLS },
     { name: 'Financials', symbols: 'JPM, BAC, GS, MS, V, MA' },
     { name: 'Healthcare', symbols: 'JNJ, UNH, PFE, MRK, ABBV, LLY' },
     { name: 'AI Leaders', symbols: 'NVDA, AMD, MSFT, GOOGL, META' },
@@ -65,23 +71,57 @@ export function Landing() {
         />
 
         {/* Logo/Brand */}
-        <div className="mb-8 text-center relative z-10">
+        <div className="mb-8 text-center relative z-10 animate-fade-in-up">
           <div className="flex items-center justify-center gap-4 mb-6">
             <img src="/metaventions-logo.png" alt="Metaventions AI" className="w-16 h-16 rounded-sm" />
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white mb-4 leading-[0.9] tracking-tight">
             Frontier<span className="text-gradient-brand">Alpha</span>
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl text-white/70 max-w-2xl mx-auto font-light">
-            Institutional Intelligence. Human Understanding.
-          </p>
-          <p className="text-[10px] text-white/30 mt-4 mono tracking-[0.5em] uppercase">
+          <p className="text-[10px] text-white/30 mt-2 mono tracking-[0.5em] uppercase">
             Architected Intelligence by Metaventions AI
           </p>
+
+          {/* Hero headline */}
+          <div className="mt-8 mb-2">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gradient-brand leading-tight">
+              AI-Powered Portfolio Intelligence
+            </h2>
+            <p className="text-base sm:text-lg text-white/60 mt-3 max-w-xl mx-auto">
+              80+ factors. Self-improving beliefs. Explainable AI.
+            </p>
+          </div>
+
+          {/* Hero CTAs */}
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={handleAnalyze}
+              disabled={isAnalyzing}
+              className="px-8 py-3 bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase transition-all disabled:opacity-50 shadow-[0_0_30px_rgba(123,44,255,0.3)] hover:shadow-[0_0_40px_rgba(123,44,255,0.5)] hover:scale-[1.02] min-w-[200px]"
+            >
+              {isAnalyzing ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 inline mr-2" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Analyzing...
+                </>
+              ) : (
+                'Analyze Your Portfolio'
+              )}
+            </button>
+            <button
+              onClick={handleViewDemo}
+              className="px-8 py-3 bg-white/5 border border-white/20 text-white/80 hover:bg-white/10 hover:border-[var(--color-accent-secondary)] hover:text-[var(--color-accent-secondary)] rounded-sm mono text-[10px] font-bold tracking-[0.3em] uppercase transition-all min-w-[140px]"
+            >
+              View Demo
+            </button>
+          </div>
         </div>
 
         {/* Ticker Input */}
-        <div className="w-full max-w-2xl mx-auto relative z-10">
+        <div className="w-full max-w-2xl mx-auto relative z-10 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
           <div className="glass-slab rounded-sm p-4 sm:p-6 md:p-8">
             <label htmlFor="ticker-input" className="block text-[10px] mono tracking-[0.4em] uppercase text-white/40 mb-3">
               Enter your portfolio tickers
@@ -100,7 +140,7 @@ export function Landing() {
               <button
                 onClick={handleAnalyze}
                 disabled={isAnalyzing}
-                className="px-8 py-3 bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase transition-all click-feedback disabled:opacity-50 shadow-[0_0_30px_rgba(123,44,255,0.3)] hover:shadow-[0_0_40px_rgba(123,44,255,0.5)] min-w-[140px]"
+                className="px-8 py-3 bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase transition-all click-feedback disabled:opacity-50 shadow-[0_0_30px_rgba(123,44,255,0.3)] hover:shadow-[0_0_40px_rgba(123,44,255,0.5)] hover:scale-[1.02] min-w-[140px]"
               >
                 {isAnalyzing ? (
                   <>

@@ -77,24 +77,41 @@ export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExport
   };
 
   const copyShareLink = async () => {
-    // Generate a shareable link (in production, this would create a server-side share link)
-    const shareData = btoa(
-      JSON.stringify({
-        positions: portfolio.positions.map((p) => ({
-          symbol: p.symbol,
-          weight: p.weight,
-        })),
-      })
-    );
-
-    const shareUrl = `${window.location.origin}/shared?data=${shareData}`;
-
     try {
+      const response = await fetch('/api/v1/portfolio/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          snapshot_json: {
+            name: portfolio.name,
+            positions: portfolio.positions.map((p) => ({
+              symbol: p.symbol,
+              shares: p.shares,
+              weight: p.weight,
+              costBasis: p.costBasis,
+              currentPrice: p.currentPrice,
+              unrealizedPnL: p.unrealizedPnL,
+            })),
+            cash: portfolio.cash,
+            totalValue: portfolio.totalValue,
+            currency: portfolio.currency,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create share link');
+      }
+
+      const result = await response.json();
+      const shareUrl = result.data?.shareUrl || `${window.location.origin}/shared/${result.data?.token}`;
+
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error('Failed to create or copy share link:', err);
     }
   };
 

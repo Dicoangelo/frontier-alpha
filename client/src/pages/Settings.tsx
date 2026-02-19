@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Save, LogOut, User, Bell, Shield, AlertTriangle, Key } from 'lucide-react';
+import { Save, LogOut, User, Bell, Shield, AlertTriangle, Key, CreditCard } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useSubscription } from '@/hooks/useSubscription';
 import { api } from '@/api/client';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
 import { NotificationSettings } from '@/components/notifications/NotificationSettings';
 import { APIKeys } from '@/components/settings/APIKeys';
-import { toast } from '@/components/shared/Toast';
+import { useToast } from '@/hooks/useToast';
 
 interface UserSettings {
   display_name: string | null;
@@ -22,7 +23,10 @@ interface UserSettings {
 
 export function Settings() {
   const { user, logout } = useAuthStore();
+  const { plan, status } = useSubscription();
+  const [billingLoading, setBillingLoading] = useState(false);
   const queryClient = useQueryClient();
+  const { toastSuccess, toastError } = useToast();
   const [hasChanges, setHasChanges] = useState(false);
 
   const { data: settingsData, isLoading } = useQuery<{ data: UserSettings }>({
@@ -52,10 +56,10 @@ export function Settings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
       setHasChanges(false);
-      toast.success('Settings saved');
+      toastSuccess('Settings saved');
     },
     onError: () => {
-      toast.error('Failed to save settings', 'Please try again');
+      toastError('Failed to save settings', { message: 'Please try again' });
     },
   });
 
@@ -231,6 +235,51 @@ export function Settings() {
               className="w-5 h-5 rounded border-[var(--color-border)] text-blue-600 focus:ring-blue-500"
             />
           </label>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <CreditCard className="w-5 h-5 text-[var(--color-text-muted)]" />
+          <h2 className="text-lg font-semibold">Subscription</h2>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium text-[var(--color-text-secondary)]">
+              Current Plan: <span className="capitalize text-[var(--color-accent)]">{plan}</span>
+            </p>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Status: <span className="capitalize">{status}</span>
+            </p>
+          </div>
+          <div className="flex gap-3">
+            {plan === 'free' ? (
+              <Button onClick={() => window.location.href = '/pricing'}>
+                Upgrade
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                isLoading={billingLoading}
+                onClick={async () => {
+                  setBillingLoading(true);
+                  try {
+                    const response = await api.post('/billing/portal') as { data: { url: string } };
+                    if (response.data?.url) {
+                      window.location.href = response.data.url;
+                    }
+                  } catch {
+                    toastError('Failed to open billing portal');
+                  } finally {
+                    setBillingLoading(false);
+                  }
+                }}
+              >
+                Manage Billing
+              </Button>
+            )}
+          </div>
         </div>
       </Card>
 

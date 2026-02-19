@@ -1,10 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import axios from 'axios';
 import { signIn, signUp, signOut, getSession, onAuthStateChange, type Session, type User } from '@/lib/supabase';
+
+interface Subscription {
+  plan: 'free' | 'pro' | 'enterprise';
+  status: 'active' | 'past_due' | 'canceled' | 'trialing';
+}
 
 interface AuthState {
   user: User | null;
   session: Session | null;
+  subscription: Subscription | null;
   loading: boolean;
   error: string | null;
   initialized: boolean;
@@ -15,6 +22,7 @@ interface AuthState {
   signup: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   clearError: () => void;
+  fetchSubscription: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -22,6 +30,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       session: null,
+      subscription: null,
       loading: false,
       error: null,
       initialized: false,
@@ -41,6 +50,8 @@ export const useAuthStore = create<AuthState>()(
               initialized: true,
               loading: false,
             });
+            // Fetch subscription in background
+            get().fetchSubscription();
           } else {
             set({ initialized: true, loading: false });
           }
@@ -127,6 +138,7 @@ export const useAuthStore = create<AuthState>()(
           set({
             user: null,
             session: null,
+            subscription: null,
             loading: false,
           });
         } catch (error: unknown) {
@@ -135,6 +147,24 @@ export const useAuthStore = create<AuthState>()(
       },
 
       clearError: () => set({ error: null }),
+
+      fetchSubscription: async () => {
+        const session = get().session;
+        if (!session?.access_token) return;
+
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || '';
+          const { data: response } = await axios.get(`${apiUrl}/api/v1/billing/subscription`, {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          if (response?.success && response.data) {
+            set({ subscription: { plan: response.data.plan, status: response.data.status } });
+          }
+        } catch {
+          // Default to free on error
+          set({ subscription: { plan: 'free', status: 'active' } });
+        }
+      },
     }),
     {
       name: 'frontier-auth',

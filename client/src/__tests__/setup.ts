@@ -4,6 +4,7 @@
  * Global configuration for React component and hook tests.
  */
 
+import '@testing-library/jest-dom';
 import { beforeAll, afterEach, vi } from 'vitest';
 
 // Mock window.matchMedia for useIsMobile hook

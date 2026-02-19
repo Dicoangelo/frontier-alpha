@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useDataSourceStore } from '@/stores/dataSourceStore';
 
 /**
  * Persistent banner shown when any API response indicates mock/simulated data.
  * Dismissible, but reappears on page navigation if still in mock mode.
+ * State is driven by dataSourceStore (Zustand); the module-level helpers
+ * remain for backward compatibility with the API interceptor bridge.
  */
 
-// Module-level state so any API call can set mock mode
+// Module-level state so any API call can set mock mode (legacy bridge)
 let _isMockMode = false;
 const listeners = new Set<(mock: boolean) => void>();
 
@@ -23,13 +26,18 @@ export function getMockMode(): boolean {
 }
 
 export function MockDataBanner() {
-  const [isMock, setIsMock] = useState(_isMockMode);
+  const isUsingMockData = useDataSourceStore((s) => s.isUsingMockData);
+  // Also subscribe to legacy module-level state so callers using setMockMode()
+  // directly (e.g. tests / non-axios paths) still work.
+  const [legacyMock, setLegacyMock] = useState(_isMockMode);
   const [dismissed, setDismissed] = useState(false);
   const location = useLocation();
 
-  // Subscribe to mock mode changes
+  const isMock = isUsingMockData || legacyMock;
+
+  // Subscribe to legacy mock mode changes
   useEffect(() => {
-    const handler = (mock: boolean) => setIsMock(mock);
+    const handler = (mock: boolean) => setLegacyMock(mock);
     listeners.add(handler);
     return () => { listeners.delete(handler); };
   }, []);

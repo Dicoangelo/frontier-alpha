@@ -2,6 +2,30 @@ import { randomBytes } from 'crypto';
 import { supabaseAdmin, FrontierSharedPortfolio, SharedPortfolioVisibility } from '../lib/supabase.js';
 import { logger } from '../lib/logger.js';
 
+// ============================================================================
+// Token-based portfolio sharing (portfolio_shares table)
+// ============================================================================
+
+export interface PortfolioShareInput {
+  snapshot_json: Record<string, unknown>;
+  user_id: string;
+}
+
+export interface PortfolioShareRecord {
+  id: string;
+  token: string;
+  user_id: string;
+  snapshot_json: Record<string, unknown>;
+  created_at: string;
+  expires_at: string;
+}
+
+export interface PortfolioShareResult {
+  token: string;
+  shareUrl: string;
+  expiresAt: string;
+}
+
 export interface SharePortfolioInput {
   portfolio_data: Record<string, unknown>;
   visibility?: SharedPortfolioVisibility;
@@ -160,3 +184,67 @@ export class SharingService {
 }
 
 export const sharingService = new SharingService();
+
+// ============================================================================
+// Token-based sharing functions (portfolio_shares table)
+// ============================================================================
+
+/**
+ * Create a token-based portfolio snapshot share.
+ * Token: crypto.randomBytes(16).toString('hex') — 32-char hex string.
+ * Expires in 30 days.
+ */
+export async function createPortfolioShare(
+  userId: string,
+  snapshotJson: Record<string, unknown>,
+  origin: string,
+): Promise<PortfolioShareResult | null> {
+  const token = randomBytes(16).toString('hex');
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabaseAdmin
+    .from('portfolio_shares')
+    .insert({
+      token,
+      user_id: userId,
+      snapshot_json: snapshotJson,
+      expires_at: expiresAt,
+    })
+    .select('token, expires_at')
+    .single();
+
+  if (error) {
+    logger.error({ err: error, userId }, 'Error creating portfolio share');
+    return null;
+  }
+
+  return {
+    token: data.token,
+    shareUrl: `${origin}/shared/${data.token}`,
+    expiresAt: data.expires_at,
+  };
+}
+
+/**
+ * Retrieve a portfolio snapshot by token.
+ * Returns null if not found or expired.
+ */
+export async function getPortfolioShareByToken(
+  token: string,
+): Promise<Record<string, unknown> | null> {
+  const { data, error } = await supabaseAdmin
+    .from('portfolio_shares')
+    .select('snapshot_json, expires_at')
+    .eq('token', token)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  if (new Date(data.expires_at) < new Date()) {
+    return null;
+  }
+
+  return data.snapshot_json as Record<string, unknown>;
+}

@@ -28,7 +28,7 @@ import { MarketDataProvider } from './data/MarketDataProvider.js';
 import { authMiddleware, hashApiKey } from './middleware/auth.js';
 import { rateLimiterMiddleware } from './middleware/rateLimiter.js';
 import { portfolioService } from './services/PortfolioService.js';
-import { sharingService } from './services/SharingService.js';
+import { sharingService, createPortfolioShare, getPortfolioShareByToken } from './services/SharingService.js';
 import { leaderboardService } from './services/LeaderboardService.js';
 import type { LeaderboardMetric, LeaderboardPeriod } from './services/LeaderboardService.js';
 import type { SharedPortfolioVisibility } from './lib/supabase.js';
@@ -762,6 +762,51 @@ export class FrontierAlphaServer {
           return reply.status(500).send({
             success: false,
             error: { code: 'INTERNAL_ERROR', message: 'Explanation generation failed' },
+          });
+        }
+      }
+    );
+
+    // ========================================
+    // Trade Explanation Chain-of-Thought (US-025)
+    // GET /api/v1/explain/trade/:symbol
+    // Cached per symbol per day
+    // ========================================
+
+    this.app.get<{
+      Params: { symbol: string };
+      Reply: APIResponse<unknown>;
+    }>(
+      '/api/v1/explain/trade/:symbol',
+      async (request, reply) => {
+        const start = Date.now();
+        const { symbol } = request.params;
+
+        if (!symbol || symbol.trim().length === 0) {
+          return reply.status(400).send({
+            success: false,
+            error: { code: 'VALIDATION_ERROR', message: 'Symbol is required' },
+          });
+        }
+
+        try {
+          const chain = await this.explanationService.explainTrade(symbol.toUpperCase());
+
+          return {
+            success: true,
+            data: chain,
+            meta: {
+              timestamp: new Date(),
+              requestId: request.id,
+              latencyMs: Date.now() - start,
+              cached: chain.cached,
+            },
+          };
+        } catch (error) {
+          logger.error({ err: error, symbol }, 'Trade explanation failed');
+          return reply.status(500).send({
+            success: false,
+            error: { code: 'INTERNAL_ERROR', message: 'Trade explanation generation failed' },
           });
         }
       }
@@ -2433,6 +2478,86 @@ export class FrontierAlphaServer {
             requestId: request.id,
             latencyMs: Date.now() - start,
           },
+        };
+      }
+    );
+
+    // ========================================
+    // Token-Based Portfolio Sharing (US-010)
+    // POST /api/v1/portfolio/share   — create encrypted share token
+    // GET  /api/v1/portfolio/shared/:token — retrieve snapshot by token
+    // ========================================
+
+    // POST /api/v1/portfolio/share
+    this.app.post<{
+      Body: { snapshot_json: Record<string, unknown> };
+    }>(
+      '/api/v1/portfolio/share',
+      { preHandler: authMiddleware },
+      async (request, reply) => {
+        const start = Date.now();
+        const { snapshot_json } = request.body || {};
+
+        if (!snapshot_json || typeof snapshot_json !== 'object') {
+          reply.code(400);
+          return {
+            data: null,
+            error: { code: 'VALIDATION_ERROR', message: 'snapshot_json is required and must be an object' },
+            meta: { timestamp: new Date(), requestId: request.id, latencyMs: Date.now() - start },
+          };
+        }
+
+        const origin = `${request.protocol}://${request.hostname}`;
+        const result = await createPortfolioShare(request.user!.id, snapshot_json, origin);
+
+        if (!result) {
+          reply.code(500);
+          return {
+            data: null,
+            error: { code: 'INTERNAL_ERROR', message: 'Failed to create share link' },
+            meta: { timestamp: new Date(), requestId: request.id, latencyMs: Date.now() - start },
+          };
+        }
+
+        reply.code(201);
+        return {
+          data: result,
+          meta: { timestamp: new Date(), requestId: request.id, latencyMs: Date.now() - start },
+        };
+      }
+    );
+
+    // GET /api/v1/portfolio/shared/:token
+    this.app.get<{ Params: { token: string } }>(
+      '/api/v1/portfolio/shared/:token',
+      async (request, reply) => {
+        const start = Date.now();
+        const { token } = request.params;
+
+        // Old base64 tokens are 88+ chars; new hex tokens are exactly 32 chars
+        if (!/^[0-9a-f]{32}$/.test(token)) {
+          reply.code(404);
+          return {
+            data: null,
+            error: { code: 'NOT_FOUND', message: 'This link has expired' },
+            meta: { timestamp: new Date(), requestId: request.id, latencyMs: Date.now() - start },
+          };
+        }
+
+        const snapshot = await getPortfolioShareByToken(token);
+
+        if (!snapshot) {
+          reply.code(404);
+          return {
+            data: null,
+            error: { code: 'NOT_FOUND', message: 'Shared portfolio not found or has expired' },
+            meta: { timestamp: new Date(), requestId: request.id, latencyMs: Date.now() - start },
+          };
+        }
+
+        return {
+          data: snapshot,
+          meta: { timestamp: new Date(), requestId: request.id, latencyMs: Date.now() - start },
         };
       }
     );

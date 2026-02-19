@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 
@@ -27,6 +27,7 @@ export function BottomSheet({
 
   const sheetRef = useRef<HTMLDivElement>(null);
   const startY = useRef(0);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const heightClasses = {
     auto: 'max-h-[85vh]',
@@ -34,13 +35,57 @@ export function BottomSheet({
     full: 'h-[90vh]',
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsClosing(true);
     setTimeout(() => {
       setIsClosing(false);
       onClose();
+      // Return focus to the element that opened the sheet
+      previousFocusRef.current?.focus();
     }, 300);
-  };
+  }, [onClose]);
+
+  // Capture previous focus and move focus into the sheet when it opens
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      // Focus the sheet itself (or first focusable child) after render
+      const timer = setTimeout(() => {
+        const focusable = sheetRef.current?.querySelector<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        (focusable ?? sheetRef.current)?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  // Focus trap: keep Tab within the sheet while it is open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !sheetRef.current) return;
+      const focusable = Array.from(
+        sheetRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => !el.hasAttribute('disabled'));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleTab);
+    return () => document.removeEventListener('keydown', handleTab);
+  }, [isOpen]);
 
   // Handle drag to close
   useEffect(() => {
@@ -149,6 +194,7 @@ export function BottomSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'sheet-title' : undefined}
+        tabIndex={-1}
       >
         {/* Handle */}
         {showHandle && (

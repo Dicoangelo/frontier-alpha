@@ -196,9 +196,9 @@ export function InlineHelp({ children, tip, className = '' }: InlineHelpProps) {
     >
       {children}
       {isVisible && (
-        <span className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[var(--color-bg-tertiary)] text-white text-xs rounded-lg shadow-lg whitespace-nowrap max-w-xs animate-fade-in">
+        <span className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-white text-xs rounded-lg shadow-lg whitespace-nowrap max-w-xs animate-fade-in" style={{ backgroundColor: 'rgba(15, 18, 25, 0.95)' }}>
           {tip}
-          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent" style={{ borderTopColor: 'rgba(15, 18, 25, 0.95)' }} />
         </span>
       )}
     </span>

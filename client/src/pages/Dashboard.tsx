@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { Plus, Zap, ArrowRightLeft } from 'lucide-react';
 import { useQuotes } from '@/hooks/useQuotes';
+import { useAuthStore } from '@/stores/authStore';
 import { PortfolioOverview } from '@/components/portfolio/PortfolioOverview';
 import { PositionList } from '@/components/portfolio/PositionList';
 import { FactorExposures } from '@/components/factors/FactorExposures';
@@ -68,6 +70,21 @@ const EMPTY_METRICS: RiskMetricsData = {
   var95: 0,
   cvar95: 0,
 };
+
+// Greeting based on time of day
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function getDisplayName(email: string | undefined | null): string {
+  if (!email) return 'Investor';
+  const local = email.split('@')[0];
+  // Capitalize first letter
+  return local.charAt(0).toUpperCase() + local.slice(1);
+}
 
 // API functions
 async function fetchPortfolio(): Promise<Portfolio | null> {
@@ -254,8 +271,26 @@ function getDemoFactors(): FactorExposure[] {
   ];
 }
 
+// Quick action pill component
+function QuickAction({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) {
+  return (
+    <Link
+      to={to}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
+        bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]
+        border border-[var(--color-border-light)]
+        hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]
+        transition-all duration-200 click-feedback"
+    >
+      {icon}
+      {label}
+    </Link>
+  );
+}
+
 export function Dashboard() {
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
   const [portfolio, setPortfolio] = useState<Portfolio>(EMPTY_PORTFOLIO);
   const [factors, setFactors] = useState<FactorExposure[]>(EMPTY_FACTORS);
   const [metrics, setMetrics] = useState<RiskMetricsData>(EMPTY_METRICS);
@@ -372,6 +407,8 @@ export function Dashboard() {
     );
   }
 
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
   return (
     <PullToRefresh onRefresh={loadPortfolioData} className="min-h-screen">
       <div
@@ -379,21 +416,42 @@ export function Dashboard() {
         style={{ opacity: contentVisible ? 1 : 0 }}
       >
 
-        {/* Live data status bar */}
-        <div className="flex items-center justify-between text-xs text-[var(--color-text-secondary)] px-1">
-          <div className="flex items-center gap-2">
+        {/* Hero Header — Greeting + Quick Actions + Live Status */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold">
+              <span className="text-gradient-brand">{getGreeting()}</span>
+              <span className="text-[var(--color-text)]">, {getDisplayName(user?.email)}</span>
+            </h1>
+            <p className="text-sm text-[var(--color-text-muted)] mt-1">{today}</p>
+            {/* Quick action pills */}
+            <div className="flex items-center gap-2 mt-3 flex-wrap">
+              <QuickAction to="/portfolio" icon={<Plus className="w-3 h-3" />} label="Add Position" />
+              <QuickAction to="/optimize" icon={<Zap className="w-3 h-3" />} label="Optimize" />
+              <QuickAction to="/trade" icon={<ArrowRightLeft className="w-3 h-3" />} label="Trade" />
+            </div>
+          </div>
+
+          {/* Live status pill — glass morphism */}
+          <div
+            className="glass-slab rounded-full px-4 py-2 flex items-center gap-2 self-start flex-shrink-0"
+          >
             <span
               className={`inline-block w-2 h-2 rounded-full ${
                 isConnected
                   ? 'bg-[var(--color-positive)] animate-pulse-green'
-                  : 'bg-[var(--color-danger)]'
+                  : 'bg-[var(--color-danger)] animate-pulse-subtle'
               }`}
             />
-            <span>{isConnected ? 'Live' : 'Disconnected'}</span>
+            <span className={`text-xs font-medium ${isConnected ? 'text-[var(--color-positive)]' : 'text-[var(--color-danger)]'}`}>
+              {isConnected ? 'Live' : 'Reconnecting...'}
+            </span>
+            {lastUpdate && isConnected && (
+              <span className="text-xs text-[var(--color-text-muted)] border-l border-[var(--color-border-light)] pl-2 ml-0.5">
+                {lastUpdate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+            )}
           </div>
-          {lastUpdate && (
-            <span>Updated {lastUpdate.toLocaleTimeString()}</span>
-          )}
         </div>
 
         <div data-tour="portfolio-overview" className="animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>

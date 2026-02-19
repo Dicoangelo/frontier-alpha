@@ -86,16 +86,16 @@ const formatFactorName = (factor: string): string => {
 };
 
 const severityColors: Record<string, string> = {
-  critical: 'text-red-600 bg-red-500/10 border-red-500/20',
-  high: 'text-orange-600 bg-orange-500/10 border-orange-500/20',
-  medium: 'text-amber-600 bg-amber-500/10 border-amber-500/20',
-  low: 'text-blue-600 bg-blue-500/10 border-blue-500/20',
+  critical: 'text-[var(--color-negative)] bg-[rgba(239, 68, 68,0.1)] border-[rgba(239, 68, 68,0.2)]',
+  high: 'text-[var(--color-warning)] bg-[rgba(249, 115, 22,0.1)] border-[rgba(249, 115, 22,0.2)]',
+  medium: 'text-[var(--color-warning)] bg-[rgba(245, 158, 11,0.1)] border-[rgba(245, 158, 11,0.2)]',
+  low: 'text-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)] border-[rgba(59, 130, 246,0.2)]',
 };
 
 const healthColors: Record<string, string> = {
-  healthy: 'text-green-600',
-  warning: 'text-amber-600',
-  critical: 'text-red-600',
+  healthy: 'text-[var(--color-positive)]',
+  warning: 'text-[var(--color-warning)]',
+  critical: 'text-[var(--color-negative)]',
 };
 
 export function FactorDriftAlert({
@@ -224,7 +224,7 @@ export function FactorDriftAlert({
                 onClick={() => handleStrategyChange(key)}
                 className={`px-3 py-1.5 text-sm rounded-lg transition ${
                   selectedStrategy === key
-                    ? 'bg-blue-500 text-white'
+                    ? 'bg-[var(--color-info)] text-white'
                     : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)]'
                 }`}
               >
@@ -247,7 +247,7 @@ export function FactorDriftAlert({
                 <div className="h-6 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                   {/* Target indicator */}
                   <div
-                    className="absolute top-0 bottom-0 w-0.5 bg-gray-400 z-10"
+                    className="absolute top-0 bottom-0 w-0.5 bg-[var(--color-bg-tertiary)] z-10"
                     style={{
                       left: `${Math.min(Math.max((drift.target + 1) * 50, 0), 100)}%`,
                     }}
@@ -256,10 +256,10 @@ export function FactorDriftAlert({
                   <div
                     className={`h-full rounded-full transition-all ${
                       drift.withinTolerance
-                        ? 'bg-green-400'
+                        ? 'bg-[var(--color-positive)]'
                         : drift.driftPct > 0.5
-                        ? 'bg-red-400'
-                        : 'bg-amber-400'
+                        ? 'bg-[var(--color-negative)]'
+                        : 'bg-[var(--color-warning)]'
                     }`}
                     style={{
                       width: `${Math.min(Math.abs(drift.current) * 50, 100)}%`,
@@ -271,7 +271,7 @@ export function FactorDriftAlert({
               <div className="w-20 text-right">
                 <span
                   className={`text-sm font-medium ${
-                    drift.withinTolerance ? 'text-green-600' : 'text-amber-600'
+                    drift.withinTolerance ? 'text-[var(--color-positive)]' : 'text-[var(--color-warning)]'
                   }`}
                 >
                   {drift.current.toFixed(2)}
@@ -282,9 +282,9 @@ export function FactorDriftAlert({
               </div>
               {!drift.withinTolerance && (
                 drift.drift > 0 ? (
-                  <TrendingUp className="w-4 h-4 text-red-500" aria-hidden="true" />
+                  <TrendingUp className="w-4 h-4 text-[var(--color-negative)]" aria-hidden="true" />
                 ) : (
-                  <TrendingDown className="w-4 h-4 text-red-500" aria-hidden="true" />
+                  <TrendingDown className="w-4 h-4 text-[var(--color-negative)]" aria-hidden="true" />
                 )
               )}
             </div>
@@ -309,12 +309,12 @@ export function FactorDriftAlert({
                 <span
                   className={`text-xs font-medium px-2 py-0.5 rounded ${
                     alert.severity === 'critical'
-                      ? 'bg-red-200'
+                      ? 'bg-[var(--color-negative)]'
                       : alert.severity === 'high'
-                      ? 'bg-orange-200'
+                      ? 'bg-[var(--color-warning)]'
                       : alert.severity === 'medium'
-                      ? 'bg-amber-200'
-                      : 'bg-blue-200'
+                      ? 'bg-[var(--color-warning)]'
+                      : 'bg-[var(--color-info)]'
                   }`}
                 >
                   {alert.severity.toUpperCase()}

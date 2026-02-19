@@ -61,8 +61,8 @@ function FactorAdjustmentBadge({ factor, adjustment }: FactorAdjustmentBadgeProp
     <div
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
         isPositive
-          ? 'bg-green-500/10 text-green-700 border border-green-500/20'
-          : 'bg-red-500/10 text-red-700 border border-red-500/20'
+          ? 'bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)] border border-[rgba(16, 185, 129,0.2)]'
+          : 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)] border border-[rgba(239, 68, 68,0.2)]'
       }`}
     >
       <Icon className="w-3.5 h-3.5" />
@@ -95,7 +95,7 @@ export function MetaPromptCard() {
     return (
       <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-5 h-5 text-indigo-500" />
+          <Sparkles className="w-5 h-5 text-[var(--color-accent)]" />
           <h3 className="text-lg font-semibold text-[var(--color-text)]">Meta-Prompt</h3>
         </div>
         <div className="text-center py-6 text-sm text-[var(--color-text-muted)]">
@@ -108,11 +108,11 @@ export function MetaPromptCard() {
   const hasFactorAdjustments = Object.keys(metaPrompt.factorAdjustments).length > 0;
 
   return (
-    <div className="bg-gradient-to-br from-[var(--color-bg)] to-indigo-50/30 rounded-xl border border-indigo-500/20 p-6">
+    <div className="bg-gradient-to-br from-[var(--color-bg)] to-indigo-50/30 rounded-xl border border-[rgba(99, 102, 241,0.2)] p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-[var(--color-accent)] rounded-lg flex items-center justify-center">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
@@ -127,8 +127,8 @@ export function MetaPromptCard() {
           <div
             className={`px-2 py-1 text-xs rounded-full ${
               metaPrompt.sourceEpisodes.delta >= 0
-                ? 'bg-green-500/10 text-green-700'
-                : 'bg-red-500/10 text-red-700'
+                ? 'bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)]'
+                : 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)]'
             }`}
           >
             {metaPrompt.sourceEpisodes.delta >= 0 ? '+' : ''}
@@ -138,8 +138,8 @@ export function MetaPromptCard() {
       </div>
 
       {/* Optimization Direction */}
-      <div className="mb-4 p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-lg">
-        <div className="text-xs text-indigo-600 font-medium mb-1 flex items-center gap-1">
+      <div className="mb-4 p-4 bg-[rgba(99, 102, 241,0.05)] border border-[rgba(99, 102, 241,0.1)] rounded-lg">
+        <div className="text-xs text-[var(--color-accent)] font-medium mb-1 flex items-center gap-1">
           <Lightbulb className="w-3.5 h-3.5" />
           Optimization Direction
         </div>
@@ -155,7 +155,7 @@ export function MetaPromptCard() {
           <div className="space-y-1.5">
             {metaPrompt.keyLearnings.slice(0, expanded ? undefined : 3).map((learning: string, idx: number) => (
               <div key={idx} className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
-                <CheckCircle2 className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-[var(--color-accent)] mt-0.5 shrink-0" />
                 <span>{learning}</span>
               </div>
             ))}
@@ -163,7 +163,7 @@ export function MetaPromptCard() {
           {metaPrompt.keyLearnings.length > 3 && (
             <button
               onClick={() => setExpanded(!expanded)}
-              className="mt-2 text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+              className="mt-2 text-xs text-[var(--color-accent)] hover:text-[var(--color-accent)] flex items-center gap-1"
             >
               {expanded ? (
                 <>

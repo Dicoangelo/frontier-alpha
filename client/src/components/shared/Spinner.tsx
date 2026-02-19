@@ -13,6 +13,6 @@ const sizes = {
 
 export function Spinner({ size = 'md', className = '' }: SpinnerProps) {
   return (
-    <Loader2 className={`animate-spin text-blue-600 ${sizes[size]} ${className}`} />
+    <Loader2 className={`animate-spin text-[var(--color-info)] ${sizes[size]} ${className}`} />
   );
 }

@@ -31,11 +31,11 @@ export function HelpButton({
         onClick={onClick}
         className={`
           flex items-center gap-2 px-3 py-2
-          text-[var(--color-text-secondary)] hover:text-blue-600
-          bg-[var(--color-bg-tertiary)] hover:bg-blue-500/10
-          border border-[var(--color-border)] hover:border-blue-500/20
+          text-[var(--color-text-secondary)] hover:text-[var(--color-info)]
+          bg-[var(--color-bg-tertiary)] hover:bg-[rgba(59, 130, 246,0.1)]
+          border border-[var(--color-border)] hover:border-[rgba(59, 130, 246,0.2)]
           rounded-lg transition-all duration-150
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+          focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] focus:ring-offset-2
           ${className}
         `}
         aria-label="Open help"
@@ -52,12 +52,12 @@ export function HelpButton({
       className={`
         ${sizeClasses[size]}
         flex items-center justify-center
-        text-[var(--color-text-muted)] hover:text-blue-600
-        bg-[var(--color-bg)] hover:bg-blue-500/10
-        border border-[var(--color-border)] hover:border-blue-300
+        text-[var(--color-text-muted)] hover:text-[var(--color-info)]
+        bg-[var(--color-bg)] hover:bg-[rgba(59, 130, 246,0.1)]
+        border border-[var(--color-border)] hover:border-[var(--color-info)]
         rounded-full shadow-sm hover:shadow
         transition-all duration-150
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+        focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] focus:ring-offset-2
         ${className}
       `}
       aria-label="Open help"
@@ -96,7 +96,7 @@ export function FloatingHelpButton({
         rounded-full shadow-lg hover:shadow-xl
         transition-all duration-200
         hover:scale-110 active:scale-95
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+        focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] focus:ring-offset-2
       `}
       aria-label="Open help (press ? for keyboard shortcut)"
       title="Help (press ?)"

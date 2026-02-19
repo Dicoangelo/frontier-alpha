@@ -78,13 +78,13 @@ function ChartTooltip({ active, payload, label }: CustomTooltipProps) {
       <div className="space-y-1">
         <div className="flex justify-between gap-4">
           <span className="text-[var(--color-text-muted)]">Return:</span>
-          <span className={data.return >= 0 ? 'text-green-600 font-mono' : 'text-red-600 font-mono'}>
+          <span className={data.return >= 0 ? 'text-[var(--color-positive)] font-mono' : 'text-[var(--color-negative)] font-mono'}>
             {data.returnPct}
           </span>
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-[var(--color-text-muted)]">Cumulative:</span>
-          <span className="text-indigo-600 font-mono">{data.cumulativePct}</span>
+          <span className="text-[var(--color-accent)] font-mono">{data.cumulativePct}</span>
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-[var(--color-text-muted)]">Sharpe:</span>
@@ -92,7 +92,7 @@ function ChartTooltip({ active, payload, label }: CustomTooltipProps) {
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-[var(--color-text-muted)]">Max DD:</span>
-          <span className="text-red-600 font-mono">-{data.drawdownPct}</span>
+          <span className="text-[var(--color-negative)] font-mono">-{data.drawdownPct}</span>
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-[var(--color-text-muted)]">Decisions:</span>
@@ -123,7 +123,7 @@ export function EpisodePerformanceChart() {
     return (
       <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
         <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="w-5 h-5 text-indigo-500" />
+          <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
           <h3 className="text-lg font-semibold text-[var(--color-text)]">Episode Performance</h3>
         </div>
         <div className="flex items-center justify-center h-48 text-[var(--color-text-muted)] text-sm">
@@ -142,7 +142,7 @@ export function EpisodePerformanceChart() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-indigo-500" />
+          <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
           <h3 className="text-lg font-semibold text-[var(--color-text)]">Episode Performance</h3>
         </div>
         <div className="flex gap-1 bg-[var(--color-bg-secondary)] rounded-lg p-0.5">
@@ -152,7 +152,7 @@ export function EpisodePerformanceChart() {
               onClick={() => setMetric(m)}
               className={`px-3 py-1 text-xs rounded-md transition-colors ${
                 metric === m
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-[var(--color-accent)] text-white'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
               }`}
             >
@@ -166,21 +166,21 @@ export function EpisodePerformanceChart() {
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg text-center">
           <div className="text-xs text-[var(--color-text-muted)]">Cumulative Return</div>
-          <div className={`text-xl font-bold ${totalCumulative >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <div className={`text-xl font-bold ${totalCumulative >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {totalCumulative >= 0 ? '+' : ''}
             {(totalCumulative * 100).toFixed(2)}%
           </div>
         </div>
         <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg text-center">
           <div className="text-xs text-[var(--color-text-muted)]">Avg Episode Return</div>
-          <div className={`text-xl font-bold ${avgReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <div className={`text-xl font-bold ${avgReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {avgReturn >= 0 ? '+' : ''}
             {(avgReturn * 100).toFixed(2)}%
           </div>
         </div>
         <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg text-center">
           <div className="text-xs text-[var(--color-text-muted)]">Avg Sharpe Ratio</div>
-          <div className="text-xl font-bold text-indigo-600">{avgSharpe.toFixed(2)}</div>
+          <div className="text-xl font-bold text-[var(--color-accent)]">{avgSharpe.toFixed(2)}</div>
         </div>
       </div>
 
@@ -188,21 +188,21 @@ export function EpisodePerformanceChart() {
       <div className="h-72" role="img" aria-label={`Episode performance chart showing ${metric} across ${chartData.length} episodes`}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, #e5e7eb)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" />
             <XAxis
               dataKey="label"
-              tick={{ fill: 'var(--color-text-muted, #9ca3af)', fontSize: 12 }}
-              axisLine={{ stroke: 'var(--color-border, #d1d5db)' }}
+              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 12 }}
+              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
             />
             <YAxis
-              tick={{ fill: 'var(--color-text-muted, #9ca3af)', fontSize: 12 }}
-              axisLine={{ stroke: 'var(--color-border, #d1d5db)' }}
+              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 12 }}
+              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
               tickFormatter={(v) =>
                 metric === 'sharpe' ? v.toFixed(1) : `${(v * 100).toFixed(0)}%`
               }
             />
             <Tooltip content={<ChartTooltip />} />
-            <ReferenceLine y={0} stroke="var(--color-border, #d1d5db)" strokeDasharray="2 2" />
+            <ReferenceLine y={0} stroke="var(--color-border, var(--color-border))" strokeDasharray="2 2" />
 
             {metric === 'returns' && (
               <>

@@ -16,11 +16,11 @@ interface RegimeSegment {
 }
 
 const REGIME_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  bull: { bg: 'bg-green-100', border: 'border-green-300', text: 'text-green-700' },
-  bear: { bg: 'bg-red-100', border: 'border-red-300', text: 'text-red-700' },
-  sideways: { bg: 'bg-yellow-100', border: 'border-yellow-300', text: 'text-yellow-700' },
-  volatile: { bg: 'bg-orange-100', border: 'border-orange-300', text: 'text-orange-700' },
-  recovery: { bg: 'bg-blue-100', border: 'border-blue-300', text: 'text-blue-700' },
+  bull: { bg: 'bg-[var(--color-positive)]', border: 'border-[var(--color-positive)]', text: 'text-[var(--color-positive)]' },
+  bear: { bg: 'bg-[var(--color-negative)]', border: 'border-[var(--color-negative)]', text: 'text-[var(--color-negative)]' },
+  sideways: { bg: 'bg-[var(--color-warning)]', border: 'border-[var(--color-warning)]', text: 'text-[var(--color-warning)]' },
+  volatile: { bg: 'bg-[var(--color-warning)]', border: 'border-[var(--color-warning)]', text: 'text-[var(--color-warning)]' },
+  recovery: { bg: 'bg-[var(--color-info)]', border: 'border-[var(--color-info)]', text: 'text-[var(--color-info)]' },
 };
 
 const REGIME_ICONS: Record<string, string> = {
@@ -51,7 +51,7 @@ export function RegimeTimeline() {
     return (
       <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Clock className="w-5 h-5 text-indigo-500" />
+          <Clock className="w-5 h-5 text-[var(--color-accent)]" />
           <h3 className="text-lg font-semibold text-[var(--color-text)]">Regime Timeline</h3>
         </div>
         <div className="flex items-center justify-center h-16 text-[var(--color-text-muted)] text-sm">
@@ -101,7 +101,7 @@ export function RegimeTimeline() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-indigo-500" />
+          <Clock className="w-5 h-5 text-[var(--color-accent)]" />
           <h3 className="text-lg font-semibold text-[var(--color-text)]">Regime Timeline</h3>
         </div>
         <span className="text-xs text-[var(--color-text-muted)]">

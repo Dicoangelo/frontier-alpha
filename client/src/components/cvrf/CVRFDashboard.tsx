@@ -40,7 +40,7 @@ export function CVRFDashboard() {
       <div className="bg-[var(--color-bg)] border-b border-[var(--color-border)] px-4 sm:px-6 py-4">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 bg-[var(--color-accent)] rounded-xl flex items-center justify-center shrink-0">
               <Brain className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -70,8 +70,8 @@ export function CVRFDashboard() {
 
       {/* Error Banner — partial errors when some data loaded */}
       {isError && !hasNoData && (
-        <div className="bg-red-500/10 border-b border-red-500/20 px-4 sm:px-6 py-3">
-          <div className="max-w-7xl mx-auto flex items-center gap-2 text-red-700">
+        <div className="bg-[rgba(239, 68, 68,0.1)] border-b border-[rgba(239, 68, 68,0.2)] px-4 sm:px-6 py-3">
+          <div className="max-w-7xl mx-auto flex items-center gap-2 text-[var(--color-negative)]">
             <AlertTriangle className="w-4 h-4" />
             <span className="text-sm">
               Some data failed to load. Check your connection and try refreshing.
@@ -133,15 +133,15 @@ export function CVRFDashboard() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[var(--color-text-muted)]">
           <div>
             Based on{' '}
-            <a href="#" className="text-indigo-600 hover:underline">
+            <a href="#" className="text-[var(--color-accent)] hover:underline">
               FinCon
             </a>
             ,{' '}
-            <a href="#" className="text-indigo-600 hover:underline">
+            <a href="#" className="text-[var(--color-accent)] hover:underline">
               TextGrad
             </a>
             , and{' '}
-            <a href="#" className="text-indigo-600 hover:underline">
+            <a href="#" className="text-[var(--color-accent)] hover:underline">
               FLAG-Trader
             </a>{' '}
             research

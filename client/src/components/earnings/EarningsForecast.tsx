@@ -134,7 +134,7 @@ export function EarningsForecast({
             <div className="flex items-center gap-2">
               <div className="flex-1 h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-blue-500 rounded-full"
+                  className="h-full bg-[var(--color-info)] rounded-full"
                   style={{ width: `${forecast.confidence * 100}%` }}
                 />
               </div>
@@ -164,15 +164,15 @@ export function EarningsForecast({
               <div className="flex-1 h-3 bg-[var(--color-border)] rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full ${
-                    forecast.beatRate > 60 ? 'bg-green-500' :
-                    forecast.beatRate < 40 ? 'bg-red-500' : 'bg-yellow-500'
+                    forecast.beatRate > 60 ? 'bg-[var(--color-positive)]' :
+                    forecast.beatRate < 40 ? 'bg-[var(--color-negative)]' : 'bg-[var(--color-warning)]'
                   }`}
                   style={{ width: `${forecast.beatRate}%` }}
                 />
               </div>
               <span className={`font-bold ${
-                forecast.beatRate > 60 ? 'text-green-600' :
-                forecast.beatRate < 40 ? 'text-red-600' : 'text-yellow-600'
+                forecast.beatRate > 60 ? 'text-[var(--color-positive)]' :
+                forecast.beatRate < 40 ? 'text-[var(--color-negative)]' : 'text-[var(--color-warning)]'
               }`}>
                 {forecast.beatRate.toFixed(0)}%
               </span>
@@ -181,9 +181,9 @@ export function EarningsForecast({
         )}
 
         {/* AI Explanation */}
-        <div className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
-          <p className="text-sm font-medium text-blue-400 mb-2">AI Analysis</p>
-          <p className="text-sm text-blue-500">{forecast.explanation}</p>
+        <div className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-[rgba(59, 130, 246,0.2)]">
+          <p className="text-sm font-medium text-[var(--color-info)] mb-2">AI Analysis</p>
+          <p className="text-sm text-[var(--color-info)]">{forecast.explanation}</p>
         </div>
 
         {/* Factor Analysis (if available) */}
@@ -202,8 +202,8 @@ export function EarningsForecast({
               <div className="flex justify-between p-2 bg-[var(--color-bg-tertiary)] rounded">
                 <span className="text-[var(--color-text-muted)]">Risk Assessment</span>
                 <span className={`font-medium ${
-                  forecast.factors.riskAssessment.includes('HIGH') ? 'text-red-600' :
-                  forecast.factors.riskAssessment.includes('LOW') ? 'text-green-600' : 'text-yellow-600'
+                  forecast.factors.riskAssessment.includes('HIGH') ? 'text-[var(--color-negative)]' :
+                  forecast.factors.riskAssessment.includes('LOW') ? 'text-[var(--color-positive)]' : 'text-[var(--color-warning)]'
                 }`}>
                   {forecast.factors.riskAssessment}
                 </span>
@@ -226,7 +226,7 @@ export function EarningsForecast({
         <div className="text-center">
           <Link
             to="/help#earnings-forecasts"
-            className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-500"
+            className="inline-flex items-center gap-1 text-sm text-[var(--color-info)] hover:text-[var(--color-info)]"
           >
             <HelpCircle className="w-4 h-4" />
             How forecasts work

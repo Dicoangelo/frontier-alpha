@@ -18,50 +18,50 @@ const ALERT_CONFIG: Record<string, {
   actions: { label: string; action: string; variant: 'primary' | 'secondary' | 'danger' }[];
 }> = {
   drawdown: {
-    icon: <TrendingDown className="w-5 h-5 text-red-600" />,
-    bgColor: 'bg-red-500/10',
-    borderColor: 'border-red-500/20',
-    iconBg: 'bg-red-500/10',
+    icon: <TrendingDown className="w-5 h-5 text-[var(--color-negative)]" />,
+    bgColor: 'bg-[rgba(239, 68, 68,0.1)]',
+    borderColor: 'border-[rgba(239, 68, 68,0.2)]',
+    iconBg: 'bg-[rgba(239, 68, 68,0.1)]',
     actions: [
       { label: 'Reduce Risk', action: 'reduce_risk', variant: 'danger' },
       { label: 'Add Hedge', action: 'add_hedge', variant: 'secondary' },
     ],
   },
   volatility_spike: {
-    icon: <BarChart3 className="w-5 h-5 text-orange-600" />,
-    bgColor: 'bg-orange-500/10',
-    borderColor: 'border-orange-500/20',
-    iconBg: 'bg-orange-500/10',
+    icon: <BarChart3 className="w-5 h-5 text-[var(--color-warning)]" />,
+    bgColor: 'bg-[rgba(249, 115, 22,0.1)]',
+    borderColor: 'border-[rgba(249, 115, 22,0.2)]',
+    iconBg: 'bg-[rgba(249, 115, 22,0.1)]',
     actions: [
       { label: 'Review Positions', action: 'review', variant: 'primary' },
       { label: 'Set Stops', action: 'set_stops', variant: 'secondary' },
     ],
   },
   concentration: {
-    icon: <Shield className="w-5 h-5 text-amber-600" />,
-    bgColor: 'bg-amber-500/10',
-    borderColor: 'border-amber-500/20',
-    iconBg: 'bg-amber-500/10',
+    icon: <Shield className="w-5 h-5 text-[var(--color-warning)]" />,
+    bgColor: 'bg-[rgba(245, 158, 11,0.1)]',
+    borderColor: 'border-[rgba(245, 158, 11,0.2)]',
+    iconBg: 'bg-[rgba(245, 158, 11,0.1)]',
     actions: [
       { label: 'Rebalance', action: 'rebalance', variant: 'primary' },
       { label: 'View Details', action: 'details', variant: 'secondary' },
     ],
   },
   earnings: {
-    icon: <Calendar className="w-5 h-5 text-blue-600" />,
-    bgColor: 'bg-blue-500/10',
-    borderColor: 'border-blue-500/20',
-    iconBg: 'bg-blue-500/10',
+    icon: <Calendar className="w-5 h-5 text-[var(--color-info)]" />,
+    bgColor: 'bg-[rgba(59, 130, 246,0.1)]',
+    borderColor: 'border-[rgba(59, 130, 246,0.2)]',
+    iconBg: 'bg-[rgba(59, 130, 246,0.1)]',
     actions: [
       { label: 'View Forecast', action: 'view_forecast', variant: 'primary' },
       { label: 'Trim Position', action: 'trim', variant: 'secondary' },
     ],
   },
   factor_drift: {
-    icon: <BarChart3 className="w-5 h-5 text-purple-600" />,
-    bgColor: 'bg-purple-500/10',
-    borderColor: 'border-purple-500/20',
-    iconBg: 'bg-purple-500/10',
+    icon: <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />,
+    bgColor: 'bg-[rgba(123, 44, 255,0.1)]',
+    borderColor: 'border-[rgba(123, 44, 255,0.2)]',
+    iconBg: 'bg-[rgba(123, 44, 255,0.1)]',
     actions: [
       { label: 'Adjust Factors', action: 'adjust_factors', variant: 'primary' },
       { label: 'Ignore', action: 'ignore', variant: 'secondary' },
@@ -70,10 +70,10 @@ const ALERT_CONFIG: Record<string, {
 };
 
 const SEVERITY_CONFIG: Record<string, { label: string; color: string; indicator: string }> = {
-  critical: { label: 'Critical', color: 'text-red-400 bg-red-500/10', indicator: '🔴' },
-  high: { label: 'High', color: 'text-orange-500 bg-orange-500/10', indicator: '🟠' },
-  medium: { label: 'Medium', color: 'text-yellow-500 bg-yellow-500/10', indicator: '🟡' },
-  low: { label: 'Low', color: 'text-blue-500 bg-blue-500/10', indicator: '🔵' },
+  critical: { label: 'Critical', color: 'text-[var(--color-negative)] bg-[rgba(239, 68, 68,0.1)]', indicator: '🔴' },
+  high: { label: 'High', color: 'text-[var(--color-warning)] bg-[rgba(249, 115, 22,0.1)]', indicator: '🟠' },
+  medium: { label: 'Medium', color: 'text-[var(--color-warning)] bg-[rgba(234, 179, 8,0.1)]', indicator: '🟡' },
+  low: { label: 'Low', color: 'text-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)]', indicator: '🔵' },
 };
 
 export function AlertCard({ alert, onAcknowledge, onAction }: AlertCardProps) {

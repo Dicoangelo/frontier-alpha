@@ -37,7 +37,7 @@ function generateInsights(symbols: string[], factors: FactorExposure[]): Insight
     if (momentumFactor.exposure > 0.5) {
       insights.push({
         type: 'opportunity',
-        icon: <TrendingUp className="w-4 h-4 text-green-600" />,
+        icon: <TrendingUp className="w-4 h-4 text-[var(--color-positive)]" />,
         title: 'Strong Momentum',
         content: `Your portfolio has high momentum exposure (${momentumFactor.exposure.toFixed(2)}). This tends to perform well in trending markets but may underperform during market reversals. Consider maintaining trailing stops on high-momentum positions.`,
         confidence: momentumFactor.confidence,
@@ -45,7 +45,7 @@ function generateInsights(symbols: string[], factors: FactorExposure[]): Insight
     } else if (momentumFactor.exposure < -0.3) {
       insights.push({
         type: 'risk',
-        icon: <TrendingDown className="w-4 h-4 text-red-600" />,
+        icon: <TrendingDown className="w-4 h-4 text-[var(--color-negative)]" />,
         title: 'Contrarian Positioning',
         content: `Your portfolio shows negative momentum exposure (${momentumFactor.exposure.toFixed(2)}), indicating contrarian positioning. While this can capture mean-reversion opportunities, be aware that "catching falling knives" can be risky in strong downtrends.`,
         confidence: momentumFactor.confidence,
@@ -62,7 +62,7 @@ function generateInsights(symbols: string[], factors: FactorExposure[]): Insight
   if (avgQuality > 0.4) {
     insights.push({
       type: 'opportunity',
-      icon: <Shield className="w-4 h-4 text-blue-600" />,
+      icon: <Shield className="w-4 h-4 text-[var(--color-info)]" />,
       title: 'Quality Tilt',
       content: `Your portfolio tilts toward high-quality companies. This exposure historically provides downside protection during market stress and tends to outperform over long horizons.`,
       confidence: 0.85,
@@ -75,7 +75,7 @@ function generateInsights(symbols: string[], factors: FactorExposure[]): Insight
     const sector = sectorFactors[0].factor.replace('sector_', '').replace('_', ' ');
     insights.push({
       type: 'risk',
-      icon: <AlertTriangle className="w-4 h-4 text-amber-600" />,
+      icon: <AlertTriangle className="w-4 h-4 text-[var(--color-warning)]" />,
       title: 'Sector Concentration',
       content: `Your portfolio is heavily concentrated in ${sector} (${(sectorFactors[0].exposure * 100).toFixed(0)}% exposure). Consider diversifying to reduce sector-specific risk. A sharp rotation out of ${sector} could significantly impact your returns.`,
       confidence: 0.9,
@@ -84,7 +84,7 @@ function generateInsights(symbols: string[], factors: FactorExposure[]): Insight
     const sectors = sectorFactors.map(f => f.factor.replace('sector_', '').replace('_', ' ')).join(', ');
     insights.push({
       type: 'factor',
-      icon: <Zap className="w-4 h-4 text-purple-600" />,
+      icon: <Zap className="w-4 h-4 text-[var(--color-accent)]" />,
       title: 'Multi-Sector Exposure',
       content: `Your portfolio has significant exposure to multiple sectors: ${sectors}. This diversification helps reduce idiosyncratic risk while maintaining growth potential.`,
       confidence: 0.8,
@@ -96,7 +96,7 @@ function generateInsights(symbols: string[], factors: FactorExposure[]): Insight
   if (volFactor && volFactor.factor === 'low_vol' && volFactor.exposure > 0.3) {
     insights.push({
       type: 'opportunity',
-      icon: <Shield className="w-4 h-4 text-green-600" />,
+      icon: <Shield className="w-4 h-4 text-[var(--color-positive)]" />,
       title: 'Low Volatility Tilt',
       content: `Your portfolio favors low-volatility stocks. This "low vol anomaly" has historically delivered risk-adjusted returns above what CAPM would predict, particularly valuable during market corrections.`,
       confidence: volFactor.confidence,
@@ -112,7 +112,7 @@ function generateInsights(symbols: string[], factors: FactorExposure[]): Insight
     const direction = ratesFactor.exposure > 0 ? 'positively' : 'negatively';
     insights.push({
       type: 'risk',
-      icon: <AlertTriangle className="w-4 h-4 text-amber-600" />,
+      icon: <AlertTriangle className="w-4 h-4 text-[var(--color-warning)]" />,
       title: 'Interest Rate Sensitivity',
       content: `Your portfolio is ${direction} correlated with interest rate changes (${ratesFactor.exposure.toFixed(2)}). Monitor Fed policy and yield curve movements, as rate changes could significantly impact your returns.`,
       confidence: ratesFactor.confidence,
@@ -127,7 +127,7 @@ function generateInsights(symbols: string[], factors: FactorExposure[]): Insight
     if (riskCount > oppCount) {
       insights.unshift({
         type: 'action',
-        icon: <AlertTriangle className="w-4 h-4 text-amber-600" />,
+        icon: <AlertTriangle className="w-4 h-4 text-[var(--color-warning)]" />,
         title: 'Portfolio Assessment',
         content: `I've identified ${riskCount} risk factors and ${oppCount} opportunities in your ${symbols.length}-position portfolio. Consider rebalancing to address the concentration and sensitivity risks highlighted below.`,
         confidence: 0.85,
@@ -135,7 +135,7 @@ function generateInsights(symbols: string[], factors: FactorExposure[]): Insight
     } else {
       insights.unshift({
         type: 'action',
-        icon: <Sparkles className="w-4 h-4 text-blue-600" />,
+        icon: <Sparkles className="w-4 h-4 text-[var(--color-info)]" />,
         title: 'Portfolio Assessment',
         content: `Your ${symbols.length}-position portfolio shows ${oppCount} favorable factor tilts. The factor exposures align well with long-term return premiums documented in academic research.`,
         confidence: 0.85,
@@ -202,7 +202,7 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
       console.error('Failed to refresh insights:', error);
       setInsights([{
         type: 'risk',
-        icon: <AlertTriangle className="w-4 h-4 text-red-600" />,
+        icon: <AlertTriangle className="w-4 h-4 text-[var(--color-negative)]" />,
         title: 'Analysis Unavailable',
         content: 'Unable to generate insights at this time. Please try again.',
       }]);

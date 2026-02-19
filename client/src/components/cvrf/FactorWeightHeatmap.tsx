@@ -32,7 +32,7 @@ function weightToColor(weight: number): string {
 }
 
 function weightToTextColor(weight: number): string {
-  return Math.abs(weight) > 0.5 ? '#1f2937' : '#6b7280';
+  return Math.abs(weight) > 0.5 ? '#1f2937' : 'var(--color-text-muted)';
 }
 
 // Factor display names
@@ -131,7 +131,7 @@ export function FactorWeightHeatmap() {
     return (
       <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Flame className="w-5 h-5 text-indigo-500" />
+          <Flame className="w-5 h-5 text-[var(--color-accent)]" />
           <h3 className="text-lg font-semibold text-[var(--color-text)]">Factor Evolution</h3>
         </div>
         <div className="flex items-center justify-center h-32 text-[var(--color-text-muted)] text-sm">
@@ -146,7 +146,7 @@ export function FactorWeightHeatmap() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Flame className="w-5 h-5 text-indigo-500" />
+          <Flame className="w-5 h-5 text-[var(--color-accent)]" />
           <h3 className="text-lg font-semibold text-[var(--color-text)]">Factor Evolution</h3>
         </div>
         {/* Legend */}
@@ -156,7 +156,7 @@ export function FactorWeightHeatmap() {
             <span>Underweight</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-3 rounded bg-gray-100 border border-gray-200" />
+            <div className="w-4 h-3 rounded bg-[var(--color-bg)] border border-[var(--color-border)]" />
             <span>Neutral</span>
           </div>
           <div className="flex items-center gap-1">

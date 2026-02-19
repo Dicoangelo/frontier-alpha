@@ -62,45 +62,45 @@ const TYPE_CONFIG: Record<ExplanationType, {
   portfolio_move: {
     label: 'Portfolio Move',
     icon: <TrendingUp className="w-4 h-4" />,
-    color: 'text-green-500',
+    color: 'text-[var(--color-positive)]',
   },
   rebalance: {
     label: 'Rebalance',
     icon: <BarChart3 className="w-4 h-4" />,
-    color: 'text-blue-500',
+    color: 'text-[var(--color-info)]',
   },
   earnings: {
     label: 'Earnings Forecast',
     icon: <Layers className="w-4 h-4" />,
-    color: 'text-purple-500',
+    color: 'text-[var(--color-accent)]',
   },
   risk_alert: {
     label: 'Risk Alert',
     icon: <AlertTriangle className="w-4 h-4" />,
-    color: 'text-amber-500',
+    color: 'text-[var(--color-warning)]',
   },
   factor_shift: {
     label: 'Factor Shift',
     icon: <Shield className="w-4 h-4" />,
-    color: 'text-cyan-500',
+    color: 'text-[var(--color-info)]',
   },
 };
 
 const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
-  ai_model: { label: 'AI Model', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
-  factor_engine: { label: 'Factor Engine', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-  market_data: { label: 'Market Data', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
-  sentiment_analysis: { label: 'Sentiment', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
-  earnings_calendar: { label: 'Earnings', color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' },
-  risk_engine: { label: 'Risk Engine', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
-  portfolio_optimizer: { label: 'Optimizer', color: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30' },
-  system: { label: 'System', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
+  ai_model: { label: 'AI Model', color: 'bg-[rgba(123, 44, 255,0.2)] text-[var(--color-accent)] border-[rgba(123, 44, 255,0.3)]' },
+  factor_engine: { label: 'Factor Engine', color: 'bg-[rgba(59, 130, 246,0.2)] text-[var(--color-info)] border-[rgba(59, 130, 246,0.3)]' },
+  market_data: { label: 'Market Data', color: 'bg-[rgba(16, 185, 129,0.2)] text-[var(--color-positive)] border-[rgba(16, 185, 129,0.3)]' },
+  sentiment_analysis: { label: 'Sentiment', color: 'bg-[rgba(245, 158, 11,0.2)] text-[var(--color-warning)] border-[rgba(245, 158, 11,0.3)]' },
+  earnings_calendar: { label: 'Earnings', color: 'bg-[rgba(6, 182, 212,0.2)] text-[var(--color-info)] border-[rgba(6, 182, 212,0.3)]' },
+  risk_engine: { label: 'Risk Engine', color: 'bg-[rgba(239, 68, 68,0.2)] text-[var(--color-negative)] border-[rgba(239, 68, 68,0.3)]' },
+  portfolio_optimizer: { label: 'Optimizer', color: 'bg-[rgba(99, 102, 241,0.2)] text-[var(--color-accent)] border-[rgba(99, 102, 241,0.3)]' },
+  system: { label: 'System', color: 'bg-[rgba(107, 114, 128,0.2)] text-[var(--color-text-muted)] border-[rgba(107, 114, 128,0.3)]' },
 };
 
 function getConfidenceColor(confidence: number): string {
-  if (confidence >= 0.8) return 'text-green-500';
-  if (confidence >= 0.6) return 'text-amber-500';
-  return 'text-red-500';
+  if (confidence >= 0.8) return 'text-[var(--color-positive)]';
+  if (confidence >= 0.6) return 'text-[var(--color-warning)]';
+  return 'text-[var(--color-negative)]';
 }
 
 function getConfidenceBarWidth(confidence: number): string {
@@ -210,13 +210,13 @@ export function ExplanationCard({
 
       {/* State: Error */}
       {!isLoading && error && (
-        <div className="flex items-start gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-          <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-[rgba(239, 68, 68,0.1)] border border-[rgba(239, 68, 68,0.2)]">
+          <AlertTriangle className="w-5 h-5 text-[var(--color-negative)] flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-red-400">{error}</p>
+            <p className="text-sm text-[var(--color-negative)]">{error}</p>
             <button
               onClick={fetchExplanation}
-              className="text-xs text-red-400 underline hover:text-red-300 mt-1"
+              className="text-xs text-[var(--color-negative)] underline hover:text-[var(--color-negative)] mt-1"
             >
               Try again
             </button>
@@ -254,19 +254,19 @@ export function ExplanationCard({
             )}
 
             {isAIPowered ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/30">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgba(123, 44, 255,0.2)] text-[var(--color-accent)] border border-[rgba(123, 44, 255,0.3)]">
                 <Sparkles className="w-3 h-3" />
                 AI-powered
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgba(59, 130, 246,0.2)] text-[var(--color-info)] border border-[rgba(59, 130, 246,0.3)]">
                 <Brain className="w-3 h-3" />
                 Template-based
               </span>
             )}
 
             {result.cached && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400 border border-gray-500/30">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgba(107, 114, 128,0.2)] text-[var(--color-text-muted)] border border-[rgba(107, 114, 128,0.3)]">
                 <CheckCircle2 className="w-3 h-3" />
                 Cached
               </span>
@@ -285,10 +285,10 @@ export function ExplanationCard({
               <div
                 className={`h-full rounded-full transition-all duration-500 ${
                   result.confidence >= 0.8
-                    ? 'bg-green-500'
+                    ? 'bg-[var(--color-positive)]'
                     : result.confidence >= 0.6
-                    ? 'bg-amber-500'
-                    : 'bg-red-500'
+                    ? 'bg-[var(--color-warning)]'
+                    : 'bg-[var(--color-negative)]'
                 }`}
                 style={{ width: getConfidenceBarWidth(result.confidence) }}
               />
@@ -304,7 +304,7 @@ export function ExplanationCard({
             {result.sources.map((source) => {
               const sourceMeta = SOURCE_LABELS[source] || {
                 label: source.replace(/_/g, ' '),
-                color: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+                color: 'bg-[rgba(107, 114, 128,0.2)] text-[var(--color-text-muted)] border-[rgba(107, 114, 128,0.3)]',
               };
               return (
                 <span

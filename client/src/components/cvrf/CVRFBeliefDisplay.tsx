@@ -22,7 +22,7 @@ function FactorBar({ factor, weight, confidence }: FactorBarProps) {
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium text-[var(--color-text-secondary)] capitalize">{factor}</span>
         <div className="flex items-center gap-2">
-          <span className={`font-mono ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          <span className={`font-mono ${isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {isPositive ? '+' : ''}{(weight * 100).toFixed(1)}%
           </span>
           <span className="text-xs text-[var(--color-text-muted)]">
@@ -33,7 +33,7 @@ function FactorBar({ factor, weight, confidence }: FactorBarProps) {
       <div className="h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-300 ${
-            isPositive ? 'bg-green-500' : 'bg-red-500'
+            isPositive ? 'bg-[var(--color-positive)]' : 'bg-[var(--color-negative)]'
           }`}
           style={{ width: `${Math.min(weightPercent, 100)}%`, opacity: 0.5 + confidence * 0.5 }}
         />
@@ -83,8 +83,8 @@ export function CVRFBeliefDisplay() {
 
   if (isError || !beliefs) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-red-500/20 p-6">
-        <div className="text-red-500 text-sm">Failed to load belief state</div>
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[rgba(239, 68, 68,0.2)] p-6">
+        <div className="text-[var(--color-negative)] text-sm">Failed to load belief state</div>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export function CVRFBeliefDisplay() {
     <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <Scale className="w-5 h-5 text-indigo-500" />
+          <Scale className="w-5 h-5 text-[var(--color-accent)]" />
           Belief State
         </h3>
         <span className="text-xs text-[var(--color-text-muted)]">v{beliefs.version}</span>
@@ -141,13 +141,13 @@ export function CVRFBeliefDisplay() {
             label="Risk Tolerance"
             value={`${(beliefs.riskTolerance * 100).toFixed(0)}%`}
             icon={<Gauge className="w-3.5 h-3.5" />}
-            color="text-indigo-600"
+            color="text-[var(--color-accent)]"
           />
           <ConstraintRow
             label="Max Drawdown"
             value={`${(beliefs.maxDrawdownThreshold * 100).toFixed(0)}%`}
             icon={<Activity className="w-3.5 h-3.5" />}
-            color="text-red-600"
+            color="text-[var(--color-negative)]"
           />
           <ConstraintRow
             label="Volatility Target"
@@ -177,9 +177,9 @@ export function CVRFBeliefDisplay() {
                 key={prior.id}
                 className={`px-2 py-0.5 text-xs rounded ${
                   prior.impactDirection === 'positive'
-                    ? 'bg-green-500/10 text-green-700'
+                    ? 'bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)]'
                     : prior.impactDirection === 'negative'
-                    ? 'bg-red-500/10 text-red-700'
+                    ? 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)]'
                     : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
                 }`}
                 title={prior.concept}

@@ -18,7 +18,7 @@ interface EpisodeCardProps {
 function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
   const [expanded, setExpanded] = useState(isActive);
 
-  const returnColor = (episode.portfolioReturn || 0) >= 0 ? 'text-green-600' : 'text-red-600';
+  const returnColor = (episode.portfolioReturn || 0) >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]';
   const returnIcon = (episode.portfolioReturn || 0) >= 0 ? TrendingUp : TrendingDown;
   const ReturnIcon = returnIcon;
 
@@ -38,7 +38,7 @@ function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
   return (
     <div
       className={`rounded-lg border ${
-        isActive ? 'border-indigo-500/30 bg-indigo-500/10' : 'border-[var(--color-border)] bg-[var(--color-bg)]'
+        isActive ? 'border-[rgba(99, 102, 241,0.3)] bg-[rgba(99, 102, 241,0.1)]' : 'border-[var(--color-border)] bg-[var(--color-bg)]'
       } overflow-hidden`}
     >
       {/* Header */}
@@ -49,7 +49,7 @@ function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
         <div className="flex items-center gap-3">
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              isActive ? 'bg-indigo-500 text-white' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
+              isActive ? 'bg-[var(--color-accent)] text-white' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
             }`}
           >
             {isActive ? <Play className="w-4 h-4" /> : <Square className="w-4 h-4" />}
@@ -58,7 +58,7 @@ function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
             <div className="font-medium text-[var(--color-text)]">
               Episode {episode.episodeNumber}
               {isActive && (
-                <span className="ml-2 text-xs bg-indigo-500 text-white px-2 py-0.5 rounded-full">
+                <span className="ml-2 text-xs bg-[var(--color-accent)] text-white px-2 py-0.5 rounded-full">
                   Active
                 </span>
               )}
@@ -111,7 +111,7 @@ function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
             </div>
             <div>
               <div className="text-xs text-[var(--color-text-muted)]">Max DD</div>
-              <div className="font-bold text-red-600">
+              <div className="font-bold text-[var(--color-negative)]">
                 {episode.maxDrawdown !== undefined
                   ? `${(episode.maxDrawdown * 100).toFixed(2)}%`
                   : '—'}
@@ -120,7 +120,7 @@ function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
           </div>
 
           {isActive && (
-            <div className="mt-3 p-2 bg-indigo-100 rounded text-xs text-indigo-700 text-center">
+            <div className="mt-3 p-2 bg-[var(--color-accent)] rounded text-xs text-[var(--color-accent)] text-center">
               Recording decisions... Close episode to run CVRF cycle.
             </div>
           )}
@@ -160,7 +160,7 @@ export function CVRFEpisodeTimeline() {
 
   if (isError || !data) {
     return (
-      <div className="text-red-500 text-sm p-4 bg-red-500/10 rounded-lg">
+      <div className="text-[var(--color-negative)] text-sm p-4 bg-[rgba(239, 68, 68,0.1)] rounded-lg">
         Failed to load episodes
       </div>
     );

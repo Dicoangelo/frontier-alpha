@@ -151,7 +151,7 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
                 <ChevronRight className="w-5 h-5 rotate-180" />
               </button>
             ) : (
-              <BookOpen className="w-6 h-6 text-blue-600" />
+              <BookOpen className="w-6 h-6 text-[var(--color-info)]" />
             )}
             <h2 className="text-lg font-semibold text-[var(--color-text)]">
               {selectedTopic ? selectedTopic.title : 'Help Center'}
@@ -176,7 +176,7 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
                 placeholder="Search help topics..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2.5 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-info)] focus:border-[var(--color-info)]"
                 aria-label="Search help"
               />
               {searchQuery && (
@@ -228,7 +228,7 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
             </Link>
             <a
               href="mailto:support@frontieralpha.com"
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--color-info)] text-white rounded-lg hover:bg-[var(--color-info)] transition"
             >
               <MessageCircle className="w-4 h-4" />
               Contact Support
@@ -262,8 +262,8 @@ function SectionList({ sections, expandedSections, onToggleSection, onSelectTopi
               className="w-full flex items-center gap-3 p-4 bg-[var(--color-bg)] hover:bg-[var(--color-bg-tertiary)] transition text-left"
               aria-expanded={isExpanded}
             >
-              <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Icon className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 bg-[rgba(59, 130, 246,0.1)] rounded-lg flex items-center justify-center flex-shrink-0">
+                <Icon className="w-5 h-5 text-[var(--color-info)]" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-medium text-[var(--color-text)]">{section.title}</h3>
@@ -342,7 +342,7 @@ function SearchResults({ query, results, hasResults, onSelectTopic }: SearchResu
         </p>
         <Link
           to="/help"
-          className="text-blue-600 hover:text-blue-700 font-medium"
+          className="text-[var(--color-info)] hover:text-[var(--color-info)] font-medium"
         >
           Browse all help topics
         </Link>
@@ -362,7 +362,7 @@ function SearchResults({ query, results, hasResults, onSelectTopic }: SearchResu
               <button
                 key={topic.id}
                 onClick={() => onSelectTopic(topic)}
-                className="w-full flex items-center gap-3 p-3 bg-[var(--color-bg)] border rounded-lg hover:bg-[var(--color-bg-tertiary)] hover:border-blue-300 transition text-left"
+                className="w-full flex items-center gap-3 p-3 bg-[var(--color-bg)] border rounded-lg hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-info)] transition text-left"
               >
                 <div className="flex-1">
                   <p className="font-medium text-[var(--color-text)]">{topic.title}</p>

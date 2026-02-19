@@ -16,10 +16,10 @@ interface Alert {
 }
 
 const severityConfig = {
-  critical: { icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-500/10' },
-  high: { icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-500/10' },
-  medium: { icon: AlertCircle, color: 'text-yellow-600', bg: 'bg-yellow-500/10' },
-  low: { icon: Info, color: 'text-blue-600', bg: 'bg-blue-500/10' },
+  critical: { icon: AlertTriangle, color: 'text-[var(--color-negative)]', bg: 'bg-[rgba(239, 68, 68,0.1)]' },
+  high: { icon: AlertTriangle, color: 'text-[var(--color-warning)]', bg: 'bg-[rgba(249, 115, 22,0.1)]' },
+  medium: { icon: AlertCircle, color: 'text-[var(--color-warning)]', bg: 'bg-[rgba(234, 179, 8,0.1)]' },
+  low: { icon: Info, color: 'text-[var(--color-info)]', bg: 'bg-[rgba(59, 130, 246,0.1)]' },
   info: { icon: Info, color: 'text-[var(--color-text-secondary)]', bg: 'bg-[var(--color-bg-tertiary)]' },
 };
 
@@ -85,7 +85,7 @@ export function AlertDropdown() {
       >
         <Bell className="w-5 h-5" aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+          <span className="absolute top-0 right-0 w-5 h-5 bg-[var(--color-negative)] text-white text-xs rounded-full flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -107,7 +107,7 @@ export function AlertDropdown() {
           <div className="max-h-96 overflow-y-auto">
             {alerts.length === 0 ? (
               <div className="p-8 text-center">
-                <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                <CheckCircle className="w-12 h-12 text-[var(--color-positive)] mx-auto mb-3" />
                 <p className="text-[var(--color-text-muted)]">No alerts</p>
                 <p className="text-sm text-[var(--color-text-muted)]">You're all caught up!</p>
               </div>
@@ -135,7 +135,7 @@ export function AlertDropdown() {
                           {!alert.acknowledged_at && (
                             <button
                               onClick={(e) => handleAcknowledge(alert.id, e)}
-                              className="text-xs text-blue-600 hover:text-blue-700 whitespace-nowrap"
+                              className="text-xs text-[var(--color-info)] hover:text-[var(--color-info)] whitespace-nowrap"
                             >
                               Dismiss
                             </button>
@@ -159,7 +159,7 @@ export function AlertDropdown() {
             <div className="p-3 border-t">
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="w-full text-center text-sm text-[var(--color-info)] hover:text-[var(--color-info)] font-medium"
               >
                 View all alerts
               </button>

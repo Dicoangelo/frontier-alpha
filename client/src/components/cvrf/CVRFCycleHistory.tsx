@@ -14,7 +14,7 @@ interface CycleCardProps {
 }
 
 function CycleCard({ cycle, index }: CycleCardProps) {
-  const deltaColor = cycle.performanceDelta >= 0 ? 'text-green-600' : 'text-red-600';
+  const deltaColor = cycle.performanceDelta >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]';
   const DeltaIcon = cycle.performanceDelta >= 0 ? TrendingUp : TrendingDown;
 
   const formatDate = (timestamp: string) => {
@@ -61,11 +61,11 @@ function CycleCard({ cycle, index }: CycleCardProps) {
         </div>
         <div className="p-2 bg-[var(--color-bg)] rounded">
           <div className="text-xs text-[var(--color-text-muted)]">Insights</div>
-          <div className="font-bold text-indigo-600">{cycle.insightsCount}</div>
+          <div className="font-bold text-[var(--color-accent)]">{cycle.insightsCount}</div>
         </div>
         <div className="p-2 bg-[var(--color-bg)] rounded">
           <div className="text-xs text-[var(--color-text-muted)]">Updates</div>
-          <div className="font-bold text-purple-600">{cycle.beliefUpdatesCount}</div>
+          <div className="font-bold text-[var(--color-accent)]">{cycle.beliefUpdatesCount}</div>
         </div>
       </div>
 
@@ -73,7 +73,7 @@ function CycleCard({ cycle, index }: CycleCardProps) {
       {cycle.newRegime && (
         <div className="mt-3 flex items-center gap-2 text-xs">
           <span className="text-[var(--color-text-muted)]">New Regime:</span>
-          <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full capitalize">
+          <span className="px-2 py-0.5 bg-[var(--color-accent)] text-[var(--color-accent)] rounded-full capitalize">
             {cycle.newRegime}
           </span>
         </div>
@@ -100,8 +100,8 @@ export function CVRFCycleHistory() {
 
   if (isError) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-red-500/20 p-6">
-        <div className="text-red-500 text-sm">Failed to load cycle history</div>
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[rgba(239, 68, 68,0.2)] p-6">
+        <div className="text-[var(--color-negative)] text-sm">Failed to load cycle history</div>
       </div>
     );
   }
@@ -117,7 +117,7 @@ export function CVRFCycleHistory() {
     <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <History className="w-5 h-5 text-indigo-500" />
+          <History className="w-5 h-5 text-[var(--color-accent)]" />
           CVRF Cycles
         </h3>
         <span className="text-xs text-[var(--color-text-muted)]">{cycles.length} cycles</span>
@@ -127,18 +127,18 @@ export function CVRFCycleHistory() {
       {cycles.length > 0 && (
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg">
-            <div className="flex items-center gap-1.5 text-indigo-600 mb-1">
+            <div className="flex items-center gap-1.5 text-[var(--color-accent)] mb-1">
               <Lightbulb className="w-4 h-4" />
               <span className="text-xs">Total Insights</span>
             </div>
-            <div className="text-2xl font-bold text-indigo-700">{totalInsights}</div>
+            <div className="text-2xl font-bold text-[var(--color-accent)]">{totalInsights}</div>
           </div>
           <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
-            <div className="flex items-center gap-1.5 text-green-600 mb-1">
+            <div className="flex items-center gap-1.5 text-[var(--color-positive)] mb-1">
               <TrendingUp className="w-4 h-4" />
               <span className="text-xs">Avg Improvement</span>
             </div>
-            <div className={`text-2xl font-bold ${avgDelta >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+            <div className={`text-2xl font-bold ${avgDelta >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
               {avgDelta >= 0 ? '+' : ''}
               {(avgDelta * 100).toFixed(2)}%
             </div>

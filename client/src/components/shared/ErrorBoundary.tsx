@@ -105,8 +105,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <div className="min-h-screen bg-[var(--color-bg-tertiary)] flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-[var(--color-bg)] rounded-xl shadow-lg p-8 text-center">
-            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <AlertTriangle className="w-8 h-8 text-red-500" />
+            <div className="w-16 h-16 bg-[rgba(239, 68, 68,0.1)] rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertTriangle className="w-8 h-8 text-[var(--color-negative)]" />
             </div>
 
             <h1 className="text-2xl font-bold text-[var(--color-text)] mb-2">
@@ -127,7 +127,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <div className="space-y-3">
               <button
                 onClick={this.handleReset}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--color-info)] text-white rounded-lg hover:bg-[var(--color-info)] transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
                 Try Again
@@ -148,7 +148,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   Technical Details
                 </summary>
                 <div className="mt-2 p-3 bg-[var(--color-bg-secondary)] rounded text-xs font-mono overflow-auto max-h-48">
-                  <p className="text-red-600 font-semibold">
+                  <p className="text-[var(--color-negative)] font-semibold">
                     {this.state.error.name}: {this.state.error.message}
                   </p>
                   {this.state.error.stack && (
@@ -199,12 +199,12 @@ export function SectionErrorBoundary({ children, sectionName }: SectionErrorBoun
   return (
     <ErrorBoundary
       fallback={
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 text-center">
-          <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-3" />
-          <p className="text-red-700 font-medium">
+        <div className="bg-[rgba(239, 68, 68,0.1)] border border-[rgba(239, 68, 68,0.2)] rounded-lg p-6 text-center">
+          <AlertTriangle className="w-8 h-8 text-[var(--color-negative)] mx-auto mb-3" />
+          <p className="text-[var(--color-negative)] font-medium">
             Failed to load {sectionName || 'this section'}
           </p>
-          <p className="text-red-600 text-sm mt-1">
+          <p className="text-[var(--color-negative)] text-sm mt-1">
             Please refresh the page or try again later.
           </p>
         </div>

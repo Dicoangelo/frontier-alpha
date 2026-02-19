@@ -26,8 +26,8 @@ export function CVRFStatsCard() {
 
   if (isError || !stats) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-red-500/20 p-6">
-        <div className="text-red-500 text-sm">Failed to load CVRF stats</div>
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[rgba(239, 68, 68,0.2)] p-6">
+        <div className="text-[var(--color-negative)] text-sm">Failed to load CVRF stats</div>
       </div>
     );
   }
@@ -36,7 +36,7 @@ export function CVRFStatsCard() {
     <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <Brain className="w-5 h-5 text-indigo-500" />
+          <Brain className="w-5 h-5 text-[var(--color-accent)]" />
           CVRF Intelligence
         </h3>
         <span className="text-xs text-[var(--color-text-muted)]">v{stats.beliefs.version}</span>
@@ -82,7 +82,7 @@ export function CVRFStatsCard() {
             <TrendingUp className="w-4 h-4" />
             <span className="text-xs">Avg Return</span>
           </div>
-          <div className="text-2xl font-bold text-green-600">{stats.episodes.avgReturn}</div>
+          <div className="text-2xl font-bold text-[var(--color-positive)]">{stats.episodes.avgReturn}</div>
           <div className="text-xs text-[var(--color-text-muted)]">Sharpe: {stats.episodes.avgSharpe}</div>
         </div>
 
@@ -92,7 +92,7 @@ export function CVRFStatsCard() {
             <Target className="w-4 h-4" />
             <span className="text-xs">Learning Rate</span>
           </div>
-          <div className="text-2xl font-bold text-indigo-600">{stats.cvrf.avgLearningRate}</div>
+          <div className="text-2xl font-bold text-[var(--color-accent)]">{stats.cvrf.avgLearningRate}</div>
           <div className="text-xs text-[var(--color-text-muted)]">τ: {stats.cvrf.avgDecisionOverlap}</div>
         </div>
       </div>
@@ -104,7 +104,7 @@ export function CVRFStatsCard() {
           {Object.entries(stats.factors.weights).map(([factor, weight]) => (
             <span
               key={factor}
-              className="px-2 py-1 bg-indigo-500/10 text-indigo-700 text-xs rounded-full"
+              className="px-2 py-1 bg-[rgba(99, 102, 241,0.1)] text-[var(--color-accent)] text-xs rounded-full"
             >
               {factor}: {weight}
             </span>

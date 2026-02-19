@@ -142,7 +142,7 @@ export function NotificationSettings() {
     return (
       <Card title="Notification Settings">
         <div className="flex items-center justify-center h-48">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-[var(--color-info)]" />
         </div>
       </Card>
     );
@@ -151,7 +151,7 @@ export function NotificationSettings() {
   if (!settings) {
     return (
       <Card title="Notification Settings">
-        <div className="text-center py-8 text-red-600">
+        <div className="text-center py-8 text-[var(--color-negative)]">
           Failed to load settings. Please try again.
         </div>
       </Card>
@@ -163,14 +163,14 @@ export function NotificationSettings() {
       <div className="space-y-6">
         {/* Status Messages */}
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm flex items-center gap-2">
+          <div className="p-3 bg-[rgba(239, 68, 68,0.1)] border border-[rgba(239, 68, 68,0.2)] rounded-lg text-[var(--color-negative)] text-sm flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
             {error}
           </div>
         )}
 
         {success && (
-          <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 text-sm flex items-center gap-2">
+          <div className="p-3 bg-[rgba(16, 185, 129,0.1)] border border-[rgba(16, 185, 129,0.2)] rounded-lg text-[var(--color-positive)] text-sm flex items-center gap-2">
             <Check className="w-4 h-4" />
             Settings saved successfully!
           </div>
@@ -192,7 +192,7 @@ export function NotificationSettings() {
               onChange={(e) => setSettings({ ...settings, emailEnabled: e.target.checked })}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-[var(--color-border)] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[var(--color-border)] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+            <div className="w-11 h-6 bg-[var(--color-border)] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[var(--color-info)] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-[var(--color-border)] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-info)]" />
           </label>
         </div>
 
@@ -206,7 +206,7 @@ export function NotificationSettings() {
             value={settings.email}
             onChange={(e) => setSettings({ ...settings, email: e.target.value })}
             placeholder="your@email.com"
-            className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-info)] focus:border-transparent"
             disabled={!settings.emailEnabled}
           />
         </div>
@@ -227,7 +227,7 @@ export function NotificationSettings() {
                 disabled={!settings.emailEnabled}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   settings.severityThreshold === level.id
-                    ? 'border-blue-500 bg-blue-500/10 text-blue-700'
+                    ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)]'
                     : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                 } ${!settings.emailEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
@@ -254,7 +254,7 @@ export function NotificationSettings() {
                 disabled={!settings.emailEnabled}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   settings.digestFrequency === option.id
-                    ? 'border-blue-500 bg-blue-500/10 text-blue-700'
+                    ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)]'
                     : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                 } ${!settings.emailEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
@@ -294,7 +294,7 @@ export function NotificationSettings() {
                     setSettings({ ...settings, alertTypes: newTypes });
                   }}
                   disabled={!settings.emailEnabled}
-                  className="w-4 h-4 text-blue-600 rounded border-[var(--color-border)] focus:ring-blue-500"
+                  className="w-4 h-4 text-[var(--color-info)] rounded border-[var(--color-border)] focus:ring-[var(--color-info)]"
                 />
                 <div>
                   <p className="font-medium text-[var(--color-text)] text-sm">{type.label}</p>
@@ -310,7 +310,7 @@ export function NotificationSettings() {
           <button
             onClick={saveSettings}
             disabled={saving}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[var(--color-info)] text-white rounded-lg hover:bg-[var(--color-info)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? (
               <Loader2 className="w-4 h-4 animate-spin" />

@@ -129,7 +129,7 @@ export function EmptyEarnings() {
 export function NetworkError({ onRetry }: { onRetry: () => void }) {
   return (
     <EmptyState
-      icon={<Wifi className="w-8 h-8 text-red-400" />}
+      icon={<Wifi className="w-8 h-8 text-[var(--color-negative)]" />}
       title="Connection issue"
       description="We're having trouble connecting to our servers. Please check your internet connection and try again."
       action={{
@@ -143,7 +143,7 @@ export function NetworkError({ onRetry }: { onRetry: () => void }) {
 export function DataLoadError({ onRetry, error }: { onRetry: () => void; error?: string }) {
   return (
     <EmptyState
-      icon={<RefreshCw className="w-8 h-8 text-amber-400" />}
+      icon={<RefreshCw className="w-8 h-8 text-[var(--color-warning)]" />}
       title="Couldn't load data"
       description={error || "Something went wrong while loading. This might be temporary."}
       action={{

@@ -159,7 +159,7 @@ export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExport
                 onClick={exportAsCSV}
                 className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--color-bg-tertiary)]"
               >
-                <FileText className="h-5 w-5 text-green-600" />
+                <FileText className="h-5 w-5 text-[var(--color-positive)]" />
                 <div>
                   <p className="font-medium text-[var(--color-text-secondary)]">Download CSV</p>
                   <p className="text-xs text-[var(--color-text-muted)]">Spreadsheet format</p>
@@ -170,7 +170,7 @@ export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExport
                 onClick={exportAsJSON}
                 className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--color-bg-tertiary)]"
               >
-                <FileJson className="h-5 w-5 text-blue-600" />
+                <FileJson className="h-5 w-5 text-[var(--color-info)]" />
                 <div>
                   <p className="font-medium text-[var(--color-text-secondary)]">Download JSON</p>
                   <p className="text-xs text-[var(--color-text-muted)]">Developer format</p>
@@ -190,7 +190,7 @@ export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExport
                 }}
                 className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--color-bg-tertiary)]"
               >
-                <Link2 className="h-5 w-5 text-purple-600" />
+                <Link2 className="h-5 w-5 text-[var(--color-accent)]" />
                 <div>
                   <p className="font-medium text-[var(--color-text-secondary)]">Create Share Link</p>
                   <p className="text-xs text-[var(--color-text-muted)]">Generate secure share URL</p>
@@ -201,7 +201,7 @@ export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExport
                 onClick={shareViaWebShare}
                 className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--color-bg-tertiary)]"
               >
-                <Share2 className="h-5 w-5 text-blue-600" />
+                <Share2 className="h-5 w-5 text-[var(--color-info)]" />
                 <div>
                   <p className="font-medium text-[var(--color-text-secondary)]">Quick Share</p>
                   <p className="text-xs text-[var(--color-text-muted)]">Use device share menu</p>
@@ -213,7 +213,7 @@ export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExport
                 className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--color-bg-tertiary)]"
               >
                 {copied ? (
-                  <Check className="h-5 w-5 text-green-600" />
+                  <Check className="h-5 w-5 text-[var(--color-positive)]" />
                 ) : (
                   <Copy className="h-5 w-5 text-[var(--color-text-muted)]" />
                 )}

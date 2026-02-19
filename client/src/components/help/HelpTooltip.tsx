@@ -124,7 +124,7 @@ export function HelpTooltip({
         onClick={() => setIsOpen(!isOpen)}
         onMouseEnter={() => setIsOpen(true)}
         onMouseLeave={() => setIsOpen(false)}
-        className="text-[var(--color-text-muted)] hover:text-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-full p-0.5"
+        className="text-[var(--color-text-muted)] hover:text-[var(--color-info)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] focus:ring-offset-1 rounded-full p-0.5"
         aria-label={`Help: ${title}`}
         aria-expanded={isOpen}
         type="button"
@@ -196,7 +196,7 @@ export function InlineHelp({ children, tip, className = '' }: InlineHelpProps) {
     >
       {children}
       {isVisible && (
-        <span className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg whitespace-nowrap max-w-xs animate-fade-in">
+        <span className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[var(--color-bg-tertiary)] text-white text-xs rounded-lg shadow-lg whitespace-nowrap max-w-xs animate-fade-in">
           {tip}
           <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
         </span>

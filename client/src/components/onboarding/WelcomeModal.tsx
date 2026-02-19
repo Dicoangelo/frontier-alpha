@@ -74,7 +74,7 @@ export function WelcomeModal({ isOpen, onClose, onStartTour, onTryDemo }: Welcom
           <h1 className="text-2xl font-bold mb-2">
             Welcome to Institutional-Grade Intelligence
           </h1>
-          <p className="text-blue-100">
+          <p className="text-[var(--color-info)]">
             See what the quants see. Understand what they won't explain.
           </p>
         </div>
@@ -91,7 +91,7 @@ export function WelcomeModal({ isOpen, onClose, onStartTour, onTryDemo }: Welcom
                 className="p-4 bg-[var(--color-bg-tertiary)] rounded-xl hover:bg-[var(--color-bg-secondary)] transition-colors animate-fade-in-up"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <feature.icon className="w-6 h-6 text-blue-600 mb-2" />
+                <feature.icon className="w-6 h-6 text-[var(--color-info)] mb-2" />
                 <h3 className="font-semibold text-[var(--color-text)] text-sm">{feature.title}</h3>
                 <p className="text-xs text-[var(--color-text-muted)] mt-1">{feature.description}</p>
               </div>

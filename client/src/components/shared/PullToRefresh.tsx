@@ -121,7 +121,7 @@ export function PullToRefresh({
         >
           <RefreshCw
             className={`w-5 h-5 ${
-              progress >= 1 ? 'text-blue-600' : 'text-[var(--color-text-muted)]'
+              progress >= 1 ? 'text-[var(--color-info)]' : 'text-[var(--color-text-muted)]'
             }`}
           />
         </div>

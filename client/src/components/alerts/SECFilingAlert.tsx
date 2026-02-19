@@ -74,17 +74,17 @@ type SeverityFilter = 'all' | 'critical' | 'high' | 'medium' | 'low';
 // ============================================================================
 
 const severityColors: Record<string, string> = {
-  critical: 'bg-red-500/10 text-red-400 border-red-500/20',
-  high: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
-  medium: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-  low: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  critical: 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)] border-[rgba(239, 68, 68,0.2)]',
+  high: 'bg-[rgba(249, 115, 22,0.1)] text-[var(--color-warning)] border-[rgba(249, 115, 22,0.2)]',
+  medium: 'bg-[rgba(245, 158, 11,0.1)] text-[var(--color-warning)] border-[rgba(245, 158, 11,0.2)]',
+  low: 'bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)] border-[rgba(59, 130, 246,0.2)]',
 };
 
 const severityDotColors: Record<string, string> = {
-  critical: 'bg-red-500',
-  high: 'bg-orange-500',
-  medium: 'bg-amber-500',
-  low: 'bg-blue-500',
+  critical: 'bg-[var(--color-negative)]',
+  high: 'bg-[var(--color-warning)]',
+  medium: 'bg-[var(--color-warning)]',
+  low: 'bg-[var(--color-info)]',
 };
 
 const filingTypeIcons: Record<string, string> = {
@@ -112,17 +112,17 @@ const filingTypeIcons: Record<string, string> = {
 };
 
 const filingTypeBadgeColors: Record<string, string> = {
-  '8-K': 'bg-purple-500/10 text-purple-700',
-  '10-K': 'bg-green-500/10 text-green-600',
-  '10-Q': 'bg-blue-500/10 text-blue-500',
-  '4': 'bg-indigo-100 text-indigo-700',
-  'SC 13D': 'bg-red-500/10 text-red-400',
-  'SC 13G': 'bg-pink-100 text-pink-700',
+  '8-K': 'bg-[rgba(123, 44, 255,0.1)] text-[var(--color-accent)]',
+  '10-K': 'bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)]',
+  '10-Q': 'bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)]',
+  '4': 'bg-[var(--color-accent)] text-[var(--color-accent)]',
+  'SC 13D': 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)]',
+  'SC 13G': 'bg-[var(--color-accent)] text-[var(--color-accent)]',
   '13F-HR': 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]',
-  'DEF 14A': 'bg-teal-100 text-teal-700',
-  'S-1': 'bg-emerald-100 text-emerald-700',
-  'NT 10-K': 'bg-red-200 text-red-400',
-  'NT 10-Q': 'bg-orange-200 text-orange-500',
+  'DEF 14A': 'bg-[var(--color-positive)] text-[var(--color-positive)]',
+  'S-1': 'bg-[var(--color-positive)] text-[var(--color-positive)]',
+  'NT 10-K': 'bg-[var(--color-negative)] text-[var(--color-negative)]',
+  'NT 10-Q': 'bg-[var(--color-warning)] text-[var(--color-warning)]',
 };
 
 const filingTypeLabels: Record<string, string> = {
@@ -240,7 +240,7 @@ function FilingTypeBadge({ type }: { type: string }) {
 function SeverityIndicator({ severity }: { severity: string }) {
   return (
     <span
-      className={`w-2 h-2 rounded-full ${severityDotColors[severity] || 'bg-gray-400'}`}
+      className={`w-2 h-2 rounded-full ${severityDotColors[severity] || 'bg-[var(--color-bg-tertiary)]'}`}
       title={`${severity.charAt(0).toUpperCase() + severity.slice(1)} priority`}
     />
   );
@@ -264,7 +264,7 @@ function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardPr
     <div
       className={`p-3 rounded-lg border transition-all cursor-pointer hover:shadow-sm ${
         severityColors[alert.severity]
-      } ${expanded ? 'ring-2 ring-blue-500 shadow-md' : ''}`}
+      } ${expanded ? 'ring-2 ring-[var(--color-info)] shadow-md' : ''}`}
       onClick={onToggle}
     >
       <div className="flex items-start justify-between gap-2">
@@ -280,12 +280,12 @@ function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardPr
                 {alert.filing.symbol || alert.filing.companyName}
               </span>
               {isRecent && (
-                <span className="px-1.5 py-0.5 text-[10px] font-bold bg-green-500 text-white rounded animate-pulse">
+                <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[var(--color-positive)] text-white rounded animate-pulse">
                   NEW
                 </span>
               )}
               {alert.severity === 'critical' && (
-                <AlertTriangle className="w-4 h-4 text-red-600" />
+                <AlertTriangle className="w-4 h-4 text-[var(--color-negative)]" />
               )}
             </div>
             {!compact && (
@@ -338,7 +338,7 @@ function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardPr
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-[var(--color-info)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-info)] transition-colors"
             >
               View Filing
               <ExternalLink className="w-3.5 h-3.5" />
@@ -470,7 +470,7 @@ export function SECFilingAlert({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <FileText className="w-5 h-5 text-blue-600" />
+          <FileText className="w-5 h-5 text-[var(--color-info)]" />
           <h3 className="text-lg font-semibold text-[var(--color-text)]">SEC Filings</h3>
           {summary.total > 0 && (
             <span className="text-sm text-[var(--color-text-muted)]">
@@ -499,7 +499,7 @@ export function SECFilingAlert({
             <Badge variant="warning">{summary.high} High</Badge>
           )}
           {summary.medium > 0 && (
-            <span className="px-2 py-1 text-xs font-medium bg-amber-500/10 text-amber-600 rounded-full">
+            <span className="px-2 py-1 text-xs font-medium bg-[rgba(245, 158, 11,0.1)] text-[var(--color-warning)] rounded-full">
               {summary.medium} Medium
             </span>
           )}
@@ -521,7 +521,7 @@ export function SECFilingAlert({
               onClick={() => setFilterType('all')}
               className={`px-2 py-1 text-xs rounded-full transition-colors ${
                 filterType === 'all'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-[var(--color-info)] text-white'
                   : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
               }`}
             >
@@ -534,7 +534,7 @@ export function SECFilingAlert({
                   onClick={() => setFilterType(type as FilterType)}
                   className={`px-2 py-1 text-xs rounded-full transition-colors ${
                     filterType === type
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-[var(--color-info)] text-white'
                       : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
                   }`}
                 >
@@ -549,7 +549,7 @@ export function SECFilingAlert({
                 onClick={() => setFilterType('other')}
                 className={`px-2 py-1 text-xs rounded-full transition-colors ${
                   filterType === 'other'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[var(--color-info)] text-white'
                     : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
                 }`}
               >
@@ -571,7 +571,7 @@ export function SECFilingAlert({
       {/* Error state */}
       {error && (
         <div className="py-6 text-center">
-          <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-amber-500" />
+          <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-[var(--color-warning)]" />
           <p className="text-[var(--color-text-secondary)]">Failed to load SEC filings</p>
           <Button
             variant="secondary"
@@ -633,7 +633,7 @@ export function SECFilingAlert({
       {filteredAlerts.length > maxAlerts && (
         <button
           onClick={() => setShowAllFilings(!showAllFilings)}
-          className="w-full mt-3 py-2 text-sm text-blue-600 hover:text-blue-500 font-medium transition-colors"
+          className="w-full mt-3 py-2 text-sm text-[var(--color-info)] hover:text-[var(--color-info)] font-medium transition-colors"
           aria-expanded={showAllFilings}
         >
           {showAllFilings
@@ -653,7 +653,7 @@ export function SECFilingAlert({
             href="https://www.sec.gov/edgar/searchedgar/companysearch"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-500 hover:underline"
+            className="text-[var(--color-info)] hover:underline"
           >
             SEC EDGAR Search
           </a>

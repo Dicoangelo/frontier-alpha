@@ -182,7 +182,7 @@ export function FeatureTour({ isActive, onComplete, onSkip }: FeatureTourProps) 
       {/* Highlight ring */}
       {highlightRect && (
         <div
-          className="fixed z-50 pointer-events-none border-2 border-blue-400 rounded-xl animate-pulse-subtle"
+          className="fixed z-50 pointer-events-none border-2 border-[var(--color-info)] rounded-xl animate-pulse-subtle"
           style={{
             top: highlightRect.top - 8,
             left: highlightRect.left - 8,
@@ -217,7 +217,7 @@ export function FeatureTour({ isActive, onComplete, onSkip }: FeatureTourProps) 
                 key={index}
                 className={`h-1.5 rounded-full transition-all ${
                   index <= currentStep
-                    ? 'w-6 bg-blue-600'
+                    ? 'w-6 bg-[var(--color-info)]'
                     : 'w-1.5 bg-[var(--color-border)]'
                 }`}
               />

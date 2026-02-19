@@ -46,7 +46,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="mt-1 block w-full px-4 py-3 border border-[var(--color-border)] rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-4 py-3 border border-[var(--color-border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--color-info)] focus:border-[var(--color-info)]"
           placeholder="you@example.com"
         />
       </div>
@@ -62,7 +62,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
-          className="mt-1 block w-full px-4 py-3 border border-[var(--color-border)] rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-4 py-3 border border-[var(--color-border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--color-info)] focus:border-[var(--color-info)]"
           placeholder="••••••••"
         />
         <p className="mt-1 text-xs text-[var(--color-text-muted)]">Must be at least 6 characters</p>
@@ -78,7 +78,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
-          className="mt-1 block w-full px-4 py-3 border border-[var(--color-border)] rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-4 py-3 border border-[var(--color-border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--color-info)] focus:border-[var(--color-info)]"
           placeholder="••••••••"
         />
       </div>
@@ -86,13 +86,13 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
       {displayError && (
         <div className={`p-3 rounded-lg border ${
           displayError.includes('check your email')
-            ? 'bg-green-500/10 border-green-500/20'
-            : 'bg-red-500/10 border-red-500/20'
+            ? 'bg-[rgba(16, 185, 129,0.1)] border-[rgba(16, 185, 129,0.2)]'
+            : 'bg-[rgba(239, 68, 68,0.1)] border-[rgba(239, 68, 68,0.2)]'
         }`}>
           <p className={`text-sm ${
             displayError.includes('check your email')
-              ? 'text-green-600'
-              : 'text-red-600'
+              ? 'text-[var(--color-positive)]'
+              : 'text-[var(--color-negative)]'
           }`}>
             {displayError}
           </p>
@@ -108,7 +108,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         <button
           type="button"
           onClick={onSwitchToLogin}
-          className="text-blue-600 hover:text-blue-700 font-medium"
+          className="text-[var(--color-info)] hover:text-[var(--color-info)] font-medium"
         >
           Sign in
         </button>

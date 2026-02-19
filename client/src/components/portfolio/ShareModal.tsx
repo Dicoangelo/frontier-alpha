@@ -160,8 +160,8 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Users className="w-5 h-5 text-blue-600" />
+              <div className="p-2 bg-[rgba(59, 130, 246,0.1)] rounded-lg">
+                <Users className="w-5 h-5 text-[var(--color-info)]" />
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-[var(--color-text)]">Share Portfolio</h2>
@@ -180,17 +180,17 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
           <div className="p-6 space-y-6">
             {/* Success message for new share */}
             {newShareUrl && (
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+              <div className="bg-[rgba(16, 185, 129,0.1)] border border-[rgba(16, 185, 129,0.2)] rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-green-600 mt-0.5" />
+                  <Check className="w-5 h-5 text-[var(--color-positive)] mt-0.5" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-green-400">Share link created!</p>
+                    <p className="text-sm font-medium text-[var(--color-positive)]">Share link created!</p>
                     <div className="mt-2 flex items-center gap-2">
                       <input
                         type="text"
                         value={newShareUrl}
                         readOnly
-                        className="flex-1 px-3 py-2 text-sm bg-[var(--color-bg)] border border-green-500/20 rounded-lg"
+                        className="flex-1 px-3 py-2 text-sm bg-[var(--color-bg)] border border-[rgba(16, 185, 129,0.2)] rounded-lg"
                       />
                       <Button
                         size="sm"
@@ -228,13 +228,13 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                       onClick={() => setFormData({ ...formData, permissions: 'view' })}
                       className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-colors ${
                         formData.permissions === 'view'
-                          ? 'border-blue-500 bg-blue-500/10'
+                          ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)]'
                           : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                       }`}
                     >
-                      <Eye className={`w-5 h-5 ${formData.permissions === 'view' ? 'text-blue-600' : 'text-[var(--color-text-muted)]'}`} />
+                      <Eye className={`w-5 h-5 ${formData.permissions === 'view' ? 'text-[var(--color-info)]' : 'text-[var(--color-text-muted)]'}`} />
                       <div className="text-left">
-                        <p className={`text-sm font-medium ${formData.permissions === 'view' ? 'text-blue-500' : 'text-[var(--color-text-secondary)]'}`}>
+                        <p className={`text-sm font-medium ${formData.permissions === 'view' ? 'text-[var(--color-info)]' : 'text-[var(--color-text-secondary)]'}`}>
                           View Only
                         </p>
                         <p className="text-xs text-[var(--color-text-muted)]">Can see portfolio</p>
@@ -245,13 +245,13 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                       onClick={() => setFormData({ ...formData, permissions: 'edit' })}
                       className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-colors ${
                         formData.permissions === 'edit'
-                          ? 'border-blue-500 bg-blue-500/10'
+                          ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)]'
                           : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                       }`}
                     >
-                      <Edit3 className={`w-5 h-5 ${formData.permissions === 'edit' ? 'text-blue-600' : 'text-[var(--color-text-muted)]'}`} />
+                      <Edit3 className={`w-5 h-5 ${formData.permissions === 'edit' ? 'text-[var(--color-info)]' : 'text-[var(--color-text-muted)]'}`} />
                       <div className="text-left">
-                        <p className={`text-sm font-medium ${formData.permissions === 'edit' ? 'text-blue-500' : 'text-[var(--color-text-secondary)]'}`}>
+                        <p className={`text-sm font-medium ${formData.permissions === 'edit' ? 'text-[var(--color-info)]' : 'text-[var(--color-text-secondary)]'}`}>
                           Can Edit
                         </p>
                         <p className="text-xs text-[var(--color-text-muted)]">Full access</p>
@@ -269,7 +269,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                   <select
                     value={formData.expiresIn}
                     onChange={(e) => setFormData({ ...formData, expiresIn: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-info)] focus:border-[var(--color-info)]"
                   >
                     {EXPIRATION_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -290,7 +290,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                     value={formData.shareWithEmail}
                     onChange={(e) => setFormData({ ...formData, shareWithEmail: e.target.value })}
                     placeholder="colleague@example.com"
-                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-info)] focus:border-[var(--color-info)]"
                   />
                   <p className="text-xs text-[var(--color-text-muted)] mt-1">
                     If the email is registered, they will be linked to this share.
@@ -299,7 +299,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
 
                 {/* Error message */}
                 {createShareMutation.isError && (
-                  <div className="flex items-center gap-2 text-red-600 text-sm">
+                  <div className="flex items-center gap-2 text-[var(--color-negative)] text-sm">
                     <AlertCircle className="w-4 h-4" />
                     Failed to create share. Please try again.
                   </div>
@@ -368,8 +368,8 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                             <span
                               className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded ${
                                 share.permissions === 'edit'
-                                  ? 'bg-purple-500/10 text-purple-700'
-                                  : 'bg-blue-500/10 text-blue-500'
+                                  ? 'bg-[rgba(123, 44, 255,0.1)] text-[var(--color-accent)]'
+                                  : 'bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)]'
                               }`}
                             >
                               {share.permissions === 'edit' ? (
@@ -385,7 +385,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                               )}
                             </span>
                             {share.isExpired && (
-                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-red-500/10 text-red-400">
+                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)]">
                                 Expired
                               </span>
                             )}
@@ -414,7 +414,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => copyToClipboard(share.shareUrl)}
-                            className="p-2 text-[var(--color-text-muted)] hover:text-blue-600 hover:bg-blue-500/10 rounded-lg transition-colors"
+                            className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-info)] hover:bg-[rgba(59, 130, 246,0.1)] rounded-lg transition-colors"
                             title="Copy link"
                           >
                             <Copy className="w-4 h-4" />
@@ -422,7 +422,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                           <button
                             onClick={() => revokeShareMutation.mutate(share.id)}
                             disabled={revokeShareMutation.isPending}
-                            className="p-2 text-[var(--color-text-muted)] hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-colors"
+                            className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-negative)] hover:bg-[rgba(239, 68, 68,0.1)] rounded-lg transition-colors"
                             title="Revoke share"
                           >
                             <Trash2 className="w-4 h-4" />

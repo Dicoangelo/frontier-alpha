@@ -49,13 +49,13 @@ function NetExposureIndicator({ value }: { value: number }) {
   }
   if (value > 0) {
     return (
-      <span className="flex items-center gap-1 text-green-500">
+      <span className="flex items-center gap-1 text-[var(--color-positive)]">
         <TrendingUp className="w-3 h-3" /> +{value.toFixed(2)}
       </span>
     );
   }
   return (
-    <span className="flex items-center gap-1 text-red-500">
+    <span className="flex items-center gap-1 text-[var(--color-negative)]">
       <TrendingDown className="w-3 h-3" /> {value.toFixed(2)}
     </span>
   );
@@ -157,7 +157,7 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
           <p className="text-sm mt-2">Add positions to see factor analysis.</p>
           <Link
             to="/help#what-are-factors"
-            className="inline-flex items-center gap-1 mt-4 text-sm text-blue-500 hover:text-blue-400"
+            className="inline-flex items-center gap-1 mt-4 text-sm text-[var(--color-info)] hover:text-[var(--color-info)]"
           >
             <HelpCircle className="w-4 h-4" />
             Learn about factors
@@ -227,9 +227,9 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
       )}
 
       {insight && (
-        <div className="mt-6 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
+        <div className="mt-6 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-[rgba(59, 130, 246,0.2)]">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-blue-500/10 rounded-full flex items-center justify-center">
+            <div className="flex-shrink-0 w-8 h-8 bg-[rgba(59, 130, 246,0.1)] rounded-full flex items-center justify-center">
               <span className="text-lg">🧠</span>
             </div>
             <div>

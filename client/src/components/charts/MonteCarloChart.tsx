@@ -148,10 +148,10 @@ export function MonteCarloChart({
     });
 
     // Theme-aware colors
-    const zeroColor = isDark ? 'rgba(255, 255, 255, 0.5)' : '#374151';
+    const zeroColor = isDark ? 'rgba(255, 255, 255, 0.5)' : 'var(--color-text)';
     const varColor = isDark ? '#f87171' : '#dc2626';
     const medianColor = isDark ? '#60a5fa' : '#3b82f6';
-    const labelColor = isDark ? 'rgba(255, 255, 255, 0.5)' : '#6b7280';
+    const labelColor = isDark ? 'rgba(255, 255, 255, 0.5)' : 'var(--color-text-muted)';
 
     // Draw zero line
     const zeroX = padding.left + ((0 - minVal) / (maxVal - minVal)) * chartWidth;
@@ -234,10 +234,10 @@ export function MonteCarloChart({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
           <div className="flex items-center gap-2 mb-1">
-            <Target className="w-4 h-4 text-blue-500" />
+            <Target className="w-4 h-4 text-[var(--color-info)]" />
             <span className="text-xs text-[var(--color-text-muted)]">Median Return</span>
           </div>
-          <p className={`text-lg font-bold ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+          <p className={`text-lg font-bold ${isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {isPositive ? '+' : ''}{(result.medianReturn * 100).toFixed(1)}%
           </p>
         </div>
@@ -245,33 +245,33 @@ export function MonteCarloChart({
         <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
           <div className="flex items-center gap-2 mb-1">
             {result.probPositive >= 0.5 ? (
-              <TrendingUp className="w-4 h-4 text-green-500" />
+              <TrendingUp className="w-4 h-4 text-[var(--color-positive)]" />
             ) : (
-              <TrendingDown className="w-4 h-4 text-red-500" />
+              <TrendingDown className="w-4 h-4 text-[var(--color-negative)]" />
             )}
             <span className="text-xs text-[var(--color-text-muted)]">Prob. Positive</span>
           </div>
-          <p className={`text-lg font-bold ${result.probPositive >= 0.5 ? 'text-green-500' : 'text-red-500'}`}>
+          <p className={`text-lg font-bold ${result.probPositive >= 0.5 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {(result.probPositive * 100).toFixed(0)}%
           </p>
         </div>
 
         <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
           <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
+            <AlertTriangle className="w-4 h-4 text-[var(--color-warning)]" />
             <span className="text-xs text-[var(--color-text-muted)]">VaR (95%)</span>
           </div>
-          <p className="text-lg font-bold text-red-500">
+          <p className="text-lg font-bold text-[var(--color-negative)]">
             {(result.var95 * 100).toFixed(1)}%
           </p>
         </div>
 
         <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
           <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle className="w-4 h-4 text-red-500" />
+            <AlertTriangle className="w-4 h-4 text-[var(--color-negative)]" />
             <span className="text-xs text-[var(--color-text-muted)]">CVaR (95%)</span>
           </div>
-          <p className="text-lg font-bold text-red-500">
+          <p className="text-lg font-bold text-[var(--color-negative)]">
             {(result.cvar95 * 100).toFixed(1)}%
           </p>
         </div>
@@ -292,7 +292,7 @@ export function MonteCarloChart({
 
             {/* 90% interval (5th to 95th percentile) */}
             <div
-              className="absolute inset-y-2 bg-blue-200 rounded-full"
+              className="absolute inset-y-2 bg-[var(--color-info)] rounded-full"
               style={{
                 left: `${((result.confidenceInterval.p5 - result.confidenceInterval.p5) / (result.confidenceInterval.p95 - result.confidenceInterval.p5)) * 100}%`,
                 right: `${100 - ((result.confidenceInterval.p95 - result.confidenceInterval.p5) / (result.confidenceInterval.p95 - result.confidenceInterval.p5)) * 100}%`,
@@ -301,7 +301,7 @@ export function MonteCarloChart({
 
             {/* 50% interval (25th to 75th percentile) */}
             <div
-              className="absolute inset-y-1 bg-blue-400 rounded-full"
+              className="absolute inset-y-1 bg-[var(--color-info)] rounded-full"
               style={{
                 left: `${((result.confidenceInterval.p25 - result.confidenceInterval.p5) / (result.confidenceInterval.p95 - result.confidenceInterval.p5)) * 100}%`,
                 width: `${((result.confidenceInterval.p75 - result.confidenceInterval.p25) / (result.confidenceInterval.p95 - result.confidenceInterval.p5)) * 100}%`,
@@ -310,7 +310,7 @@ export function MonteCarloChart({
 
             {/* Median marker */}
             <div
-              className="absolute top-0 bottom-0 w-1 bg-blue-600 rounded-full"
+              className="absolute top-0 bottom-0 w-1 bg-[var(--color-info)] rounded-full"
               style={{
                 left: `${((result.confidenceInterval.p50 - result.confidenceInterval.p5) / (result.confidenceInterval.p95 - result.confidenceInterval.p5)) * 100}%`,
               }}
@@ -320,7 +320,7 @@ export function MonteCarloChart({
         <div className="flex justify-between text-xs text-[var(--color-text-muted)] mt-1">
           <span>{(result.confidenceInterval.p5 * 100).toFixed(1)}%</span>
           <span>{(result.confidenceInterval.p25 * 100).toFixed(1)}%</span>
-          <span className="font-medium text-blue-500">{(result.confidenceInterval.p50 * 100).toFixed(1)}%</span>
+          <span className="font-medium text-[var(--color-info)]">{(result.confidenceInterval.p50 * 100).toFixed(1)}%</span>
           <span>{(result.confidenceInterval.p75 * 100).toFixed(1)}%</span>
           <span>{(result.confidenceInterval.p95 * 100).toFixed(1)}%</span>
         </div>

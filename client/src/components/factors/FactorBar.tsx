@@ -43,25 +43,25 @@ const FACTOR_INFO: Record<string, { category: string; color: string; description
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Momentum: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  Quality: 'bg-green-500/10 text-green-500 border-green-500/20',
-  Value: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
-  Volatility: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
-  Size: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
-  Macro: 'bg-red-500/10 text-red-500 border-red-500/20',
-  Sector: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
+  Momentum: 'bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)] border-[rgba(59, 130, 246,0.2)]',
+  Quality: 'bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)] border-[rgba(16, 185, 129,0.2)]',
+  Value: 'bg-[rgba(123, 44, 255,0.1)] text-[var(--color-accent)] border-[rgba(123, 44, 255,0.2)]',
+  Volatility: 'bg-[rgba(249, 115, 22,0.1)] text-[var(--color-warning)] border-[rgba(249, 115, 22,0.2)]',
+  Size: 'bg-[rgba(99, 102, 241,0.1)] text-[var(--color-accent)] border-[rgba(99, 102, 241,0.2)]',
+  Macro: 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)] border-[rgba(239, 68, 68,0.2)]',
+  Sector: 'bg-[rgba(6, 182, 212,0.1)] text-[var(--color-info)] border-[rgba(6, 182, 212,0.2)]',
   Other: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)]',
 };
 
 const BAR_COLORS: Record<string, { positive: string; negative: string }> = {
-  Momentum: { positive: 'bg-blue-500', negative: 'bg-blue-400' },
-  Quality: { positive: 'bg-green-500', negative: 'bg-green-400' },
-  Value: { positive: 'bg-purple-500', negative: 'bg-purple-400' },
-  Volatility: { positive: 'bg-orange-500', negative: 'bg-orange-400' },
-  Size: { positive: 'bg-indigo-500', negative: 'bg-indigo-400' },
-  Macro: { positive: 'bg-red-500', negative: 'bg-red-400' },
-  Sector: { positive: 'bg-cyan-500', negative: 'bg-cyan-400' },
-  Other: { positive: 'bg-gray-500', negative: 'bg-[var(--color-text-muted)]' },
+  Momentum: { positive: 'bg-[var(--color-info)]', negative: 'bg-[var(--color-info)]' },
+  Quality: { positive: 'bg-[var(--color-positive)]', negative: 'bg-[var(--color-positive)]' },
+  Value: { positive: 'bg-[var(--color-accent)]', negative: 'bg-[var(--color-accent)]' },
+  Volatility: { positive: 'bg-[var(--color-warning)]', negative: 'bg-[var(--color-warning)]' },
+  Size: { positive: 'bg-[var(--color-accent)]', negative: 'bg-[var(--color-accent)]' },
+  Macro: { positive: 'bg-[var(--color-negative)]', negative: 'bg-[var(--color-negative)]' },
+  Sector: { positive: 'bg-[var(--color-info)]', negative: 'bg-[var(--color-info)]' },
+  Other: { positive: 'bg-[var(--color-bg-tertiary)]', negative: 'bg-[var(--color-text-muted)]' },
 };
 
 interface FactorBarProps {
@@ -82,7 +82,7 @@ export function FactorBar({ factor, showCategory = true }: FactorBarProps) {
   // Signal strength indicator
   const signalStrength = Math.abs(factor.tStat);
   const signalLabel = signalStrength >= 2 ? 'Strong' : signalStrength >= 1 ? 'Moderate' : 'Weak';
-  const signalColor = signalStrength >= 2 ? 'text-green-600' : signalStrength >= 1 ? 'text-yellow-600' : 'text-[var(--color-text-muted)]';
+  const signalColor = signalStrength >= 2 ? 'text-[var(--color-positive)]' : signalStrength >= 1 ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-muted)]';
 
   return (
     <div className="space-y-1.5">

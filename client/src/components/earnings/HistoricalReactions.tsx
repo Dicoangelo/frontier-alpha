@@ -64,9 +64,9 @@ export function HistoricalReactions({ symbol }: HistoricalReactionsProps) {
   const getOutcomeIcon = (outcome: string) => {
     switch (outcome) {
       case 'beat':
-        return <TrendingUp className="w-4 h-4 text-green-500" />;
+        return <TrendingUp className="w-4 h-4 text-[var(--color-positive)]" />;
       case 'miss':
-        return <TrendingDown className="w-4 h-4 text-red-500" />;
+        return <TrendingDown className="w-4 h-4 text-[var(--color-negative)]" />;
       default:
         return <Minus className="w-4 h-4 text-[var(--color-text-muted)]" />;
     }
@@ -75,9 +75,9 @@ export function HistoricalReactions({ symbol }: HistoricalReactionsProps) {
   const getOutcomeColor = (outcome: string) => {
     switch (outcome) {
       case 'beat':
-        return 'text-green-600 bg-green-500/10';
+        return 'text-[var(--color-positive)] bg-[rgba(16, 185, 129,0.1)]';
       case 'miss':
-        return 'text-red-600 bg-red-500/10';
+        return 'text-[var(--color-negative)] bg-[rgba(239, 68, 68,0.1)]';
       default:
         return 'text-[var(--color-text-secondary)] bg-[var(--color-bg-tertiary)]';
     }
@@ -93,7 +93,7 @@ export function HistoricalReactions({ symbol }: HistoricalReactionsProps) {
     return (
       <Card title={`${symbol} Earnings History`}>
         <div className="flex items-center justify-center h-48">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-info)]" />
         </div>
       </Card>
     );
@@ -102,7 +102,7 @@ export function HistoricalReactions({ symbol }: HistoricalReactionsProps) {
   if (error) {
     return (
       <Card title={`${symbol} Earnings History`}>
-        <div className="text-center py-8 text-red-600">
+        <div className="text-center py-8 text-[var(--color-negative)]">
           <p>{error}</p>
         </div>
       </Card>
@@ -119,7 +119,7 @@ export function HistoricalReactions({ symbol }: HistoricalReactionsProps) {
               <Target className="w-3 h-3" />
               Beat Rate
             </div>
-            <p className={`text-lg font-bold ${summary.beatRate > 60 ? 'text-green-600' : summary.beatRate < 40 ? 'text-red-600' : 'text-[var(--color-text-secondary)]'}`}>
+            <p className={`text-lg font-bold ${summary.beatRate > 60 ? 'text-[var(--color-positive)]' : summary.beatRate < 40 ? 'text-[var(--color-negative)]' : 'text-[var(--color-text-secondary)]'}`}>
               {summary.beatRate.toFixed(0)}%
             </p>
           </div>
@@ -134,22 +134,22 @@ export function HistoricalReactions({ symbol }: HistoricalReactionsProps) {
             </p>
           </div>
 
-          <div className="bg-green-500/10 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-green-600 text-xs mb-1">
+          <div className="bg-[rgba(16, 185, 129,0.1)] rounded-lg p-3">
+            <div className="flex items-center gap-2 text-[var(--color-positive)] text-xs mb-1">
               <TrendingUp className="w-3 h-3" />
               On Beat
             </div>
-            <p className="text-lg font-bold text-green-600">
+            <p className="text-lg font-bold text-[var(--color-positive)]">
               {formatPercent(summary.avgBeatMove)}
             </p>
           </div>
 
-          <div className="bg-red-500/10 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-red-600 text-xs mb-1">
+          <div className="bg-[rgba(239, 68, 68,0.1)] rounded-lg p-3">
+            <div className="flex items-center gap-2 text-[var(--color-negative)] text-xs mb-1">
               <TrendingDown className="w-3 h-3" />
               On Miss
             </div>
-            <p className="text-lg font-bold text-red-600">
+            <p className="text-lg font-bold text-[var(--color-negative)]">
               {formatPercent(summary.avgMissMove)}
             </p>
           </div>
@@ -193,12 +193,12 @@ export function HistoricalReactions({ symbol }: HistoricalReactionsProps) {
                   </div>
                 </td>
                 <td className={`py-3 text-right font-medium ${
-                  (reaction.priceMove ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                  (reaction.priceMove ?? 0) >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'
                 }`}>
                   {formatPercent(reaction.priceMove)}
                 </td>
                 <td className={`py-3 text-right hidden sm:table-cell ${
-                  (reaction.postEarningsDrift ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                  (reaction.postEarningsDrift ?? 0) >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'
                 }`}>
                   {formatPercent(reaction.postEarningsDrift)}
                 </td>
@@ -231,7 +231,7 @@ export function HistoricalReactions({ symbol }: HistoricalReactionsProps) {
                   title={`${r.fiscalQuarter}: ${formatPercent(move)}`}
                 >
                   <div
-                    className={`w-full rounded-t ${isPositive ? 'bg-green-400' : 'bg-red-400'}`}
+                    className={`w-full rounded-t ${isPositive ? 'bg-[var(--color-positive)]' : 'bg-[var(--color-negative)]'}`}
                     style={{ height: `${Math.max(4, height)}%` }}
                   />
                 </div>

@@ -97,9 +97,9 @@ function generateMockData(currentValue: number, days: number): DataPoint[] {
 // Theme-aware canvas colors
 function getChartColors(isDark: boolean) {
   return {
-    grid: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e5e7eb',
-    label: isDark ? 'rgba(255, 255, 255, 0.5)' : '#6b7280',
-    benchmark: isDark ? 'rgba(255, 255, 255, 0.35)' : '#9ca3af',
+    grid: isDark ? 'rgba(255, 255, 255, 0.08)' : 'var(--color-border)',
+    label: isDark ? 'rgba(255, 255, 255, 0.5)' : 'var(--color-text-muted)',
+    benchmark: isDark ? 'rgba(255, 255, 255, 0.35)' : 'var(--color-text-muted)',
     line: isDark ? '#60a5fa' : '#3b82f6',
     gradientTop: isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.3)',
     gradientBottom: isDark ? 'rgba(96, 165, 250, 0)' : 'rgba(59, 130, 246, 0)',
@@ -412,13 +412,13 @@ export function EquityCurve({
         <div className="flex items-center gap-6">
           <div>
             <p className="text-sm text-[var(--color-text-muted)]">Total Return</p>
-            <p className={`text-xl font-bold ${totalReturn >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            <p className={`text-xl font-bold ${totalReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
               {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(2)}%
             </p>
           </div>
           <div>
             <p className="text-sm text-[var(--color-text-muted)]">vs S&P 500</p>
-            <p className={`text-xl font-bold ${alpha >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            <p className={`text-xl font-bold ${alpha >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
               {alpha >= 0 ? '+' : ''}{alpha.toFixed(2)}%
             </p>
           </div>
@@ -484,7 +484,7 @@ export function EquityCurve({
               <p className="text-[var(--color-text-muted)] mb-1">{new Date(hoveredPoint.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
               <p className="font-semibold text-[var(--color-text)]">${hoveredPoint.portfolio.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
               <p className="text-[var(--color-text-muted)]">Benchmark: ${hoveredPoint.benchmark.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-              <p className={dailyChange >= 0 ? 'text-green-500' : 'text-red-500'}>
+              <p className={dailyChange >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}>
                 {dailyChange >= 0 ? '+' : ''}{dailyChange.toFixed(2)}%
               </p>
             </div>
@@ -495,7 +495,7 @@ export function EquityCurve({
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 bg-blue-500 dark:bg-blue-400" />
+          <div className="w-4 h-0.5 bg-[var(--color-info)] dark:bg-[var(--color-info)]" />
           <span className="text-[var(--color-text-secondary)]">Portfolio</span>
         </div>
         <div className="flex items-center gap-2">

@@ -209,19 +209,22 @@ export function Alerts() {
       {/* Header — delay 0ms */}
       <div
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up"
-        style={{ animationDelay: '0ms' }}
+        style={{ animationDelay: '0ms', animationFillMode: 'both' }}
       >
-        <div className="flex items-center gap-3">
-          <Bell className="w-6 h-6 text-[var(--color-text-secondary)]" />
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Alerts</h1>
-          {totalActive > 0 && (
-            <span
-              className="px-2 py-1 text-sm font-medium rounded-full text-[var(--color-negative)]"
-              style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
-            >
-              {totalActive} active
-            </span>
-          )}
+        <div>
+          <div className="flex items-center gap-3">
+            <Bell className="w-6 h-6 text-[var(--color-text-muted)]" />
+            <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Alerts</h1>
+            {totalActive > 0 && (
+              <span
+                className="px-2 py-1 text-sm font-medium rounded-full text-[var(--color-negative)]"
+                style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+              >
+                {totalActive} active
+              </span>
+            )}
+          </div>
+          <p className="text-[var(--color-text-muted)] mt-1">Risk alerts, factor drift monitoring, and SEC filings</p>
         </div>
         <Button onClick={loadAlerts} isLoading={isLoading} variant="secondary">
           <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -232,7 +235,7 @@ export function Alerts() {
       {/* Summary Cards — delay 50ms */}
       <div
         className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up"
-        style={{ animationDelay: '50ms' }}
+        style={{ animationDelay: '50ms', animationFillMode: 'both' }}
       >
         <SummaryCard
           label="Critical"
@@ -271,7 +274,7 @@ export function Alerts() {
       {/* Filters — delay 100ms */}
       <div
         className="flex flex-wrap items-center gap-4 animate-fade-in-up"
-        style={{ animationDelay: '100ms' }}
+        style={{ animationDelay: '100ms', animationFillMode: 'both' }}
       >
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-[var(--color-text-muted)]" />
@@ -299,7 +302,7 @@ export function Alerts() {
       {/* Factor Drift Monitor — delay 150ms */}
       <div
         className="animate-fade-in-up"
-        style={{ animationDelay: '150ms' }}
+        style={{ animationDelay: '150ms', animationFillMode: 'both' }}
       >
         <FactorDriftAlert
           exposures={factorExposures}
@@ -310,7 +313,7 @@ export function Alerts() {
       {/* SEC Filing Alerts — delay 200ms */}
       <div
         className="animate-fade-in-up"
-        style={{ animationDelay: '200ms' }}
+        style={{ animationDelay: '200ms', animationFillMode: 'both' }}
       >
         <SECFilingAlert
           symbols={portfolioSymbols}
@@ -321,7 +324,7 @@ export function Alerts() {
       {/* Alert List — delay 250ms */}
       <div
         className="animate-fade-in-up"
-        style={{ animationDelay: '250ms' }}
+        style={{ animationDelay: '250ms', animationFillMode: 'both' }}
       >
         <Card>
           {filteredAlerts.length === 0 ? (
@@ -355,20 +358,33 @@ function SummaryCard({
   onClick: () => void;
   active: boolean;
 }) {
+  // Map emoji indicators to proper CSS colors
+  const dotColorMap: Record<string, string> = {
+    '🔴': 'rgb(239, 68, 68)',
+    '🟠': 'rgb(249, 115, 22)',
+    '🟡': 'rgb(245, 158, 11)',
+    '🔵': 'rgb(59, 130, 246)',
+  };
+  const dotColor = dotColorMap[indicator] || 'var(--color-text-muted)';
+
   return (
     <button
       onClick={onClick}
-      className="p-4 min-h-[44px] rounded-lg border transition-all duration-200 hover:shadow-md"
+      className="p-4 min-h-[44px] rounded-xl border transition-all duration-200 hover:shadow-md"
       style={{
         ...bgStyle,
         ...(active ? { boxShadow: '0 0 0 2px var(--color-accent)' } : {}),
       }}
     >
       <div className="flex items-center justify-between mb-2">
-        <span className="text-lg">{indicator}</span>
+        <span
+          className="w-3 h-3 rounded-full flex-shrink-0"
+          style={{ backgroundColor: dotColor }}
+          aria-hidden="true"
+        />
         <span className="text-2xl font-bold text-[var(--color-text)]">{count}</span>
       </div>
-      <p className="text-sm text-[var(--color-text-secondary)] text-left">{label}</p>
+      <p className="text-xs text-[var(--color-text-muted)] text-left uppercase tracking-wider font-medium">{label}</p>
     </button>
   );
 }

@@ -100,7 +100,7 @@ export function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] dark:bg-[#0F1219]">
+    <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Sovereign bar */}
       <div className="sovereign-bar fixed top-0 left-0 right-0 z-50" />
 
@@ -116,10 +116,10 @@ export function Pricing() {
 
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-black text-white mb-4">
+          <h1 className="text-4xl sm:text-5xl font-black text-[var(--color-text)] mb-4">
             Choose Your <span className="text-gradient-brand">Plan</span>
           </h1>
-          <p className="text-lg text-white/60 max-w-xl mx-auto">
+          <p className="text-lg text-[var(--color-text-muted)] max-w-xl mx-auto">
             Institutional intelligence at every level. Start free, scale when you're ready.
           </p>
         </div>
@@ -144,17 +144,17 @@ export function Pricing() {
                 )}
 
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-white mb-1">{plan.name}</h3>
+                  <h3 className="text-lg font-semibold text-[var(--color-text)] mb-1">{plan.name}</h3>
                   <div className="flex items-baseline gap-1 mb-2">
-                    <span className="text-4xl font-black text-white">{plan.price}</span>
-                    <span className="text-sm text-white/40">{plan.priceNote}</span>
+                    <span className="text-4xl font-black text-[var(--color-text)]">{plan.price}</span>
+                    <span className="text-sm text-[var(--color-text-muted)]">{plan.priceNote}</span>
                   </div>
-                  <p className="text-sm text-white/50">{plan.description}</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">{plan.description}</p>
                 </div>
 
                 <ul className="space-y-3 mb-8 flex-1">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-sm text-white/70">
+                    <li key={feature} className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
                       <Check className="w-4 h-4 text-[var(--color-positive)] flex-shrink-0 mt-0.5" />
                       {feature}
                     </li>
@@ -164,14 +164,14 @@ export function Pricing() {
                 {isCurrent ? (
                   <button
                     disabled
-                    className="w-full py-3 px-4 rounded-sm text-sm font-medium bg-white/5 text-white/40 cursor-default mono tracking-[0.1em] uppercase"
+                    className="w-full py-3 px-4 rounded-sm text-sm font-medium bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-default mono tracking-[0.1em] uppercase"
                   >
                     Current Plan
                   </button>
                 ) : plan.priceId === null ? (
                   <button
                     disabled
-                    className="w-full py-3 px-4 rounded-sm text-sm font-medium bg-white/5 text-white/40 cursor-default mono tracking-[0.1em] uppercase"
+                    className="w-full py-3 px-4 rounded-sm text-sm font-medium bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-default mono tracking-[0.1em] uppercase"
                   >
                     Free Forever
                   </button>
@@ -182,7 +182,7 @@ export function Pricing() {
                     className={`w-full py-3 px-4 rounded-sm text-sm font-medium mono tracking-[0.1em] uppercase transition-all click-feedback ${
                       plan.highlighted
                         ? 'bg-[var(--color-accent)] text-white hover:opacity-90 shadow-[0_0_20px_rgba(123,44,255,0.3)]'
-                        : 'bg-white/10 text-white hover:bg-white/15'
+                        : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text)] hover:bg-[var(--color-border)]'
                     } disabled:opacity-50`}
                   >
                     {isLoading ? 'Redirecting...' : 'Get Started'}
@@ -194,7 +194,7 @@ export function Pricing() {
         </div>
 
         {/* Footer note */}
-        <p className="text-center text-xs text-white/30 mt-8 mono">
+        <p className="text-center text-xs text-[var(--color-text-muted)] mt-8 mono">
           All plans include SSL encryption, SOC 2 compliance, and 99.9% uptime SLA.
         </p>
       </div>

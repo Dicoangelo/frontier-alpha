@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Save, LogOut, User, Bell, Shield, AlertTriangle, Key, CreditCard } from 'lucide-react';
+import { Save, LogOut, User, Bell, Shield, AlertTriangle, Key, CreditCard, Sun, Moon, Monitor } from 'lucide-react';
+import { useThemeStore } from '@/stores/themeStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubscription } from '@/hooks/useSubscription';
 import { api } from '@/api/client';
@@ -102,8 +103,11 @@ export function Settings() {
         )}
       </div>
 
-      {/* Profile card — delay 50ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+      {/* Appearance card — delay 50ms */}
+      <AppearanceCard />
+
+      {/* Profile card — delay 100ms */}
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(123, 44, 255, 0.08)' }}>
             <User className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
@@ -135,8 +139,8 @@ export function Settings() {
         </div>
       </Card>
 
-      {/* Risk preferences card — delay 100ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
+      {/* Risk preferences card — delay 150ms */}
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)' }}>
             <Shield className="w-5 h-5" style={{ color: 'var(--color-positive)' }} />
@@ -229,8 +233,8 @@ export function Settings() {
         </div>
       </Card>
 
-      {/* Notifications card — delay 150ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+      {/* Notifications card — delay 200ms */}
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(245, 158, 11, 0.08)' }}>
             <Bell className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
@@ -258,8 +262,8 @@ export function Settings() {
         </div>
       </Card>
 
-      {/* Subscription card — delay 200ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
+      {/* Subscription card — delay 250ms */}
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(59, 130, 246, 0.08)' }}>
             <CreditCard className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
@@ -306,8 +310,8 @@ export function Settings() {
         </div>
       </Card>
 
-      {/* API Keys card — delay 250ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
+      {/* API Keys card — delay 300ms */}
+      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(123, 44, 255, 0.08)' }}>
             <Key className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
@@ -317,10 +321,10 @@ export function Settings() {
         <APIKeys />
       </Card>
 
-      {/* Danger zone card — delay 300ms */}
+      {/* Danger zone card — delay 350ms */}
       <Card
         className="p-6 hover:shadow-md transition-shadow animate-fade-in-up"
-        style={{ borderColor: 'rgba(239, 68, 68, 0.2)', animationDelay: '300ms', animationFillMode: 'both' }}
+        style={{ borderColor: 'rgba(239, 68, 68, 0.2)', animationDelay: '350ms', animationFillMode: 'both' }}
       >
         <div className="flex items-center gap-3 mb-6">
           <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)' }}>
@@ -341,5 +345,63 @@ export function Settings() {
         </div>
       </Card>
     </div>
+  );
+}
+
+function AppearanceCard() {
+  const { theme, setTheme, resolved } = useThemeStore();
+
+  const options: { value: 'light' | 'dark' | 'system'; label: string; icon: typeof Sun; description: string }[] = [
+    { value: 'light', label: 'Light', icon: Sun, description: 'Always use light theme' },
+    { value: 'dark', label: 'Dark', icon: Moon, description: 'Always use dark theme' },
+    { value: 'system', label: 'System', icon: Monitor, description: 'Follow OS preference' },
+  ];
+
+  return (
+    <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(59, 130, 246, 0.08)' }}>
+          {resolved === 'dark' ? (
+            <Moon className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
+          ) : (
+            <Sun className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
+          )}
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold">Appearance</h2>
+          <p className="text-sm text-[var(--color-text-muted)]">Currently {resolved}</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        {options.map((opt) => {
+          const Icon = opt.icon;
+          const isActive = theme === opt.value;
+          return (
+            <button
+              key={opt.value}
+              onClick={() => setTheme(opt.value)}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-sm"
+              style={
+                isActive
+                  ? {
+                      borderColor: 'var(--color-accent)',
+                      backgroundColor: 'rgba(123, 44, 255, 0.08)',
+                    }
+                  : {
+                      borderColor: 'var(--color-border)',
+                    }
+              }
+            >
+              <Icon className="w-6 h-6" style={{ color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)' }} />
+              <span className="text-sm font-medium" style={{ color: isActive ? 'var(--color-accent)' : 'var(--color-text)' }}>
+                {opt.label}
+              </span>
+              <span className="text-xs text-[var(--color-text-muted)] text-center">{opt.description}</span>
+            </button>
+          );
+        })}
+      </div>
+    </Card>
   );
 }

@@ -227,6 +227,37 @@
     background-size: 100% 100%, 100% 100%, 100% 100%, 80px 80px, 80px 80px;
   }
 
+  /* ── Quote Flash (live price update feedback) ── */
+  .quote-flash-up {
+    animation: quote-flash-up 600ms ease-out;
+  }
+  .quote-flash-down {
+    animation: quote-flash-down 600ms ease-out;
+  }
+
+  @keyframes quote-flash-up {
+    0% { background-color: rgba(16, 185, 129, 0.12); }
+    100% { background-color: transparent; }
+  }
+  @keyframes quote-flash-down {
+    0% { background-color: rgba(239, 68, 68, 0.12); }
+    100% { background-color: transparent; }
+  }
+  .dark .quote-flash-up {
+    animation: quote-flash-up-dark 600ms ease-out;
+  }
+  .dark .quote-flash-down {
+    animation: quote-flash-down-dark 600ms ease-out;
+  }
+  @keyframes quote-flash-up-dark {
+    0% { background-color: rgba(52, 211, 153, 0.08); }
+    100% { background-color: transparent; }
+  }
+  @keyframes quote-flash-down-dark {
+    0% { background-color: rgba(248, 113, 113, 0.08); }
+    100% { background-color: transparent; }
+  }
+
   /* ── Skeleton Shimmer ── */
   .skeleton-shimmer {
     background: linear-gradient(90deg, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.05) 75%);

@@ -42,6 +42,7 @@ export default {
         'pulse-subtle': 'pulse-subtle 2s infinite',
         'glow': 'glow 2s ease-in-out infinite alternate',
         'pulse-green': 'pulse-green 2s ease-in-out infinite',
+        'donut-draw': 'donut-draw 0.8s ease-out forwards',
       },
       keyframes: {
         shimmer: {
@@ -85,6 +86,10 @@ export default {
         'glow': {
           '0%': { boxShadow: '0 0 5px rgba(123, 44, 255, 0.3), 0 0 10px rgba(24, 230, 255, 0.1)' },
           '100%': { boxShadow: '0 0 10px rgba(123, 44, 255, 0.5), 0 0 20px rgba(24, 230, 255, 0.2)' },
+        },
+        'donut-draw': {
+          '0%': { strokeDashoffset: '339.292' },
+          '100%': { strokeDashoffset: 'var(--target-offset)' },
         },
       },
       transitionProperty: {

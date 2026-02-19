@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/shared/Card';
+import { useCountUp } from '@/components/portfolio/PortfolioOverview';
 import type { Position } from '@/types';
 
 const SEGMENT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
@@ -16,6 +17,7 @@ interface Segment {
   color: string;
   dashArray: string;
   dashOffset: number;
+  circumference: number;
 }
 
 function buildSegments(positions: Position[], _totalValue: number): Segment[] {
@@ -50,6 +52,7 @@ function buildSegments(positions: Position[], _totalValue: number): Segment[] {
       color: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
       dashArray: `${dash.toFixed(3)} ${gap.toFixed(3)}`,
       dashOffset: -offset,
+      circumference,
     };
     offset += dash;
     return seg;
@@ -58,6 +61,19 @@ function buildSegments(positions: Position[], _totalValue: number): Segment[] {
 
 export function WeightAllocation({ positions, totalValue }: WeightAllocationProps) {
   const [hoveredSymbol, setHoveredSymbol] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const hasAnimated = useRef(false);
+
+  // Trigger draw-in animation on mount
+  useEffect(() => {
+    if (hasAnimated.current) return;
+    hasAnimated.current = true;
+    // Small delay to allow DOM paint before animation
+    const frame = requestAnimationFrame(() => setIsVisible(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const centerCountRef = useCountUp(totalValue, 900);
 
   if (positions.length === 0) return null;
 
@@ -65,15 +81,12 @@ export function WeightAllocation({ positions, totalValue }: WeightAllocationProp
   const cx = SIZE / 2;
   const cy = SIZE / 2;
   const r = 54;
+  const circumference = 2 * Math.PI * r;
   const strokeWidth = 20;
 
   const segments = buildSegments(positions, totalValue);
 
   const hovered = hoveredSymbol ? segments.find(s => s.symbol === hoveredSymbol) : null;
-
-  const formattedTotal = totalValue >= 1000
-    ? `$${(totalValue / 1000).toFixed(0)}k`
-    : `$${totalValue.toFixed(0)}`;
 
   return (
     <Card title="Weight Allocation">
@@ -99,7 +112,7 @@ export function WeightAllocation({ positions, totalValue }: WeightAllocationProp
 
             {/* Segments — rotate so first segment starts at top */}
             <g transform={`rotate(-90 ${cx} ${cy})`}>
-              {segments.map((seg) => (
+              {segments.map((seg, i) => (
                 <circle
                   key={seg.symbol}
                   cx={cx}
@@ -109,9 +122,14 @@ export function WeightAllocation({ positions, totalValue }: WeightAllocationProp
                   stroke={seg.color}
                   strokeWidth={hoveredSymbol === seg.symbol ? strokeWidth + 4 : strokeWidth}
                   strokeDasharray={seg.dashArray}
-                  strokeDashoffset={seg.dashOffset}
+                  strokeDashoffset={isVisible ? seg.dashOffset : circumference}
                   strokeLinecap="butt"
-                  className="transition-all duration-150 cursor-pointer"
+                  className="cursor-pointer"
+                  style={{
+                    transition: isVisible
+                      ? `stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${i * 80}ms, stroke-width 0.15s ease`
+                      : 'none',
+                  }}
                   onMouseEnter={() => setHoveredSymbol(seg.symbol)}
                   onMouseLeave={() => setHoveredSymbol(null)}
                   onTouchStart={() => setHoveredSymbol(seg.symbol)}
@@ -156,19 +174,36 @@ export function WeightAllocation({ positions, totalValue }: WeightAllocationProp
               </>
             ) : (
               <>
+                {/* Center total with countUp — increased font size */}
+                <foreignObject x={cx - 35} y={cy - 14} width="70" height="20">
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                    <span
+                      ref={centerCountRef}
+                      style={{
+                        fontSize: '16px',
+                        fontWeight: 700,
+                        color: 'var(--color-text)',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      0
+                    </span>
+                  </div>
+                </foreignObject>
+                {/* We prepend the $ sign separately for better alignment */}
                 <text
-                  x={cx}
-                  y={cy - 4}
+                  x={cx - 28}
+                  y={cy + 2}
                   textAnchor="middle"
-                  fontSize="13"
+                  fontSize="10"
                   fontWeight="700"
                   fill="var(--color-text)"
                 >
-                  {formattedTotal}
+                  $
                 </text>
                 <text
                   x={cx}
-                  y={cy + 12}
+                  y={cy + 18}
                   textAnchor="middle"
                   fontSize="9"
                   fill="var(--color-text-muted)"

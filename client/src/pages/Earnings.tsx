@@ -80,7 +80,7 @@ export function Earnings() {
   const content = (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)]">Earnings Calendar</h1>
           <p className="text-[var(--color-text-muted)] mt-1">
@@ -101,32 +101,58 @@ export function Earnings() {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '50ms' }}>
-        <div className="bg-[var(--color-bg)] p-4 rounded-lg border hover:shadow-md transition-shadow duration-200">
-          <p className="text-sm text-[var(--color-text-muted)]">Total Upcoming</p>
-          <p className="text-2xl font-bold text-[var(--color-text)]">{earnings.length}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(123, 44, 255, 0.08)' }}>
+            <Calendar className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Total Upcoming</p>
+            <p className="text-xl font-bold text-[var(--color-text)] mt-0.5">{earnings.length}</p>
+          </div>
         </div>
         <div
-          className="p-4 rounded-lg border hover:shadow-md transition-shadow duration-200"
-          style={earningsToday > 0 ? { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)' } : undefined}
+          className="flex items-center gap-3 p-4 rounded-xl border"
+          style={{
+            backgroundColor: earningsToday > 0 ? 'rgba(239, 68, 68, 0.08)' : 'var(--color-bg-tertiary)',
+            borderColor: earningsToday > 0 ? 'rgba(239, 68, 68, 0.2)' : 'var(--color-border-light)',
+          }}
         >
-          <p className="text-sm text-[var(--color-text-muted)]">Reporting Today</p>
-          <p className={`text-2xl font-bold ${earningsToday > 0 ? 'text-[var(--color-negative)]' : 'text-[var(--color-text)]'}`}>
-            {earningsToday}
-          </p>
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
+            <AlertCircle className="w-5 h-5" style={{ color: 'var(--color-negative)' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Reporting Today</p>
+            <p className={`text-xl font-bold mt-0.5 ${earningsToday > 0 ? 'text-[var(--color-negative)]' : 'text-[var(--color-text)]'}`}>
+              {earningsToday}
+            </p>
+          </div>
         </div>
         <div
-          className="p-4 rounded-lg border hover:shadow-md transition-shadow duration-200"
-          style={earningsThisWeek > 0 ? { backgroundColor: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.2)' } : undefined}
+          className="flex items-center gap-3 p-4 rounded-xl border"
+          style={{
+            backgroundColor: earningsThisWeek > 0 ? 'rgba(245, 158, 11, 0.08)' : 'var(--color-bg-tertiary)',
+            borderColor: earningsThisWeek > 0 ? 'rgba(245, 158, 11, 0.2)' : 'var(--color-border-light)',
+          }}
         >
-          <p className="text-sm text-[var(--color-text-muted)]">This Week</p>
-          <p className={`text-2xl font-bold ${earningsThisWeek > 0 ? 'text-[var(--color-warning)]' : 'text-[var(--color-text)]'}`}>
-            {earningsThisWeek}
-          </p>
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+            <Calendar className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">This Week</p>
+            <p className={`text-xl font-bold mt-0.5 ${earningsThisWeek > 0 ? 'text-[var(--color-warning)]' : 'text-[var(--color-text)]'}`}>
+              {earningsThisWeek}
+            </p>
+          </div>
         </div>
-        <div className="bg-[var(--color-bg)] p-4 rounded-lg border hover:shadow-md transition-shadow duration-200">
-          <p className="text-sm text-[var(--color-text-muted)]">Positions Tracked</p>
-          <p className="text-2xl font-bold text-[var(--color-text)]">{symbols.length}</p>
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+            <Calendar className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Positions Tracked</p>
+            <p className="text-xl font-bold text-[var(--color-text)] mt-0.5">{symbols.length}</p>
+          </div>
         </div>
       </div>
 

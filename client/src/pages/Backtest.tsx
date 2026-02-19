@@ -96,13 +96,15 @@ interface MetricCardProps {
 
 function MetricCard({ label, value, subtitle, icon, color = 'text-[var(--color-text)]' }: MetricCardProps) {
   return (
-    <div className="p-4 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] hover:shadow-lg transition-shadow duration-200">
-      <div className="flex items-center gap-2 text-[var(--color-text-muted)] mb-2">
-        {icon}
-        <span className="text-xs">{label}</span>
+    <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
+      <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(123, 44, 255, 0.08)' }}>
+        <span className="text-[var(--color-accent)]">{icon}</span>
       </div>
-      <div className={`text-2xl font-bold ${color}`}>{value}</div>
-      {subtitle && <div className="text-xs text-[var(--color-text-muted)] mt-1">{subtitle}</div>}
+      <div className="min-w-0">
+        <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">{label}</p>
+        <p className={`text-xl font-bold mt-0.5 ${color}`}>{value}</p>
+        {subtitle && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>}
+      </div>
     </div>
   );
 }
@@ -139,7 +141,7 @@ export function Backtest() {
       {/* Header */}
       <div
         className="bg-[var(--color-bg)] border-b border-[var(--color-border)] px-4 sm:px-6 py-4 animate-fade-in-up"
-        style={{ animationDelay: '0ms' }}
+        style={{ animationFillMode: 'both' }}
       >
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">

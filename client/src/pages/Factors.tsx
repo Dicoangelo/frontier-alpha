@@ -108,7 +108,7 @@ export function Factors() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)]">Factor Analysis</h1>
           <p className="text-[var(--color-text-muted)] mt-1">
@@ -125,29 +125,49 @@ export function Factors() {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '50ms' }}>
-        <div className="bg-[var(--color-bg)] p-4 rounded-lg border hover:shadow-md transition-shadow duration-200">
-          <p className="text-sm text-[var(--color-text-muted)]">Total Factors</p>
-          <p className="text-2xl font-bold text-[var(--color-text)]">{totalFactors}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(123, 44, 255, 0.08)' }}>
+            <Layers className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Total Factors</p>
+            <p className="text-xl font-bold text-[var(--color-text)] mt-0.5">{totalFactors}</p>
+          </div>
         </div>
-        <div className="bg-[var(--color-bg)] p-4 rounded-lg border hover:shadow-md transition-shadow duration-200">
-          <p className="text-sm text-[var(--color-text-muted)]">Significant (|t| &gt; 1.96)</p>
-          <p className="text-2xl font-bold text-[var(--color-accent)]">{significantFactors}</p>
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+            <TrendingUp className="w-5 h-5" style={{ color: 'var(--color-positive)' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Significant</p>
+            <p className="text-xl font-bold text-[var(--color-accent)] mt-0.5">{significantFactors}</p>
+          </div>
         </div>
-        <div className="bg-[var(--color-bg)] p-4 rounded-lg border hover:shadow-md transition-shadow duration-200">
-          <p className="text-sm text-[var(--color-text-muted)]">Positions Analyzed</p>
-          <p className="text-2xl font-bold text-[var(--color-text)]">{symbols.length}</p>
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+            <Activity className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Positions</p>
+            <p className="text-xl font-bold text-[var(--color-text)] mt-0.5">{symbols.length}</p>
+          </div>
         </div>
-        <div className="bg-[var(--color-bg)] p-4 rounded-lg border hover:shadow-md transition-shadow duration-200">
-          <p className="text-sm text-[var(--color-text-muted)]">Last Updated</p>
-          <p className="text-sm font-medium text-[var(--color-text)]">
-            {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'Never'}
-          </p>
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+            <RefreshCw className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Last Updated</p>
+            <p className="text-sm font-medium text-[var(--color-text)] mt-0.5">
+              {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'Never'}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Category Filters */}
-      <div className="flex flex-wrap gap-2 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+      <div className="flex flex-wrap gap-2 animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
         <Button
           variant={selectedCategory === null ? 'primary' : 'outline'}
           size="sm"
@@ -202,7 +222,7 @@ export function Factors() {
 
       {/* Factor Categories Grid */}
       {!isLoading && symbols.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           {displayCategories.map(category => (
             <FactorCategoryCard
               key={category}

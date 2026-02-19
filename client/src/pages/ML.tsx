@@ -204,19 +204,17 @@ interface MetricCardProps {
 }
 
 function MetricCard({ label, value, subtitle, icon, color }: MetricCardProps) {
+  const resolvedColor = color ?? 'var(--color-text)';
   return (
-    <div
-      className="p-4 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] hover:shadow-lg transition-shadow duration-200"
-      style={{ color: color ?? 'var(--color-text)' }}
-    >
-      <div className="flex items-center gap-2 text-[var(--color-text-muted)] mb-2">
-        {icon}
-        <span className="text-xs">{label}</span>
+    <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
+      <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: `color-mix(in srgb, ${resolvedColor} 12%, transparent)` }}>
+        <span style={{ color: resolvedColor }}>{icon}</span>
       </div>
-      <div className="text-2xl font-bold" style={{ color: color ?? 'var(--color-text)' }}>
-        {value}
+      <div className="min-w-0">
+        <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">{label}</p>
+        <p className="text-xl font-bold mt-0.5" style={{ color: resolvedColor }}>{value}</p>
+        {subtitle && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>}
       </div>
-      {subtitle && <div className="text-xs text-[var(--color-text-muted)] mt-1">{subtitle}</div>}
     </div>
   );
 }

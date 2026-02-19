@@ -99,17 +99,17 @@ export function Optimize() {
 
   return (
     <div className="space-y-6">
-      {/* OPT2-002: Header — 0ms */}
-      <div className="flex items-center justify-between animate-fade-in-up" style={{ animationDelay: '0ms' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between animate-fade-in-up" style={{ animationFillMode: 'both' }}>
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Portfolio Optimization</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Portfolio Optimization</h1>
           <p className="text-[var(--color-text-muted)] mt-1">Multi-factor optimization with cognitive insights</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* OPT2-002: Left column — 50ms */}
-        <div className="lg:col-span-2 space-y-6 animate-fade-in-up" style={{ animationDelay: '50ms' }}>
+        <div className="lg:col-span-2 space-y-6 animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">Optimization Objective</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -204,7 +204,7 @@ export function Optimize() {
         </div>
 
         {/* OPT2-002: Right column (Holdings) — 100ms */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+        <div className="animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">Current Holdings</h2>
             {symbols.length === 0 ? (
@@ -230,7 +230,7 @@ export function Optimize() {
 
       {result && (
         /* OPT2-002: Results section — 150ms */
-        <Card className="p-6 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+        <Card className="p-6 animate-fade-in-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <h2 className="text-lg font-semibold mb-4">Optimization Results</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
@@ -291,7 +291,7 @@ export function Optimize() {
 
       {/* OPT2-002: Monte Carlo — 200ms */}
       {result && (
-        <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+        <div className="animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
           <MonteCarloChart
             result={result.monteCarlo || {
               // Generate Monte Carlo estimate from optimization result if not provided by API

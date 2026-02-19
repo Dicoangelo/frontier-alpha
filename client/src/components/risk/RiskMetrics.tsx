@@ -1,80 +1,124 @@
+import type { ReactNode } from 'react';
 import { Card } from '@/components/shared/Card';
 import { Badge } from '@/components/shared/Badge';
 import { HelpTooltip } from '@/components/help';
-import { Shield, TrendingDown, Activity, Target } from 'lucide-react';
+import { Shield, TrendingDown, Activity, Target, BarChart2 } from 'lucide-react';
 import type { RiskMetrics as RiskMetricsType } from '@/types';
+
+// Configurable thresholds object — single source of truth per US-019
+export const RISK_THRESHOLDS = {
+  sharpe: { green: 1.0, yellow: 0.5 },           // >= green: good, >= yellow: ok, < yellow: danger
+  volatility: { green: 0.15, yellow: 0.25 },      // <= green: good, <= yellow: ok, > yellow: danger
+  drawdown: { green: -0.10, yellow: -0.20 },       // >= green: good, >= yellow: ok, < yellow: danger
+  beta: { greenMin: 0.8, greenMax: 1.2 },          // inside range: good, outside: warning
+  var95: { green: 0.02, yellow: 0.04 },            // <= green: good, <= yellow: ok, > yellow: danger
+} as const;
 
 interface RiskMetricsProps {
   metrics: RiskMetricsType;
   benchmark?: { sharpeRatio?: number; volatility?: number; maxDrawdown?: number };
 }
 
-function getSharpeLabel(value: number): { variant: 'success' | 'warning' | 'danger' | 'info'; text: string } {
-  if (value >= 2.0) return { variant: 'success', text: 'Excellent' };
-  if (value >= 1.5) return { variant: 'success', text: 'Good' };
-  if (value >= 1.0) return { variant: 'info', text: 'Adequate' };
-  if (value >= 0.5) return { variant: 'warning', text: 'Below Avg' };
-  return { variant: 'danger', text: 'Poor' };
+function getSharpeLabel(value: number): { variant: 'success' | 'warning' | 'danger' | 'info'; text: string; color: string } {
+  if (value >= RISK_THRESHOLDS.sharpe.green) return { variant: 'success', text: value >= 2.0 ? 'Excellent' : 'Good', color: 'var(--color-positive)' };
+  if (value >= RISK_THRESHOLDS.sharpe.yellow) return { variant: 'warning', text: 'Below Avg', color: 'var(--color-warning)' };
+  return { variant: 'danger', text: 'Poor', color: 'var(--color-danger)' };
 }
 
-function getVolatilityLabel(value: number): { variant: 'success' | 'warning' | 'danger' | 'info'; text: string; context: string } {
-  if (value <= 0.12) return { variant: 'success', text: 'Low', context: 'Suitable for conservative portfolios' };
-  if (value <= 0.20) return { variant: 'info', text: 'Moderate', context: 'Normal for a balanced portfolio' };
-  if (value <= 0.30) return { variant: 'warning', text: 'Elevated', context: 'High for conservative, normal for growth' };
-  return { variant: 'danger', text: 'High', context: 'Expect large daily swings' };
+function getVolatilityLabel(value: number): { variant: 'success' | 'warning' | 'danger' | 'info'; text: string; color: string; context: string } {
+  if (value <= RISK_THRESHOLDS.volatility.green) return { variant: 'success', text: 'Low', color: 'var(--color-positive)', context: 'Suitable for conservative portfolios' };
+  if (value <= RISK_THRESHOLDS.volatility.yellow) return { variant: 'warning', text: 'Elevated', color: 'var(--color-warning)', context: 'High for conservative, normal for growth' };
+  return { variant: 'danger', text: 'High', color: 'var(--color-danger)', context: 'Expect large daily swings' };
 }
 
-function getDrawdownLabel(value: number): { variant: 'success' | 'warning' | 'danger' | 'info'; text: string } {
-  const absVal = Math.abs(value);
-  if (absVal <= 0.05) return { variant: 'success', text: 'Healthy' };
-  if (absVal <= 0.10) return { variant: 'info', text: 'Caution' };
-  if (absVal <= 0.20) return { variant: 'warning', text: 'Warning' };
-  return { variant: 'danger', text: 'Critical' };
+function getDrawdownLabel(value: number): { variant: 'success' | 'warning' | 'danger' | 'info'; text: string; color: string } {
+  if (value >= RISK_THRESHOLDS.drawdown.green) return { variant: 'success', text: 'Healthy', color: 'var(--color-positive)' };
+  if (value >= RISK_THRESHOLDS.drawdown.yellow) return { variant: 'warning', text: 'Warning', color: 'var(--color-warning)' };
+  return { variant: 'danger', text: 'Critical', color: 'var(--color-danger)' };
+}
+
+function getBetaLabel(value: number): { variant: 'success' | 'warning' | 'danger' | 'info'; text: string; color: string } {
+  const { greenMin, greenMax } = RISK_THRESHOLDS.beta;
+  if (value >= greenMin && value <= greenMax) return { variant: 'success', text: 'Neutral', color: 'var(--color-positive)' };
+  return { variant: 'warning', text: value > greenMax ? 'Aggressive' : 'Defensive', color: 'var(--color-warning)' };
+}
+
+function getVarLabel(value: number): { variant: 'success' | 'warning' | 'danger' | 'info'; text: string; color: string } {
+  if (value <= RISK_THRESHOLDS.var95.green) return { variant: 'success', text: 'Low', color: 'var(--color-positive)' };
+  if (value <= RISK_THRESHOLDS.var95.yellow) return { variant: 'warning', text: 'Moderate', color: 'var(--color-warning)' };
+  return { variant: 'danger', text: 'High', color: 'var(--color-danger)' };
 }
 
 export function RiskMetrics({ metrics, benchmark }: RiskMetricsProps) {
   const volInfo = getVolatilityLabel(metrics.volatility);
+  const sharpeInfo = getSharpeLabel(metrics.sharpeRatio);
+  const drawdownInfo = getDrawdownLabel(metrics.maxDrawdown);
+  const betaInfo = getBetaLabel(metrics.beta);
+  const varInfo = getVarLabel(metrics.var95);
 
   return (
     <Card title="Risk Metrics">
       <div className="grid grid-cols-2 gap-4">
         <MetricCard
-          icon={<Target className="w-5 h-5 text-[var(--color-info)]" />}
+          icon={<Target className="w-5 h-5" style={{ color: sharpeInfo.color }} />}
           label="Sharpe Ratio"
           value={metrics.sharpeRatio.toFixed(2)}
-          badge={getSharpeLabel(metrics.sharpeRatio)}
+          badge={sharpeInfo}
           helpKey="sharpeRatio"
-          tooltip="Risk-adjusted return. Above 1.5 is good, above 2.0 is excellent. Measures how much return you get per unit of risk."
+          tooltip={`Risk-adjusted return. >= ${RISK_THRESHOLDS.sharpe.green} is good, >= ${RISK_THRESHOLDS.sharpe.yellow} is adequate, below ${RISK_THRESHOLDS.sharpe.yellow} is poor.`}
           benchmarkValue={benchmark?.sharpeRatio != null ? benchmark.sharpeRatio.toFixed(2) : undefined}
+          valueColor={sharpeInfo.color}
         />
 
         <MetricCard
-          icon={<Activity className="w-5 h-5 text-[var(--color-accent)]" />}
+          icon={<Activity className="w-5 h-5" style={{ color: volInfo.color }} />}
           label="Volatility (Ann.)"
           value={`${(metrics.volatility * 100).toFixed(1)}%`}
           badge={volInfo}
           helpKey="volatility"
-          tooltip={`${volInfo.context}. A 20% volatility means your portfolio could move ~1.3% on any given day.`}
+          tooltip={`${volInfo.context}. <= ${RISK_THRESHOLDS.volatility.green * 100}% is low, <= ${RISK_THRESHOLDS.volatility.yellow * 100}% is elevated, above ${RISK_THRESHOLDS.volatility.yellow * 100}% is high.`}
           benchmarkValue={benchmark?.volatility != null ? `${(benchmark.volatility * 100).toFixed(1)}%` : undefined}
+          valueColor={volInfo.color}
         />
 
         <MetricCard
-          icon={<TrendingDown className="w-5 h-5 text-[var(--color-danger)]" />}
+          icon={<TrendingDown className="w-5 h-5" style={{ color: drawdownInfo.color }} />}
           label="Max Drawdown"
           value={`${(metrics.maxDrawdown * 100).toFixed(1)}%`}
-          badge={getDrawdownLabel(metrics.maxDrawdown)}
+          badge={drawdownInfo}
           helpKey="maxDrawdown"
-          tooltip="The largest peak-to-trough decline. Under 5% is healthy, 10-20% warrants attention, above 20% is critical."
+          tooltip={`The largest peak-to-trough decline. >= ${RISK_THRESHOLDS.drawdown.green * 100}% is healthy, >= ${RISK_THRESHOLDS.drawdown.yellow * 100}% warrants attention, below is critical.`}
           benchmarkValue={benchmark?.maxDrawdown != null ? `${(benchmark.maxDrawdown * 100).toFixed(1)}%` : undefined}
+          valueColor={drawdownInfo.color}
         />
 
         <MetricCard
-          icon={<Shield className="w-5 h-5 text-[var(--color-warning)]" />}
+          icon={<Shield className="w-5 h-5" style={{ color: varInfo.color }} />}
           label="VaR (95%)"
           value={`${(metrics.var95 * 100).toFixed(1)}%`}
-          badge={{ variant: 'info', text: 'Daily' }}
+          badge={varInfo}
           helpKey="var95"
-          tooltip="Value at Risk — the maximum loss you can expect on 95% of trading days. A 2% VaR means you'd lose more than 2% only 1 in 20 days."
+          tooltip={`Daily Value at Risk. <= ${RISK_THRESHOLDS.var95.green * 100}% is low risk, <= ${RISK_THRESHOLDS.var95.yellow * 100}% is moderate, above is high risk.`}
+          valueColor={varInfo.color}
+        />
+
+        <MetricCard
+          icon={<BarChart2 className="w-5 h-5" style={{ color: betaInfo.color }} />}
+          label="Beta"
+          value={metrics.beta.toFixed(2)}
+          badge={betaInfo}
+          helpKey="beta"
+          tooltip={`Market sensitivity. ${RISK_THRESHOLDS.beta.greenMin}–${RISK_THRESHOLDS.beta.greenMax} is neutral (market-like), above is aggressive, below is defensive.`}
+          valueColor={betaInfo.color}
+        />
+
+        <MetricCard
+          icon={<Shield className="w-5 h-5 text-[var(--color-text-muted)]" />}
+          label="CVaR (95%)"
+          value={`${(metrics.cvar95 * 100).toFixed(1)}%`}
+          badge={{ variant: 'info', text: 'Daily', color: 'var(--color-info)' }}
+          helpKey="cvar95"
+          tooltip="Conditional Value at Risk — the average loss in the worst 5% of scenarios. Always higher than VaR."
         />
       </div>
     </Card>
@@ -89,14 +133,16 @@ function MetricCard({
   helpKey,
   tooltip,
   benchmarkValue,
+  valueColor,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   value: string;
-  badge: { variant: 'success' | 'warning' | 'danger' | 'info'; text: string };
+  badge: { variant: 'success' | 'warning' | 'danger' | 'info'; text: string; color?: string };
   helpKey?: string;
   tooltip?: string;
   benchmarkValue?: string;
+  valueColor?: string;
 }) {
   return (
     <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg" title={tooltip}>
@@ -107,7 +153,12 @@ function MetricCard({
       </div>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xl font-bold text-[var(--color-text)]">{value}</p>
+          <p
+            className="text-xl font-bold"
+            style={{ color: valueColor || 'var(--color-text)' }}
+          >
+            {value}
+          </p>
           {benchmarkValue && (
             <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
               vs SPY: {benchmarkValue}

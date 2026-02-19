@@ -28,6 +28,7 @@ const Options = lazy(() => import('@/pages/Options').then(m => ({ default: m.Opt
 const Social = lazy(() => import('@/pages/Social').then(m => ({ default: m.Social })));
 const Tax = lazy(() => import('@/pages/Tax').then(m => ({ default: m.Tax })));
 const SharedPortfolio = lazy(() => import('@/pages/SharedPortfolio'));
+const Pricing = lazy(() => import('@/pages/Pricing'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -287,6 +288,12 @@ function AppRoutes() {
               </ErrorBoundary>
             </Layout>
           </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pricing"
+        element={
+          <Pricing />
         }
       />
       {/* Public route for shared portfolios - no auth required */}

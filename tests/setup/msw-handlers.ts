@@ -1229,6 +1229,62 @@ export const handlers = [
   }),
 
   // ========================
+  // Portfolio Sharing (US-010)
+  // ========================
+  http.post(`${API_BASE}/api/v1/portfolio/share`, async ({ request }) => {
+    if (!hasAuth(request)) return unauthorized();
+    const body = (await request.json()) as Record<string, unknown>;
+
+    if (!body.snapshot_json || typeof body.snapshot_json !== 'object') {
+      return HttpResponse.json(
+        { data: null, error: { code: 'VALIDATION_ERROR', message: 'snapshot_json is required and must be an object' } },
+        { status: 400 }
+      );
+    }
+
+    const token = 'a'.repeat(32); // mock 32-char hex token
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    return HttpResponse.json(
+      {
+        data: {
+          token,
+          shareUrl: `http://localhost:3000/shared/${token}`,
+          expiresAt,
+        },
+        meta: mockMeta(),
+      },
+      { status: 201 }
+    );
+  }),
+
+  http.get(`${API_BASE}/api/v1/portfolio/shared/:token`, ({ params }) => {
+    const token = params.token as string;
+
+    // Invalid token format (not 32-char hex) → 404 with expired message
+    if (!/^[0-9a-f]{32}$/.test(token)) {
+      return HttpResponse.json(
+        { data: null, error: { code: 'NOT_FOUND', message: 'This link has expired' } },
+        { status: 404 }
+      );
+    }
+
+    // Valid-looking token — return mock snapshot
+    return HttpResponse.json({
+      data: {
+        name: 'Shared Portfolio',
+        positions: [
+          { id: 'pos-1', symbol: 'AAPL', shares: 50, weight: 0.6, costBasis: 180.5, currentPrice: 227.63, unrealizedPnL: 2356.5, change: 0.012 },
+          { id: 'pos-2', symbol: 'MSFT', shares: 30, weight: 0.4, costBasis: 380.25, currentPrice: 415.2, unrealizedPnL: 1048.5, change: -0.005 },
+        ],
+        cash: 5000,
+        totalValue: 30129,
+        currency: 'USD',
+      },
+      meta: mockMeta(),
+    });
+  }),
+
+  // ========================
   // Catch-all: 404
   // ========================
   http.all(`${API_BASE}/api/v1/*`, () => {

@@ -23,7 +23,7 @@ export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
           <button
             onClick={onMenuClick}
             className="lg:hidden p-2 -ml-2 text-theme-secondary hover:text-accent click-feedback rounded-sm"
-            aria-label="Open menu"
+            aria-label="Toggle navigation"
           >
             <Menu className="w-6 h-6" />
           </button>

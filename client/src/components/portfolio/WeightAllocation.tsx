@@ -1,6 +1,35 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card } from '@/components/shared/Card';
 import type { Position } from '@/types';
+
+// Count-up animation for the donut center value — runs once on mount
+function useCenterCountUp(target: number, formatter: (v: number) => string) {
+  const ref = useRef<SVGTextElement>(null);
+  const hasRun = useRef(false);
+
+  const animate = useCallback(() => {
+    if (!ref.current || hasRun.current) return;
+    hasRun.current = true;
+    const el = ref.current;
+    let start: number | null = null;
+
+    const step = (ts: number) => {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / 800, 1);
+      const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+      el.textContent = formatter(eased * target);
+      if (p < 1) requestAnimationFrame(step);
+    };
+
+    requestAnimationFrame(step);
+  }, [target, formatter]);
+
+  useEffect(() => {
+    animate();
+  }, [animate]);
+
+  return ref;
+}
 
 const SEGMENT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
@@ -57,6 +86,10 @@ export function WeightAllocation({ positions, totalValue }: WeightAllocationProp
   const [hoveredSymbol, setHoveredSymbol] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const hasAnimated = useRef(false);
+
+  const centerRef = useCenterCountUp(totalValue, (v) =>
+    v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v.toFixed(0)}`
+  );
 
   useEffect(() => {
     if (hasAnimated.current) return;
@@ -168,6 +201,7 @@ export function WeightAllocation({ positions, totalValue }: WeightAllocationProp
             ) : (
               <>
                 <text
+                  ref={centerRef}
                   x={cx}
                   y={cy - 2}
                   textAnchor="middle"

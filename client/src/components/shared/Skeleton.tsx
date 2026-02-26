@@ -6,6 +6,7 @@ interface SkeletonProps {
   width?: string | number;
   height?: string | number;
   lines?: number;
+  style?: React.CSSProperties;
 }
 
 export function Skeleton({
@@ -14,6 +15,7 @@ export function Skeleton({
   width,
   height,
   lines = 1,
+  style: styleProp,
 }: SkeletonProps) {
   const baseStyles = 'animate-pulse bg-gradient-to-r from-[var(--color-border)] via-[var(--color-bg-secondary)] to-[var(--color-border)] bg-[length:200%_100%] animate-shimmer';
 
@@ -26,6 +28,7 @@ export function Skeleton({
   const style: React.CSSProperties = {
     width: typeof width === 'number' ? `${width}px` : width,
     height: typeof height === 'number' ? `${height}px` : height,
+    ...styleProp,
   };
 
   if (variant === 'text' && lines > 1) {

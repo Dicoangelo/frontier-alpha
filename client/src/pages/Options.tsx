@@ -9,6 +9,7 @@
  */
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { SkeletonOptionsPage } from '@/components/shared/Skeleton';
 import {
   ResponsiveContainer,
   LineChart,
@@ -504,36 +505,36 @@ function ChainSection({ contracts }: { contracts: ChainContract[] }) {
                 <tr
                   key={strike}
                   className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
-                  style={isATM ? { backgroundColor: 'rgba(123, 44, 255, 0.05)' } : undefined}
+                  style={isATM ? { backgroundColor: 'color-mix(in srgb, var(--color-accent) 5%, transparent)' } : undefined}
                 >
                   {/* Call side */}
                   <td
                     className="text-right px-2 py-2 font-mono text-xs"
-                    style={isITMCall ? { backgroundColor: 'rgba(16, 185, 129, 0.05)' } : undefined}
+                    style={isITMCall ? { backgroundColor: 'color-mix(in srgb, var(--color-positive) 5%, transparent)' } : undefined}
                   >
                     {call?.bid.toFixed(2)}
                   </td>
                   <td
                     className="text-right px-2 py-2 font-mono text-xs"
-                    style={isITMCall ? { backgroundColor: 'rgba(16, 185, 129, 0.05)' } : undefined}
+                    style={isITMCall ? { backgroundColor: 'color-mix(in srgb, var(--color-positive) 5%, transparent)' } : undefined}
                   >
                     {call?.ask.toFixed(2)}
                   </td>
                   <td
                     className="text-right px-2 py-2 font-mono text-xs font-medium"
-                    style={isITMCall ? { backgroundColor: 'rgba(16, 185, 129, 0.05)' } : undefined}
+                    style={isITMCall ? { backgroundColor: 'color-mix(in srgb, var(--color-positive) 5%, transparent)' } : undefined}
                   >
                     {call?.last.toFixed(2)}
                   </td>
                   <td
                     className="text-right px-2 py-2 font-mono text-xs text-[var(--color-text-muted)]"
-                    style={isITMCall ? { backgroundColor: 'rgba(16, 185, 129, 0.05)' } : undefined}
+                    style={isITMCall ? { backgroundColor: 'color-mix(in srgb, var(--color-positive) 5%, transparent)' } : undefined}
                   >
                     {call ? formatVolume(call.volume) : ''}
                   </td>
                   <td
                     className="text-right px-2 py-2 font-mono text-xs text-[var(--color-text-muted)] border-r border-[var(--color-border)]"
-                    style={isITMCall ? { backgroundColor: 'rgba(16, 185, 129, 0.05)' } : undefined}
+                    style={isITMCall ? { backgroundColor: 'color-mix(in srgb, var(--color-positive) 5%, transparent)' } : undefined}
                   >
                     {call ? formatVolume(call.openInterest) : ''}
                   </td>
@@ -548,31 +549,31 @@ function ChainSection({ contracts }: { contracts: ChainContract[] }) {
                   {/* Put side */}
                   <td
                     className="text-right px-2 py-2 font-mono text-xs"
-                    style={isITMPut ? { backgroundColor: 'rgba(239, 68, 68, 0.05)' } : undefined}
+                    style={isITMPut ? { backgroundColor: 'color-mix(in srgb, var(--color-negative) 5%, transparent)' } : undefined}
                   >
                     {put?.bid.toFixed(2)}
                   </td>
                   <td
                     className="text-right px-2 py-2 font-mono text-xs"
-                    style={isITMPut ? { backgroundColor: 'rgba(239, 68, 68, 0.05)' } : undefined}
+                    style={isITMPut ? { backgroundColor: 'color-mix(in srgb, var(--color-negative) 5%, transparent)' } : undefined}
                   >
                     {put?.ask.toFixed(2)}
                   </td>
                   <td
                     className="text-right px-2 py-2 font-mono text-xs font-medium"
-                    style={isITMPut ? { backgroundColor: 'rgba(239, 68, 68, 0.05)' } : undefined}
+                    style={isITMPut ? { backgroundColor: 'color-mix(in srgb, var(--color-negative) 5%, transparent)' } : undefined}
                   >
                     {put?.last.toFixed(2)}
                   </td>
                   <td
                     className="text-right px-2 py-2 font-mono text-xs text-[var(--color-text-muted)]"
-                    style={isITMPut ? { backgroundColor: 'rgba(239, 68, 68, 0.05)' } : undefined}
+                    style={isITMPut ? { backgroundColor: 'color-mix(in srgb, var(--color-negative) 5%, transparent)' } : undefined}
                   >
                     {put ? formatVolume(put.volume) : ''}
                   </td>
                   <td
                     className="text-right px-2 py-2 font-mono text-xs text-[var(--color-text-muted)]"
-                    style={isITMPut ? { backgroundColor: 'rgba(239, 68, 68, 0.05)' } : undefined}
+                    style={isITMPut ? { backgroundColor: 'color-mix(in srgb, var(--color-negative) 5%, transparent)' } : undefined}
                   >
                     {put ? formatVolume(put.openInterest) : ''}
                   </td>
@@ -587,21 +588,21 @@ function ChainSection({ contracts }: { contracts: ChainContract[] }) {
         <span className="flex items-center gap-1">
           <span
             className="w-3 h-3 rounded"
-            style={{ backgroundColor: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.3)' }}
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-positive) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--color-positive) 30%, transparent)' }}
           />
           ITM Calls
         </span>
         <span className="flex items-center gap-1">
           <span
             className="w-3 h-3 rounded"
-            style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--color-negative) 30%, transparent)' }}
           />
           ITM Puts
         </span>
         <span className="flex items-center gap-1">
           <span
             className="w-3 h-3 rounded"
-            style={{ backgroundColor: 'rgba(123, 44, 255, 0.2)', border: '1px solid rgba(123, 44, 255, 0.3)' }}
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 20%, transparent)', border: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)' }}
           />
           ATM
         </span>
@@ -678,7 +679,7 @@ function GreeksSection({ cells }: { cells: GreeksHeatmapCell[] }) {
                 key={side}
                 onClick={() => setOptionSide(side)}
                 aria-pressed={optionSide === side}
-                className={`px-3 py-2 text-xs font-medium min-h-[44px] transition-colors ${
+                className={`px-3 py-2 text-xs font-medium min-h-[44px] transition-colors active:scale-[0.97] ${
                   optionSide === side
                     ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text)]'
                     : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
@@ -686,8 +687,8 @@ function GreeksSection({ cells }: { cells: GreeksHeatmapCell[] }) {
                 style={
                   optionSide === side
                     ? side === 'call'
-                      ? { backgroundColor: 'rgba(16, 185, 129, 0.1)', color: 'var(--color-positive)' }
-                      : { backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-negative)' }
+                      ? { backgroundColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)', color: 'var(--color-positive)' }
+                      : { backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)', color: 'var(--color-negative)' }
                     : undefined
                 }
               >
@@ -701,14 +702,14 @@ function GreeksSection({ cells }: { cells: GreeksHeatmapCell[] }) {
                 key={greek}
                 onClick={() => setSelectedGreek(greek)}
                 aria-pressed={selectedGreek === greek}
-                className={`px-2.5 py-2 text-xs font-medium min-h-[44px] transition-colors ${
+                className={`px-2.5 py-2 text-xs font-medium min-h-[44px] transition-colors active:scale-[0.97] ${
                   selectedGreek === greek
                     ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text)]'
                     : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
                 }`}
                 style={
                   selectedGreek === greek
-                    ? { backgroundColor: 'rgba(123, 44, 255, 0.1)', color: 'var(--color-accent)' }
+                    ? { backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)', color: 'var(--color-accent)' }
                     : undefined
                 }
               >
@@ -912,7 +913,7 @@ function VolSurfaceSection({ points }: { points: VolSurfacePoint[] }) {
       g.append('path')
         .attr('d', pathData)
         .attr('fill', colorScale(face.iv))
-        .attr('stroke', 'rgba(255,255,255,0.15)')
+        .attr('stroke', 'var(--color-border-light)')
         .attr('stroke-width', 0.5)
         .attr('opacity', 0.85);
     }
@@ -930,7 +931,7 @@ function VolSurfaceSection({ points }: { points: VolSurfacePoint[] }) {
       g.append('path')
         .attr('d', `M ${linePoints.map(([x, y]) => `${x},${y}`).join(' L ')}`)
         .attr('fill', 'none')
-        .attr('stroke', 'rgba(255,255,255,0.2)')
+        .attr('stroke', 'var(--color-border)')
         .attr('stroke-width', 0.5);
     }
 
@@ -947,7 +948,7 @@ function VolSurfaceSection({ points }: { points: VolSurfacePoint[] }) {
       g.append('path')
         .attr('d', `M ${linePoints.map(([x, y]) => `${x},${y}`).join(' L ')}`)
         .attr('fill', 'none')
-        .attr('stroke', 'rgba(255,255,255,0.2)')
+        .attr('stroke', 'var(--color-border)')
         .attr('stroke-width', 0.5);
     }
 
@@ -1070,7 +1071,7 @@ function VolSurfaceSection({ points }: { points: VolSurfacePoint[] }) {
 
 function StatMini({ label, value }: { label: string; value: string }) {
   return (
-    <div className="px-3 py-2 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] hover:shadow-lg transition-shadow duration-200">
+    <div className="px-3 py-2 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] hover:shadow-lg transition-all duration-200 active:scale-[0.98]">
       <div className="text-xs text-[var(--color-text-muted)]">{label}</div>
       <div className="text-sm font-bold font-mono text-[var(--color-text)]">{value}</div>
     </div>
@@ -1171,9 +1172,9 @@ function StrategiesSection() {
           <span
             className="px-2 py-0.5 rounded-full transition-colors duration-200"
             style={{
-              backgroundColor: 'rgba(123, 44, 255, 0.1)',
+              backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
               color: 'var(--color-accent)',
-              border: '1px solid rgba(123, 44, 255, 0.2)',
+              border: '1px solid color-mix(in srgb, var(--color-accent) 20%, transparent)',
             }}
           >
             {strategy.outlook}
@@ -1185,14 +1186,14 @@ function StrategiesSection() {
               style={
                 leg.quantity > 0
                   ? {
-                      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                      backgroundColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)',
                       color: 'var(--color-positive)',
-                      borderColor: 'rgba(16, 185, 129, 0.2)',
+                      borderColor: 'color-mix(in srgb, var(--color-positive) 20%, transparent)',
                     }
                   : {
-                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)',
                       color: 'var(--color-negative)',
-                      borderColor: 'rgba(239, 68, 68, 0.2)',
+                      borderColor: 'color-mix(in srgb, var(--color-negative) 20%, transparent)',
                     }
               }
             >
@@ -1303,6 +1304,15 @@ function formatVolume(n: number): string {
 
 export function Options() {
   const [activeTab, setActiveTab] = useState<TabId>('chain');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate data loading (replaced by real API when connected)
+    const timer = setTimeout(() => setIsLoading(false), 600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) return <SkeletonOptionsPage />;
 
   return (
     <div className="space-y-6">
@@ -1378,7 +1388,7 @@ export function Options() {
               aria-selected={activeTab === tab.id}
               aria-controls={`panel-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors min-h-[44px] ${
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors active:scale-[0.97] min-h-[44px] ${
                 activeTab === tab.id
                   ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
                   : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-border)]'
@@ -1424,7 +1434,7 @@ function MetricCard({ label, value, subtitle, icon, color = 'text-[var(--color-t
   const cssColor = colorMatch ? `var(${colorMatch[1]})` : 'var(--color-text-muted)';
 
   return (
-    <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)] hover:shadow-lg transition-shadow duration-200">
+    <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)] hover:shadow-lg transition-all duration-200 active:scale-[0.98]">
       <div
         className="p-2.5 rounded-lg flex-shrink-0"
         style={{ backgroundColor: `color-mix(in srgb, ${cssColor} 12%, transparent)` }}

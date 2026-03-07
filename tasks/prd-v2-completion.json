@@ -60,7 +60,9 @@
         "npm run build passes"
       ],
       "priority": 1,
-      "dependsOn": []
+      "dependsOn": [],
+      "status": "done",
+      "completionNotes": "Token-based POST /api/v1/portfolio/share implemented in PortfolioExport.tsx. No data in URL, share link uses token only."
     },
     {
       "id": "US-028",
@@ -84,7 +86,9 @@
         "npm run build passes"
       ],
       "priority": 1,
-      "dependsOn": []
+      "dependsOn": [],
+      "status": "done",
+      "completionNotes": "Exponential backoff with jitter, page visibility API, heartbeat ping/pong, max 10 attempts, ConnectionStatus shows countdown. All AC met."
     },
     {
       "id": "US-007",
@@ -108,7 +112,9 @@
         "npm run build passes"
       ],
       "priority": 1,
-      "dependsOn": []
+      "dependsOn": [],
+      "status": "done",
+      "completionNotes": "useToast hook with toastSuccess/toastError/toastWarning/toastInfo. Auto-dismiss (4s default, 8s error, 6s warning). Max 5 stacking. role=alert. animate-slide-in-right. Action button supported."
     },
     {
       "id": "US-009",
@@ -133,7 +139,9 @@
         "npm run build passes"
       ],
       "priority": 2,
-      "dependsOn": ["US-007"]
+      "dependsOn": ["US-007"],
+      "status": "done",
+      "completionNotes": "Zustand dataSourceStore with isUsingMockData. Axios response interceptor reads X-Data-Source header. Banner dismissible per-session, reappears on navigation if still mock."
     },
     {
       "id": "US-020",
@@ -165,7 +173,9 @@
         "npm run build passes"
       ],
       "priority": 3,
-      "dependsOn": []
+      "dependsOn": [],
+      "status": "done",
+      "completionNotes": "Focus indicators (focus-visible:ring-2), aria-current via NavLink, aria-expanded on BottomSheet/AlertDropdown, focus trap in BottomSheet, proper thead/tbody/scope, aria-hidden on icons, min-h-[44px] touch targets."
     },
     {
       "id": "US-015",
@@ -189,7 +199,9 @@
         "npm run build passes"
       ],
       "priority": 2,
-      "dependsOn": []
+      "dependsOn": [],
+      "status": "done",
+      "completionNotes": "Gradient text headline (text-gradient-brand), subtitle with 80+ factors value prop, Analyze Your Portfolio + View Demo CTAs, pill presets (Mag 7, Financials, Healthcare, AI Leaders), animate-fade-in-up with staggered delays, responsive flex-col/sm:flex-row."
     },
     {
       "id": "US-016",
@@ -212,7 +224,9 @@
         "npm run build passes"
       ],
       "priority": 2,
-      "dependsOn": []
+      "dependsOn": [],
+      "status": "done",
+      "completionNotes": "Desktop table with sorting (SortField type), mobile responsive card layout with Tailwind responsive classes (grid-cols-1 lg:grid-cols-2). Sparkline component integrated."
     },
     {
       "id": "US-017",
@@ -238,7 +252,9 @@
         "npm run build passes"
       ],
       "priority": 2,
-      "dependsOn": []
+      "dependsOn": [],
+      "status": "done",
+      "completionNotes": "SkeletonDashboard on isLoading, DataLoadError with retry (onRetry=loadPortfolioData), EmptyPortfolio when positions.length===0. All three states properly wired."
     },
     {
       "id": "US-018",
@@ -270,7 +286,9 @@
         "npm run build passes"
       ],
       "priority": 3,
-      "dependsOn": ["US-017"]
+      "dependsOn": ["US-017"],
+      "status": "done",
+      "completionNotes": "Factors, Earnings, Alerts, CVRF, Backtest, ML have skeleton + error states. Tax/Social use mock data (no loading needed). Options page now has SkeletonOptionsPage with loading state."
     },
     {
       "id": "US-019",
@@ -295,7 +313,9 @@
         "npm run build passes"
       ],
       "priority": 2,
-      "dependsOn": []
+      "dependsOn": [],
+      "status": "done",
+      "completionNotes": "RISK_THRESHOLDS config object with green/yellow/red ranges. getSharpeLabel/getVolatilityLabel etc return variant+color. HelpTooltip with context text. All colors use var(--color-positive/warning/danger)."
     },
     {
       "id": "US-021",
@@ -324,7 +344,9 @@
         "npm run build passes"
       ],
       "priority": 3,
-      "dependsOn": ["US-007"]
+      "dependsOn": ["US-007"],
+      "status": "done",
+      "completionNotes": "useToast imported in Portfolio.tsx. toastSuccess on add/update position, toastError on failure. Mutation hooks properly wired."
     },
     {
       "id": "US-023",
@@ -350,7 +372,9 @@
         "npm run build passes"
       ],
       "priority": 3,
-      "dependsOn": []
+      "dependsOn": [],
+      "status": "done",
+      "completionNotes": "BeliefConstellation rendered in CVRFDashboard. D3 visualization with node interactivity, hover tooltips, category coloring, zoom/pan behavior."
     },
     {
       "id": "US-024",
@@ -375,7 +399,9 @@
         "npm run build passes"
       ],
       "priority": 3,
-      "dependsOn": []
+      "dependsOn": [],
+      "status": "done",
+      "completionNotes": "Recharts LineChart with XAxis/YAxis, ConvictionTooltip component, BeliefDiff interface for before/after, onSelectEpisode callback with selectedIndex state."
     },
     {
       "id": "US-025",
@@ -402,7 +428,9 @@
         "npm run build passes"
       ],
       "priority": 4,
-      "dependsOn": ["US-023"]
+      "dependsOn": ["US-023"],
+      "status": "done",
+      "completionNotes": "TradeReasoning component with 4-step chain-of-thought (Factor Signal → Belief State → Optimization → Recommendation). API integration via useMutation."
     },
     {
       "id": "US-026",
@@ -427,7 +455,9 @@
         "npm run build passes"
       ],
       "priority": 4,
-      "dependsOn": []
+      "dependsOn": [],
+      "status": "done",
+      "completionNotes": "BeliefImpactPanel with ConvictionGauge SVG (0-100%) rendered on Earnings page. estimateImpact() models factor deltas for consensus comparison."
     },
     {
       "id": "US-027",
@@ -453,7 +483,9 @@
         "npm run build passes"
       ],
       "priority": 4,
-      "dependsOn": []
+      "dependsOn": [],
+      "status": "done",
+      "completionNotes": "5x4 calendar grid (Mon-Fri), getImpactColor by expected move %, ChevronLeft/Right month navigation, click expansion for earnings details, getWeekdayMonthGrid utility."
     }
   ]
 }

@@ -227,9 +227,9 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
       )}
 
       {insight && (
-        <div className="mt-6 p-4 rounded-lg border border-[rgba(123, 44, 255, 0.15)]" style={{ background: 'linear-gradient(to right, rgba(123, 44, 255, 0.06), rgba(59, 130, 246, 0.06))' }}>
+        <div className="mt-6 p-4 rounded-lg border border-[color-mix(in_srgb,var(--color-accent)_15%,transparent)]" style={{ background: 'linear-gradient(to right, color-mix(in srgb, var(--color-accent) 6%, transparent), color-mix(in srgb, var(--color-info) 6%, transparent))' }}>
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 bg-[rgba(59, 130, 246,0.1)] rounded-full flex items-center justify-center">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)' }}>
               <span className="text-lg">🧠</span>
             </div>
             <div>

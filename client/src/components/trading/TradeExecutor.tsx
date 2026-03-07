@@ -440,7 +440,7 @@ export function TradeExecutor({
           {submitOrder.isError && (
             <div
               className="flex items-center gap-2 p-3 rounded-lg"
-              style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+              style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)' }}
             >
               <AlertCircle className="w-4 h-4 text-[var(--color-negative)]" />
               <span className="text-sm text-[var(--color-negative)]">
@@ -453,7 +453,7 @@ export function TradeExecutor({
           {submitSuccess && (
             <div
               className="flex items-center gap-2 p-3 rounded-lg"
-              style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}
+              style={{ backgroundColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)' }}
             >
               <CheckCircle className="w-4 h-4 text-[var(--color-positive)]" />
               <span className="text-sm text-[var(--color-positive)]">Order submitted successfully!</span>
@@ -577,7 +577,7 @@ export function TradeExecutor({
                   {validation.errors.length > 0 && (
                     <div
                       className="p-3 rounded-lg"
-                      style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+                      style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)' }}
                     >
                       {validation.errors.map((error, i) => (
                         <div key={i} className="flex items-start gap-2 text-sm text-[var(--color-negative)]">
@@ -591,7 +591,7 @@ export function TradeExecutor({
                   {validation.warnings.length > 0 && (
                     <div
                       className="p-3 rounded-lg space-y-1"
-                      style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}
+                      style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)' }}
                     >
                       {validation.warnings.map((warning, i) => (
                         <div key={i} className="flex items-start gap-2 text-sm text-[var(--color-warning)]">
@@ -685,8 +685,8 @@ export function TradeExecutor({
                       className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                       style={{
                         backgroundColor: order.side === 'buy'
-                          ? 'rgba(16, 185, 129, 0.1)'
-                          : 'rgba(239, 68, 68, 0.1)',
+                          ? 'color-mix(in srgb, var(--color-positive) 10%, transparent)'
+                          : 'color-mix(in srgb, var(--color-negative) 10%, transparent)',
                       }}
                     >
                       {order.side === 'buy' ? (

@@ -37,7 +37,9 @@
         "Trading Tips bullets use Lucide icons not asterisks",
         "ConnectionSettingsModal close button uses Lucide X icon",
         "All external link colors use var(--color-info) or var(--color-accent)"
-      ]
+      ],
+      "status": "done",
+      "completionNotes": "Zero hardcoded Tailwind colors. All use var(--color-*). Trading Tips use CheckCircle2. Modal close uses Lucide X. External links use var(--color-info)."
     },
     {
       "id": "TRADE-002",
@@ -51,7 +53,9 @@
         "Each Card section has animate-fade-in-up with staggered delays (50ms increments)",
         "ConnectionSettingsModal backdrop fades in, card scales in",
         "Content visible transition matches Dashboard pattern"
-      ]
+      ],
+      "status": "done",
+      "completionNotes": "TradingSkeleton component with full skeleton layout. Staggered animate-fade-in-up (50ms increments: 0/50/100/150/200/220/250/300ms). Modal backdrop animate-fade-in + card animate-scale-in."
     },
     {
       "id": "TRADE-003",
@@ -71,7 +75,9 @@
         "Uses CSS variables for all colors",
         "Responsive — fills container width",
         "Integrated into Trading.tsx sidebar"
-      ]
+      ],
+      "status": "done",
+      "completionNotes": "PriceChart.tsx (263 lines) with pure SVG, 20-point sparkline, linear gradient fill, green/red by direction, hover crosshair with tooltip, CSS variables throughout, responsive width=100%, integrated in Trading.tsx sidebar."
     },
     {
       "id": "TRADE-004",
@@ -86,7 +92,9 @@
         "Pre-market (4:00-9:30) and after-hours (4:00-8:00) phases labeled",
         "Progress bar uses CSS variable colors with gradient fill",
         "Timer updates every second via setInterval"
-      ]
+      ],
+      "status": "done",
+      "completionNotes": "getMarketPhase() with 9:30-4:00 ET market hours, progress bar with percentage, formatCountdown() HH:MM:SS, pre-market/after-hours labels, CSS variable gradient fill, setInterval(tick, 1000) with cleanup."
     },
     {
       "id": "TRADE-005",
@@ -101,7 +109,9 @@
         "Position cards have hover:shadow-lg transition-shadow duration-200",
         "Position cards have click-feedback (active:scale-[0.98])",
         "Selected position has animate-pulse-subtle on border"
-      ]
+      ],
+      "status": "done",
+      "completionNotes": "Sparkline component (40x16 SVG) with seeded PRNG per symbol, hover:shadow-lg transition-all duration-200, active:scale-[0.98], animate-pulse-subtle on selected position."
     },
     {
       "id": "TRADE-006",
@@ -117,7 +127,9 @@
         "Replace all hardcoded colors in TradeExecutor.tsx with CSS variables",
         "Hover effect on order rows: shadow-lg transition",
         "Empty state icon is properly sized and animated"
-      ]
+      ],
+      "status": "done",
+      "completionNotes": "Staggered fade-in-up (50ms per row), formatRelativeTime(), timeline dot connectors, hover:shadow-lg, animated empty state. All hardcoded rgba colors converted to color-mix(in srgb, var(--color-*))."
     }
   ]
 }

@@ -8,17 +8,23 @@
     {
       "id": "OPT-001",
       "title": "CSS variable compliance — all 37 hardcoded colors",
-      "priority": "P0"
+      "priority": "P0",
+      "status": "done",
+      "completionNotes": "All 26 hardcoded rgba colors converted to color-mix(in srgb, var(--color-*)) — chain table rows, legend badges, Greeks buttons, strategy leg badges, D3 SVG strokes use var(--color-border)."
     },
     {
       "id": "OPT-002",
       "title": "Staggered entry animations + skeleton loading",
-      "priority": "P0"
+      "priority": "P0",
+      "status": "done",
+      "completionNotes": "SkeletonOptionsPage component added to Skeleton.tsx. Options page imports it and shows skeleton during isLoading state (600ms simulated load). Staggered fade-in-up animations already present on all sections."
     },
     {
       "id": "OPT-003",
       "title": "Hover polish + micro-interactions",
-      "priority": "P1"
+      "priority": "P1",
+      "status": "done",
+      "completionNotes": "hover:shadow-lg on StatMini/MetricCard, active:scale-[0.97] on option side buttons, Greek buttons, tab buttons. active:scale-[0.98] on MetricCard and StatMini. transition-all duration-200 on all interactive elements."
     }
   ]
 }

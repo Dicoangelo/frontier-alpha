@@ -18,7 +18,9 @@
         "Replace window.location.href = '/portfolio' with useNavigate() from react-router-dom",
         "Add fade transition between loading/error/loaded states (opacity + transform)",
         "Tests pass, build passes"
-      ]
+      ],
+      "status": "done",
+      "completionNotes": "Pulse animation (animate-pulse-green), useNavigate(), and transition-colors duration-300 fade on status dot and label."
     },
     {
       "id": "DASH-002",
@@ -31,7 +33,9 @@
         "Replace hardcoded bg-blue-500, bg-green-500, bg-red-500 with CSS variables (--color-primary, --color-positive, --color-danger)",
         "Add number count-up animation on initial load (CSS counter or requestAnimationFrame, ~800ms)",
         "Tests pass, build passes"
-      ]
+      ],
+      "status": "done",
+      "completionNotes": "Daily change with TrendingUp/Down icons, dynamic rgba colors, responsive grid (grid-cols-1 sm:grid-cols-2), CSS variables via ICON_BG_STYLES, useCountUp hook with requestAnimationFrame."
     },
     {
       "id": "DASH-003",
@@ -43,7 +47,9 @@
         "Tooltip: positioned near cursor showing date, portfolio value, benchmark value, and daily change",
         "Tooltip doesn't overflow canvas bounds (clamp to edges)",
         "Tests pass, build passes"
-      ]
+      ],
+      "status": "done",
+      "completionNotes": "Touch handlers (onTouchStart/Move/End), dashed crosshair vertical line, tooltip positioned near cursor with clampedLeft bounds clamping."
     },
     {
       "id": "DASH-004",
@@ -56,7 +62,9 @@
         "Sparkline hidden on mobile card layout (too small to be useful)",
         "No external charting library — pure SVG polyline",
         "Tests pass, build passes"
-      ]
+      ],
+      "status": "done",
+      "completionNotes": "Sparkline component (W=40, H=16) with SVG polyline, 7 data points, green/red coloring, hidden on mobile via layout structure."
     },
     {
       "id": "DASH-005",
@@ -71,7 +79,9 @@
         "Responsive: donut scales to container, min 200px",
         "Placed on Dashboard below EquityCurve, above the grid",
         "Tests pass, build passes"
-      ]
+      ],
+      "status": "done",
+      "completionNotes": "Pure SVG donut with circle segments, center shows formattedTotal, hover shows symbol/weight/value, SEGMENT_COLORS array with 6 colors, responsive with minWidth 160."
     },
     {
       "id": "DASH-006",
@@ -89,7 +99,9 @@
         "CognitiveInsight cards have slide-in-left animation on appear",
         "All hardcoded Tailwind colors (text-green-500, bg-blue-500/10, etc.) replaced with CSS variable equivalents where theme vars exist",
         "Tests pass, build passes"
-      ]
+      ],
+      "status": "done",
+      "completionNotes": "hover:shadow-lg on cards, staggered fade-in-up, smooth accordion height transition, slide-in-left on CognitiveInsight. Hardcoded rgba colors in CognitiveInsight.tsx and FactorExposures.tsx converted to color-mix(in srgb, var(--color-*))."
     }
   ]
 }

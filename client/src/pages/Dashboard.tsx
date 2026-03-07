@@ -437,13 +437,13 @@ export function Dashboard() {
             className="glass-slab rounded-full px-4 py-2 flex items-center gap-2 self-start flex-shrink-0"
           >
             <span
-              className={`inline-block w-2 h-2 rounded-full ${
+              className={`inline-block w-2 h-2 rounded-full transition-colors duration-300 ${
                 isConnected
                   ? 'bg-[var(--color-positive)] animate-pulse-green'
                   : 'bg-[var(--color-text-muted)]'
               }`}
             />
-            <span className={`text-xs font-medium ${isConnected ? 'text-[var(--color-positive)]' : 'text-[var(--color-text-muted)]'}`}>
+            <span className={`text-xs font-medium transition-colors duration-300 ${isConnected ? 'text-[var(--color-positive)]' : 'text-[var(--color-text-muted)]'}`}>
               {isConnected ? 'Live' : 'Offline'}
             </span>
             {lastUpdate && (

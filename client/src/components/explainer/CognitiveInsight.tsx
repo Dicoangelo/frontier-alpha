@@ -219,10 +219,10 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
   };
 
   const insightTypeBg: Record<string, React.CSSProperties> = {
-    risk: { backgroundColor: 'rgba(245, 158, 11, 0.08)' },
-    opportunity: { backgroundColor: 'rgba(16, 185, 129, 0.08)' },
-    action: { backgroundColor: 'rgba(59, 130, 246, 0.08)' },
-    factor: { backgroundColor: 'rgba(123, 44, 255, 0.08)' },
+    risk: { backgroundColor: 'color-mix(in srgb, var(--color-warning) 8%, transparent)' },
+    opportunity: { backgroundColor: 'color-mix(in srgb, var(--color-positive) 8%, transparent)' },
+    action: { backgroundColor: 'color-mix(in srgb, var(--color-info) 8%, transparent)' },
+    factor: { backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)' },
   };
 
   return (

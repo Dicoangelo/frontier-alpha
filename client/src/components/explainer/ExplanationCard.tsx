@@ -87,14 +87,14 @@ const TYPE_CONFIG: Record<ExplanationType, {
 };
 
 const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
-  ai_model: { label: 'AI Model', color: 'bg-[rgba(123, 44, 255,0.2)] text-[var(--color-accent)] border-[rgba(123, 44, 255,0.3)]' },
-  factor_engine: { label: 'Factor Engine', color: 'bg-[rgba(59, 130, 246,0.2)] text-[var(--color-info)] border-[rgba(59, 130, 246,0.3)]' },
-  market_data: { label: 'Market Data', color: 'bg-[rgba(16, 185, 129,0.2)] text-[var(--color-positive)] border-[rgba(16, 185, 129,0.3)]' },
-  sentiment_analysis: { label: 'Sentiment', color: 'bg-[rgba(245, 158, 11,0.2)] text-[var(--color-warning)] border-[rgba(245, 158, 11,0.3)]' },
-  earnings_calendar: { label: 'Earnings', color: 'bg-[rgba(6, 182, 212,0.2)] text-[var(--color-info)] border-[rgba(6, 182, 212,0.3)]' },
-  risk_engine: { label: 'Risk Engine', color: 'bg-[rgba(239, 68, 68,0.2)] text-[var(--color-negative)] border-[rgba(239, 68, 68,0.3)]' },
-  portfolio_optimizer: { label: 'Optimizer', color: 'bg-[rgba(99, 102, 241,0.2)] text-[var(--color-accent)] border-[rgba(99, 102, 241,0.3)]' },
-  system: { label: 'System', color: 'bg-[rgba(107, 114, 128,0.2)] text-[var(--color-text-muted)] border-[rgba(107, 114, 128,0.3)]' },
+  ai_model: { label: 'AI Model', color: 'bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] text-[var(--color-accent)] border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)]' },
+  factor_engine: { label: 'Factor Engine', color: 'bg-[color-mix(in_srgb,var(--color-info)_20%,transparent)] text-[var(--color-info)] border-[color-mix(in_srgb,var(--color-info)_30%,transparent)]' },
+  market_data: { label: 'Market Data', color: 'bg-[color-mix(in_srgb,var(--color-positive)_20%,transparent)] text-[var(--color-positive)] border-[color-mix(in_srgb,var(--color-positive)_30%,transparent)]' },
+  sentiment_analysis: { label: 'Sentiment', color: 'bg-[color-mix(in_srgb,var(--color-warning)_20%,transparent)] text-[var(--color-warning)] border-[color-mix(in_srgb,var(--color-warning)_30%,transparent)]' },
+  earnings_calendar: { label: 'Earnings', color: 'bg-[color-mix(in_srgb,var(--color-info)_20%,transparent)] text-[var(--color-info)] border-[color-mix(in_srgb,var(--color-info)_30%,transparent)]' },
+  risk_engine: { label: 'Risk Engine', color: 'bg-[color-mix(in_srgb,var(--color-negative)_20%,transparent)] text-[var(--color-negative)] border-[color-mix(in_srgb,var(--color-negative)_30%,transparent)]' },
+  portfolio_optimizer: { label: 'Optimizer', color: 'bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] text-[var(--color-accent)] border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)]' },
+  system: { label: 'System', color: 'bg-[color-mix(in_srgb,var(--color-text-muted)_20%,transparent)] text-[var(--color-text-muted)] border-[color-mix(in_srgb,var(--color-text-muted)_30%,transparent)]' },
 };
 
 function getConfidenceColor(confidence: number): string {
@@ -210,7 +210,7 @@ export function ExplanationCard({
 
       {/* State: Error */}
       {!isLoading && error && (
-        <div className="flex items-start gap-3 p-3 rounded-lg bg-[rgba(239, 68, 68,0.1)] border border-[rgba(239, 68, 68,0.2)]">
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]">
           <AlertTriangle className="w-5 h-5 text-[var(--color-negative)] flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm text-[var(--color-negative)]">{error}</p>

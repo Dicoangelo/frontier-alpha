@@ -29,8 +29,8 @@ Use this to track progress across multiple Claude Code sessions:
 |------|------------|--------|------------|------------|
 | **1** | Test & Data Foundation | 🟢 Complete | Session 1 (2026-02-08) | 100% |
 | **2** | CVRF Intelligence | 🟢 Complete | Session 2 (2026-02-08) | 100% |
-| **3** | User Experience | 🔵 Queued | - | 0% |
-| **4** | Scale & Polish | 🔵 Queued | - | 0% |
+| **3** | User Experience | 🟢 Complete | Session 3 (2026-03-07) | 100% |
+| **4** | Scale & Polish | 🟢 Complete | Session 3 (2026-03-07) | 100% |
 
 **Status Legend:** 🔵 Queued | 🟡 In Progress | 🟢 Complete | 🔴 Blocked
 
@@ -550,8 +550,9 @@ scripts/download-ken-french.ts         ← Enhance data download
 ### **Milestone:** Enhanced Intelligence & Mobile-Ready
 
 #### **Task 3.1: Earnings Oracle Dashboard** ⏱️ 3 days
-**Status:** 🔵 Queued
+**Status:** 🟢 Complete
 **Priority:** 🔥 Critical
+**Evidence:** `src/earnings/EarningsOracle.ts` (444 lines) with Alpha Vantage + Polygon.io integration. 5 frontend components (`EarningsCalendar`, `HistoricalReactionChart`, `EarningsForecast`, `EarningsAlerts`, `EarningsPage`). 4 API routes for calendar, forecast, alerts, and historical data.
 
 **Goal:** Full earnings intelligence center
 
@@ -613,8 +614,9 @@ curl "https://api.polygon.io/v3/reference/earnings?ticker=AAPL"
 ---
 
 #### **Task 3.2: Advanced Cognitive Explainer** ⏱️ 2 days
-**Status:** 🔵 Queued
+**Status:** 🟢 Complete
 **Priority:** 🔥 Critical
+**Evidence:** `api/v1/explain.ts` (516 lines) with `tryLLM()` calling OpenAI GPT-4o-mini + template fallback. `src/core/CognitiveExplainer.ts` (357 lines) with 10+ explanation templates. `ExplanationCard.tsx` UI with loading/error/result states. All hardcoded rgba colors converted to CSS variables.
 
 **Goal:** GPT-4o-powered contextual explanations
 
@@ -625,7 +627,7 @@ curl "https://api.polygon.io/v3/reference/earnings?ticker=AAPL"
 # Get API key: https://platform.openai.com/api-keys
 # Add to .env
 OPENAI_API_KEY=sk-proj-...
-OPENAI_MODEL=gpt-4o-2024-08-06  # or claude-3-5-sonnet-20241022
+OPENAI_MODEL=gpt-4o-2024-08-06  # or claude-sonnet-4-6
 ```
 
 **Step 3.2.2: Explainer Service**
@@ -698,8 +700,9 @@ package.json                           ← Add openai package
 ---
 
 #### **Task 3.3: Progressive Web App (PWA)** ⏱️ 2 days
-**Status:** 🔵 Queued
+**Status:** 🟢 Complete
 **Priority:** 🟡 High
+**Evidence:** `client/src/service-worker.ts` (93 lines) with Workbox precaching, NetworkFirst API, CacheFirst static, push notifications. `client/public/manifest.json` (45 lines) with icons and shortcuts. `client/vite.config.ts` with VitePWA plugin (`injectManifest` strategy).
 
 **Goal:** Install on mobile, offline support, push notifications
 
@@ -836,8 +839,9 @@ package.json                           ← Add workbox, web-push
 ### **Milestone:** Production-Grade Platform
 
 #### **Task 4.1: API Platform & Rate Limiting** ⏱️ 2 days
-**Status:** 🔵 Queued
+**Status:** 🟢 Complete
 **Priority:** 🔥 Critical
+**Evidence:** `src/middleware/auth.ts` (264 lines) with JWT + API key auth (hashed keys). Rate limiter middleware with tiered limits. 29 API endpoints across factors, portfolio, earnings, explain, CVRF, backtest, and trading.
 
 **Goal:** Developer-ready API with tiered access
 
@@ -943,8 +947,9 @@ client/src/pages/Settings/APIKeys.tsx  ← CREATE: Key management UI
 ---
 
 #### **Task 4.2: Performance Optimization** ⏱️ 2 days
-**Status:** 🔵 Queued
+**Status:** 🟢 Complete
 **Priority:** 🟡 High
+**Evidence:** All 17 pages lazy-loaded via `React.lazy()` in `App.tsx`. Manual Rollup chunks in `vite.config.ts` (recharts, d3, sentry, react-dom). Redis cache layer. Code splitting produces optimized bundles.
 
 **Goal:** <50ms API latency, Lighthouse 95+
 
@@ -1056,8 +1061,9 @@ ls -lh client/dist/assets/*.js
 ---
 
 #### **Task 4.3: Observability Stack** ⏱️ 2 days
-**Status:** 🔵 Queued
+**Status:** 🟢 Complete
 **Priority:** 🟡 High
+**Evidence:** `src/lib/logger.ts` (101 lines) — Pino structured logging with 38 redact paths. Sentry integration with lazy loading, session replay (10% sampled, 100% on error). Performance monitoring via request logging middleware.
 
 **Goal:** Full monitoring + error tracking
 
@@ -1158,8 +1164,9 @@ package.json                           ← Add pino
 ---
 
 #### **Task 4.4: Documentation & Polish** ⏱️ 2 days
-**Status:** 🔵 Queued
+**Status:** 🟢 Complete
 **Priority:** 🟢 Medium
+**Evidence:** `docs/API.md`, `docs/DEVELOPER.md`, `docs/USER_GUIDE.md`, `docs/PROTOCOL.md` all exist. Loading skeletons on all major pages. Error boundaries. CSS variable compliance across all components.
 
 **Goal:** Production-ready docs + final polish
 

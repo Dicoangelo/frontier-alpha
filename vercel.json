@@ -1,9 +1,12 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "cd client && npm install && npm run build",
   "outputDirectory": "client/dist",
   "framework": "vite",
   "installCommand": "npm install && cd client && npm install",
-  "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" != \"main\" ]; then exit 0; fi; git diff --quiet HEAD^ HEAD -- . ':!*.md' ':!*.txt' ':!.github' ':!tests' ':!*.test.ts' ':!*.spec.ts' ':!.env.example'",
+  "git": {
+    "deploymentEnabled": false
+  },
   "rewrites": [
     { "source": "/api/edge/:path*", "destination": "/api/edge/:path*" },
     { "source": "/api/:path*", "destination": "/api/:path*" },

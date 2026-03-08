@@ -89,8 +89,8 @@ function TimingBadge({ timing }: { timing: string | undefined }) {
       data-testid={isBMO ? 'bmo-badge' : 'amc-badge'}
       className={`absolute top-0.5 left-0.5 text-[7px] font-bold leading-none px-0.5 rounded ${
         isBMO
-          ? 'bg-[rgba(59, 130, 246,0.2)] text-[var(--color-info)]'
-          : 'bg-[rgba(245, 158, 11,0.2)] text-[var(--color-warning)]'
+          ? 'bg-[color-mix(in_srgb,var(--color-info)_20%,transparent)] text-[var(--color-info)]'
+          : 'bg-[color-mix(in_srgb,var(--color-warning)_20%,transparent)] text-[var(--color-warning)]'
       }`}
     >
       {isBMO ? 'BMO' : 'AMC'}
@@ -425,11 +425,11 @@ export function EarningsHeatmap({ earnings, onSelect, selectedSymbol }: Earnings
           High Impact
         </div>
         <div className="flex items-center gap-1.5 ml-2 border-l border-[var(--color-border)] pl-2">
-          <span className="text-[8px] font-bold text-[var(--color-info)] bg-[rgba(59, 130, 246,0.2)] px-0.5 rounded">BMO</span>
+          <span className="text-[8px] font-bold text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_20%,transparent)] px-0.5 rounded">BMO</span>
           Pre-market
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[8px] font-bold text-[var(--color-warning)] bg-[rgba(245, 158, 11,0.2)] px-0.5 rounded">AMC</span>
+          <span className="text-[8px] font-bold text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_20%,transparent)] px-0.5 rounded">AMC</span>
           Post-market
         </div>
       </div>

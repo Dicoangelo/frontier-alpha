@@ -181,7 +181,7 @@ export function EarningsForecast({
         )}
 
         {/* AI Explanation */}
-        <div className="p-4 rounded-lg border border-[rgba(123, 44, 255, 0.15)]" style={{ background: 'linear-gradient(to right, rgba(123, 44, 255, 0.06), rgba(59, 130, 246, 0.06))' }}>
+        <div className="p-4 rounded-lg border border-[color-mix(in_srgb,var(--color-accent)_15%,transparent)]" style={{ background: 'linear-gradient(to right, color-mix(in srgb, var(--color-accent) 6%, transparent), color-mix(in srgb, var(--color-info) 6%, transparent))' }}>
           <p className="text-sm font-medium text-[var(--color-info)] mb-2">AI Analysis</p>
           <p className="text-sm text-[var(--color-info)]">{forecast.explanation}</p>
         </div>

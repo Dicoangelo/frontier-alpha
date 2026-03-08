@@ -105,7 +105,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <div className="min-h-screen bg-[var(--color-bg-tertiary)] flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-[var(--color-bg)] rounded-xl shadow-lg p-8 text-center">
-            <div className="w-16 h-16 bg-[rgba(239, 68, 68,0.1)] rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertTriangle className="w-8 h-8 text-[var(--color-negative)]" />
             </div>
 
@@ -199,7 +199,7 @@ export function SectionErrorBoundary({ children, sectionName }: SectionErrorBoun
   return (
     <ErrorBoundary
       fallback={
-        <div className="bg-[rgba(239, 68, 68,0.1)] border border-[rgba(239, 68, 68,0.2)] rounded-lg p-6 text-center">
+        <div className="bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)] rounded-lg p-6 text-center">
           <AlertTriangle className="w-8 h-8 text-[var(--color-negative)] mx-auto mb-3" />
           <p className="text-[var(--color-negative)] font-medium">
             Failed to load {sectionName || 'this section'}

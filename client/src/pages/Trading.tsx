@@ -151,8 +151,8 @@ export default function Trading() {
             <div
               className="mb-6 p-4 rounded-lg flex items-start gap-3 border"
               style={{
-                backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                borderColor: 'rgba(245, 158, 11, 0.2)',
+                backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
+                borderColor: 'color-mix(in srgb, var(--color-warning) 20%, transparent)',
               }}
             >
               <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-warning)]" />
@@ -185,8 +185,8 @@ export default function Trading() {
             <div
               className="mb-6 p-4 rounded-lg flex items-start gap-3 border"
               style={{
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                borderColor: 'rgba(59, 130, 246, 0.2)',
+                backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)',
+                borderColor: 'color-mix(in srgb, var(--color-info) 20%, transparent)',
               }}
             >
               <Info className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-info)]" />
@@ -213,8 +213,8 @@ export default function Trading() {
             <div
               className="mb-6 p-4 rounded-lg flex items-start gap-3 border"
               style={{
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                borderColor: 'rgba(16, 185, 129, 0.2)',
+                backgroundColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)',
+                borderColor: 'color-mix(in srgb, var(--color-positive) 20%, transparent)',
               }}
             >
               <Shield className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-positive)]" />
@@ -332,7 +332,7 @@ export default function Trading() {
                         }`}
                         style={
                           selectedSymbol === position.symbol
-                            ? { backgroundColor: 'rgba(59, 130, 246, 0.1)' }
+                            ? { backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)' }
                             : undefined
                         }
                       >
@@ -754,7 +754,7 @@ function ConnectionSettingsModal({
             <div
               className="p-3 rounded-lg text-sm"
               style={{
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)',
                 color: 'var(--color-negative)',
               }}
             >
@@ -766,7 +766,7 @@ function ConnectionSettingsModal({
             <div
               className="p-3 rounded-lg text-sm"
               style={{
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)',
                 color: 'var(--color-negative)',
               }}
             >

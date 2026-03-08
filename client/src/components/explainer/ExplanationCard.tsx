@@ -254,19 +254,19 @@ export function ExplanationCard({
             )}
 
             {isAIPowered ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgba(123, 44, 255,0.2)] text-[var(--color-accent)] border border-[rgba(123, 44, 255,0.3)]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] text-[var(--color-accent)] border border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)]">
                 <Sparkles className="w-3 h-3" />
                 AI-powered
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgba(59, 130, 246,0.2)] text-[var(--color-info)] border border-[rgba(59, 130, 246,0.3)]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[color-mix(in_srgb,var(--color-info)_20%,transparent)] text-[var(--color-info)] border border-[color-mix(in_srgb,var(--color-info)_30%,transparent)]">
                 <Brain className="w-3 h-3" />
                 Template-based
               </span>
             )}
 
             {result.cached && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[rgba(107, 114, 128,0.2)] text-[var(--color-text-muted)] border border-[rgba(107, 114, 128,0.3)]">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[color-mix(in_srgb,var(--color-text-muted)_20%,transparent)] text-[var(--color-text-muted)] border border-[color-mix(in_srgb,var(--color-text-muted)_30%,transparent)]">
                 <CheckCircle2 className="w-3 h-3" />
                 Cached
               </span>
@@ -304,7 +304,7 @@ export function ExplanationCard({
             {result.sources.map((source) => {
               const sourceMeta = SOURCE_LABELS[source] || {
                 label: source.replace(/_/g, ' '),
-                color: 'bg-[rgba(107, 114, 128,0.2)] text-[var(--color-text-muted)] border-[rgba(107, 114, 128,0.3)]',
+                color: 'bg-[color-mix(in_srgb,var(--color-text-muted)_20%,transparent)] text-[var(--color-text-muted)] border-[color-mix(in_srgb,var(--color-text-muted)_30%,transparent)]',
               };
               return (
                 <span

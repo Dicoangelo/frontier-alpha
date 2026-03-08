@@ -16,10 +16,10 @@ interface Alert {
 }
 
 const severityConfig = {
-  critical: { icon: AlertTriangle, color: 'text-[var(--color-negative)]', bg: 'bg-[rgba(239, 68, 68,0.1)]' },
-  high: { icon: AlertTriangle, color: 'text-[var(--color-warning)]', bg: 'bg-[rgba(249, 115, 22,0.1)]' },
-  medium: { icon: AlertCircle, color: 'text-[var(--color-warning)]', bg: 'bg-[rgba(234, 179, 8,0.1)]' },
-  low: { icon: Info, color: 'text-[var(--color-info)]', bg: 'bg-[rgba(59, 130, 246,0.1)]' },
+  critical: { icon: AlertTriangle, color: 'text-[var(--color-negative)]', bg: 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)]' },
+  high: { icon: AlertTriangle, color: 'text-[var(--color-warning)]', bg: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]' },
+  medium: { icon: AlertCircle, color: 'text-[var(--color-warning)]', bg: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]' },
+  low: { icon: Info, color: 'text-[var(--color-info)]', bg: 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]' },
   info: { icon: Info, color: 'text-[var(--color-text-secondary)]', bg: 'bg-[var(--color-bg-tertiary)]' },
 };
 

@@ -31,10 +31,10 @@ interface TradeReasoningChain {
 
 const STEP_ICONS = [Zap, Activity, GitBranch, Target];
 const STEP_COLORS = [
-  'text-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)]',
-  'text-[var(--color-accent)] bg-[rgba(123, 44, 255,0.1)]',
-  'text-[var(--color-warning)] bg-[rgba(245, 158, 11,0.1)]',
-  'text-[var(--color-positive)] bg-[rgba(16, 185, 129,0.1)]',
+  'text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]',
+  'text-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]',
+  'text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]',
+  'text-[var(--color-positive)] bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)]',
 ];
 
 // Kept to suppress unused import warnings from linter

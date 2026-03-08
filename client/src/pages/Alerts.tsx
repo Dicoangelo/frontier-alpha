@@ -218,7 +218,7 @@ export function Alerts() {
             {totalActive > 0 && (
               <span
                 className="px-2 py-1 text-sm font-medium rounded-full text-[var(--color-negative)]"
-                style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}
+                style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)' }}
               >
                 {totalActive} active
               </span>
@@ -241,7 +241,7 @@ export function Alerts() {
           label="Critical"
           count={severityCounts.critical || 0}
           indicator="🔴"
-          bgStyle={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)' }}
+          bgStyle={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--color-negative) 20%, transparent)' }}
           onClick={() => setSeverityFilter(severityFilter === 'critical' ? 'all' : 'critical')}
           active={severityFilter === 'critical'}
         />
@@ -249,7 +249,7 @@ export function Alerts() {
           label="High"
           count={severityCounts.high || 0}
           indicator="🟠"
-          bgStyle={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', borderColor: 'rgba(249, 115, 22, 0.2)' }}
+          bgStyle={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--color-warning) 20%, transparent)' }}
           onClick={() => setSeverityFilter(severityFilter === 'high' ? 'all' : 'high')}
           active={severityFilter === 'high'}
         />
@@ -257,7 +257,7 @@ export function Alerts() {
           label="Medium"
           count={severityCounts.medium || 0}
           indicator="🟡"
-          bgStyle={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.2)' }}
+          bgStyle={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--color-warning) 20%, transparent)' }}
           onClick={() => setSeverityFilter(severityFilter === 'medium' ? 'all' : 'medium')}
           active={severityFilter === 'medium'}
         />
@@ -265,7 +265,7 @@ export function Alerts() {
           label="Low"
           count={severityCounts.low || 0}
           indicator="🔵"
-          bgStyle={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: 'rgba(59, 130, 246, 0.2)' }}
+          bgStyle={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--color-info) 20%, transparent)' }}
           onClick={() => setSeverityFilter(severityFilter === 'low' ? 'all' : 'low')}
           active={severityFilter === 'low'}
         />

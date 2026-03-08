@@ -74,10 +74,10 @@ type SeverityFilter = 'all' | 'critical' | 'high' | 'medium' | 'low';
 // ============================================================================
 
 const severityColors: Record<string, string> = {
-  critical: 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)] border-[rgba(239, 68, 68,0.2)]',
-  high: 'bg-[rgba(249, 115, 22,0.1)] text-[var(--color-warning)] border-[rgba(249, 115, 22,0.2)]',
-  medium: 'bg-[rgba(245, 158, 11,0.1)] text-[var(--color-warning)] border-[rgba(245, 158, 11,0.2)]',
-  low: 'bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)] border-[rgba(59, 130, 246,0.2)]',
+  critical: 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)] border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]',
+  high: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] text-[var(--color-warning)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]',
+  medium: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] text-[var(--color-warning)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]',
+  low: 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]',
 };
 
 const severityDotColors: Record<string, string> = {
@@ -112,11 +112,11 @@ const filingTypeIcons: Record<string, string> = {
 };
 
 const filingTypeBadgeColors: Record<string, string> = {
-  '8-K': 'bg-[rgba(123, 44, 255,0.1)] text-[var(--color-accent)]',
-  '10-K': 'bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)]',
-  '10-Q': 'bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)]',
+  '8-K': 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)]',
+  '10-K': 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]',
+  '10-Q': 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)]',
   '4': 'bg-[var(--color-accent)] text-[var(--color-accent)]',
-  'SC 13D': 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)]',
+  'SC 13D': 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)]',
   'SC 13G': 'bg-[var(--color-accent)] text-[var(--color-accent)]',
   '13F-HR': 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]',
   'DEF 14A': 'bg-[var(--color-positive)] text-[var(--color-positive)]',
@@ -499,7 +499,7 @@ export function SECFilingAlert({
             <Badge variant="warning">{summary.high} High</Badge>
           )}
           {summary.medium > 0 && (
-            <span className="px-2 py-1 text-xs font-medium bg-[rgba(245, 158, 11,0.1)] text-[var(--color-warning)] rounded-full">
+            <span className="px-2 py-1 text-xs font-medium bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] text-[var(--color-warning)] rounded-full">
               {summary.medium} Medium
             </span>
           )}

@@ -36,7 +36,7 @@ function FactorCategoryCard({ category, factors }: FactorCategoryCardProps) {
   return (
     <Card className="hover:shadow-lg transition-shadow duration-200">
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(123, 44, 255, 0.1)' }}>
+        <div className="p-2 rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}>
           <Icon className="w-5 h-5 text-[var(--color-accent)]" />
         </div>
         <div>
@@ -127,7 +127,7 @@ export function Factors() {
       {/* Stats Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
         <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
-          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(123, 44, 255, 0.08)' }}>
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)' }}>
             <Layers className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
           </div>
           <div className="min-w-0">
@@ -136,7 +136,7 @@ export function Factors() {
           </div>
         </div>
         <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
-          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)' }}>
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)' }}>
             <TrendingUp className="w-5 h-5" style={{ color: 'var(--color-positive)' }} />
           </div>
           <div className="min-w-0">
@@ -145,7 +145,7 @@ export function Factors() {
           </div>
         </div>
         <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
-          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)' }}>
             <Activity className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
           </div>
           <div className="min-w-0">
@@ -154,7 +154,7 @@ export function Factors() {
           </div>
         </div>
         <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
-          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)' }}>
             <RefreshCw className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
           </div>
           <div className="min-w-0">
@@ -238,8 +238,8 @@ export function Factors() {
         <div
           className="p-4 rounded-lg border animate-fade-in-up"
           style={{
-            background: 'linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(123, 44, 255, 0.1))',
-            borderColor: 'rgba(59, 130, 246, 0.2)',
+            background: 'linear-gradient(to right, color-mix(in srgb, var(--color-info) 10%, transparent), color-mix(in srgb, var(--color-accent) 10%, transparent))',
+            borderColor: 'color-mix(in srgb, var(--color-info) 20%, transparent)',
             animationDelay: '200ms',
           }}
         >

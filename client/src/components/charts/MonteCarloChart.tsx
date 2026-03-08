@@ -148,10 +148,10 @@ export function MonteCarloChart({
     });
 
     // Theme-aware colors
-    const zeroColor = isDark ? 'rgba(255, 255, 255, 0.5)' : 'var(--color-text)';
+    const zeroColor = isDark ? 'color-mix(in srgb, var(--color-text) 50%, transparent)' : 'var(--color-text)';
     const varColor = isDark ? '#f87171' : '#dc2626';
     const medianColor = isDark ? '#60a5fa' : '#3b82f6';
-    const labelColor = isDark ? 'rgba(255, 255, 255, 0.5)' : 'var(--color-text-muted)';
+    const labelColor = isDark ? 'color-mix(in srgb, var(--color-text) 50%, transparent)' : 'var(--color-text-muted)';
 
     // Draw zero line
     const zeroX = padding.left + ((0 - minVal) / (maxVal - minVal)) * chartWidth;

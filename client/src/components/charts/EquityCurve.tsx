@@ -97,12 +97,12 @@ function generateMockData(currentValue: number, days: number): DataPoint[] {
 // Theme-aware canvas colors
 function getChartColors(isDark: boolean) {
   return {
-    grid: isDark ? 'rgba(255, 255, 255, 0.08)' : 'var(--color-border)',
-    label: isDark ? 'rgba(255, 255, 255, 0.5)' : 'var(--color-text-muted)',
-    benchmark: isDark ? 'rgba(255, 255, 255, 0.35)' : 'var(--color-text-muted)',
+    grid: isDark ? 'color-mix(in srgb, var(--color-text) 8%, transparent)' : 'var(--color-border)',
+    label: isDark ? 'color-mix(in srgb, var(--color-text) 50%, transparent)' : 'var(--color-text-muted)',
+    benchmark: isDark ? 'color-mix(in srgb, var(--color-text) 35%, transparent)' : 'var(--color-text-muted)',
     line: isDark ? '#60a5fa' : '#3b82f6',
-    gradientTop: isDark ? 'rgba(96, 165, 250, 0.25)' : 'rgba(59, 130, 246, 0.3)',
-    gradientBottom: isDark ? 'rgba(96, 165, 250, 0)' : 'rgba(59, 130, 246, 0)',
+    gradientTop: isDark ? 'color-mix(in srgb, var(--color-info) 25%, transparent)' : 'color-mix(in srgb, var(--color-info) 30%, transparent)',
+    gradientBottom: 'transparent',
     dot: isDark ? '#60a5fa' : '#3b82f6',
     dotStroke: isDark ? '#0F1219' : '#ffffff',
   };
@@ -345,7 +345,7 @@ export function EquityCurve({
     // Draw crosshair at hovered position
     if (hoveredX !== null && hoveredX >= padding.left && hoveredX <= dimensions.width - padding.right) {
       ctx.save();
-      ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)';
+      ctx.strokeStyle = isDark ? 'color-mix(in srgb, var(--color-text) 30%, transparent)' : 'color-mix(in srgb, var(--color-text) 20%, transparent)';
       ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();

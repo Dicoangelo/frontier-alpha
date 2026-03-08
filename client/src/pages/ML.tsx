@@ -82,25 +82,25 @@ const REGIME_CONFIG: Record<
   bull: {
     label: 'Bull',
     color: 'var(--color-positive)',
-    bgColor: 'rgba(16, 185, 129, 0.1)',
+    bgColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)',
     icon: TrendingUp,
   },
   bear: {
     label: 'Bear',
     color: 'var(--color-negative)',
-    bgColor: 'rgba(239, 68, 68, 0.1)',
+    bgColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)',
     icon: AlertTriangle,
   },
   sideways: {
     label: 'Sideways',
     color: 'var(--color-warning)',
-    bgColor: 'rgba(245, 158, 11, 0.1)',
+    bgColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
     icon: Activity,
   },
   volatile: {
     label: 'Volatile',
     color: 'var(--color-accent)',
-    bgColor: 'rgba(123, 44, 255, 0.1)',
+    bgColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
     icon: Zap,
   },
 };
@@ -225,26 +225,26 @@ function StatusBadge({ status }: { status: ModelStatus }) {
     deployed: {
       label: 'Deployed',
       color: 'var(--color-positive)',
-      bgColor: 'rgba(16, 185, 129, 0.1)',
-      borderColor: 'rgba(16, 185, 129, 0.2)',
+      bgColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)',
+      borderColor: 'color-mix(in srgb, var(--color-positive) 20%, transparent)',
     },
     validated: {
       label: 'Validated',
       color: 'var(--color-info)',
-      bgColor: 'rgba(59, 130, 246, 0.1)',
-      borderColor: 'rgba(59, 130, 246, 0.2)',
+      bgColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)',
+      borderColor: 'color-mix(in srgb, var(--color-info) 20%, transparent)',
     },
     training: {
       label: 'Training',
       color: 'var(--color-warning)',
-      bgColor: 'rgba(245, 158, 11, 0.1)',
-      borderColor: 'rgba(245, 158, 11, 0.2)',
+      bgColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
+      borderColor: 'color-mix(in srgb, var(--color-warning) 20%, transparent)',
     },
     archived: {
       label: 'Archived',
       color: 'var(--color-text-muted)',
-      bgColor: 'rgba(107, 114, 128, 0.1)',
-      borderColor: 'rgba(107, 114, 128, 0.2)',
+      bgColor: 'color-mix(in srgb, var(--color-text-muted) 10%, transparent)',
+      borderColor: 'color-mix(in srgb, var(--color-text-muted) 20%, transparent)',
     },
   };
   const c = config[status];

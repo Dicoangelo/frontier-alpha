@@ -281,10 +281,10 @@ function HarvestSection({ opportunities }: { opportunities: HarvestOpportunity[]
       <div
         className="p-4 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in-up"
         style={{
-          backgroundColor: 'rgba(123, 44, 255, 0.1)',
+          backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
           borderWidth: '1px',
           borderStyle: 'solid',
-          borderColor: 'rgba(123, 44, 255, 0.2)',
+          borderColor: 'color-mix(in srgb, var(--color-accent) 20%, transparent)',
           animationDelay: '0ms',
           animationFillMode: 'both',
         }}
@@ -333,7 +333,7 @@ function HarvestSection({ opportunities }: { opportunities: HarvestOpportunity[]
                           <span className="font-bold font-mono text-[var(--color-text)]">{opp.symbol}</span>
                           <span
                             className={`px-1.5 py-0.5 text-[10px] font-medium rounded text-[var(${opp.holdingPeriod === 'short_term' ? '--color-warning' : '--color-positive'})]`}
-                            style={{ backgroundColor: opp.holdingPeriod === 'short_term' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)' }}
+                            style={{ backgroundColor: opp.holdingPeriod === 'short_term' ? 'color-mix(in srgb, var(--color-warning) 10%, transparent)' : 'color-mix(in srgb, var(--color-positive) 10%, transparent)' }}
                           >
                             {opp.holdingPeriod === 'short_term' ? 'ST' : 'LT'}
                           </span>
@@ -392,10 +392,10 @@ function WashSalesSection({ violations }: { violations: WashSaleEntry[] }) {
       <div
         className="p-4 rounded-lg animate-fade-in-up"
         style={{
-          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
           borderWidth: '1px',
           borderStyle: 'solid',
-          borderColor: 'rgba(245, 158, 11, 0.2)',
+          borderColor: 'color-mix(in srgb, var(--color-warning) 20%, transparent)',
           animationDelay: '0ms',
           animationFillMode: 'both',
         }}
@@ -443,7 +443,7 @@ function WashSalesSection({ violations }: { violations: WashSaleEntry[] }) {
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}
+                      style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)' }}
                     >
                       <AlertTriangle className="w-5 h-5 text-[var(--color-warning)]" aria-hidden="true" />
                     </div>
@@ -459,8 +459,8 @@ function WashSalesSection({ violations }: { violations: WashSaleEntry[] }) {
                           }`}
                           style={{
                             backgroundColor: v.matchType === 'same_ticker'
-                              ? 'rgba(245, 158, 11, 0.1)'
-                              : 'rgba(123, 44, 255, 0.1)',
+                              ? 'color-mix(in srgb, var(--color-warning) 10%, transparent)'
+                              : 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
                           }}
                         >
                           {v.matchType === 'same_ticker' ? 'Same Ticker' : 'Substantially Identical'}
@@ -629,14 +629,14 @@ function ReportSection({ rows, summary }: { rows: ReportRow[]; summary: TaxSumma
                         <span className="text-[var(--color-text)]">{row.description}</span>
                         <span
                           className={`px-1.5 py-0.5 text-[10px] font-medium rounded text-[var(${row.isShortTerm ? '--color-warning' : '--color-positive'})]`}
-                          style={{ backgroundColor: row.isShortTerm ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)' }}
+                          style={{ backgroundColor: row.isShortTerm ? 'color-mix(in srgb, var(--color-warning) 10%, transparent)' : 'color-mix(in srgb, var(--color-positive) 10%, transparent)' }}
                         >
                           {row.isShortTerm ? 'ST' : 'LT'}
                         </span>
                         {row.adjustmentCode === 'W' && (
                           <span
                             className="px-1.5 py-0.5 text-[10px] font-medium rounded text-[var(--color-warning)]"
-                            style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}
+                            style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)' }}
                           >
                             W
                           </span>

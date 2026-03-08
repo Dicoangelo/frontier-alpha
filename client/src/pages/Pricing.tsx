@@ -134,7 +134,7 @@ export function Pricing() {
               <div
                 key={plan.name}
                 className={`glass-slab rounded-sm p-6 sm:p-8 flex flex-col relative ${
-                  plan.highlighted ? 'border border-[var(--color-accent)]/40 shadow-[0_0_40px_rgba(123,44,255,0.15)]' : ''
+                  plan.highlighted ? 'border border-[var(--color-accent)]/40 shadow-[0_0_40px_color-mix(in srgb, var(--color-accent) 15%, transparent)]' : ''
                 }`}
               >
                 {plan.highlighted && (
@@ -181,7 +181,7 @@ export function Pricing() {
                     disabled={isLoading}
                     className={`w-full py-3 px-4 rounded-sm text-sm font-medium mono tracking-[0.1em] uppercase transition-all click-feedback ${
                       plan.highlighted
-                        ? 'bg-[var(--color-accent)] text-white hover:opacity-90 shadow-[0_0_20px_rgba(123,44,255,0.3)]'
+                        ? 'bg-[var(--color-accent)] text-white hover:opacity-90 shadow-[0_0_20px_color-mix(in srgb, var(--color-accent) 30%, transparent)]'
                         : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text)] hover:bg-[var(--color-border)]'
                     } disabled:opacity-50`}
                   >

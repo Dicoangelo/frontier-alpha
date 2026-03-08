@@ -83,7 +83,7 @@ export function CVRFBeliefDisplay() {
 
   if (isError || !beliefs) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[rgba(239, 68, 68,0.2)] p-6">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)] p-6">
         <div className="text-[var(--color-negative)] text-sm">Failed to load belief state</div>
       </div>
     );
@@ -106,7 +106,7 @@ export function CVRFBeliefDisplay() {
       </div>
 
       {/* Market Regime */}
-      <div className="mb-6 p-4 rounded-lg" style={{ background: 'linear-gradient(to right, var(--color-bg-tertiary), rgba(123, 44, 255, 0.06))' }}>
+      <div className="mb-6 p-4 rounded-lg" style={{ background: 'linear-gradient(to right, var(--color-bg-tertiary), color-mix(in srgb, var(--color-accent) 6%, transparent))' }}>
         <div className="text-xs text-[var(--color-text-muted)] mb-1">Market Regime</div>
         <div className="flex items-center gap-3">
           <span className="text-2xl">{regime.icon}</span>
@@ -177,9 +177,9 @@ export function CVRFBeliefDisplay() {
                 key={prior.id}
                 className={`px-2 py-0.5 text-xs rounded ${
                   prior.impactDirection === 'positive'
-                    ? 'bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)]'
+                    ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]'
                     : prior.impactDirection === 'negative'
-                    ? 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)]'
+                    ? 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)]'
                     : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
                 }`}
                 title={prior.concept}

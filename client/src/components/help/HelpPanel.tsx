@@ -262,7 +262,7 @@ function SectionList({ sections, expandedSections, onToggleSection, onSelectTopi
               className="w-full flex items-center gap-3 p-4 bg-[var(--color-bg)] hover:bg-[var(--color-bg-tertiary)] transition text-left"
               aria-expanded={isExpanded}
             >
-              <div className="w-10 h-10 bg-[rgba(59, 130, 246,0.1)] rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] rounded-lg flex items-center justify-center flex-shrink-0">
                 <Icon className="w-5 h-5 text-[var(--color-info)]" />
               </div>
               <div className="flex-1 min-w-0">

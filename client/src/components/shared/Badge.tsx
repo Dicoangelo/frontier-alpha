@@ -5,10 +5,10 @@ interface BadgeProps {
 }
 
 const variants = {
-  success: 'bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)]',
-  warning: 'bg-[rgba(234, 179, 8,0.1)] text-[var(--color-warning)]',
-  danger: 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)]',
-  info: 'bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)]',
+  success: 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]',
+  warning: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] text-[var(--color-warning)]',
+  danger: 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)]',
+  info: 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)]',
   neutral: 'bg-[var(--color-bg-secondary)] text-[var(--color-text)]',
   default: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]',
 };

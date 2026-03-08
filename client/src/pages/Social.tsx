@@ -130,10 +130,10 @@ const COLUMNS: ColumnDef[] = [
 
 // SOC-001: color/bgColor use CSS variables and rgba values (no hardcoded Tailwind color classes)
 const FEED_EVENT_CONFIG: Record<FeedEventType, { icon: typeof TrendingUp; color: string; bgColor: string }> = {
-  rebalance:     { icon: ArrowUpDown,  color: 'var(--color-accent)',   bgColor: 'rgba(123, 44, 255, 0.1)' },
-  new_position:  { icon: TrendingUp,   color: 'var(--color-positive)', bgColor: 'rgba(16, 185, 129, 0.1)' },
-  close_position:{ icon: TrendingDown, color: 'var(--color-negative)', bgColor: 'rgba(239, 68, 68, 0.1)'  },
-  milestone:     { icon: Star,         color: 'var(--color-warning)',  bgColor: 'rgba(245, 158, 11, 0.1)' },
+  rebalance:     { icon: ArrowUpDown,  color: 'var(--color-accent)',   bgColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' },
+  new_position:  { icon: TrendingUp,   color: 'var(--color-positive)', bgColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)' },
+  close_position:{ icon: TrendingDown, color: 'var(--color-negative)', bgColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)'  },
+  milestone:     { icon: Star,         color: 'var(--color-warning)',  bgColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)' },
 };
 
 // ── Helper: get metric value from entry ────────────────────────

@@ -30,10 +30,10 @@ interface RecordDecisionModalProps {
 }
 
 const ACTION_OPTIONS = [
-  { value: 'buy', label: 'Buy', icon: TrendingUp, color: 'text-[var(--color-positive)] bg-[rgba(16, 185, 129,0.1)] border-[rgba(16, 185, 129,0.2)]' },
-  { value: 'sell', label: 'Sell', icon: TrendingDown, color: 'text-[var(--color-negative)] bg-[rgba(239, 68, 68,0.1)] border-[rgba(239, 68, 68,0.2)]' },
+  { value: 'buy', label: 'Buy', icon: TrendingUp, color: 'text-[var(--color-positive)] bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)]' },
+  { value: 'sell', label: 'Sell', icon: TrendingDown, color: 'text-[var(--color-negative)] bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]' },
   { value: 'hold', label: 'Hold', icon: Minus, color: 'text-[var(--color-text-secondary)] bg-[var(--color-bg-tertiary)] border-[var(--color-border)]' },
-  { value: 'rebalance', label: 'Rebalance', icon: RotateCcw, color: 'text-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)] border-[rgba(59, 130, 246,0.2)]' },
+  { value: 'rebalance', label: 'Rebalance', icon: RotateCcw, color: 'text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]' },
 ] as const;
 
 function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModalProps) {
@@ -222,7 +222,7 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
 
         {/* Error */}
         {error && (
-          <div className="mb-4 p-3 bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)] rounded-lg text-sm flex items-center gap-2">
+          <div className="mb-4 p-3 bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)] rounded-lg text-sm flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
             {error}
           </div>
@@ -338,7 +338,7 @@ function CloseEpisodeModal({ isOpen, onClose, onConfirm, isClosing }: CloseEpiso
         </div>
 
         {/* Run CVRF Cycle Toggle */}
-        <div className="flex items-center gap-3 p-3 bg-[rgba(99, 102, 241,0.1)] rounded-lg mb-4">
+        <div className="flex items-center gap-3 p-3 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-lg mb-4">
           <input
             type="checkbox"
             id="runCycle"
@@ -504,7 +504,7 @@ export function CVRFEpisodeControls() {
 
       {/* Active Episode Info */}
       {hasActiveEpisode && activeEpisode && (
-        <div className="mt-3 p-3 bg-[rgba(99, 102, 241,0.1)] rounded-lg text-sm">
+        <div className="mt-3 p-3 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-lg text-sm">
           <div className="flex items-center justify-between text-[var(--color-accent)]">
             <span>Decisions recorded:</span>
             <span className="font-bold">{activeEpisode.decisionsCount}</span>
@@ -526,8 +526,8 @@ export function CVRFEpisodeControls() {
         <div
           className={`mt-3 p-3 rounded-lg flex items-center gap-2 text-sm ${
             result.type === 'success'
-              ? 'bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)]'
-              : 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)]'
+              ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]'
+              : 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)]'
           }`}
         >
           {result.type === 'success' ? (

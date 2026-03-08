@@ -159,7 +159,7 @@ export function APIKeys() {
     <div className="space-y-4">
       {/* Created key banner -- shown once after creation */}
       {createdKey && (
-        <div className="p-4 rounded-lg border-2 border-[rgba(234, 179, 8,0.4)] bg-[rgba(234, 179, 8,0.05)]">
+        <div className="p-4 rounded-lg border-2 border-[color-mix(in_srgb,var(--color-warning)_40%,transparent)] bg-[color-mix(in_srgb,var(--color-warning)_5%,transparent)]">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-[var(--color-warning)] mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
@@ -246,7 +246,7 @@ export function APIKeys() {
                   onClick={() => setNewKeyPermissions('read')}
                   className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm transition ${
                     newKeyPermissions === 'read'
-                      ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)]'
+                      ? 'border-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)]'
                       : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                   }`}
                 >
@@ -256,7 +256,7 @@ export function APIKeys() {
                   onClick={() => setNewKeyPermissions('readwrite')}
                   className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm transition ${
                     newKeyPermissions === 'readwrite'
-                      ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)]'
+                      ? 'border-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)]'
                       : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                   }`}
                 >
@@ -303,7 +303,7 @@ export function APIKeys() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-[var(--color-text)]">{key.name}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)]">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]">
                     Active
                   </span>
                 </div>
@@ -397,7 +397,7 @@ export function APIKeys() {
                   <span className="text-sm text-[var(--color-text-muted)] line-through">
                     {key.name}
                   </span>
-                  <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)]">
+                  <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)]">
                     Revoked
                   </span>
                   <p className="text-xs text-[var(--color-text-muted)] mt-0.5">

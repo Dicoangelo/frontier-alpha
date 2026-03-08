@@ -125,7 +125,7 @@ export function Optimize() {
                   /* OPT2-001: accent border/bg for selected state */
                   style={
                     selectedObjective === obj.value
-                      ? { borderColor: 'var(--color-accent)', backgroundColor: 'rgba(123, 44, 255, 0.1)' }
+                      ? { borderColor: 'var(--color-accent)', backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }
                       : undefined
                   }
                 >

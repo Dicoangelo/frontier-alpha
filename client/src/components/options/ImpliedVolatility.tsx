@@ -70,8 +70,8 @@ interface ImpliedVolatilityProps {
 }
 
 const signalColors: Record<string, string> = {
-  high_iv: 'text-[var(--color-warning)] bg-[rgba(249, 115, 22,0.1)]',
-  low_iv: 'text-[var(--color-positive)] bg-[rgba(16, 185, 129,0.1)]',
+  high_iv: 'text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]',
+  low_iv: 'text-[var(--color-positive)] bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)]',
   neutral: 'text-[var(--color-text-secondary)] bg-[var(--color-bg-tertiary)]',
 };
 
@@ -82,8 +82,8 @@ const signalIcons: Record<string, typeof TrendingUp> = {
 };
 
 const termStructureColors: Record<string, string> = {
-  contango: 'text-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)]',
-  backwardation: 'text-[var(--color-warning)] bg-[rgba(245, 158, 11,0.1)]',
+  contango: 'text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]',
+  backwardation: 'text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]',
   flat: 'text-[var(--color-text-secondary)] bg-[var(--color-bg-tertiary)]',
 };
 
@@ -112,9 +112,9 @@ function IVGauge({ value, label, max = 100 }: { value: number; label: string; ma
   const rotation = (percentage / 100) * 180 - 90; // -90 to 90 degrees
 
   const getColor = (v: number) => {
-    if (v >= 70) return '#f97316'; // orange
-    if (v <= 30) return '#22c55e'; // green
-    return '#3b82f6'; // blue
+    if (v >= 70) return 'var(--color-warning)';
+    if (v <= 30) return 'var(--color-positive)';
+    return 'var(--color-info)';
   };
 
   return (
@@ -291,10 +291,10 @@ export function ImpliedVolatility({
           {portfolioIV.insights && (
             <div className={`p-3 rounded-lg border ${
               portfolioIV.insights.overallSignal === 'high_iv'
-                ? 'bg-[rgba(249, 115, 22,0.1)] border-[rgba(249, 115, 22,0.2)]'
+                ? 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]'
                 : portfolioIV.insights.overallSignal === 'low_iv'
-                ? 'bg-[rgba(16, 185, 129,0.1)] border-[rgba(16, 185, 129,0.2)]'
-                : 'bg-[rgba(59, 130, 246,0.1)] border-[rgba(59, 130, 246,0.2)]'
+                ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)]'
+                : 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]'
             }`}>
               <div className="flex items-start gap-2">
                 <Info className="w-4 h-4 mt-0.5 text-[var(--color-text-secondary)]" />
@@ -425,7 +425,7 @@ export function ImpliedVolatility({
 
                 {/* Earnings Expected Move (if available) */}
                 {iv.expectedMove.earnings !== undefined && (
-                  <div className="mb-3 p-2 bg-[rgba(123, 44, 255,0.1)] rounded-lg border border-[rgba(123, 44, 255,0.2)]">
+                  <div className="mb-3 p-2 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-lg border border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <BarChart3 className="w-4 h-4 text-[var(--color-accent)]" />
@@ -468,7 +468,7 @@ export function ImpliedVolatility({
                   <span>P/C Ratio: {iv.putCallRatio}</span>
                   <span>Skew: {iv.skew > 0 ? '+' : ''}{iv.skew}%</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded ${
-                    iv.dataSource === 'options' ? 'bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)]' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
+                    iv.dataSource === 'options' ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
                   }`}>
                     {iv.dataSource === 'options' ? 'Live Options' : 'Historical'}
                   </span>
@@ -528,10 +528,10 @@ export function ImpliedVolatilityCompact({
   if (!portfolioIV) return null;
 
   const signalColor = portfolioIV.insights?.overallSignal === 'high_iv'
-    ? 'bg-[rgba(249, 115, 22,0.1)] border-[rgba(249, 115, 22,0.2)]'
+    ? 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]'
     : portfolioIV.insights?.overallSignal === 'low_iv'
-    ? 'bg-[rgba(16, 185, 129,0.1)] border-[rgba(16, 185, 129,0.2)]'
-    : 'bg-[rgba(123, 44, 255,0.1)] border-[rgba(123, 44, 255,0.2)]';
+    ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)]'
+    : 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]';
 
   return (
     <div className={`p-4 rounded-lg border ${signalColor} ${className}`}>
@@ -605,9 +605,9 @@ export function EarningsIV({
 
   return (
     <div className={`p-4 rounded-lg border ${
-      isPremiumExpensive ? 'bg-[rgba(249, 115, 22,0.1)] border-[rgba(249, 115, 22,0.2)]' :
-      isPremiumCheap ? 'bg-[rgba(16, 185, 129,0.1)] border-[rgba(16, 185, 129,0.2)]' :
-      'bg-[rgba(59, 130, 246,0.1)] border-[rgba(59, 130, 246,0.2)]'
+      isPremiumExpensive ? 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]' :
+      isPremiumCheap ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)]' :
+      'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]'
     } ${className}`}>
       <div className="flex items-center gap-2 mb-3">
         <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
@@ -656,9 +656,9 @@ export function EarningsIV({
 
       {/* Recommendation */}
       <div className={`mt-3 p-2 rounded ${
-        isPremiumExpensive ? 'bg-[rgba(249, 115, 22,0.1)]' :
-        isPremiumCheap ? 'bg-[rgba(16, 185, 129,0.1)]' :
-        'bg-[rgba(59, 130, 246,0.1)]'
+        isPremiumExpensive ? 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]' :
+        isPremiumCheap ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)]' :
+        'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]'
       }`}>
         <p className="text-xs font-medium">
           {isPremiumExpensive

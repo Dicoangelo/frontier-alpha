@@ -19,9 +19,9 @@ const ALERT_CONFIG: Record<string, {
 }> = {
   drawdown: {
     icon: <TrendingDown className="w-5 h-5 text-[var(--color-negative)]" />,
-    bgColor: 'bg-[rgba(239, 68, 68,0.1)]',
-    borderColor: 'border-[rgba(239, 68, 68,0.2)]',
-    iconBg: 'bg-[rgba(239, 68, 68,0.1)]',
+    bgColor: 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)]',
+    borderColor: 'border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]',
+    iconBg: 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)]',
     actions: [
       { label: 'Reduce Risk', action: 'reduce_risk', variant: 'danger' },
       { label: 'Add Hedge', action: 'add_hedge', variant: 'secondary' },
@@ -29,9 +29,9 @@ const ALERT_CONFIG: Record<string, {
   },
   volatility_spike: {
     icon: <BarChart3 className="w-5 h-5 text-[var(--color-warning)]" />,
-    bgColor: 'bg-[rgba(249, 115, 22,0.1)]',
-    borderColor: 'border-[rgba(249, 115, 22,0.2)]',
-    iconBg: 'bg-[rgba(249, 115, 22,0.1)]',
+    bgColor: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]',
+    borderColor: 'border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]',
+    iconBg: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]',
     actions: [
       { label: 'Review Positions', action: 'review', variant: 'primary' },
       { label: 'Set Stops', action: 'set_stops', variant: 'secondary' },
@@ -39,9 +39,9 @@ const ALERT_CONFIG: Record<string, {
   },
   concentration: {
     icon: <Shield className="w-5 h-5 text-[var(--color-warning)]" />,
-    bgColor: 'bg-[rgba(245, 158, 11,0.1)]',
-    borderColor: 'border-[rgba(245, 158, 11,0.2)]',
-    iconBg: 'bg-[rgba(245, 158, 11,0.1)]',
+    bgColor: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]',
+    borderColor: 'border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]',
+    iconBg: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]',
     actions: [
       { label: 'Rebalance', action: 'rebalance', variant: 'primary' },
       { label: 'View Details', action: 'details', variant: 'secondary' },
@@ -49,9 +49,9 @@ const ALERT_CONFIG: Record<string, {
   },
   earnings: {
     icon: <Calendar className="w-5 h-5 text-[var(--color-info)]" />,
-    bgColor: 'bg-[rgba(59, 130, 246,0.1)]',
-    borderColor: 'border-[rgba(59, 130, 246,0.2)]',
-    iconBg: 'bg-[rgba(59, 130, 246,0.1)]',
+    bgColor: 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]',
+    borderColor: 'border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]',
+    iconBg: 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]',
     actions: [
       { label: 'View Forecast', action: 'view_forecast', variant: 'primary' },
       { label: 'Trim Position', action: 'trim', variant: 'secondary' },
@@ -59,9 +59,9 @@ const ALERT_CONFIG: Record<string, {
   },
   factor_drift: {
     icon: <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />,
-    bgColor: 'bg-[rgba(123, 44, 255,0.1)]',
-    borderColor: 'border-[rgba(123, 44, 255,0.2)]',
-    iconBg: 'bg-[rgba(123, 44, 255,0.1)]',
+    bgColor: 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]',
+    borderColor: 'border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]',
+    iconBg: 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]',
     actions: [
       { label: 'Adjust Factors', action: 'adjust_factors', variant: 'primary' },
       { label: 'Ignore', action: 'ignore', variant: 'secondary' },
@@ -70,10 +70,10 @@ const ALERT_CONFIG: Record<string, {
 };
 
 const SEVERITY_CONFIG: Record<string, { label: string; color: string; indicator: string }> = {
-  critical: { label: 'Critical', color: 'text-[var(--color-negative)] bg-[rgba(239, 68, 68,0.1)]', indicator: '🔴' },
-  high: { label: 'High', color: 'text-[var(--color-warning)] bg-[rgba(249, 115, 22,0.1)]', indicator: '🟠' },
-  medium: { label: 'Medium', color: 'text-[var(--color-warning)] bg-[rgba(234, 179, 8,0.1)]', indicator: '🟡' },
-  low: { label: 'Low', color: 'text-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)]', indicator: '🔵' },
+  critical: { label: 'Critical', color: 'text-[var(--color-negative)] bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)]', indicator: '🔴' },
+  high: { label: 'High', color: 'text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]', indicator: '🟠' },
+  medium: { label: 'Medium', color: 'text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]', indicator: '🟡' },
+  low: { label: 'Low', color: 'text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]', indicator: '🔵' },
 };
 
 export function AlertCard({ alert, onAcknowledge, onAction }: AlertCardProps) {

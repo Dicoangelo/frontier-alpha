@@ -280,7 +280,7 @@ export function Portfolio() {
         </div>
 
         <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)]">
-          <div className="p-3 rounded-lg flex-shrink-0" style={{ backgroundColor: totalPnL >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)' }}>
+          <div className="p-3 rounded-lg flex-shrink-0" style={{ backgroundColor: totalPnL >= 0 ? 'color-mix(in srgb, var(--color-positive) 10%, transparent)' : 'color-mix(in srgb, var(--color-negative) 10%, transparent)' }}>
             {totalPnL >= 0
               ? <TrendingUp className="w-5 h-5" style={{ color: 'var(--color-positive)' }} />
               : <TrendingDown className="w-5 h-5" style={{ color: 'var(--color-negative)' }} />
@@ -295,7 +295,7 @@ export function Portfolio() {
         </div>
 
         <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)]">
-          <div className="p-3 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+          <div className="p-3 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)' }}>
             <BarChart3 className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
           </div>
           <div className="min-w-0">
@@ -305,7 +305,7 @@ export function Portfolio() {
         </div>
 
         <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)]">
-          <div className="p-3 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+          <div className="p-3 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)' }}>
             <Wallet className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
           </div>
           <div className="min-w-0">

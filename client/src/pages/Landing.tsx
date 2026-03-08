@@ -65,7 +65,7 @@ export function Landing() {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse 80% 60% at 50% 30%, rgba(123,44,255,0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 30% 70%, rgba(24,230,255,0.06) 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse 80% 60% at 50% 30%, color-mix(in srgb, var(--color-accent) 12%, transparent) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 30% 70%, color-mix(in srgb, var(--color-info) 6%, transparent) 0%, transparent 60%)',
           }}
           aria-hidden="true"
         />
@@ -97,7 +97,7 @@ export function Landing() {
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzing}
-              className="px-8 py-3 bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase transition-all disabled:opacity-50 shadow-[0_0_30px_rgba(123,44,255,0.3)] hover:shadow-[0_0_40px_rgba(123,44,255,0.5)] hover:scale-[1.02] min-w-[200px]"
+              className="px-8 py-3 bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase transition-all disabled:opacity-50 shadow-[0_0_30px_color-mix(in srgb, var(--color-accent) 30%, transparent)] hover:shadow-[0_0_40px_color-mix(in srgb, var(--color-accent) 50%, transparent)] hover:scale-[1.02] min-w-[200px]"
             >
               {isAnalyzing ? (
                 <>
@@ -140,7 +140,7 @@ export function Landing() {
               <button
                 onClick={handleAnalyze}
                 disabled={isAnalyzing}
-                className="px-8 py-3 bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase transition-all click-feedback disabled:opacity-50 shadow-[0_0_30px_rgba(123,44,255,0.3)] hover:shadow-[0_0_40px_rgba(123,44,255,0.5)] hover:scale-[1.02] min-w-[140px]"
+                className="px-8 py-3 bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase transition-all click-feedback disabled:opacity-50 shadow-[0_0_30px_color-mix(in srgb, var(--color-accent) 30%, transparent)] hover:shadow-[0_0_40px_color-mix(in srgb, var(--color-accent) 50%, transparent)] hover:scale-[1.02] min-w-[140px]"
               >
                 {isAnalyzing ? (
                   <>
@@ -199,7 +199,7 @@ export function Landing() {
           <h2 id="features-heading" className="sr-only">Platform Features</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <div className="glass-slab rounded-sm p-5 sm:p-6 md:p-8 text-center group hover:-translate-y-1 transition-all duration-500">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-sm flex items-center justify-center" style={{ backgroundColor: 'rgba(123,44,255,0.1)' }}>
+              <div className="w-12 h-12 mx-auto mb-4 rounded-sm flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}>
                 <svg className="w-6 h-6 text-[var(--color-accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
@@ -211,7 +211,7 @@ export function Landing() {
             </div>
 
             <div className="glass-slab rounded-sm p-5 sm:p-6 md:p-8 text-center group hover:-translate-y-1 transition-all duration-500">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-sm flex items-center justify-center" style={{ backgroundColor: 'rgba(0,255,198,0.1)' }}>
+              <div className="w-12 h-12 mx-auto mb-4 rounded-sm flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)' }}>
                 <svg className="w-6 h-6 text-[#00FFC6]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
@@ -223,7 +223,7 @@ export function Landing() {
             </div>
 
             <div className="glass-slab rounded-sm p-5 sm:p-6 md:p-8 text-center group hover:-translate-y-1 transition-all duration-500">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-sm flex items-center justify-center" style={{ backgroundColor: 'rgba(24,230,255,0.1)' }}>
+              <div className="w-12 h-12 mx-auto mb-4 rounded-sm flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)' }}>
                 <svg className="w-6 h-6 text-[var(--color-accent-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>

@@ -70,7 +70,7 @@ export function CVRFDashboard() {
 
       {/* Error Banner — partial errors when some data loaded */}
       {isError && !hasNoData && (
-        <div className="bg-[rgba(239, 68, 68,0.1)] border-b border-[rgba(239, 68, 68,0.2)] px-4 sm:px-6 py-3">
+        <div className="bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] border-b border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)] px-4 sm:px-6 py-3">
           <div className="max-w-7xl mx-auto flex items-center gap-2 text-[var(--color-negative)]">
             <AlertTriangle className="w-4 h-4" />
             <span className="text-sm">

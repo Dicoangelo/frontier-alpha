@@ -86,8 +86,8 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
       {displayError && (
         <div className={`p-3 rounded-lg border ${
           displayError.includes('check your email')
-            ? 'bg-[rgba(16, 185, 129,0.1)] border-[rgba(16, 185, 129,0.2)]'
-            : 'bg-[rgba(239, 68, 68,0.1)] border-[rgba(239, 68, 68,0.2)]'
+            ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)]'
+            : 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]'
         }`}>
           <p className={`text-sm ${
             displayError.includes('check your email')

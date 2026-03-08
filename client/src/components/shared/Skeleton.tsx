@@ -512,13 +512,13 @@ export function SkeletonSharedPortfolioPage() {
       <div className="h-16" style={{ background: 'linear-gradient(to right, var(--color-accent), var(--color-info))' }}>
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Skeleton variant="rectangular" width={40} height={40} className="rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }} />
+            <Skeleton variant="rectangular" width={40} height={40} className="rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 20%, transparent)' }} />
             <div>
-              <Skeleton variant="text" width={100} height={14} style={{ backgroundColor: 'rgba(255,255,255,0.2)' }} />
-              <Skeleton variant="text" width={160} height={20} style={{ backgroundColor: 'rgba(255,255,255,0.3)' }} />
+              <Skeleton variant="text" width={100} height={14} style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 20%, transparent)' }} />
+              <Skeleton variant="text" width={160} height={20} style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 30%, transparent)' }} />
             </div>
           </div>
-          <Skeleton variant="rectangular" width={100} height={32} className="rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }} />
+          <Skeleton variant="rectangular" width={100} height={32} className="rounded-full" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 20%, transparent)' }} />
         </div>
       </div>
 

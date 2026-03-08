@@ -38,7 +38,7 @@ function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
   return (
     <div
       className={`rounded-lg border ${
-        isActive ? 'border-[rgba(99, 102, 241,0.3)] bg-[rgba(99, 102, 241,0.1)]' : 'border-[var(--color-border)] bg-[var(--color-bg)]'
+        isActive ? 'border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]' : 'border-[var(--color-border)] bg-[var(--color-bg)]'
       } overflow-hidden`}
     >
       {/* Header */}
@@ -160,7 +160,7 @@ export function CVRFEpisodeTimeline() {
 
   if (isError || !data) {
     return (
-      <div className="text-[var(--color-negative)] text-sm p-4 bg-[rgba(239, 68, 68,0.1)] rounded-lg">
+      <div className="text-[var(--color-negative)] text-sm p-4 bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] rounded-lg">
         Failed to load episodes
       </div>
     );

@@ -56,7 +56,7 @@ export function NotificationSettings({ className = '' }: NotificationSettingsPro
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           {isEnabled ? (
-            <div className="rounded-full bg-[rgba(16, 185, 129,0.1)] p-2">
+            <div className="rounded-full bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] p-2">
               <Bell className="h-5 w-5 text-[var(--color-positive)]" />
             </div>
           ) : (
@@ -103,7 +103,7 @@ export function NotificationSettings({ className = '' }: NotificationSettingsPro
       </div>
 
       {error && (
-        <div className="mt-3 rounded-md bg-[rgba(239, 68, 68,0.1)] p-3">
+        <div className="mt-3 rounded-md bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] p-3">
           <p className="text-sm text-[var(--color-negative)]">{error}</p>
         </div>
       )}

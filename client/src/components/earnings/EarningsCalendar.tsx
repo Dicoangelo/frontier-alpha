@@ -51,7 +51,7 @@ export function EarningsCalendar({
             onClick={() => onSelect(earning.symbol)}
             className={`w-full p-4 rounded-lg border transition-all text-left ${
               selectedSymbol === earning.symbol
-                ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)]'
+                ? 'border-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]'
                 : 'border-[var(--color-border)] hover:border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >

@@ -100,7 +100,7 @@ export function CVRFCycleHistory() {
 
   if (isError) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[rgba(239, 68, 68,0.2)] p-6">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)] p-6">
         <div className="text-[var(--color-negative)] text-sm">Failed to load cycle history</div>
       </div>
     );
@@ -126,14 +126,14 @@ export function CVRFCycleHistory() {
       {/* Summary Stats */}
       {cycles.length > 0 && (
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(to right, rgba(123, 44, 255, 0.08), rgba(123, 44, 255, 0.04))' }}>
+          <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(to right, color-mix(in srgb, var(--color-accent) 8%, transparent), color-mix(in srgb, var(--color-accent) 4%, transparent))' }}>
             <div className="flex items-center gap-1.5 text-[var(--color-accent)] mb-1">
               <Lightbulb className="w-4 h-4" />
               <span className="text-xs">Total Insights</span>
             </div>
             <div className="text-2xl font-bold text-[var(--color-accent)]">{totalInsights}</div>
           </div>
-          <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(to right, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.04))' }}>
+          <div className="p-3 rounded-lg" style={{ background: 'linear-gradient(to right, color-mix(in srgb, var(--color-positive) 8%, transparent), color-mix(in srgb, var(--color-positive) 4%, transparent))' }}>
             <div className="flex items-center gap-1.5 text-[var(--color-positive)] mb-1">
               <TrendingUp className="w-4 h-4" />
               <span className="text-xs">Avg Improvement</span>

@@ -97,7 +97,7 @@ interface MetricCardProps {
 function MetricCard({ label, value, subtitle, icon, color = 'text-[var(--color-text)]' }: MetricCardProps) {
   return (
     <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
-      <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(123, 44, 255, 0.08)' }}>
+      <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)' }}>
         <span className="text-[var(--color-accent)]">{icon}</span>
       </div>
       <div className="min-w-0">
@@ -319,8 +319,8 @@ export function Backtest() {
           <div
             className="rounded-xl p-4 flex items-center gap-2 border"
             style={{
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              borderColor: 'rgba(239, 68, 68, 0.2)',
+              backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)',
+              borderColor: 'color-mix(in srgb, var(--color-negative) 20%, transparent)',
               color: 'var(--color-negative)',
             }}
           >

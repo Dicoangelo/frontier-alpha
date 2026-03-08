@@ -48,8 +48,8 @@ interface StatCardProps {
 
 const ICON_BG_STYLES: Record<string, React.CSSProperties> = {
   primary: { backgroundColor: 'var(--color-accent-light)' },
-  positive: { backgroundColor: 'rgba(16, 185, 129, 0.1)' },
-  negative: { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
+  positive: { backgroundColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)' },
+  negative: { backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)' },
 };
 
 function StatCard({
@@ -112,7 +112,7 @@ export function PortfolioOverview({ portfolio }: PortfolioOverviewProps) {
           <span
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold"
             style={{
-              backgroundColor: stats.dailyChange >= 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+              backgroundColor: stats.dailyChange >= 0 ? 'color-mix(in srgb, var(--color-positive) 12%, transparent)' : 'color-mix(in srgb, var(--color-negative) 12%, transparent)',
               color: stats.dailyChange >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
             }}
           >

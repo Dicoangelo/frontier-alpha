@@ -200,13 +200,13 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
               {formatPercent(data.brinson.benchmarkReturn)}
             </p>
           </div>
-          <div className="bg-[rgba(59, 130, 246,0.1)] rounded-lg p-4">
+          <div className="bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] rounded-lg p-4">
             <p className="text-xs text-[var(--color-info)] mb-1">Active Return</p>
             <p className={`text-xl font-bold ${data.brinson.activeReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
               {formatPercent(data.brinson.activeReturn)}
             </p>
           </div>
-          <div className="bg-[rgba(123, 44, 255,0.1)] rounded-lg p-4">
+          <div className="bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-lg p-4">
             <p className="text-xs text-[var(--color-accent)] mb-1">Specific Return</p>
             <p className={`text-xl font-bold ${data.factor.specificReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
               {formatPercent(data.factor.specificReturn)}
@@ -346,7 +346,7 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
             </h4>
             <div className="space-y-2">
               {data.topContributors.map((c) => (
-                <div key={c.symbol} className="flex justify-between items-center p-2 bg-[rgba(16, 185, 129,0.1)] rounded">
+                <div key={c.symbol} className="flex justify-between items-center p-2 bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] rounded">
                   <span className="font-medium text-[var(--color-text)]">{c.symbol}</span>
                   <span className="text-[var(--color-positive)]">{formatBps(c.contribution)}</span>
                 </div>
@@ -364,7 +364,7 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
             </h4>
             <div className="space-y-2">
               {data.topDetractors.map((c) => (
-                <div key={c.symbol} className="flex justify-between items-center p-2 bg-[rgba(239, 68, 68,0.1)] rounded">
+                <div key={c.symbol} className="flex justify-between items-center p-2 bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] rounded">
                   <span className="font-medium text-[var(--color-text)]">{c.symbol}</span>
                   <span className="text-[var(--color-negative)]">{formatBps(c.contribution)}</span>
                 </div>

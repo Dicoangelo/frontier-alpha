@@ -163,14 +163,14 @@ export function NotificationSettings() {
       <div className="space-y-6">
         {/* Status Messages */}
         {error && (
-          <div className="p-3 bg-[rgba(239, 68, 68,0.1)] border border-[rgba(239, 68, 68,0.2)] rounded-lg text-[var(--color-negative)] text-sm flex items-center gap-2">
+          <div className="p-3 bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)] rounded-lg text-[var(--color-negative)] text-sm flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
             {error}
           </div>
         )}
 
         {success && (
-          <div className="p-3 bg-[rgba(16, 185, 129,0.1)] border border-[rgba(16, 185, 129,0.2)] rounded-lg text-[var(--color-positive)] text-sm flex items-center gap-2">
+          <div className="p-3 bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)] rounded-lg text-[var(--color-positive)] text-sm flex items-center gap-2">
             <Check className="w-4 h-4" />
             Settings saved successfully!
           </div>
@@ -227,7 +227,7 @@ export function NotificationSettings() {
                 disabled={!settings.emailEnabled}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   settings.severityThreshold === level.id
-                    ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)]'
+                    ? 'border-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)]'
                     : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                 } ${!settings.emailEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
@@ -254,7 +254,7 @@ export function NotificationSettings() {
                 disabled={!settings.emailEnabled}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   settings.digestFrequency === option.id
-                    ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)]'
+                    ? 'border-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)]'
                     : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                 } ${!settings.emailEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               >

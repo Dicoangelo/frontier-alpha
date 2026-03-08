@@ -61,8 +61,8 @@ function FactorAdjustmentBadge({ factor, adjustment }: FactorAdjustmentBadgeProp
     <div
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
         isPositive
-          ? 'bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)] border border-[rgba(16, 185, 129,0.2)]'
-          : 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)] border border-[rgba(239, 68, 68,0.2)]'
+          ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)] border border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)]'
+          : 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)] border border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]'
       }`}
     >
       <Icon className="w-3.5 h-3.5" />
@@ -108,7 +108,7 @@ export function MetaPromptCard() {
   const hasFactorAdjustments = Object.keys(metaPrompt.factorAdjustments).length > 0;
 
   return (
-    <div className="rounded-xl border border-[rgba(123, 44, 255, 0.2)] p-6" style={{ background: 'linear-gradient(to bottom right, var(--color-bg), rgba(123, 44, 255, 0.04))' }}>
+    <div className="rounded-xl border border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] p-6" style={{ background: 'linear-gradient(to bottom right, var(--color-bg), color-mix(in srgb, var(--color-accent) 4%, transparent))' }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -127,8 +127,8 @@ export function MetaPromptCard() {
           <div
             className={`px-2 py-1 text-xs rounded-full ${
               metaPrompt.sourceEpisodes.delta >= 0
-                ? 'bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)]'
-                : 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)]'
+                ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]'
+                : 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)]'
             }`}
           >
             {metaPrompt.sourceEpisodes.delta >= 0 ? '+' : ''}
@@ -138,7 +138,7 @@ export function MetaPromptCard() {
       </div>
 
       {/* Optimization Direction */}
-      <div className="mb-4 p-4 bg-[rgba(99, 102, 241,0.05)] border border-[rgba(99, 102, 241,0.1)] rounded-lg">
+      <div className="mb-4 p-4 bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)] border border-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-lg">
         <div className="text-xs text-[var(--color-accent)] font-medium mb-1 flex items-center gap-1">
           <Lightbulb className="w-3.5 h-3.5" />
           Optimization Direction

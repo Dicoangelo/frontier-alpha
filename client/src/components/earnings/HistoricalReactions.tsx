@@ -75,9 +75,9 @@ export function HistoricalReactions({ symbol }: HistoricalReactionsProps) {
   const getOutcomeColor = (outcome: string) => {
     switch (outcome) {
       case 'beat':
-        return 'text-[var(--color-positive)] bg-[rgba(16, 185, 129,0.1)]';
+        return 'text-[var(--color-positive)] bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)]';
       case 'miss':
-        return 'text-[var(--color-negative)] bg-[rgba(239, 68, 68,0.1)]';
+        return 'text-[var(--color-negative)] bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)]';
       default:
         return 'text-[var(--color-text-secondary)] bg-[var(--color-bg-tertiary)]';
     }
@@ -134,7 +134,7 @@ export function HistoricalReactions({ symbol }: HistoricalReactionsProps) {
             </p>
           </div>
 
-          <div className="bg-[rgba(16, 185, 129,0.1)] rounded-lg p-3">
+          <div className="bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] rounded-lg p-3">
             <div className="flex items-center gap-2 text-[var(--color-positive)] text-xs mb-1">
               <TrendingUp className="w-3 h-3" />
               On Beat
@@ -144,7 +144,7 @@ export function HistoricalReactions({ symbol }: HistoricalReactionsProps) {
             </p>
           </div>
 
-          <div className="bg-[rgba(239, 68, 68,0.1)] rounded-lg p-3">
+          <div className="bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] rounded-lg p-3">
             <div className="flex items-center gap-2 text-[var(--color-negative)] text-xs mb-1">
               <TrendingDown className="w-3 h-3" />
               On Miss

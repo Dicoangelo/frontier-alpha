@@ -43,13 +43,13 @@ const FACTOR_INFO: Record<string, { category: string; color: string; description
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Momentum: 'bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)] border-[rgba(59, 130, 246,0.2)]',
-  Quality: 'bg-[rgba(16, 185, 129,0.1)] text-[var(--color-positive)] border-[rgba(16, 185, 129,0.2)]',
-  Value: 'bg-[rgba(123, 44, 255,0.1)] text-[var(--color-accent)] border-[rgba(123, 44, 255,0.2)]',
-  Volatility: 'bg-[rgba(249, 115, 22,0.1)] text-[var(--color-warning)] border-[rgba(249, 115, 22,0.2)]',
-  Size: 'bg-[rgba(99, 102, 241,0.1)] text-[var(--color-accent)] border-[rgba(99, 102, 241,0.2)]',
-  Macro: 'bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)] border-[rgba(239, 68, 68,0.2)]',
-  Sector: 'bg-[rgba(6, 182, 212,0.1)] text-[var(--color-info)] border-[rgba(6, 182, 212,0.2)]',
+  Momentum: 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]',
+  Quality: 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)] border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)]',
+  Value: 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)] border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]',
+  Volatility: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] text-[var(--color-warning)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]',
+  Size: 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)] border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]',
+  Macro: 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)] border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]',
+  Sector: 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]',
   Other: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)]',
 };
 

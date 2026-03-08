@@ -160,7 +160,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-[rgba(59, 130, 246,0.1)] rounded-lg">
+              <div className="p-2 bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] rounded-lg">
                 <Users className="w-5 h-5 text-[var(--color-info)]" />
               </div>
               <div>
@@ -180,7 +180,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
           <div className="p-6 space-y-6">
             {/* Success message for new share */}
             {newShareUrl && (
-              <div className="bg-[rgba(16, 185, 129,0.1)] border border-[rgba(16, 185, 129,0.2)] rounded-lg p-4">
+              <div className="bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)] rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-[var(--color-positive)] mt-0.5" />
                   <div className="flex-1">
@@ -190,7 +190,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                         type="text"
                         value={newShareUrl}
                         readOnly
-                        className="flex-1 px-3 py-2 text-sm bg-[var(--color-bg)] border border-[rgba(16, 185, 129,0.2)] rounded-lg"
+                        className="flex-1 px-3 py-2 text-sm bg-[var(--color-bg)] border border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)] rounded-lg"
                       />
                       <Button
                         size="sm"
@@ -228,7 +228,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                       onClick={() => setFormData({ ...formData, permissions: 'view' })}
                       className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-colors ${
                         formData.permissions === 'view'
-                          ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)]'
+                          ? 'border-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]'
                           : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                       }`}
                     >
@@ -245,7 +245,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                       onClick={() => setFormData({ ...formData, permissions: 'edit' })}
                       className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-colors ${
                         formData.permissions === 'edit'
-                          ? 'border-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)]'
+                          ? 'border-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]'
                           : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
                       }`}
                     >
@@ -368,8 +368,8 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                             <span
                               className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded ${
                                 share.permissions === 'edit'
-                                  ? 'bg-[rgba(123, 44, 255,0.1)] text-[var(--color-accent)]'
-                                  : 'bg-[rgba(59, 130, 246,0.1)] text-[var(--color-info)]'
+                                  ? 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)]'
+                                  : 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)]'
                               }`}
                             >
                               {share.permissions === 'edit' ? (
@@ -385,7 +385,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                               )}
                             </span>
                             {share.isExpired && (
-                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-[rgba(239, 68, 68,0.1)] text-[var(--color-negative)]">
+                              <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)]">
                                 Expired
                               </span>
                             )}
@@ -414,7 +414,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => copyToClipboard(share.shareUrl)}
-                            className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-info)] hover:bg-[rgba(59, 130, 246,0.1)] rounded-lg transition-colors"
+                            className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-info)] hover:bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] rounded-lg transition-colors"
                             title="Copy link"
                           >
                             <Copy className="w-4 h-4" />
@@ -422,7 +422,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                           <button
                             onClick={() => revokeShareMutation.mutate(share.id)}
                             disabled={revokeShareMutation.isPending}
-                            className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-negative)] hover:bg-[rgba(239, 68, 68,0.1)] rounded-lg transition-colors"
+                            className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-negative)] hover:bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] rounded-lg transition-colors"
                             title="Revoke share"
                           >
                             <Trash2 className="w-4 h-4" />

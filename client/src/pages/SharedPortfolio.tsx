@@ -86,7 +86,7 @@ export function SharedPortfolio() {
     return (
       <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-4">
         <Card className="max-w-md w-full p-8 text-center">
-          <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center bg-[rgba(234, 179, 8,0.1)]">
+          <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]">
             <Clock className="w-8 h-8 text-[var(--color-warning)]" />
           </div>
           <h1 className="mt-6 text-xl font-semibold text-[var(--color-text)]">This link has expired</h1>
@@ -118,7 +118,7 @@ export function SharedPortfolio() {
       <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-4">
         <Card className="max-w-md w-full p-8 text-center">
           <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center ${
-            isExpired ? 'bg-[rgba(234, 179, 8,0.1)]' : 'bg-[rgba(239, 68, 68,0.1)]'
+            isExpired ? 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]' : 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)]'
           }`}>
             {isExpired ? (
               <Clock className="w-8 h-8 text-[var(--color-warning)]" />
@@ -174,7 +174,7 @@ export function SharedPortfolio() {
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg" style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}>
+              <div className="p-2 rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 20%, transparent)' }}>
                 <Share2 className="w-5 h-5" />
               </div>
               <div>
@@ -183,12 +183,12 @@ export function SharedPortfolio() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}>
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 20%, transparent)' }}>
                 <Eye className="w-4 h-4" />
                 {share?.permissions === 'edit' ? 'Can Edit' : 'View Only'}
               </span>
               {share?.expiresAt && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}>
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm" style={{ backgroundColor: 'color-mix(in srgb, var(--color-text) 20%, transparent)' }}>
                   <Clock className="w-4 h-4" />
                   Expires {new Date(share.expiresAt).toLocaleDateString()}
                 </span>
@@ -213,7 +213,7 @@ export function SharedPortfolio() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-[rgba(59, 130, 246,0.1)] rounded-lg">
+              <div className="p-3 bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] rounded-lg">
                 <DollarSign className="w-6 h-6 text-[var(--color-info)]" />
               </div>
               <div>
@@ -227,7 +227,7 @@ export function SharedPortfolio() {
 
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-lg ${totalPnL >= 0 ? 'bg-[rgba(16, 185, 129,0.1)]' : 'bg-[rgba(239, 68, 68,0.1)]'}`}>
+              <div className={`p-3 rounded-lg ${totalPnL >= 0 ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)]' : 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)]'}`}>
                 {totalPnL >= 0 ? (
                   <TrendingUp className="w-6 h-6 text-[var(--color-positive)]" />
                 ) : (
@@ -245,7 +245,7 @@ export function SharedPortfolio() {
 
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-lg ${pnlPercent >= 0 ? 'bg-[rgba(16, 185, 129,0.1)]' : 'bg-[rgba(239, 68, 68,0.1)]'}`}>
+              <div className={`p-3 rounded-lg ${pnlPercent >= 0 ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)]' : 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)]'}`}>
                 {pnlPercent >= 0 ? (
                   <TrendingUp className="w-6 h-6 text-[var(--color-positive)]" />
                 ) : (
@@ -263,7 +263,7 @@ export function SharedPortfolio() {
 
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-[rgba(123, 44, 255,0.1)] rounded-lg">
+              <div className="p-3 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-lg">
                 <PieChart className="w-6 h-6 text-[var(--color-accent)]" />
               </div>
               <div>

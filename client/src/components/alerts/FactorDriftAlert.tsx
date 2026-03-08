@@ -86,10 +86,10 @@ const formatFactorName = (factor: string): string => {
 };
 
 const severityColors: Record<string, string> = {
-  critical: 'text-[var(--color-negative)] bg-[rgba(239, 68, 68,0.1)] border-[rgba(239, 68, 68,0.2)]',
-  high: 'text-[var(--color-warning)] bg-[rgba(249, 115, 22,0.1)] border-[rgba(249, 115, 22,0.2)]',
-  medium: 'text-[var(--color-warning)] bg-[rgba(245, 158, 11,0.1)] border-[rgba(245, 158, 11,0.2)]',
-  low: 'text-[var(--color-info)] bg-[rgba(59, 130, 246,0.1)] border-[rgba(59, 130, 246,0.2)]',
+  critical: 'text-[var(--color-negative)] bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]',
+  high: 'text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]',
+  medium: 'text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]',
+  low: 'text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]',
 };
 
 const healthColors: Record<string, string> = {

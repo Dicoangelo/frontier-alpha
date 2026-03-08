@@ -103,7 +103,7 @@ export function Earnings() {
       {/* Stats Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
         <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
-          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(123, 44, 255, 0.08)' }}>
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)' }}>
             <Calendar className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
           </div>
           <div className="min-w-0">
@@ -114,11 +114,11 @@ export function Earnings() {
         <div
           className="flex items-center gap-3 p-4 rounded-xl border"
           style={{
-            backgroundColor: earningsToday > 0 ? 'rgba(239, 68, 68, 0.08)' : 'var(--color-bg-tertiary)',
-            borderColor: earningsToday > 0 ? 'rgba(239, 68, 68, 0.2)' : 'var(--color-border-light)',
+            backgroundColor: earningsToday > 0 ? 'color-mix(in srgb, var(--color-negative) 8%, transparent)' : 'var(--color-bg-tertiary)',
+            borderColor: earningsToday > 0 ? 'color-mix(in srgb, var(--color-negative) 20%, transparent)' : 'var(--color-border-light)',
           }}
         >
-          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)' }}>
             <AlertCircle className="w-5 h-5" style={{ color: 'var(--color-negative)' }} />
           </div>
           <div className="min-w-0">
@@ -131,11 +131,11 @@ export function Earnings() {
         <div
           className="flex items-center gap-3 p-4 rounded-xl border"
           style={{
-            backgroundColor: earningsThisWeek > 0 ? 'rgba(245, 158, 11, 0.08)' : 'var(--color-bg-tertiary)',
-            borderColor: earningsThisWeek > 0 ? 'rgba(245, 158, 11, 0.2)' : 'var(--color-border-light)',
+            backgroundColor: earningsThisWeek > 0 ? 'color-mix(in srgb, var(--color-warning) 8%, transparent)' : 'var(--color-bg-tertiary)',
+            borderColor: earningsThisWeek > 0 ? 'color-mix(in srgb, var(--color-warning) 20%, transparent)' : 'var(--color-border-light)',
           }}
         >
-          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)' }}>
             <Calendar className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
           </div>
           <div className="min-w-0">
@@ -146,7 +146,7 @@ export function Earnings() {
           </div>
         </div>
         <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
-          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)' }}>
             <Calendar className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
           </div>
           <div className="min-w-0">
@@ -160,7 +160,7 @@ export function Earnings() {
       {earningsToday > 0 && (
         <div
           className="flex items-center gap-3 p-4 rounded-lg border animate-fade-in-up"
-          style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)', animationDelay: '100ms' }}
+          style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--color-negative) 20%, transparent)', animationDelay: '100ms' }}
         >
           <AlertCircle className="w-5 h-5 text-[var(--color-negative)] flex-shrink-0" />
           <div>
@@ -229,7 +229,7 @@ export function Earnings() {
       {!isLoading && symbols.length > 0 && earnings.length === 0 && (
         <div
           className="p-4 rounded-lg border"
-          style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: 'rgba(59, 130, 246, 0.2)' }}
+          style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--color-info) 20%, transparent)' }}
         >
           <p className="text-[var(--color-info)]">
             None of your {symbols.length} positions have earnings scheduled in the next {daysAhead} days.

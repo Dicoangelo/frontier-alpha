@@ -52,7 +52,7 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       </div>
 
       {error && (
-        <div className="p-3 rounded-sm" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: '1px', borderColor: 'rgba(239, 68, 68, 0.2)' }}>
+        <div className="p-3 rounded-sm" style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)', borderWidth: '1px', borderColor: 'color-mix(in srgb, var(--color-negative) 20%, transparent)' }}>
           <p className="text-sm text-[var(--color-negative)] mono">{error}</p>
         </div>
       )}

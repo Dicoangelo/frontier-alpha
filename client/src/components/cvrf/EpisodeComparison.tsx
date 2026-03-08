@@ -58,7 +58,7 @@ function EpisodeSelector({ label, selected, episodes, onSelect, onClear }: Episo
     <div>
       <div className="text-xs text-[var(--color-text-muted)] mb-1.5">{label}</div>
       {selected ? (
-        <div className="flex items-center gap-2 p-2 bg-[rgba(99, 102, 241,0.1)] border border-[rgba(99, 102, 241,0.2)] rounded-lg">
+        <div className="flex items-center gap-2 p-2 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] rounded-lg">
           <span className="text-sm font-medium text-[var(--color-accent)]">Episode {selected.episodeNumber}</span>
           <span className="text-xs text-[var(--color-text-muted)]">
             {selected.portfolioReturn !== undefined
@@ -67,7 +67,7 @@ function EpisodeSelector({ label, selected, episodes, onSelect, onClear }: Episo
           </span>
           <button
             onClick={onClear}
-            className="ml-auto p-0.5 hover:bg-[rgba(99, 102, 241,0.2)] rounded"
+            className="ml-auto p-0.5 hover:bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] rounded"
           >
             <X className="w-3 h-3 text-[var(--color-accent)]" />
           </button>

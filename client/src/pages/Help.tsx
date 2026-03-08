@@ -229,7 +229,7 @@ export function Help() {
                       <button
                         key={topic.id}
                         onClick={() => selectTopic(topic)}
-                        className="w-full flex items-center gap-3 p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-[rgba(59, 130, 246,0.1)] hover:border-[rgba(59, 130, 246,0.2)] border border-transparent transition text-left"
+                        className="w-full flex items-center gap-3 p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--color-info)_20%,transparent)] border border-transparent transition text-left"
                       >
                         <div className="flex-1">
                           <p className="font-medium text-[var(--color-text)]">{topic.title}</p>
@@ -302,7 +302,7 @@ export function Help() {
                       <button
                         key={topicId}
                         onClick={() => selectTopic(result.topic)}
-                        className="flex items-center gap-3 p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-[rgba(59, 130, 246,0.1)] transition text-left"
+                        className="flex items-center gap-3 p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] transition text-left"
                       >
                         <div className="flex-1">
                           <p className="font-medium text-[var(--color-text)]">{result.topic.title}</p>
@@ -491,7 +491,7 @@ export function Help() {
 
           {/* Contact Section */}
           <div className="mt-12 mb-8 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }} id="contact">
-            <Card className="p-8 border-[rgba(123, 44, 255, 0.2)]" style={{ background: 'linear-gradient(to right, rgba(123, 44, 255, 0.06), rgba(59, 130, 246, 0.06))' }}>
+            <Card className="p-8 border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]" style={{ background: 'linear-gradient(to right, color-mix(in srgb, var(--color-accent) 6%, transparent), color-mix(in srgb, var(--color-info) 6%, transparent))' }}>
               <div className="text-center max-w-xl mx-auto">
                 <MessageCircle className="w-12 h-12 text-[var(--color-info)] mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Still need help?</h2>
@@ -550,7 +550,7 @@ function QuickStartCard({
   return (
     <button
       onClick={onClick}
-      className="p-6 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] hover:border-[rgba(59, 130, 246,0.3)] hover:shadow-lg transition-all text-left group"
+      className="p-6 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] hover:border-[color-mix(in_srgb,var(--color-info)_30%,transparent)] hover:shadow-lg transition-all text-left group"
     >
       <div className="w-12 h-12 bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
         <Icon className="w-6 h-6 text-[var(--color-info)]" />

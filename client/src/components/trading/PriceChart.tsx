@@ -1,4 +1,4 @@
-import { useState, useCallback, useId } from 'react';
+import React, { useState, useCallback, useId, useMemo } from 'react';
 import { Card } from '@/components/shared/Card';
 import { Badge } from '@/components/shared/Badge';
 
@@ -42,14 +42,14 @@ function pricesToPoints(prices: number[]): { x: number; y: number }[] {
   }));
 }
 
-export function PriceChart({ symbol, currentPrice, className }: PriceChartProps) {
+export const PriceChart = React.memo(function PriceChart({ symbol, currentPrice, className }: PriceChartProps) {
   const uid = useId().replace(/:/g, '');
   const [hoverX, setHoverX] = useState<number | null>(null);
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
 
   const basePrice = currentPrice ?? 100;
-  const prices = generatePriceData(symbol, basePrice);
-  const points = pricesToPoints(prices);
+  const prices = useMemo(() => generatePriceData(symbol, basePrice), [symbol, basePrice]);
+  const points = useMemo(() => pricesToPoints(prices), [prices]);
 
   const firstPrice = prices[0];
   const lastPrice = prices[prices.length - 1];
@@ -260,4 +260,4 @@ export function PriceChart({ symbol, currentPrice, className }: PriceChartProps)
       )}
     </Card>
   );
-}
+});

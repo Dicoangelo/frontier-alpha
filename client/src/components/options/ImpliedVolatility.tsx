@@ -514,7 +514,7 @@ export function ImpliedVolatilityCompact({
   if (isLoading) {
     return (
       <div className={`p-4 bg-[var(--color-bg-tertiary)] rounded-lg ${className}`}>
-        <div className="animate-pulse flex items-center gap-3">
+        <div className="animate-shimmer flex items-center gap-3">
           <div className="w-8 h-8 bg-[var(--color-border)] rounded" />
           <div className="flex-1">
             <div className="h-4 bg-[var(--color-border)] rounded w-24 mb-1" />
@@ -579,7 +579,7 @@ export function EarningsIV({
 
   if (isLoading) {
     return (
-      <div className={`p-4 bg-[var(--color-bg-tertiary)] rounded-lg animate-pulse ${className}`}>
+      <div className={`p-4 bg-[var(--color-bg-tertiary)] rounded-lg animate-shimmer ${className}`}>
         <div className="h-6 bg-[var(--color-border)] rounded w-3/4 mb-2" />
         <div className="h-4 bg-[var(--color-border)] rounded w-1/2" />
       </div>

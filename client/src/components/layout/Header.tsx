@@ -44,9 +44,9 @@ export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          <div className="flex items-center gap-1 sm:gap-2">
-            <div className="w-2 h-2 bg-[#00FFC6] rounded-full animate-pulse shadow-[0_0_8px_#00FFC6]" />
-            <span className="text-[10px] text-[#00FFC6] mono tracking-[0.3em] uppercase hidden sm:inline">Live</span>
+          <div className="flex items-center gap-1 sm:gap-2" role="status" aria-label="Live connection active">
+            <div className="w-2 h-2 bg-[#00FFC6] rounded-full animate-pulse-green shadow-[0_0_8px_#00FFC6]" aria-hidden="true" />
+            <span className="text-[10px] text-[#00FFC6] mono tracking-[0.3em] uppercase hidden sm:inline" aria-hidden="true">Live</span>
           </div>
 
           <AlertDropdown />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import {
   BarChart3,
   Activity,
@@ -116,6 +116,7 @@ export default function Trading() {
   const { data: marketClock } = useMarketClock();
   const connectBroker = useConnectBroker();
   const { data: selectedQuote } = useQuote(selectedSymbol);
+  const deferredQuotePrice = useDeferredValue(selectedQuote?.last);
 
   const positions = positionsData?.positions || [];
 
@@ -281,7 +282,7 @@ export default function Trading() {
               >
                 <PriceChart
                   symbol={selectedSymbol}
-                  currentPrice={selectedQuote?.last}
+                  currentPrice={deferredQuotePrice}
                 />
               </div>
             )}
@@ -548,7 +549,7 @@ function MarketStatusDisplay({ clock }: { clock?: { isOpen: boolean; nextOpen: s
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div
-            className={`w-3 h-3 rounded-full flex-shrink-0 ${isOpen ? 'animate-pulse' : ''}`}
+            className={`w-3 h-3 rounded-full flex-shrink-0 ${isOpen ? 'animate-pulse-green' : ''}`}
             style={{ backgroundColor: isOpen ? 'var(--color-positive)' : 'var(--color-negative)' }}
           />
           <span className="font-medium text-[var(--color-text)]">

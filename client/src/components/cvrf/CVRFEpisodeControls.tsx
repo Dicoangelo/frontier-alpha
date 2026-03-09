@@ -436,7 +436,7 @@ export function CVRFEpisodeControls() {
 
   if (isLoading) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-4 animate-pulse">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-4 animate-shimmer">
         <div className="h-10 bg-[var(--color-border)] rounded-lg" />
       </div>
     );
@@ -449,7 +449,7 @@ export function CVRFEpisodeControls() {
         <div className="flex items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full ${
-              hasActiveEpisode ? 'bg-[var(--color-positive)] animate-pulse' : 'bg-[var(--color-border)]'
+              hasActiveEpisode ? 'bg-[var(--color-positive)] animate-pulse-green' : 'bg-[var(--color-border)]'
             }`}
           />
           <span className="text-sm text-[var(--color-text-secondary)]">

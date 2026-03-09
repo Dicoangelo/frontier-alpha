@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Card } from '@/components/shared/Card';
 import { Badge } from '@/components/shared/Badge';
 import type { Position, Quote } from '@/types';
@@ -40,8 +40,8 @@ function getSparklinePoints(symbol: string, unrealizedPnL: number): number[] {
 }
 
 // Pure SVG sparkline component
-function Sparkline({ symbol, unrealizedPnL }: { symbol: string; unrealizedPnL: number }) {
-  const points = getSparklinePoints(symbol, unrealizedPnL);
+const Sparkline = React.memo(function Sparkline({ symbol, unrealizedPnL }: { symbol: string; unrealizedPnL: number }) {
+  const points = useMemo(() => getSparklinePoints(symbol, unrealizedPnL), [symbol, unrealizedPnL]);
   const min = Math.min(...points);
   const max = Math.max(...points);
   const range = max - min || 1;
@@ -55,7 +55,10 @@ function Sparkline({ symbol, unrealizedPnL }: { symbol: string; unrealizedPnL: n
   });
 
   const isUp = points[points.length - 1] >= points[0];
-  const color = isUp ? '#10b981' : '#ef4444';
+  const color = useMemo(() => {
+    const varName = isUp ? '--color-positive' : '--color-negative';
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  }, [isUp]);
 
   return (
     <svg
@@ -75,7 +78,7 @@ function Sparkline({ symbol, unrealizedPnL }: { symbol: string; unrealizedPnL: n
       />
     </svg>
   );
-}
+});
 
 type SortField = 'symbol' | 'shares' | 'currentPrice' | 'value' | 'unrealizedPnL' | 'weight';
 type SortDir = 'asc' | 'desc';
@@ -161,7 +164,7 @@ export function PositionList({ positions, quotes }: PositionListProps) {
     }
   };
 
-  const sorted = [...positions].sort((a, b) => {
+  const sorted = useMemo(() => [...positions].sort((a, b) => {
     let av: number | string;
     let bv: number | string;
     switch (sortField) {
@@ -195,7 +198,7 @@ export function PositionList({ positions, quotes }: PositionListProps) {
     }
     const cmp = typeof av === 'string' ? av.localeCompare(bv as string) : (av as number) - (bv as number);
     return sortDir === 'asc' ? cmp : -cmp;
-  });
+  }), [positions, sortField, sortDir]);
 
   const SortArrow = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <span className="ml-1 opacity-20">↕</span>;

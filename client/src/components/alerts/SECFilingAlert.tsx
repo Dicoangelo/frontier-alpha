@@ -280,7 +280,7 @@ function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardPr
                 {alert.filing.symbol || alert.filing.companyName}
               </span>
               {isRecent && (
-                <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[var(--color-positive)] text-white rounded animate-pulse">
+                <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[var(--color-positive)] text-white rounded animate-pulse-subtle">
                   NEW
                 </span>
               )}

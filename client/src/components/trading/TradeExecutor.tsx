@@ -4,19 +4,12 @@ import {
   TrendingDown,
   DollarSign,
   ShoppingCart,
-  X,
   AlertCircle,
   CheckCircle,
-  RefreshCw,
-  Wallet,
-  Activity,
   Eye,
-  AlertTriangle,
-  Zap,
 } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
-import { Badge } from '@/components/shared/Badge';
 import {
   useTrading,
   useQuote,
@@ -25,6 +18,9 @@ import {
   type OrderPreview,
   type OrderValidation,
 } from '@/hooks/useTrading';
+import { AccountSummary } from './AccountSummary';
+import { OrderPreviewModal } from './OrderPreviewModal';
+import { OrderHistory } from './OrderHistory';
 
 interface TradeExecutorProps {
   defaultSymbol?: string;
@@ -45,30 +41,6 @@ const timeInForceOptions = [
   { value: 'ioc', label: 'IOC', description: 'Immediate or cancel' },
   { value: 'fok', label: 'FOK', description: 'Fill or kill' },
 ];
-
-const statusColors: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
-  filled: 'success',
-  partially_filled: 'info',
-  new: 'info',
-  accepted: 'info',
-  pending_new: 'warning',
-  canceled: 'neutral',
-  expired: 'neutral',
-  rejected: 'danger',
-};
-
-function formatRelativeTime(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = Date.now();
-  const diff = now - date.getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
 
 export function TradeExecutor({
   defaultSymbol = '',
@@ -220,56 +192,14 @@ export function TradeExecutor({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Account Info */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-[var(--color-info)]" />
-            <h3 className="font-semibold text-[var(--color-text)]">Account</h3>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant={brokerConnected ? 'success' : 'warning'}>
-              {brokerType === 'alpaca' ? 'Alpaca' : 'Demo'}
-            </Badge>
-            {paperTrading && (
-              <Badge variant="info">Paper Trading</Badge>
-            )}
-            {!isMarketOpen && (
-              <Badge variant="neutral">Market Closed</Badge>
-            )}
-          </div>
-        </div>
-
-        {accountLoading ? (
-          <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
-            <RefreshCw className="w-4 h-4 animate-spin" />
-            Loading account...
-          </div>
-        ) : account ? (
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <p className="text-xs text-[var(--color-text-muted)]">Buying Power</p>
-              <p className="text-lg font-semibold text-[var(--color-positive)]">
-                ${account.buyingPower.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-[var(--color-text-muted)]">Cash</p>
-              <p className="text-lg font-semibold text-[var(--color-text)]">
-                ${account.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-[var(--color-text-muted)]">Portfolio Value</p>
-              <p className="text-lg font-semibold text-[var(--color-text)]">
-                ${account.portfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <p className="text-[var(--color-text-muted)]">Account info unavailable</p>
-        )}
-      </Card>
+      <AccountSummary
+        account={account}
+        accountLoading={accountLoading}
+        brokerConnected={brokerConnected}
+        brokerType={brokerType}
+        paperTrading={paperTrading}
+        isMarketOpen={isMarketOpen}
+      />
 
       {/* Order Form */}
       <Card className="p-4">
@@ -353,7 +283,7 @@ export function TradeExecutor({
           </div>
 
           {/* Order Type */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Order Type</label>
               <select
@@ -493,250 +423,23 @@ export function TradeExecutor({
 
       {/* Order Preview Modal */}
       {showPreview && preview && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-[var(--color-text)]">Order Preview</h3>
-              <button
-                onClick={() => setShowPreview(false)}
-                className="p-1 hover:bg-[var(--color-bg-secondary)] rounded"
-              >
-                <X className="w-5 h-5 text-[var(--color-text-muted)]" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Order Summary */}
-              <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-[var(--color-text-secondary)]">Symbol</span>
-                  <span className="font-semibold">{preview.symbol}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--color-text-secondary)]">Side</span>
-                  <Badge variant={preview.side === 'buy' ? 'success' : 'danger'}>
-                    {preview.side.toUpperCase()}
-                  </Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--color-text-secondary)]">Quantity</span>
-                  <span className="font-semibold">{preview.qty}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--color-text-secondary)]">Order Type</span>
-                  <span className="font-semibold capitalize">{preview.type}</span>
-                </div>
-              </div>
-
-              {/* Price Details */}
-              <div className="p-4 border border-[var(--color-border)] rounded-lg space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-[var(--color-text-secondary)]">Current Price</span>
-                  <span>${preview.currentPrice.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[var(--color-text-secondary)]">Estimated Price</span>
-                  <span>${preview.estimatedPrice.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[var(--color-text-secondary)]">Estimated Cost</span>
-                  <span>${preview.estimatedCost.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[var(--color-text-secondary)]">Fees</span>
-                  <span>${preview.estimatedFees.toFixed(2)}</span>
-                </div>
-                {preview.slippageEstimate > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-[var(--color-text-secondary)]">Est. Slippage</span>
-                    <span className="text-[var(--color-warning)]">${preview.slippageEstimate.toFixed(2)}</span>
-                  </div>
-                )}
-                <hr className="my-2" />
-                <div className="flex justify-between font-semibold">
-                  <span>Total</span>
-                  <span>${preview.estimatedTotal.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* Market Impact */}
-              <div className="flex items-center gap-2">
-                <Zap className={`w-4 h-4 ${
-                  preview.marketImpact === 'high' ? 'text-[var(--color-negative)]' :
-                  preview.marketImpact === 'medium' ? 'text-[var(--color-warning)]' :
-                  'text-[var(--color-positive)]'
-                }`} />
-                <span className="text-sm text-[var(--color-text-secondary)]">
-                  Market Impact: <span className="font-medium capitalize">{preview.marketImpact}</span>
-                </span>
-              </div>
-
-              {/* Validation */}
-              {validation && (
-                <>
-                  {validation.errors.length > 0 && (
-                    <div
-                      className="p-3 rounded-lg"
-                      style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)' }}
-                    >
-                      {validation.errors.map((error, i) => (
-                        <div key={i} className="flex items-start gap-2 text-sm text-[var(--color-negative)]">
-                          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                          <span>{error}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {validation.warnings.length > 0 && (
-                    <div
-                      className="p-3 rounded-lg space-y-1"
-                      style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)' }}
-                    >
-                      {validation.warnings.map((warning, i) => (
-                        <div key={i} className="flex items-start gap-2 text-sm text-[var(--color-warning)]">
-                          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                          <span>{warning}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Actions */}
-              <div className="flex gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowPreview(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant={side === 'buy' ? 'primary' : 'danger'}
-                  onClick={handleConfirmOrder}
-                  disabled={!!(validation && !validation.valid)}
-                  isLoading={submitOrder.isPending ?? false}
-                  className="flex-1"
-                >
-                  Confirm {side === 'buy' ? 'Buy' : 'Sell'}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
+        <OrderPreviewModal
+          preview={preview}
+          validation={validation}
+          side={side}
+          isSubmitting={submitOrder.isPending ?? false}
+          onClose={() => setShowPreview(false)}
+          onConfirm={handleConfirmOrder}
+        />
       )}
 
-      {/* Orders List */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-[var(--color-warning)]" />
-            <h3 className="font-semibold text-[var(--color-text)]">Orders</h3>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => refetchOrders()}
-            disabled={ordersLoading}
-          >
-            <RefreshCw className={`w-4 h-4 ${ordersLoading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-
-        {ordersLoading && orders.length === 0 ? (
-          <div className="py-8 text-center text-[var(--color-text-muted)]">
-            <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin" />
-            <p>Loading orders...</p>
-          </div>
-        ) : orders.length === 0 ? (
-          <div className="py-8 text-center text-[var(--color-text-muted)]">
-            <ShoppingCart className="w-8 h-8 mx-auto mb-2 opacity-40 animate-pulse-subtle" />
-            <p>No orders yet</p>
-            <p className="text-sm">Place an order above to get started</p>
-          </div>
-        ) : (
-          <div className="space-y-0">
-            {orders.slice(0, 10).map((order, idx) => (
-              <div
-                key={order.id}
-                className="relative pl-6 animate-fade-in-up hover:shadow-lg transition-shadow duration-200"
-                style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}
-              >
-                {/* Timeline dot */}
-                <div
-                  className="absolute left-0 top-4 w-3 h-3 rounded-full border-2 border-[var(--color-border)]"
-                  style={{
-                    backgroundColor: order.side === 'buy'
-                      ? 'var(--color-positive)'
-                      : 'var(--color-negative)',
-                  }}
-                />
-                {/* Timeline line (not on last item) */}
-                {idx < Math.min(orders.length, 10) - 1 && (
-                  <div className="absolute left-[5px] top-7 bottom-0 w-0.5 bg-[var(--color-border)]" />
-                )}
-
-                {/* Order content */}
-                <div className="p-3 mb-2 border border-[var(--color-border-light)] rounded-lg flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{
-                        backgroundColor: order.side === 'buy'
-                          ? 'color-mix(in srgb, var(--color-positive) 10%, transparent)'
-                          : 'color-mix(in srgb, var(--color-negative) 10%, transparent)',
-                      }}
-                    >
-                      {order.side === 'buy' ? (
-                        <TrendingUp className="w-4 h-4 text-[var(--color-positive)]" />
-                      ) : (
-                        <TrendingDown className="w-4 h-4 text-[var(--color-negative)]" />
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-[var(--color-text)]">{order.symbol}</span>
-                        <Badge variant={statusColors[order.status] || 'neutral'}>
-                          {order.status}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm text-[var(--color-text-muted)]">
-                          {order.qty} shares @ {order.type === 'market' ? 'Market' : `$${order.limitPrice || order.filledAvgPrice || '-'}`}
-                        </p>
-                        {order.createdAt && (
-                          <span className="text-xs text-[var(--color-text-muted)] opacity-70">
-                            {formatRelativeTime(order.createdAt)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {order.filledQty > 0 && order.filledAvgPrice && (
-                      <span className="text-sm text-[var(--color-text-secondary)]">
-                        ${(order.filledQty * order.filledAvgPrice).toFixed(2)}
-                      </span>
-                    )}
-                    {['new', 'accepted', 'pending_new', 'partially_filled'].includes(order.status) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => cancelOrder.mutate(order.id)}
-                        disabled={cancelOrder.isPending}
-                      >
-                        <X className="w-4 h-4 text-[var(--color-negative)]" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+      <OrderHistory
+        orders={orders}
+        ordersLoading={ordersLoading}
+        onRefetch={() => refetchOrders()}
+        onCancelOrder={(id) => cancelOrder.mutate(id)}
+        isCanceling={cancelOrder.isPending}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Card } from '@/components/shared/Card';
 import type { Position } from '@/types';
 
@@ -82,7 +82,7 @@ function buildSegments(positions: Position[], _totalValue: number): Segment[] {
   });
 }
 
-export function WeightAllocation({ positions, totalValue }: WeightAllocationProps) {
+export const WeightAllocation = React.memo(function WeightAllocation({ positions, totalValue }: WeightAllocationProps) {
   const [hoveredSymbol, setHoveredSymbol] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const hasAnimated = useRef(false);
@@ -107,7 +107,7 @@ export function WeightAllocation({ positions, totalValue }: WeightAllocationProp
   const circumference = 2 * Math.PI * r;
   const strokeWidth = 20;
 
-  const segments = buildSegments(positions, totalValue);
+  const segments = useMemo(() => buildSegments(positions, totalValue), [positions, totalValue]);
   const hovered = hoveredSymbol ? segments.find(s => s.symbol === hoveredSymbol) : null;
 
   const formattedTotal = totalValue >= 1000
@@ -250,4 +250,4 @@ export function WeightAllocation({ positions, totalValue }: WeightAllocationProp
       </div>
     </Card>
   );
-}
+});

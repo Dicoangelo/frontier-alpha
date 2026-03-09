@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
+import { ScrollableTable } from '@/components/shared/ScrollableTable';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -373,7 +374,7 @@ function RegimeSection({ regime }: { regime: RegimeState }) {
 
       {/* Transition Probability Matrix */}
       {showMatrix && (
-        <div className="mt-4 overflow-x-auto">
+        <ScrollableTable className="mt-4">
           <table className="w-full text-sm" role="img" aria-label="Regime transition probability matrix">
             <thead>
               <tr>
@@ -410,7 +411,7 @@ function RegimeSection({ regime }: { regime: RegimeState }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </ScrollableTable>
       )}
     </Card>
   );

@@ -1,0 +1,291 @@
+{
+  "name": "frontier-alpha-ux-optimization",
+  "description": "Iterative UI/UX optimization pass \u2014 decompose large components, standardize interactions, improve performance, polish micro-interactions. NOT a rebuild \u2014 surgical improvements to the existing codebase. Target: perceptibly smoother, faster, more consistent experience.",
+  "version": "1.0.0",
+  "project": "~/projects/products/frontier-alpha",
+  "stack": {
+    "client": "React 19 + Vite 7 + Tailwind 4.1 + Zustand + TanStack Query + Recharts + D3",
+    "test": "Vitest",
+    "deploy": "Vercel (frontier-alpha.metaventionsai.com)"
+  },
+  "constraints": [
+    "NO full rewrites \u2014 iterative changes only",
+    "ALL existing tests must pass after every story",
+    "NO new dependencies unless absolutely justified",
+    "ALL colors must use CSS variables (var(--color-*))",
+    "ALL animations must use Tailwind config custom animations",
+    "Preserve glass morphism design system (.glass-slab, gradients)",
+    "Mobile-first responsive patterns (sm/md/lg breakpoints)",
+    "Build must pass: cd client && npm run build"
+  ],
+  "verification": {
+    "after_each_story": [
+      "cd ~/projects/products/frontier-alpha && npx vitest run",
+      "cd ~/projects/products/frontier-alpha/client && npx tsc -b --noEmit",
+      "cd ~/projects/products/frontier-alpha && npm run build"
+    ]
+  },
+  "lanes": {
+    "A_perf_decompose": {
+      "agent": "performance-engineer",
+      "description": "Component decomposition and render optimization",
+      "stories": [
+        "UXO-001",
+        "UXO-002",
+        "UXO-003"
+      ]
+    },
+    "B_interaction_polish": {
+      "agent": "interaction-designer",
+      "description": "Micro-interactions, transitions, animation consistency",
+      "stories": [
+        "UXO-004",
+        "UXO-005",
+        "UXO-006"
+      ]
+    },
+    "C_consistency_responsive": {
+      "agent": "ui-consistency",
+      "description": "Spacing, responsive gaps, visual consistency",
+      "stories": [
+        "UXO-007",
+        "UXO-008",
+        "UXO-009"
+      ]
+    }
+  },
+  "userStories": [
+    {
+      "id": "UXO-001",
+      "lane": "A",
+      "title": "Decompose Skeleton.tsx into per-page skeleton files",
+      "description": "Skeleton.tsx is 685 lines with 15+ variants crammed in one file. Extract each page skeleton into its own file under components/shared/skeletons/. Wrap each with React.memo() since skeletons are deterministic.",
+      "files_to_modify": [
+        "client/src/components/shared/Skeleton.tsx",
+        "client/src/components/shared/skeletons/SkeletonDashboard.tsx",
+        "client/src/components/shared/skeletons/SkeletonPortfolio.tsx",
+        "client/src/components/shared/skeletons/SkeletonTrading.tsx",
+        "client/src/components/shared/skeletons/SkeletonOptions.tsx",
+        "client/src/components/shared/skeletons/SkeletonEarnings.tsx",
+        "client/src/components/shared/skeletons/index.ts"
+      ],
+      "acceptanceCriteria": [
+        "Skeleton.tsx reduced to <100 lines \u2014 only base primitives (SkeletonBlock, SkeletonText, SkeletonCircle)",
+        "Each page skeleton in its own file under components/shared/skeletons/",
+        "All page skeletons wrapped with React.memo()",
+        "Barrel export from skeletons/index.ts",
+        "All existing imports updated \u2014 no broken references",
+        "Zero visual change \u2014 skeletons look identical before and after",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "dependsOn": [],
+      "status": "done"
+    },
+    {
+      "id": "UXO-002",
+      "lane": "A",
+      "title": "Extract TradeExecutor sub-components",
+      "description": "TradeExecutor.tsx is 838 lines. Extract into focused sub-components: OrderForm, AccountSummary, OrderPreview, OrderHistory. Keep state management in TradeExecutor as coordinator.",
+      "files_to_modify": [
+        "client/src/components/trading/TradeExecutor.tsx",
+        "client/src/components/trading/OrderForm.tsx",
+        "client/src/components/trading/AccountSummary.tsx",
+        "client/src/components/trading/OrderPreview.tsx"
+      ],
+      "acceptanceCriteria": [
+        "TradeExecutor.tsx reduced to <300 lines \u2014 orchestrator only",
+        "OrderForm handles: symbol input, order type, quantity, limit price",
+        "AccountSummary shows: buying power, portfolio value, margin",
+        "OrderPreview shows: order confirmation details before submit",
+        "Each sub-component wrapped with React.memo() where props are stable",
+        "Zero visual change \u2014 trading UI identical before and after",
+        "All existing functionality preserved (preview, submit, cancel)",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "dependsOn": [],
+      "status": "done"
+    },
+    {
+      "id": "UXO-003",
+      "lane": "A",
+      "title": "Memoize expensive chart renders and add useDeferredValue for quotes",
+      "description": "Chart components (EquityCurve, MonteCarloChart, PriceChart, WeightAllocation) re-render on every parent update. Wrap with React.memo() and useMemo for data transforms. Add useDeferredValue for real-time quote updates to prevent blocking renders.",
+      "files_to_modify": [
+        "client/src/components/charts/EquityCurve.tsx",
+        "client/src/components/charts/MonteCarloChart.tsx",
+        "client/src/components/trading/PriceChart.tsx",
+        "client/src/components/portfolio/WeightAllocation.tsx",
+        "client/src/components/portfolio/PositionList.tsx"
+      ],
+      "acceptanceCriteria": [
+        "EquityCurve wrapped with React.memo() \u2014 only re-renders when data/dimensions change",
+        "MonteCarloChart wrapped with React.memo()",
+        "PriceChart wrapped with React.memo()",
+        "WeightAllocation wrapped with React.memo()",
+        "Data transform in EquityCurve uses useMemo with proper dependency array",
+        "PositionList sparkline data generation uses useMemo (not re-computed every render)",
+        "Quote updates in Trading page use useDeferredValue to prevent jank",
+        "No visual regression \u2014 charts render identically",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 1,
+      "dependsOn": [],
+      "status": "done"
+    },
+    {
+      "id": "UXO-004",
+      "lane": "B",
+      "title": "Standardize all animations to custom Tailwind config",
+      "description": "Replace all Tailwind default animate-pulse with custom animate-pulse-subtle from config. Ensure every component uses only the 12 custom animations defined in tailwind.config.js. No inline @keyframes in components.",
+      "files_to_modify": [
+        "client/src/components/shared/Skeleton.tsx",
+        "client/src/components/cvrf/CVRFEpisodeControls.tsx",
+        "client/src/components/shared/ConnectionStatus.tsx",
+        "client/src/pages/Dashboard.tsx",
+        "client/src/pages/Trading.tsx"
+      ],
+      "acceptanceCriteria": [
+        "Zero instances of animate-pulse (Tailwind default) \u2014 all replaced with animate-pulse-subtle or animate-shimmer",
+        "All animation durations consistent: enter=0.3s, content=0.4s, emphasis=2s",
+        "No inline @keyframes in any TSX file \u2014 all in tailwind.config.js or index.css",
+        "Skeleton shimmer uses animate-shimmer consistently (not animate-pulse)",
+        "Live indicators use animate-pulse-green (not animate-pulse)",
+        "Staggered animations use consistent 50ms delay increments",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "dependsOn": [],
+      "status": "done"
+    },
+    {
+      "id": "UXO-005",
+      "lane": "B",
+      "title": "Add page transition animations and route-level loading",
+      "description": "Currently pages pop in without transition. Add a subtle fade-in-up on route change using a shared PageTransition wrapper. Keep it CSS-only \u2014 no Framer Motion.",
+      "files_to_modify": [
+        "client/src/components/shared/PageTransition.tsx",
+        "client/src/components/layout/Layout.tsx",
+        "client/src/index.css"
+      ],
+      "acceptanceCriteria": [
+        "New PageTransition component wraps page content with animate-fade-in-up (0.3s)",
+        "Layout.tsx wraps {children} with <PageTransition>",
+        "Transition uses CSS animation (not JS) \u2014 respects prefers-reduced-motion",
+        "No layout shift during transition (fixed dimensions on container)",
+        "Page content appears within 300ms \u2014 no perceived delay",
+        "Works on both desktop and mobile",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "dependsOn": [],
+      "status": "done"
+    },
+    {
+      "id": "UXO-006",
+      "lane": "B",
+      "title": "Polish hover/focus micro-interactions across all cards and buttons",
+      "description": "Ensure every interactive element has consistent hover feedback: cards get shadow-lg + subtle translateY(-1px), buttons get scale(1.02) on hover and scale(0.98) on active. Focus rings consistent everywhere.",
+      "files_to_modify": [
+        "client/src/components/shared/Card.tsx",
+        "client/src/components/shared/Button.tsx",
+        "client/src/index.css"
+      ],
+      "acceptanceCriteria": [
+        "All Card components: hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200",
+        "All Button components: hover:scale-[1.02] active:scale-[0.98] transition-transform duration-150",
+        "Focus rings: 2px solid var(--color-accent) with 2px offset on all interactive elements",
+        "Glass-slab hover: subtle border color brightening (--color-border \u2192 --color-border-hover)",
+        "Add --color-border-hover CSS variable (slightly brighter than --color-border)",
+        "No hover effects on mobile (use @media (hover: hover) media query)",
+        "Transitions respect prefers-reduced-motion",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "dependsOn": [],
+      "status": "done"
+    },
+    {
+      "id": "UXO-007",
+      "lane": "C",
+      "title": "Normalize spacing scale across all components",
+      "description": "Create a spacing convention document in index.css and apply it. Cards: p-4 sm:p-6. Sections: gap-4 sm:gap-6. Page padding: p-4 sm:p-6 lg:p-8. Fix inconsistent spacing in Settings, Trading, Options pages.",
+      "files_to_modify": [
+        "client/src/index.css",
+        "client/src/components/settings/NotificationSettings.tsx",
+        "client/src/components/settings/APIKeys.tsx",
+        "client/src/pages/Trading.tsx",
+        "client/src/pages/Options.tsx"
+      ],
+      "acceptanceCriteria": [
+        "Spacing convention defined as CSS utilities: .space-card (p-4 sm:p-6), .space-section (gap-4 sm:gap-6), .space-page (p-4 sm:p-6 lg:p-8)",
+        "NotificationSettings uses consistent p-4 padding on all sections",
+        "APIKeys uses consistent p-4 padding and gap-4 between items",
+        "Trading page sections use consistent gap-4 sm:gap-6",
+        "Options page sections use consistent spacing",
+        "No visual regression \u2014 layout proportions look natural",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "dependsOn": [],
+      "status": "done"
+    },
+    {
+      "id": "UXO-008",
+      "lane": "C",
+      "title": "Fix responsive table overflow and add horizontal scroll on mobile",
+      "description": "Tables in Trading (TradeExecutor grid-cols-3) and other data-heavy components break on narrow screens. Add horizontal scroll wrapper for tables that can't be converted to cards.",
+      "files_to_modify": [
+        "client/src/components/trading/TradeExecutor.tsx",
+        "client/src/components/shared/ScrollableTable.tsx",
+        "client/src/pages/Tax.tsx",
+        "client/src/pages/ML.tsx"
+      ],
+      "acceptanceCriteria": [
+        "New ScrollableTable wrapper: overflow-x-auto with -webkit-overflow-scrolling: touch",
+        "TradeExecutor grid adapts: grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+        "Tax page data tables wrapped with ScrollableTable on mobile",
+        "ML page data grids responsive (stack on mobile, grid on desktop)",
+        "Scroll indicator shadow on left/right edges when content overflows",
+        "No horizontal page scroll on any mobile viewport (320px-768px)",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 2,
+      "dependsOn": [],
+      "status": "done"
+    },
+    {
+      "id": "UXO-009",
+      "lane": "C",
+      "title": "Fix remaining hardcoded SVG colors and minor a11y gaps",
+      "description": "PositionList sparkline uses hardcoded #10b981/#ef4444. Header live indicator missing aria-label. Fix these final consistency gaps.",
+      "files_to_modify": [
+        "client/src/components/portfolio/PositionList.tsx",
+        "client/src/components/layout/Header.tsx",
+        "client/src/components/alerts/AlertDropdown.tsx"
+      ],
+      "acceptanceCriteria": [
+        "PositionList sparkline colors use getComputedStyle to read CSS variables (or CSS color-mix fallback)",
+        "Zero hardcoded hex colors in any SVG component",
+        "Header live indicator has aria-label='Connection status: connected/disconnected'",
+        "AlertDropdown has aria-expanded and aria-haspopup='true'",
+        "All icon-only buttons have aria-label",
+        "axe-core audit shows zero critical or serious violations on Dashboard page",
+        "npx vitest run passes",
+        "npm run build passes"
+      ],
+      "priority": 3,
+      "dependsOn": [],
+      "status": "done"
+    }
+  ]
+}

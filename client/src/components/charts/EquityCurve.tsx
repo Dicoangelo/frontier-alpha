@@ -94,17 +94,24 @@ function generateMockData(currentValue: number, days: number): DataPoint[] {
   }));
 }
 
-// Theme-aware canvas colors
-function getChartColors(isDark: boolean) {
+// Read a CSS custom property from :root as a resolved color string
+function cssVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// Theme-aware canvas colors — reads CSS variables at call time
+function getChartColors(_isDark: boolean) {
+  const chartPrimary = cssVar('--chart-primary');
+  const bg = cssVar('--color-bg');
   return {
-    grid: isDark ? 'color-mix(in srgb, var(--color-text) 8%, transparent)' : 'var(--color-border)',
-    label: isDark ? 'color-mix(in srgb, var(--color-text) 50%, transparent)' : 'var(--color-text-muted)',
-    benchmark: isDark ? 'color-mix(in srgb, var(--color-text) 35%, transparent)' : 'var(--color-text-muted)',
-    line: isDark ? '#60a5fa' : '#3b82f6',
-    gradientTop: isDark ? 'color-mix(in srgb, var(--color-info) 25%, transparent)' : 'color-mix(in srgb, var(--color-info) 30%, transparent)',
+    grid: cssVar('--color-border'),
+    label: cssVar('--color-text-muted'),
+    benchmark: cssVar('--color-text-muted'),
+    line: chartPrimary,
+    gradientTop: chartPrimary + '40', // ~25% opacity via hex alpha
     gradientBottom: 'transparent',
-    dot: isDark ? '#60a5fa' : '#3b82f6',
-    dotStroke: isDark ? '#0F1219' : '#ffffff',
+    dot: chartPrimary,
+    dotStroke: bg,
   };
 }
 

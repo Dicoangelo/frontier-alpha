@@ -135,23 +135,28 @@ export const MonteCarloChart = React.memo(function MonteCarloChart({
       const y = padding.top + chartHeight - barHeight;
       const binValue = minVal + i * binWidth;
 
-      // Color based on return (red for negative, green for positive)
+      // Color based on return — use CSS chart variables with dynamic alpha
+      const dangerHex = cs.getPropertyValue('--chart-danger').trim();
+      const secondaryHex = cs.getPropertyValue('--chart-secondary').trim();
       if (binValue < 0) {
         const intensity = Math.min(Math.abs(binValue) / Math.abs(minVal), 1);
-        ctx.fillStyle = `rgba(239, 68, 68, ${0.3 + intensity * 0.5})`;
+        const alpha = Math.round((0.3 + intensity * 0.5) * 255).toString(16).padStart(2, '0');
+        ctx.fillStyle = dangerHex + alpha;
       } else {
         const intensity = Math.min(binValue / maxVal, 1);
-        ctx.fillStyle = `rgba(34, 197, 94, ${0.3 + intensity * 0.5})`;
+        const alpha = Math.round((0.3 + intensity * 0.5) * 255).toString(16).padStart(2, '0');
+        ctx.fillStyle = secondaryHex + alpha;
       }
 
       ctx.fillRect(x, y, barWidth, barHeight);
     });
 
-    // Theme-aware colors
-    const zeroColor = isDark ? 'color-mix(in srgb, var(--color-text) 50%, transparent)' : 'var(--color-text)';
-    const varColor = isDark ? '#f87171' : '#dc2626';
-    const medianColor = isDark ? '#60a5fa' : '#3b82f6';
-    const labelColor = isDark ? 'color-mix(in srgb, var(--color-text) 50%, transparent)' : 'var(--color-text-muted)';
+    // Theme-aware colors — read from CSS variables
+    const cs = getComputedStyle(document.documentElement);
+    const zeroColor = cs.getPropertyValue('--color-text').trim();
+    const varColor = cs.getPropertyValue('--chart-danger').trim();
+    const medianColor = cs.getPropertyValue('--chart-primary').trim();
+    const labelColor = cs.getPropertyValue('--color-text-muted').trim();
 
     // Draw zero line
     const zeroX = padding.left + ((0 - minVal) / (maxVal - minVal)) * chartWidth;

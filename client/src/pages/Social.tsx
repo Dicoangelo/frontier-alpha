@@ -347,7 +347,7 @@ function LeaderboardTab({ entries, onToggleFollow }: {
                         className="h-full rounded-full"
                         style={{
                           width: `${entry.consistency_score * 100}%`,
-                          background: 'linear-gradient(to right, var(--color-accent), #a855f7)',
+                          background: 'linear-gradient(to right, var(--color-accent), var(--chart-purple))',
                         }}
                       />
                     </div>

@@ -4,9 +4,13 @@ import {
   AlertCircle,
   Search,
   Wifi,
+  WifiOff,
   RefreshCw,
-  FileText
+  FileText,
+  Lock,
+  Server,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './Button';
 
 interface EmptyStateProps {
@@ -92,11 +96,16 @@ export function EmptyPortfolio({ onAddPosition }: { onAddPosition: () => void })
 }
 
 export function EmptyAlerts() {
+  const navigate = useNavigate();
   return (
     <EmptyState
       icon={<AlertCircle className="w-8 h-8 text-[var(--color-text-muted)]" />}
       title="No alerts"
       description="You're all caught up! Risk alerts will appear here when your portfolio needs attention."
+      action={{
+        label: 'Create Alert',
+        onClick: () => navigate('/alerts'),
+      }}
     />
   );
 }
@@ -117,11 +126,16 @@ export function EmptySearchResults({ query, onClear }: { query: string; onClear:
 }
 
 export function EmptyEarnings() {
+  const navigate = useNavigate();
   return (
     <EmptyState
       icon={<FileText className="w-8 h-8 text-[var(--color-text-muted)]" />}
       title="No upcoming earnings"
       description="None of your portfolio holdings have earnings announcements scheduled in the next 30 days."
+      action={{
+        label: 'Add Holdings',
+        onClick: () => navigate('/portfolio'),
+      }}
     />
   );
 }
@@ -141,11 +155,31 @@ export function NetworkError({ onRetry }: { onRetry: () => void }) {
 }
 
 export function DataLoadError({ onRetry, error }: { onRetry: () => void; error?: string }) {
+  const errorLower = (error || '').toLowerCase();
+
+  let icon = <RefreshCw className="w-8 h-8 text-[var(--color-warning)]" />;
+  let title = "Couldn't load data";
+  let description = error || "Something went wrong while loading. This might be temporary.";
+
+  if (errorLower.includes('network') || errorLower.includes('offline')) {
+    icon = <WifiOff className="w-8 h-8 text-[var(--color-negative)]" />;
+    title = 'Connection issue';
+    description = 'Please check your internet connection and try again.';
+  } else if (errorLower.includes('401') || errorLower.includes('unauthorized')) {
+    icon = <Lock className="w-8 h-8 text-[var(--color-warning)]" />;
+    title = 'Authentication required';
+    description = 'Your session may have expired. Please sign in again.';
+  } else if (errorLower.includes('500') || errorLower.includes('server')) {
+    icon = <Server className="w-8 h-8 text-[var(--color-negative)]" />;
+    title = 'Server error';
+    description = 'Our servers are having trouble. Please try again in a moment.';
+  }
+
   return (
     <EmptyState
-      icon={<RefreshCw className="w-8 h-8 text-[var(--color-warning)]" />}
-      title="Couldn't load data"
-      description={error || "Something went wrong while loading. This might be temporary."}
+      icon={icon}
+      title={title}
+      description={description}
       action={{
         label: 'Retry',
         onClick: onRetry,

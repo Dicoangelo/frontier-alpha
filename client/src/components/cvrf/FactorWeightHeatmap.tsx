@@ -17,22 +17,21 @@ interface HeatmapCell {
 }
 
 function weightToColor(weight: number): string {
-  // Map -1..+1 to red..neutral..green
+  // Map -1..+1 to danger..neutral..secondary using CSS variables
   const clamped = Math.max(-1, Math.min(1, weight));
+  const pct = Math.round(Math.abs(clamped) * 100);
 
   if (clamped >= 0) {
-    // 0 → neutral, 1 → bright green
-    const intensity = Math.round(clamped * 255);
-    return `rgb(${255 - intensity}, 255, ${255 - intensity})`;
+    // 0 → transparent, 1 → full chart-secondary
+    return `color-mix(in srgb, var(--chart-secondary) ${pct}%, var(--color-bg))`;
   } else {
-    // 0 → neutral, -1 → bright red
-    const intensity = Math.round(Math.abs(clamped) * 255);
-    return `rgb(255, ${255 - intensity}, ${255 - intensity})`;
+    // 0 → transparent, -1 → full chart-danger
+    return `color-mix(in srgb, var(--chart-danger) ${pct}%, var(--color-bg))`;
   }
 }
 
 function weightToTextColor(weight: number): string {
-  return Math.abs(weight) > 0.5 ? '#1f2937' : 'var(--color-text-muted)';
+  return Math.abs(weight) > 0.5 ? 'var(--color-text)' : 'var(--color-text-muted)';
 }
 
 // Factor display names

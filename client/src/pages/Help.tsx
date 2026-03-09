@@ -59,12 +59,13 @@ export function Help() {
       }
 
       // Scroll to section
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         const element = document.getElementById(hash);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
         }
       }, 100);
+      return () => clearTimeout(timer);
     }
   }, [location.hash]);
 

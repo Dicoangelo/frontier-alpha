@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Card } from '@/components/shared/Card';
+import { useThemeStore } from '@/stores/themeStore';
 import type { Position } from '@/types';
 
 // Count-up animation for the donut center value — runs once on mount
@@ -31,7 +32,18 @@ function useCenterCountUp(target: number, formatter: (v: number) => string) {
   return ref;
 }
 
-const SEGMENT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+// Read chart palette from CSS variables at render time (theme-reactive)
+function getSegmentColors(): string[] {
+  const cs = getComputedStyle(document.documentElement);
+  return [
+    cs.getPropertyValue('--chart-primary').trim(),
+    cs.getPropertyValue('--chart-secondary').trim(),
+    cs.getPropertyValue('--chart-accent').trim(),
+    cs.getPropertyValue('--chart-danger').trim(),
+    cs.getPropertyValue('--chart-purple').trim(),
+    cs.getPropertyValue('--chart-cyan').trim(),
+  ];
+}
 
 interface WeightAllocationProps {
   positions: Position[];
@@ -47,7 +59,7 @@ interface Segment {
   dashOffset: number;
 }
 
-function buildSegments(positions: Position[], _totalValue: number): Segment[] {
+function buildSegments(positions: Position[], _totalValue: number, segmentColors: string[]): Segment[] {
   const r = 54;
   const circumference = 2 * Math.PI * r;
 
@@ -73,7 +85,7 @@ function buildSegments(positions: Position[], _totalValue: number): Segment[] {
       symbol: p.symbol,
       weight: normalizedWeight,
       value: (p as Position & { value?: number }).value ?? p.shares * p.currentPrice,
-      color: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
+      color: segmentColors[i % segmentColors.length],
       dashArray: `${dash.toFixed(3)} ${gap.toFixed(3)}`,
       dashOffset: -offset,
     };
@@ -86,6 +98,7 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
   const [hoveredSymbol, setHoveredSymbol] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const hasAnimated = useRef(false);
+  const isDark = useThemeStore((s) => s.resolved === 'dark');
 
   const centerRef = useCenterCountUp(totalValue, (v) =>
     v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v.toFixed(0)}`
@@ -107,7 +120,9 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
   const circumference = 2 * Math.PI * r;
   const strokeWidth = 20;
 
-  const segments = useMemo(() => buildSegments(positions, totalValue), [positions, totalValue]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const segmentColors = useMemo(() => getSegmentColors(), [isDark]);
+  const segments = useMemo(() => buildSegments(positions, totalValue, segmentColors), [positions, totalValue, segmentColors]);
   const hovered = hoveredSymbol ? segments.find(s => s.symbol === hoveredSymbol) : null;
 
   const formattedTotal = totalValue >= 1000

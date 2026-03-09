@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { MobileNav } from './MobileNav';
@@ -8,6 +7,7 @@ import { HelpPanel, useHelpPanel, FloatingHelpButton } from '@/components/help';
 import { ConnectionStatus } from '@/components/shared/ConnectionStatus';
 import { MockDataBanner } from '@/components/shared/MockDataBanner';
 import { KeyboardHelpModal } from '@/components/shared/KeyboardHelpModal';
+import { PageTransition } from '@/components/shared/PageTransition';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 interface LayoutProps {
@@ -17,7 +17,6 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const location = useLocation();
   const { isOpen: helpOpen, openHelp, closeHelp, toggleHelp, initialTopic } = useHelpPanel();
 
   const handleToggleShortcutsModal = useCallback(() => {
@@ -97,10 +96,9 @@ export function Layout({ children }: LayoutProps) {
         role="main"
         tabIndex={-1}
       >
-        {/* Page transition wrapper - re-triggers animation on route change */}
-        <div key={location.pathname} className="animate-fade-in">
+        <PageTransition>
           {children}
-        </div>
+        </PageTransition>
       </main>
 
       {/* Mobile Bottom Navigation */}

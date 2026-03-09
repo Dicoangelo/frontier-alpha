@@ -13,7 +13,7 @@ export function CVRFStatsCard() {
 
   if (isLoading) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6 animate-pulse">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6 animate-shimmer">
         <div className="h-6 bg-[var(--color-border)] rounded w-1/3 mb-4" />
         <div className="space-y-3">
           <div className="h-4 bg-[var(--color-border)] rounded w-full" />

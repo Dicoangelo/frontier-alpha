@@ -82,10 +82,10 @@ export function MetaPromptCard() {
   if (isLoading) {
     return (
       <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
-        <div className="h-6 bg-[var(--color-border)] rounded w-1/3 mb-4 animate-pulse" />
+        <div className="h-6 bg-[var(--color-border)] rounded w-1/3 mb-4 animate-shimmer" />
         <div className="space-y-3">
-          <div className="h-4 bg-[var(--color-border)] rounded w-full animate-pulse" />
-          <div className="h-4 bg-[var(--color-border)] rounded w-2/3 animate-pulse" />
+          <div className="h-4 bg-[var(--color-border)] rounded w-full animate-shimmer" />
+          <div className="h-4 bg-[var(--color-border)] rounded w-2/3 animate-shimmer" />
         </div>
       </div>
     );

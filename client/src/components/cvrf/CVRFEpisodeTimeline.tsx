@@ -144,7 +144,7 @@ export function CVRFEpisodeTimeline() {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-[var(--color-bg)] rounded-lg border border-[var(--color-border)] p-4 animate-pulse">
+          <div key={i} className="bg-[var(--color-bg)] rounded-lg border border-[var(--color-border)] p-4 animate-shimmer">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-[var(--color-border)] rounded-full" />
               <div className="space-y-2">

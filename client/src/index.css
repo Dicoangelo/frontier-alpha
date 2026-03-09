@@ -37,6 +37,14 @@
     --color-warning: #f59e0b;
     --color-info: #3b82f6;
 
+    /* Chart Palette */
+    --chart-primary: #3b82f6;
+    --chart-secondary: #10b981;
+    --chart-accent: #f59e0b;
+    --chart-danger: #ef4444;
+    --chart-purple: #8b5cf6;
+    --chart-cyan: #06b6d4;
+
     /* Misc */
     --color-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
     --font-mono: 'JetBrains Mono', monospace;
@@ -72,6 +80,14 @@
     --color-danger: #f87171;
     --color-warning: #fbbf24;
     --color-info: #60a5fa;
+
+    /* Chart Palette */
+    --chart-primary: #60a5fa;
+    --chart-secondary: #34d399;
+    --chart-accent: #fbbf24;
+    --chart-danger: #f87171;
+    --chart-purple: #a78bfa;
+    --chart-cyan: #22d3ee;
 
     /* Misc */
     --color-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);

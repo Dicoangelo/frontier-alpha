@@ -276,7 +276,7 @@ export function Optimize() {
                       /* OPT2-001: gradient via inline style */
                       style={{
                         width: `${weight * 100}%`,
-                        background: 'linear-gradient(to right, var(--color-accent), #a855f7)',
+                        background: 'linear-gradient(to right, var(--color-accent), var(--chart-purple))',
                       }}
                     />
                   </div>

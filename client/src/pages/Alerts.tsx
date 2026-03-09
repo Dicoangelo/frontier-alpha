@@ -358,12 +358,12 @@ function SummaryCard({
   onClick: () => void;
   active: boolean;
 }) {
-  // Map emoji indicators to proper CSS colors
+  // Map emoji indicators to CSS variable colors
   const dotColorMap: Record<string, string> = {
-    '🔴': 'rgb(239, 68, 68)',
-    '🟠': 'rgb(249, 115, 22)',
-    '🟡': 'rgb(245, 158, 11)',
-    '🔵': 'rgb(59, 130, 246)',
+    '🔴': 'var(--chart-danger)',
+    '🟠': 'var(--chart-accent)',
+    '🟡': 'var(--color-warning)',
+    '🔵': 'var(--chart-primary)',
   };
   const dotColor = dotColorMap[indicator] || 'var(--color-text-muted)';
 

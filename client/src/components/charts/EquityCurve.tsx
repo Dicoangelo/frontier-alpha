@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card } from '@/components/shared/Card';
 import { useThemeStore } from '@/stores/themeStore';
 
@@ -118,7 +118,7 @@ const TIMEFRAME_DAYS: Record<string, number> = {
   'ALL': 365,
 };
 
-export function EquityCurve({
+export const EquityCurve = React.memo(function EquityCurve({
   portfolioValue,
   portfolioReturns = [],
   benchmarkReturns = [],
@@ -505,4 +505,4 @@ export function EquityCurve({
       </div>
     </Card>
   );
-}
+});

@@ -65,7 +65,7 @@ export function ConnectionStatus() {
     >
       {state === 'reconnecting' ? (
         <>
-          <Wifi className="w-3.5 h-3.5 animate-pulse" />
+          <Wifi className="w-3.5 h-3.5 animate-pulse-subtle" />
           <span>
             Live feed disconnected. Reconnecting
             {attempt > 0 && ` (attempt ${attempt})`}
@@ -105,7 +105,7 @@ export function ConnectionDot() {
 
   const colors: Record<ConnectionState, string> = {
     connected: 'bg-[var(--color-positive)]',
-    reconnecting: 'bg-[var(--color-warning)] animate-pulse',
+    reconnecting: 'bg-[var(--color-warning)] animate-pulse-subtle',
     disconnected: 'bg-[var(--color-danger)]',
   };
 

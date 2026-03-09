@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Card } from '@/components/shared/Card';
 import { TrendingUp, TrendingDown, Target, AlertTriangle } from 'lucide-react';
 import { useThemeStore } from '@/stores/themeStore';
@@ -24,7 +24,7 @@ interface MonteCarloChartProps {
   className?: string;
 }
 
-export function MonteCarloChart({
+export const MonteCarloChart = React.memo(function MonteCarloChart({
   result,
   timeHorizon = '1 Year',
   className = '',
@@ -34,7 +34,7 @@ export function MonteCarloChart({
   const isDark = useThemeStore((s) => s.resolved === 'dark');
 
   // Generate histogram data from simulations or confidence interval
-  const generateHistogramData = () => {
+  const generateHistogramData = useMemo(() => {
     if (result.simulations && result.simulations.length > 0) {
       return result.simulations;
     }
@@ -66,7 +66,7 @@ export function MonteCarloChart({
     }
 
     return samples;
-  };
+  }, [result]);
 
   // Resize observer
   useEffect(() => {
@@ -107,7 +107,7 @@ export function MonteCarloChart({
 
     ctx.clearRect(0, 0, dimensions.width, dimensions.height);
 
-    const samples = generateHistogramData();
+    const samples = generateHistogramData;
     const padding = { top: 20, right: 20, bottom: 40, left: 50 };
     const chartWidth = dimensions.width - padding.left - padding.right;
     const chartHeight = dimensions.height - padding.top - padding.bottom;
@@ -218,8 +218,7 @@ export function MonteCarloChart({
     ctx.fillText('Frequency', 0, 0);
     ctx.restore();
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- generateHistogramData depends only on result which is already a dep
-  }, [result, dimensions, isDark]);
+  }, [result, dimensions, isDark, generateHistogramData]);
 
   const isPositive = result.medianReturn > 0;
 
@@ -334,7 +333,7 @@ export function MonteCarloChart({
       </div>
     </Card>
   );
-}
+});
 
 // Demo/preview component with sample data
 export function MonteCarloChartDemo() {

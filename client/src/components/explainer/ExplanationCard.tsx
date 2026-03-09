@@ -121,7 +121,7 @@ function formatTimestamp(iso: string): string {
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-3 animate-pulse">
+    <div className="space-y-3 animate-shimmer">
       <div className="flex items-center gap-2">
         <div className="w-5 h-5 rounded bg-theme-tertiary" />
         <div className="h-4 w-32 rounded bg-theme-tertiary" />

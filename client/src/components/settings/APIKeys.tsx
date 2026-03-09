@@ -390,7 +390,7 @@ export function APIKeys() {
             {revokedKeys.map((key) => (
               <div
                 key={key.id}
-                className="flex items-center gap-4 p-3 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] opacity-50"
+                className="flex items-center gap-4 p-4 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] opacity-50"
               >
                 <Key className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -411,7 +411,7 @@ export function APIKeys() {
       )}
 
       {/* Usage hint */}
-      <div className="text-xs text-[var(--color-text-muted)] mt-4 p-3 rounded-lg bg-[var(--color-bg-tertiary)]">
+      <div className="text-xs text-[var(--color-text-muted)] mt-4 p-4 rounded-lg bg-[var(--color-bg-tertiary)]">
         <p className="font-medium mb-1">Usage</p>
         <code className="block">
           curl -H &quot;X-API-Key: fa_your_key_here&quot; {window.location.origin}/api/v1/portfolio

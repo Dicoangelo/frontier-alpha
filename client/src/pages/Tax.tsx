@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
+import { ScrollableTable } from '@/components/shared/ScrollableTable';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -213,7 +214,7 @@ function SummarySection({ data }: { data: TaxSummaryData }) {
         style={{ animationDelay: '50ms', animationFillMode: 'both' }}
       >
         <Card title="Gains & Losses Breakdown">
-          <div className="overflow-x-auto -mx-6">
+          <ScrollableTable>
             <table className="w-full text-sm min-w-[480px]">
               <thead>
                 <tr className="border-b border-[var(--color-border)]">
@@ -250,7 +251,7 @@ function SummarySection({ data }: { data: TaxSummaryData }) {
                 </tr>
               </tbody>
             </table>
-          </div>
+          </ScrollableTable>
         </Card>
       </div>
     </div>
@@ -304,7 +305,7 @@ function HarvestSection({ opportunities }: { opportunities: HarvestOpportunity[]
         style={{ animationDelay: '50ms', animationFillMode: 'both' }}
       >
         <Card>
-          <div className="overflow-x-auto -mx-6">
+          <ScrollableTable>
             <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr className="border-b border-[var(--color-border)]">
@@ -369,7 +370,7 @@ function HarvestSection({ opportunities }: { opportunities: HarvestOpportunity[]
                 })}
               </tbody>
             </table>
-          </div>
+          </ScrollableTable>
         </Card>
       </div>
     </div>
@@ -608,7 +609,7 @@ function ReportSection({ rows, summary }: { rows: ReportRow[]; summary: TaxSumma
         style={{ animationDelay: '50ms', animationFillMode: 'both' }}
       >
         <Card>
-          <div className="overflow-x-auto -mx-6">
+          <ScrollableTable>
             <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr className="border-b border-[var(--color-border)]">
@@ -663,7 +664,7 @@ function ReportSection({ rows, summary }: { rows: ReportRow[]; summary: TaxSumma
                 ))}
               </tbody>
             </table>
-          </div>
+          </ScrollableTable>
 
           {rows.length > 5 && (
             <div className="mt-4 text-center">

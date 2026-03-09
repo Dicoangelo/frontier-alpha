@@ -208,7 +208,7 @@ export function EpisodePerformanceChart() {
               <>
                 <Bar
                   dataKey="return"
-                  fill="#818cf8"
+                  fill="var(--chart-purple)"
                   opacity={0.3}
                   radius={[4, 4, 0, 0]}
                   name="Episode Return"
@@ -216,9 +216,9 @@ export function EpisodePerformanceChart() {
                 <Line
                   type="monotone"
                   dataKey="cumulativeReturn"
-                  stroke="#4f46e5"
+                  stroke="var(--chart-primary)"
                   strokeWidth={2}
-                  dot={{ r: 4, fill: '#4f46e5' }}
+                  dot={{ r: 4, fill: 'var(--chart-primary)' }}
                   name="Cumulative"
                 />
               </>
@@ -228,9 +228,9 @@ export function EpisodePerformanceChart() {
               <Line
                 type="monotone"
                 dataKey="sharpe"
-                stroke="#8b5cf6"
+                stroke="var(--chart-purple)"
                 strokeWidth={2}
-                dot={{ r: 4, fill: '#8b5cf6' }}
+                dot={{ r: 4, fill: 'var(--chart-purple)' }}
                 name="Sharpe Ratio"
               />
             )}
@@ -238,7 +238,7 @@ export function EpisodePerformanceChart() {
             {metric === 'drawdown' && (
               <Bar
                 dataKey="maxDrawdown"
-                fill="#ef4444"
+                fill="var(--chart-danger)"
                 opacity={0.5}
                 radius={[4, 4, 0, 0]}
                 name="Max Drawdown"

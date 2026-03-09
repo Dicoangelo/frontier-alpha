@@ -1,110 +1,46 @@
 /**
  * ML Dashboard Page
  *
- * Machine learning dashboard showing current market regime, model performance
+ * Orchestrator showing current market regime, model performance
  * metrics, training history, and factor attribution waterfall chart.
  */
 
-import { useState, useMemo } from 'react';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Cell,
-  ReferenceLine,
-} from 'recharts';
-import {
-  Cpu,
-  Activity,
-  TrendingUp,
-  Target,
-  Gauge,
-  Clock,
-  AlertTriangle,
-  RefreshCw,
-  ChevronDown,
-  ChevronUp,
-  Zap,
-} from 'lucide-react';
-import { Card } from '@/components/shared/Card';
+import { Activity, TrendingUp, Target, Clock, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
-import { ScrollableTable } from '@/components/shared/ScrollableTable';
+import { RegimeDetector, REGIME_CONFIG } from '@/components/ml/RegimeDetector';
+import type { RegimeState } from '@/components/ml/RegimeDetector';
+import { ModelVersions } from '@/components/ml/ModelVersions';
+import type { ModelVersion } from '@/components/ml/ModelVersions';
+import { FactorAttribution } from '@/components/ml/FactorAttribution';
+import type { WaterfallBar, AttributionDriver } from '@/components/ml/FactorAttribution';
 
-// ── Types ──────────────────────────────────────────────────────
+// ── MetricCard ──────────────────────────────────────────────────
 
-type MarketRegime = 'bull' | 'bear' | 'sideways' | 'volatile';
-type ModelStatus = 'training' | 'validated' | 'deployed' | 'archived';
-
-interface RegimeState {
-  regime: MarketRegime;
-  confidence: number;
-  probabilities: Record<MarketRegime, number>;
-  transitionMatrix: Array<{ from: MarketRegime; to: Record<MarketRegime, number> }>;
-}
-
-interface ModelVersion {
-  id: string;
-  modelType: 'regime_detector' | 'neural_factor';
-  version: string;
-  status: ModelStatus;
-  accuracy: number;
-  sharpeImprovement: number;
-  maxDrawdownReduction: number;
-  trainedAt: string;
-  deployedAt: string | null;
-}
-
-interface AttributionDriver {
-  factor: string;
-  contribution: number;
-  direction: 'positive' | 'negative';
-}
-
-interface WaterfallBar {
+interface MetricCardProps {
   label: string;
-  start: number;
-  end: number;
-  value: number;
-  type: 'positive' | 'negative' | 'total' | 'residual';
+  value: string;
+  subtitle?: string;
+  icon: React.ReactNode;
+  color?: string;
+}
+
+function MetricCard({ label, value, subtitle, icon, color }: MetricCardProps) {
+  const resolvedColor = color ?? 'var(--color-text)';
+  return (
+    <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
+      <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: `color-mix(in srgb, ${resolvedColor} 12%, transparent)` }}>
+        <span style={{ color: resolvedColor }}>{icon}</span>
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">{label}</p>
+        <p className="text-xl font-bold mt-0.5" style={{ color: resolvedColor }}>{value}</p>
+        {subtitle && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>}
+      </div>
+    </div>
+  );
 }
 
 // ── Mock Data ──────────────────────────────────────────────────
-
-const REGIMES: MarketRegime[] = ['bull', 'bear', 'sideways', 'volatile'];
-
-const REGIME_CONFIG: Record<
-  MarketRegime,
-  { label: string; color: string; bgColor: string; icon: typeof TrendingUp }
-> = {
-  bull: {
-    label: 'Bull',
-    color: 'var(--color-positive)',
-    bgColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)',
-    icon: TrendingUp,
-  },
-  bear: {
-    label: 'Bear',
-    color: 'var(--color-negative)',
-    bgColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)',
-    icon: AlertTriangle,
-  },
-  sideways: {
-    label: 'Sideways',
-    color: 'var(--color-warning)',
-    bgColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
-    icon: Activity,
-  },
-  volatile: {
-    label: 'Volatile',
-    color: 'var(--color-accent)',
-    bgColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
-    icon: Zap,
-  },
-};
 
 const MOCK_REGIME: RegimeState = {
   regime: 'bull',
@@ -194,440 +130,6 @@ const MOCK_TOP_DRIVERS: AttributionDriver[] = [
   { factor: 'Size', contribution: -0.012, direction: 'negative' },
 ];
 
-// ── Helper Components ──────────────────────────────────────────
-
-interface MetricCardProps {
-  label: string;
-  value: string;
-  subtitle?: string;
-  icon: React.ReactNode;
-  color?: string;
-}
-
-function MetricCard({ label, value, subtitle, icon, color }: MetricCardProps) {
-  const resolvedColor = color ?? 'var(--color-text)';
-  return (
-    <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
-      <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: `color-mix(in srgb, ${resolvedColor} 12%, transparent)` }}>
-        <span style={{ color: resolvedColor }}>{icon}</span>
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">{label}</p>
-        <p className="text-xl font-bold mt-0.5" style={{ color: resolvedColor }}>{value}</p>
-        {subtitle && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>}
-      </div>
-    </div>
-  );
-}
-
-function StatusBadge({ status }: { status: ModelStatus }) {
-  type StatusStyle = { label: string; color: string; bgColor: string; borderColor: string };
-  const config: Record<ModelStatus, StatusStyle> = {
-    deployed: {
-      label: 'Deployed',
-      color: 'var(--color-positive)',
-      bgColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)',
-      borderColor: 'color-mix(in srgb, var(--color-positive) 20%, transparent)',
-    },
-    validated: {
-      label: 'Validated',
-      color: 'var(--color-info)',
-      bgColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)',
-      borderColor: 'color-mix(in srgb, var(--color-info) 20%, transparent)',
-    },
-    training: {
-      label: 'Training',
-      color: 'var(--color-warning)',
-      bgColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
-      borderColor: 'color-mix(in srgb, var(--color-warning) 20%, transparent)',
-    },
-    archived: {
-      label: 'Archived',
-      color: 'var(--color-text-muted)',
-      bgColor: 'color-mix(in srgb, var(--color-text-muted) 10%, transparent)',
-      borderColor: 'color-mix(in srgb, var(--color-text-muted) 20%, transparent)',
-    },
-  };
-  const c = config[status];
-  return (
-    <span
-      className="px-2 py-0.5 text-xs font-medium rounded-full border"
-      style={{ color: c.color, backgroundColor: c.bgColor, borderColor: c.borderColor }}
-    >
-      {c.label}
-    </span>
-  );
-}
-
-// ── Regime Section ─────────────────────────────────────────────
-
-function RegimeSection({ regime }: { regime: RegimeState }) {
-  const [showMatrix, setShowMatrix] = useState(false);
-  const currentConfig = REGIME_CONFIG[regime.regime];
-  const RegimeIcon = currentConfig.icon;
-
-  const confidencePercent = Math.round(regime.confidence * 100);
-
-  return (
-    <Card>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <Gauge className="w-5 h-5 text-[var(--color-accent)]" />
-          Market Regime
-        </h2>
-        <button
-          onClick={() => setShowMatrix(!showMatrix)}
-          className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] flex items-center gap-1 transition-colors hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors"
-          aria-expanded={showMatrix}
-          aria-label="Toggle transition probability matrix"
-        >
-          Transitions
-          {showMatrix ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-      </div>
-
-      {/* Current Regime Badge */}
-      <div className="flex items-center gap-4 mb-6">
-        <div
-          className="p-3 rounded-xl"
-          style={{ backgroundColor: currentConfig.bgColor }}
-        >
-          <RegimeIcon className="w-8 h-8" style={{ color: currentConfig.color }} />
-        </div>
-        <div>
-          <div className="text-2xl font-bold" style={{ color: currentConfig.color }}>
-            {currentConfig.label}
-          </div>
-          <div className="text-sm text-[var(--color-text-muted)]">
-            Current market regime
-          </div>
-        </div>
-      </div>
-
-      {/* Confidence Gauge */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between text-sm mb-2">
-          <span className="text-[var(--color-text-muted)]">Confidence</span>
-          <span className="font-bold text-[var(--color-text)]">{confidencePercent}%</span>
-        </div>
-        <div className="relative h-4 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
-          <div
-            className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
-            style={{
-              width: `${confidencePercent}%`,
-              background: 'linear-gradient(to right, var(--color-accent), #a855f7)',
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Regime Probabilities */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        {REGIMES.map((r) => {
-          const rc = REGIME_CONFIG[r];
-          const prob = regime.probabilities[r];
-          const isActive = r === regime.regime;
-          return (
-            <div
-              key={r}
-              className="p-3 rounded-lg border transition-colors"
-              style={
-                isActive
-                  ? {
-                      backgroundColor: rc.bgColor,
-                      borderColor: rc.color,
-                    }
-                  : {
-                      backgroundColor: 'var(--color-bg-secondary)',
-                      borderColor: 'var(--color-border)',
-                    }
-              }
-            >
-              <div className="flex items-center justify-between">
-                <span
-                  className="text-sm font-medium"
-                  style={{ color: isActive ? rc.color : 'var(--color-text)' }}
-                >
-                  {rc.label}
-                </span>
-                <span
-                  className="text-sm font-mono font-bold"
-                  style={{ color: isActive ? rc.color : 'var(--color-text-muted)' }}
-                >
-                  {(prob * 100).toFixed(0)}%
-                </span>
-              </div>
-              <div className="mt-1 h-1.5 bg-[var(--color-bg)] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-300"
-                  style={{
-                    width: `${prob * 100}%`,
-                    backgroundColor: isActive ? rc.color : 'var(--color-text-muted)',
-                    opacity: isActive ? 1 : 0.3,
-                  }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Transition Probability Matrix */}
-      {showMatrix && (
-        <ScrollableTable className="mt-4">
-          <table className="w-full text-sm" role="img" aria-label="Regime transition probability matrix">
-            <thead>
-              <tr>
-                <th className="text-left p-2 text-[var(--color-text-muted)]">From \ To</th>
-                {REGIMES.map((r) => (
-                  <th key={r} className="p-2 text-center" style={{ color: REGIME_CONFIG[r].color }}>
-                    {REGIME_CONFIG[r].label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {regime.transitionMatrix.map((row) => (
-                <tr key={row.from} className="border-t border-[var(--color-border)]">
-                  <td className="p-2 font-medium" style={{ color: REGIME_CONFIG[row.from].color }}>
-                    {REGIME_CONFIG[row.from].label}
-                  </td>
-                  {REGIMES.map((to) => {
-                    const prob = row.to[to];
-                    const isHigh = prob > 0.3;
-                    return (
-                      <td key={to} className="p-2 text-center">
-                        <span
-                          className={`font-mono text-xs ${
-                            isHigh ? 'font-bold text-[var(--color-text)]' : 'text-[var(--color-text-muted)]'
-                          }`}
-                        >
-                          {(prob * 100).toFixed(0)}%
-                        </span>
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </ScrollableTable>
-      )}
-    </Card>
-  );
-}
-
-// ── Models Section ─────────────────────────────────────────────
-
-function ModelsSection({ models }: { models: ModelVersion[] }) {
-  const [showAll, setShowAll] = useState(false);
-
-  const deployedModels = models.filter((m) => m.status === 'deployed');
-  const displayModels = showAll ? models : models.slice(0, 3);
-
-  return (
-    <Card>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <Cpu className="w-5 h-5 text-[var(--color-accent)]" />
-          Model Performance
-        </h2>
-        <span className="text-sm text-[var(--color-text-muted)]">
-          {deployedModels.length} deployed
-        </span>
-      </div>
-
-      {/* Model Cards */}
-      <div className="space-y-3">
-        {displayModels.map((model) => (
-          <div
-            key={model.id}
-            className="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:shadow-md transition-all duration-200 hover:border-[var(--color-accent)]"
-            style={{ '--tw-border-opacity': '0.3' } as React.CSSProperties}
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-[var(--color-text)]">
-                  {model.modelType === 'regime_detector' ? 'Regime Detector' : 'Neural Factor'}
-                </span>
-                <span className="text-xs text-[var(--color-text-muted)] font-mono">v{model.version}</span>
-                <StatusBadge status={model.status} />
-              </div>
-              <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
-                <Clock className="w-3 h-3" />
-                {new Date(model.trainedAt).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </div>
-            </div>
-
-            {/* Metrics Row */}
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <div className="text-xs text-[var(--color-text-muted)]">Accuracy</div>
-                <div className="text-sm font-bold text-[var(--color-text)]">
-                  {(model.accuracy * 100).toFixed(1)}%
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-[var(--color-text-muted)]">Sharpe +</div>
-                <div className="text-sm font-bold text-[var(--color-positive)]">
-                  +{(model.sharpeImprovement * 100).toFixed(0)}%
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-[var(--color-text-muted)]">DD Reduction</div>
-                <div className="text-sm font-bold text-[var(--color-info)]">
-                  -{(model.maxDrawdownReduction * 100).toFixed(0)}%
-                </div>
-              </div>
-            </div>
-
-            {/* Accuracy Bar */}
-            <div className="mt-3 h-1.5 bg-[var(--color-bg)] rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-300"
-                style={{
-                  width: `${model.accuracy * 100}%`,
-                  background: 'linear-gradient(to right, var(--color-accent), #a855f7)',
-                }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {models.length > 3 && (
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="mt-3 w-full py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center justify-center gap-1 hover:bg-[var(--color-bg-secondary)] rounded-lg"
-        >
-          {showAll ? (
-            <>Show less <ChevronUp className="w-4 h-4" /></>
-          ) : (
-            <>Show all {models.length} versions <ChevronDown className="w-4 h-4" /></>
-          )}
-        </button>
-      )}
-    </Card>
-  );
-}
-
-// ── Attribution Section ────────────────────────────────────────
-
-function AttributionSection({
-  waterfall,
-  topDrivers,
-}: {
-  waterfall: WaterfallBar[];
-  topDrivers: AttributionDriver[];
-}) {
-  // Transform waterfall data for Recharts stacked bar approach
-  const chartData = useMemo(() => {
-    return waterfall.map((item) => ({
-      label: item.label,
-      // "invisible" base for the waterfall effect
-      base: item.type === 'total' ? 0 : Math.min(item.start, item.end),
-      // visible bar value (always positive for display)
-      value: Math.abs(item.value),
-      rawValue: item.value,
-      type: item.type,
-    }));
-  }, [waterfall]);
-
-  const barColors: Record<string, string> = {
-    positive: 'var(--color-positive)',
-    negative: 'var(--color-negative)',
-    total: 'var(--color-accent)',
-    residual: '#a855f7',
-  };
-
-  return (
-    <Card>
-      <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2 mb-4">
-        <Target className="w-5 h-5 text-[var(--color-accent)]" />
-        Factor Attribution
-      </h2>
-
-      {/* Waterfall Chart */}
-      <div className="h-64 mb-6" role="img" aria-label="Factor attribution waterfall chart showing contribution of each factor to total return">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 10, right: 10, bottom: 5, left: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" vertical={false} />
-            <XAxis
-              dataKey="label"
-              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
-              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
-            />
-            <YAxis
-              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
-              tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
-              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'var(--color-bg, #fff)',
-                border: '1px solid var(--color-border, var(--color-border))',
-                borderRadius: '8px',
-                fontSize: '12px',
-              }}
-              formatter={(_value: unknown, name: unknown, props: unknown) => {
-                if (name === 'base') return [null, null];
-                const p = props as { payload: { rawValue: number; type: string } };
-                const raw = p.payload.rawValue;
-                return [`${raw >= 0 ? '+' : ''}${(raw * 100).toFixed(2)}%`, p.payload.type === 'total' ? 'Total Return' : 'Contribution'];
-              }}
-            />
-            <ReferenceLine y={0} stroke="var(--color-text-muted, var(--color-text-muted))" strokeDasharray="2 2" />
-            {/* Invisible base bar */}
-            <Bar dataKey="base" stackId="waterfall" fill="transparent" />
-            {/* Visible value bar */}
-            <Bar dataKey="value" stackId="waterfall" radius={[4, 4, 0, 0]}>
-              {chartData.map((entry, index) => (
-                <Cell key={index} fill={barColors[entry.type]} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Top 5 Drivers */}
-      <div>
-        <h3 className="text-sm font-semibold text-[var(--color-text)] mb-3">Top 5 Drivers</h3>
-        <div className="space-y-2">
-          {topDrivers.map((driver) => {
-            const isPositive = driver.direction === 'positive';
-            return (
-              <div
-                key={driver.factor}
-                className="flex items-center justify-between hover:bg-[var(--color-bg-secondary)] rounded-lg px-2 -mx-2 transition-colors duration-150"
-              >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-2 h-6 rounded-full"
-                    style={{ backgroundColor: isPositive ? 'var(--color-positive)' : 'var(--color-negative)' }}
-                  />
-                  <span className="text-sm text-[var(--color-text)]">{driver.factor}</span>
-                </div>
-                <span
-                  className="text-sm font-mono font-bold"
-                  style={{ color: isPositive ? 'var(--color-positive)' : 'var(--color-negative)' }}
-                >
-                  {driver.contribution >= 0 ? '+' : ''}
-                  {(driver.contribution * 100).toFixed(2)}%
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </Card>
-  );
-}
-
 // ── Main Page ──────────────────────────────────────────────────
 
 export function ML() {
@@ -703,7 +205,7 @@ export function ML() {
           className="lg:col-span-4 animate-fade-in-up"
           style={{ animationDelay: '100ms', animationFillMode: 'both' }}
         >
-          <RegimeSection regime={regime} />
+          <RegimeDetector regime={regime} />
         </div>
 
         {/* Models Section */}
@@ -711,7 +213,7 @@ export function ML() {
           className="lg:col-span-4 animate-fade-in-up"
           style={{ animationDelay: '150ms', animationFillMode: 'both' }}
         >
-          <ModelsSection models={models} />
+          <ModelVersions models={models} />
         </div>
 
         {/* Attribution Section */}
@@ -719,7 +221,7 @@ export function ML() {
           className="lg:col-span-4 animate-fade-in-up"
           style={{ animationDelay: '200ms', animationFillMode: 'both' }}
         >
-          <AttributionSection waterfall={waterfall} topDrivers={topDrivers} />
+          <FactorAttribution waterfall={waterfall} topDrivers={topDrivers} />
         </div>
       </div>
     </div>

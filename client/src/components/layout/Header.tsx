@@ -1,8 +1,26 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Settings, Menu, HelpCircle, Moon, Sun } from 'lucide-react';
 import { AlertDropdown } from '@/components/alerts/AlertDropdown';
 import { HelpKeyboardHint } from '@/components/help';
 import { useThemeStore } from '@/stores/themeStore';
+
+const pageTitleMap: Record<string, string> = {
+  '/': 'Dashboard',
+  '/dashboard': 'Dashboard',
+  '/portfolio': 'Portfolio',
+  '/trade': 'Trade',
+  '/optimize': 'Optimize',
+  '/factors': 'Factors',
+  '/earnings': 'Earnings',
+  '/alerts': 'Alerts',
+  '/cvrf': 'CVRF',
+  '/ml': 'ML',
+  '/options': 'Options',
+  '/social': 'Social',
+  '/tax': 'Tax',
+  '/settings': 'Settings',
+  '/help': 'Help',
+};
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -11,6 +29,8 @@ interface HeaderProps {
 
 export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
   const { resolved, toggle } = useThemeStore();
+  const location = useLocation();
+  const pageTitle = pageTitleMap[location.pathname] || '';
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 glass-slab-floating z-50">
@@ -41,6 +61,13 @@ export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
               <p className="text-[10px] text-theme-muted mono tracking-[0.3em] uppercase">by Metaventions AI</p>
             </div>
           </Link>
+
+          {/* Mobile page title */}
+          {pageTitle && (
+            <span className="lg:hidden text-sm font-semibold text-theme mono tracking-[0.1em] uppercase">
+              {pageTitle}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">

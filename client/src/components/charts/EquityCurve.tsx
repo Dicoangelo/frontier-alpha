@@ -94,19 +94,16 @@ function generateMockData(currentValue: number, days: number): DataPoint[] {
   }));
 }
 
-// Read a CSS custom property from :root as a resolved color string
-function cssVar(name: string): string {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
-
-// Theme-aware canvas colors — reads CSS variables at call time
-function getChartColors(_isDark: boolean) {
-  const chartPrimary = cssVar('--chart-primary');
-  const bg = cssVar('--color-bg');
+// Read resolved chart colors from CSS variables (cached per theme change)
+function readChartColors() {
+  const cs = getComputedStyle(document.documentElement);
+  const v = (name: string) => cs.getPropertyValue(name).trim();
+  const chartPrimary = v('--chart-primary');
+  const bg = v('--color-bg');
   return {
-    grid: cssVar('--color-border'),
-    label: cssVar('--color-text-muted'),
-    benchmark: cssVar('--color-text-muted'),
+    grid: v('--color-border'),
+    label: v('--color-text-muted'),
+    benchmark: v('--color-text-muted'),
     line: chartPrimary,
     gradientTop: chartPrimary + '40', // ~25% opacity via hex alpha
     gradientBottom: 'transparent',
@@ -140,6 +137,10 @@ export const EquityCurve = React.memo(function EquityCurve({
   const [animationProgress, setAnimationProgress] = useState(0);
   const animationRef = useRef<number | null>(null);
   const isDark = useThemeStore((s) => s.resolved === 'dark');
+
+  // Cache resolved CSS colors — only recompute on theme change, not per animation frame
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const chartColors = useMemo(() => readChartColors(), [isDark]);
 
   const days = TIMEFRAME_DAYS[selectedTimeframe];
 
@@ -224,7 +225,7 @@ export const EquityCurve = React.memo(function EquityCurve({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const colors = getChartColors(isDark);
+    const colors = chartColors;
 
     // Set canvas size
     const dpr = window.devicePixelRatio || 1;

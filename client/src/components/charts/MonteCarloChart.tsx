@@ -126,6 +126,15 @@ export const MonteCarloChart = React.memo(function MonteCarloChart({
 
     const maxBinCount = Math.max(...bins);
 
+    // Theme-aware colors — read from CSS variables (once, before draw loop)
+    const cs = getComputedStyle(document.documentElement);
+    const dangerHex = cs.getPropertyValue('--chart-danger').trim();
+    const secondaryHex = cs.getPropertyValue('--chart-secondary').trim();
+    const zeroColor = cs.getPropertyValue('--color-text').trim();
+    const varColor = dangerHex;
+    const medianColor = cs.getPropertyValue('--chart-primary').trim();
+    const labelColor = cs.getPropertyValue('--color-text-muted').trim();
+
     // Draw bars
     const barWidth = chartWidth / binCount - 1;
 
@@ -135,9 +144,7 @@ export const MonteCarloChart = React.memo(function MonteCarloChart({
       const y = padding.top + chartHeight - barHeight;
       const binValue = minVal + i * binWidth;
 
-      // Color based on return — use CSS chart variables with dynamic alpha
-      const dangerHex = cs.getPropertyValue('--chart-danger').trim();
-      const secondaryHex = cs.getPropertyValue('--chart-secondary').trim();
+      // Color based on return — CSS chart variables with dynamic alpha
       if (binValue < 0) {
         const intensity = Math.min(Math.abs(binValue) / Math.abs(minVal), 1);
         const alpha = Math.round((0.3 + intensity * 0.5) * 255).toString(16).padStart(2, '0');
@@ -150,13 +157,6 @@ export const MonteCarloChart = React.memo(function MonteCarloChart({
 
       ctx.fillRect(x, y, barWidth, barHeight);
     });
-
-    // Theme-aware colors — read from CSS variables
-    const cs = getComputedStyle(document.documentElement);
-    const zeroColor = cs.getPropertyValue('--color-text').trim();
-    const varColor = cs.getPropertyValue('--chart-danger').trim();
-    const medianColor = cs.getPropertyValue('--chart-primary').trim();
-    const labelColor = cs.getPropertyValue('--color-text-muted').trim();
 
     // Draw zero line
     const zeroX = padding.left + ((0 - minVal) / (maxVal - minVal)) * chartWidth;

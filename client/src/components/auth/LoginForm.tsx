@@ -3,6 +3,8 @@ import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 interface LoginFormProps {
   onSwitchToSignup: () => void;
 }
@@ -14,7 +16,7 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const { login, loading, error, clearError } = useAuthStore();
 
   const validateEmail = (value: string) => {
-    if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    if (value && !EMAIL_RE.test(value)) {
       setEmailError('Please enter a valid email address');
     } else {
       setEmailError('');

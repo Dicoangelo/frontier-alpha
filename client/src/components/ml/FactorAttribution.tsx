@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import { Target } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
+import { rechartsTooltipStyle } from '@/lib/theme';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -82,12 +83,7 @@ function FactorAttributionInner({ waterfall, topDrivers }: FactorAttributionProp
               axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: 'var(--color-bg, #fff)',
-                border: '1px solid var(--color-border, var(--color-border))',
-                borderRadius: '8px',
-                fontSize: '12px',
-              }}
+              contentStyle={rechartsTooltipStyle}
               formatter={(_value: unknown, name: unknown, props: unknown) => {
                 if (name === 'base') return [null, null];
                 const p = props as { payload: { rawValue: number; type: string } };

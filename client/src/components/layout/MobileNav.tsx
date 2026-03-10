@@ -37,6 +37,41 @@ const morePages = [
   { name: 'Help', icon: HelpCircle, href: '/help' },
 ];
 
+function navButtonClass(isActive: boolean) {
+  return `
+    flex flex-col items-center justify-center
+    min-w-[64px] min-h-[56px] px-3 py-2
+    touch-manipulation
+    transition-all duration-150 ease-out
+    active:scale-95 click-feedback
+    focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset
+    ${isActive ? 'text-accent' : 'text-theme-muted hover:text-theme-secondary'}
+  `;
+}
+
+function NavButtonContent({ icon: Icon, label, isActive }: { icon: React.ElementType; label: string; isActive: boolean }) {
+  return (
+    <>
+      <div
+        className={`
+          relative flex items-center justify-center
+          w-12 h-11 min-h-[44px] rounded-sm
+          transition-all duration-200
+          ${isActive ? 'bg-accent-light' : ''}
+        `}
+      >
+        <Icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''} transition-transform`} />
+        {isActive && (
+          <span className="absolute -bottom-1 w-4 h-[2px] gradient-brand rounded-full" />
+        )}
+      </div>
+      <span className={`text-[9px] mt-0.5 mono tracking-[0.15em] uppercase ${isActive ? 'text-accent' : ''}`}>
+        {label}
+      </span>
+    </>
+  );
+}
+
 export function MobileNav() {
   const [moreOpen, setMoreOpen] = useState(false);
   const navigate = useNavigate();
@@ -58,38 +93,10 @@ export function MobileNav() {
               to={item.href}
               end={item.href === '/'}
               aria-label={item.name}
-              className={({ isActive }) => `
-                flex flex-col items-center justify-center
-                min-w-[64px] min-h-[56px] px-3 py-2
-                touch-manipulation
-                transition-all duration-150 ease-out
-                active:scale-95 click-feedback
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset
-                ${isActive
-                  ? 'text-accent'
-                  : 'text-theme-muted hover:text-theme-secondary'
-                }
-              `}
+              className={({ isActive }) => navButtonClass(isActive)}
             >
               {({ isActive }) => (
-                <>
-                  <div
-                    className={`
-                      relative flex items-center justify-center
-                      w-12 h-11 min-h-[44px] rounded-sm
-                      transition-all duration-200
-                      ${isActive ? 'bg-accent-light' : ''}
-                    `}
-                  >
-                    <item.icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''} transition-transform`} />
-                    {isActive && (
-                      <span className="absolute -bottom-1 w-4 h-[2px] gradient-brand rounded-full" />
-                    )}
-                  </div>
-                  <span className={`text-[9px] mt-0.5 mono tracking-[0.15em] uppercase ${isActive ? 'text-accent' : ''}`}>
-                    {item.name}
-                  </span>
-                </>
+                <NavButtonContent icon={item.icon} label={item.name} isActive={isActive} />
               )}
             </NavLink>
           ))}
@@ -98,35 +105,9 @@ export function MobileNav() {
           <button
             onClick={() => setMoreOpen(true)}
             aria-label="More pages"
-            className={`
-              flex flex-col items-center justify-center
-              min-w-[64px] min-h-[56px] px-3 py-2
-              touch-manipulation
-              transition-all duration-150 ease-out
-              active:scale-95 click-feedback
-              focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset
-              ${isMoreActive
-                ? 'text-accent'
-                : 'text-theme-muted hover:text-theme-secondary'
-              }
-            `}
+            className={navButtonClass(isMoreActive)}
           >
-            <div
-              className={`
-                relative flex items-center justify-center
-                w-12 h-11 min-h-[44px] rounded-sm
-                transition-all duration-200
-                ${isMoreActive ? 'bg-accent-light' : ''}
-              `}
-            >
-              <MoreHorizontal className={`w-5 h-5 ${isMoreActive ? 'scale-110' : ''} transition-transform`} />
-              {isMoreActive && (
-                <span className="absolute -bottom-1 w-4 h-[2px] gradient-brand rounded-full" />
-              )}
-            </div>
-            <span className={`text-[9px] mt-0.5 mono tracking-[0.15em] uppercase ${isMoreActive ? 'text-accent' : ''}`}>
-              More
-            </span>
+            <NavButtonContent icon={MoreHorizontal} label="More" isActive={isMoreActive} />
           </button>
         </div>
       </nav>

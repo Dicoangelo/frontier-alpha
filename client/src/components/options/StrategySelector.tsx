@@ -18,6 +18,7 @@ import {
 import { Target, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import type { StrategyType } from './options-types';
+import { rechartsTooltipStyle } from '@/lib/theme';
 import {
   UNDERLYING_PRICE,
   STRATEGIES,
@@ -138,12 +139,7 @@ function StrategySelectorInner() {
               axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: 'var(--color-bg, #fff)',
-                border: '1px solid var(--color-border, var(--color-border))',
-                borderRadius: '8px',
-                fontSize: '12px',
-              }}
+              contentStyle={rechartsTooltipStyle}
               formatter={(value: unknown) => [`$${Number(value).toFixed(2)}`, 'P&L']}
               labelFormatter={(label: unknown) => `Price: $${Number(label).toFixed(2)}`}
             />

@@ -176,6 +176,36 @@ export const fonts = {
   mono: "'JetBrains Mono', monospace",
 } as const;
 
+// ─── Category Colors (for CVRF, charts, multi-series) ───────────────
+// Maps to CSS chart variables — use these in D3/canvas/SVG code
+export const categoryColors: Record<string, string> = {
+  style:      'var(--chart-primary)',
+  quality:    'var(--chart-secondary)',
+  volatility: 'var(--chart-danger)',
+  sentiment:  'var(--chart-purple)',
+  macro:      'var(--chart-accent)',
+  sector:     'var(--chart-cyan)',
+};
+
+// Ordered palette for multi-series charts (conviction timeline, etc.)
+export const chartPalette = [
+  'var(--chart-primary)',
+  'var(--chart-secondary)',
+  'var(--chart-danger)',
+  'var(--chart-purple)',
+  'var(--chart-accent)',
+  'var(--chart-cyan)',
+  '#EC4899', // pink — no CSS var yet
+  '#14B8A6', // teal — no CSS var yet
+];
+
+// Semantic gauge colors (conviction, confidence, etc.)
+export function gaugeColor(value: number): string {
+  if (value >= 0.7) return 'var(--color-positive)';
+  if (value >= 0.4) return 'var(--color-warning)';
+  return 'var(--color-negative)';
+}
+
 // ─── Recharts Shared Styles ──────────────────────────────────────────
 // Reuse across all Recharts <Tooltip contentStyle={...} /> instances
 export const rechartsTooltipStyle: React.CSSProperties = {

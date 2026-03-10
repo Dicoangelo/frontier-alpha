@@ -13,6 +13,7 @@ import {
 import { useCVRFHistory, useCVRFEpisodes, useCVRFBeliefs } from '@/hooks/useCVRF';
 import { Card } from '@/components/shared/Card';
 import { Spinner } from '@/components/shared/Spinner';
+import { chartPalette } from '@/lib/theme';
 import type { CVRFCycleResult } from '@/types/cvrf';
 
 // ============================================================================
@@ -44,11 +45,8 @@ interface ConvictionDataPoint {
 // CONSTANTS
 // ============================================================================
 
-// Colors for the conviction lines — consistent set
-const LINE_COLORS = [
-  '#3B82F6', '#22C55E', '#EF4444', '#A855F7',
-  '#F59E0B', '#06B6D4', '#EC4899', '#14B8A6',
-];
+// Colors for the conviction lines — sourced from shared chart palette
+const LINE_COLORS = chartPalette;
 
 // ============================================================================
 // CONVICTION CHART

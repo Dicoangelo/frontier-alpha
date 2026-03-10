@@ -45,6 +45,10 @@
     --chart-purple: #8b5cf6;
     --chart-cyan: #06b6d4;
 
+    /* Tooltip / Inverse */
+    --color-bg-tooltip: #0F1219;
+    --color-text-inverse: #ffffff;
+
     /* Misc */
     --color-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
     --font-mono: 'JetBrains Mono', monospace;
@@ -88,6 +92,10 @@
     --chart-danger: #f87171;
     --chart-purple: #a78bfa;
     --chart-cyan: #22d3ee;
+
+    /* Tooltip / Inverse */
+    --color-bg-tooltip: #1a1f2e;
+    --color-text-inverse: #0B1020;
 
     /* Misc */
     --color-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);

@@ -31,6 +31,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@/api/client';
 import { useToast } from '@/hooks/useToast';
+import { rechartsTooltipStyle } from '@/lib/theme';
 
 interface BacktestRunConfig {
   symbols: string[];
@@ -402,11 +403,7 @@ export function Backtest() {
                         tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                       />
                       <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'var(--color-bg, #fff)',
-                          border: '1px solid var(--color-border, var(--color-border))',
-                          borderRadius: '8px',
-                        }}
+                        contentStyle={rechartsTooltipStyle}
                         formatter={(value: number | undefined) => [`$${(value ?? 0).toLocaleString()}`, 'Portfolio Value']}
                         labelFormatter={(label) => new Date(label).toLocaleDateString()}
                       />

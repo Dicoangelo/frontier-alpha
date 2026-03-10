@@ -139,7 +139,7 @@ export function Alerts() {
   };
 
   const handleAction = async (id: string, action: string) => {
-    console.log(`Alert action: ${action} on ${id}`);
+    // Handle alert action
     // Navigate to appropriate page based on action
     switch (action) {
       case 'reduce_risk':

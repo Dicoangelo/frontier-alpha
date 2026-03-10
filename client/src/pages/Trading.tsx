@@ -251,8 +251,7 @@ export default function Trading() {
           >
             <TradeExecutor
               defaultSymbol={selectedSymbol}
-              onOrderSubmitted={(order) => {
-                console.log('Order submitted:', order);
+              onOrderSubmitted={() => {
                 refetchPositions();
               }}
             />

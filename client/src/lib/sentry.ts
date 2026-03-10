@@ -128,7 +128,7 @@ export function initSentry(): Promise<void> {
         },
       });
 
-      console.log('[Sentry] Initialized for production');
+      // Sentry initialized successfully
     } catch (err) {
       // @sentry/react is not installed — gracefully degrade
       console.warn('[Sentry] @sentry/react not available, error tracking disabled', err);

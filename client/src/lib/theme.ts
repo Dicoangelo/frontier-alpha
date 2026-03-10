@@ -144,6 +144,9 @@ export const cssVars = {
   warning:         '--color-warning',
   info:            '--color-info',
 
+  // Brand
+  brandTeal:       '--color-brand-teal',
+
   // Misc
   cardShadow:      '--color-card-shadow',
   fontMono:        '--font-mono',
@@ -195,8 +198,8 @@ export const chartPalette = [
   'var(--chart-purple)',
   'var(--chart-accent)',
   'var(--chart-cyan)',
-  '#EC4899', // pink — no CSS var yet
-  '#14B8A6', // teal — no CSS var yet
+  'var(--chart-pink)',
+  'var(--chart-teal)',
 ];
 
 // Semantic gauge colors (conviction, confidence, etc.)

@@ -15,6 +15,8 @@ export function Login() {
           <img
             src="/metaventions-logo.png"
             alt="Metaventions AI"
+            width={64}
+            height={64}
             className="w-16 h-16 rounded-sm mx-auto mb-4"
           />
           <h1 className="text-3xl font-black text-[var(--color-text)]">

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   FileText,
@@ -366,7 +366,7 @@ function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardPr
 // MAIN COMPONENT
 // ============================================================================
 
-export function SECFilingAlert({
+export const SECFilingAlert = React.memo(function SECFilingAlert({
   symbols,
   className = '',
   maxAlerts = 10,
@@ -451,9 +451,9 @@ export function SECFilingAlert({
     ? filteredAlerts
     : filteredAlerts.slice(0, maxAlerts);
 
-  const toggleExpand = (id: string) => {
-    setExpandedAlert(expandedAlert === id ? null : id);
-  };
+  const toggleExpand = useCallback((id: string) => {
+    setExpandedAlert((prev) => (prev === id ? null : id));
+  }, []);
 
   // Count filing types for filter badges
   const typeCounts = useMemo(() => {
@@ -519,7 +519,9 @@ export function SECFilingAlert({
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setFilterType('all')}
-              className={`px-2 py-1 text-xs rounded-full transition-colors ${
+              aria-label="Show all filing types"
+              aria-pressed={filterType === 'all'}
+              className={`px-2 py-1 text-xs rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] ${
                 filterType === 'all'
                   ? 'bg-[var(--color-info)] text-white'
                   : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
@@ -661,7 +663,7 @@ export function SECFilingAlert({
       )}
     </Card>
   );
-}
+});
 
 // ============================================================================
 // DEMO/STANDALONE COMPONENT

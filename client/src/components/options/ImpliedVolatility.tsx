@@ -1,3 +1,4 @@
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   TrendingUp,
@@ -182,7 +183,7 @@ function IVvsHVBar({ iv, hv }: { iv: number; hv: number }) {
   );
 }
 
-export function ImpliedVolatility({
+export const ImpliedVolatility = React.memo(function ImpliedVolatility({
   symbols,
   className = '',
   showDollars = true,
@@ -220,9 +221,11 @@ export function ImpliedVolatility({
           size="sm"
           onClick={() => refetch()}
           disabled={isFetching}
+          aria-label="Refresh implied volatility data"
         >
           <RefreshCw
             className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`}
+            aria-hidden="true"
           />
         </Button>
       </div>
@@ -495,7 +498,7 @@ export function ImpliedVolatility({
       )}
     </Card>
   );
-}
+});
 
 // Compact version for dashboard
 export function ImpliedVolatilityCompact({

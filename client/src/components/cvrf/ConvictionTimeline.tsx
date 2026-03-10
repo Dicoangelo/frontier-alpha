@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Clock, ArrowRight, BarChart2 } from 'lucide-react';
 import {
   LineChart,
@@ -330,7 +330,7 @@ function BeliefDiffPanel({ selected }: { selected: TimelineNode | null }) {
 // MAIN COMPONENT
 // ============================================================================
 
-export function ConvictionTimeline() {
+export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'chart' | 'nodes'>('chart');
@@ -561,4 +561,4 @@ export function ConvictionTimeline() {
       </div>
     </Card>
   );
-}
+});

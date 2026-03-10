@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import * as d3 from 'd3';
 import { Orbit, Info, X } from 'lucide-react';
 import { useCVRFBeliefs, useRegimeDisplay } from '@/hooks/useCVRF';
@@ -190,7 +190,7 @@ function DetailPanel({ node, onClose }: DetailPanelProps) {
 // MAIN COMPONENT
 // ============================================================================
 
-export function BeliefConstellation() {
+export const BeliefConstellation = React.memo(function BeliefConstellation() {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const simulationRef = useRef<d3.Simulation<FactorNode, FactorLink> | null>(null);
@@ -595,4 +595,4 @@ export function BeliefConstellation() {
       </div>
     </Card>
   );
-}
+});

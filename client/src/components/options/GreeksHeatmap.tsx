@@ -152,7 +152,7 @@ function GreeksHeatmapInner({ cells }: GreeksHeatmapProps) {
                       <td
                         key={exp}
                         className="text-center px-2 py-2 font-mono"
-                        style={{ backgroundColor: getColor(value), color: '#fff' }}
+                        style={{ backgroundColor: getColor(value), color: 'var(--color-text-inverse, #fff)' }}
                         title={`Strike ${strike}, ${EXPIRATION_LABELS[exp]}: ${value.toFixed(4)}`}
                       >
                         {selectedGreek === 'gamma' ? value.toFixed(5) : value.toFixed(3)}

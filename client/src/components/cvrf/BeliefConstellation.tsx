@@ -4,6 +4,7 @@ import { Orbit, Info, X } from 'lucide-react';
 import { useCVRFBeliefs, useRegimeDisplay } from '@/hooks/useCVRF';
 import { Card } from '@/components/shared/Card';
 import { Spinner } from '@/components/shared/Spinner';
+import { categoryColors } from '@/lib/theme';
 
 // ============================================================================
 // TYPES
@@ -31,15 +32,8 @@ interface FactorLink extends d3.SimulationLinkDatum<FactorNode> {
 // CONSTANTS
 // ============================================================================
 
-// Colors per spec: style=blue, quality=green, volatility=red, sentiment=purple, macro=amber, sector=cyan
-const CATEGORY_COLORS: Record<FactorCategory, string> = {
-  style: '#3B82F6',       // blue
-  quality: '#22C55E',     // green
-  volatility: '#EF4444',  // red
-  sentiment: '#A855F7',   // purple
-  macro: '#F59E0B',       // amber
-  sector: '#06B6D4',      // cyan
-};
+// Colors per spec — sourced from CSS chart variables via theme.ts
+const CATEGORY_COLORS: Record<FactorCategory, string> = categoryColors as Record<FactorCategory, string>;
 
 const CATEGORY_LABELS: Record<FactorCategory, string> = {
   style: 'Style',

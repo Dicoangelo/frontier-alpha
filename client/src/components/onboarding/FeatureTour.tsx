@@ -172,7 +172,7 @@ export function FeatureTour({ isActive, onComplete, onSkip }: FeatureTourProps) 
               left: highlightRect.left - 8,
               width: highlightRect.width + 16,
               height: highlightRect.height + 16,
-              boxShadow: '0 0 0 9999px rgba(0,0,0,0.6)',
+              boxShadow: '0 0 0 9999px color-mix(in srgb, var(--color-text) 60%, transparent)',
               borderRadius: '12px',
             }}
           />

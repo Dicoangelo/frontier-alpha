@@ -29,7 +29,7 @@ function ConvictionGauge({ value, size = 64 }: ConvictionGaugeProps) {
   const bgPath = `M ${polarX(startAngle)} ${polarY(startAngle)} A ${r} ${r} 0 1 1 ${polarX(endAngle)} ${polarY(endAngle)}`;
   const fillPath = value <= 0 ? '' : `M ${polarX(startAngle)} ${polarY(startAngle)} A ${r} ${r} 0 ${fillAngle - startAngle > Math.PI ? 1 : 0} 1 ${polarX(fillAngle)} ${polarY(fillAngle)}`;
 
-  const color = value >= 0.7 ? '#22C55E' : value >= 0.4 ? '#F59E0B' : '#EF4444';
+  const color = value >= 0.7 ? 'var(--color-positive)' : value >= 0.4 ? 'var(--color-warning)' : 'var(--color-negative)';
 
   return (
     <svg width={size} height={size} aria-label={`Conviction gauge: ${(value * 100).toFixed(0)}%`}>

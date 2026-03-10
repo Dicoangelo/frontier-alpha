@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -15,6 +16,24 @@ import {
   Users,
   Receipt,
 } from 'lucide-react';
+
+// Route → lazy import map for hover prefetching
+const routePrefetchMap: Record<string, () => Promise<unknown>> = {
+  '/':         () => import('@/pages/Dashboard'),
+  '/portfolio': () => import('@/pages/Portfolio'),
+  '/trade':    () => import('@/pages/Trading'),
+  '/optimize': () => import('@/pages/Optimize'),
+  '/factors':  () => import('@/pages/Factors'),
+  '/earnings': () => import('@/pages/Earnings'),
+  '/alerts':   () => import('@/pages/Alerts'),
+  '/cvrf':     () => import('@/pages/CVRF'),
+  '/ml':       () => import('@/pages/ML'),
+  '/options':  () => import('@/pages/Options'),
+  '/social':   () => import('@/pages/Social'),
+  '/tax':      () => import('@/pages/Tax'),
+  '/settings': () => import('@/pages/Settings'),
+  '/help':     () => import('@/pages/Help'),
+};
 
 const navigation = [
   { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
@@ -38,6 +57,12 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onNavigate }: SidebarProps) {
+  // Prefetch route chunk on hover (fires import() which Vite caches)
+  const handlePrefetch = useCallback((href: string) => {
+    const prefetch = routePrefetchMap[href];
+    if (prefetch) prefetch();
+  }, []);
+
   return (
     <aside className="fixed left-0 top-16 bottom-0 w-64 glass-slab overflow-y-auto">
       <nav className="p-4 space-y-1">
@@ -47,6 +72,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             to={item.href}
             end={item.href === '/'}
             onClick={onNavigate}
+            onPointerEnter={() => handlePrefetch(item.href)}
             className={({ isActive }: { isActive: boolean }) => `
               flex items-center gap-3 px-4 py-3 rounded-sm transition-all click-feedback
               focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset

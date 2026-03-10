@@ -129,7 +129,7 @@ export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExport
       });
     } catch {
       // User cancelled or error
-      console.log('Share cancelled');
+      // User cancelled share or share API error — ignore
     }
   };
 

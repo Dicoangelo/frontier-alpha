@@ -73,7 +73,7 @@ export function Landing() {
         {/* Logo/Brand */}
         <div className="mb-8 text-center relative z-10 animate-fade-in-up">
           <div className="flex items-center justify-center gap-4 mb-6">
-            <img src="/metaventions-logo.png" alt="Metaventions AI" className="w-16 h-16 rounded-sm" />
+            <img src="/metaventions-logo.png" alt="Metaventions AI" width={64} height={64} className="w-16 h-16 rounded-sm" loading="eager" />
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-[var(--color-text)] mb-4 leading-[0.9] tracking-tight">
             Frontier<span className="text-gradient-brand">Alpha</span>
@@ -212,7 +212,7 @@ export function Landing() {
 
             <div className="glass-slab rounded-sm p-5 sm:p-6 md:p-8 text-center group hover:-translate-y-1 transition-all duration-500">
               <div className="w-12 h-12 mx-auto mb-4 rounded-sm flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)' }}>
-                <svg className="w-6 h-6 text-[#00FFC6]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <svg className="w-6 h-6 text-[var(--color-brand-teal)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>

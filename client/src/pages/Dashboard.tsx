@@ -99,7 +99,7 @@ async function fetchPortfolio(): Promise<Portfolio | null> {
 
     if (!response.ok) {
       if (response.status === 401) {
-        console.log('Not authenticated, using demo portfolio');
+        // Not authenticated — fall back to demo portfolio
         return getDemoPortfolio();
       }
       throw new Error(`Portfolio fetch failed: ${response.status}`);

@@ -49,6 +49,13 @@
     --color-bg-tooltip: #0F1219;
     --color-text-inverse: #ffffff;
 
+    /* Brand */
+    --color-brand-teal: #00FFC6;
+
+    /* Chart extras */
+    --chart-pink: #EC4899;
+    --chart-teal: #14B8A6;
+
     /* Misc */
     --color-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
     --font-mono: 'JetBrains Mono', monospace;
@@ -96,6 +103,13 @@
     /* Tooltip / Inverse */
     --color-bg-tooltip: #1a1f2e;
     --color-text-inverse: #0B1020;
+
+    /* Brand */
+    --color-brand-teal: #00FFC6;
+
+    /* Chart extras */
+    --chart-pink: #F472B6;
+    --chart-teal: #2DD4BF;
 
     /* Misc */
     --color-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
@@ -362,7 +376,7 @@
 
   /* Compute Halo */
   .gradient-halo {
-    background: linear-gradient(to right, #00FFC6, #18E6FF, #5AA7FF);
+    background: linear-gradient(to right, var(--color-brand-teal), #18E6FF, #5AA7FF);
   }
 
   /* Text Gradients */
@@ -379,7 +393,7 @@
     background-clip: text;
   }
   .text-gradient-halo {
-    background: linear-gradient(to right, #00FFC6, #18E6FF, #5AA7FF);
+    background: linear-gradient(to right, var(--color-brand-teal), #18E6FF, #5AA7FF);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

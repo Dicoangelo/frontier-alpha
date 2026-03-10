@@ -38,15 +38,26 @@ function PasswordStrengthBar({ password }: { password: string }) {
   );
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [validationError, setValidationError] = useState('');
   const { signup, loading, error, clearError } = useAuthStore();
 
   const passwordsMatch = password.length > 0 && confirmPassword.length > 0 && password === confirmPassword;
-  const isFormValid = email.length > 0 && password.length >= 6 && passwordsMatch;
+  const isFormValid = email.length > 0 && !emailError && password.length >= 6 && passwordsMatch;
+
+  const validateEmail = (value: string) => {
+    if (value && !EMAIL_RE.test(value)) {
+      setEmailError('Please enter a valid email address');
+    } else {
+      setEmailError('');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,23 +82,29 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-[var(--color-text-secondary)]">
+        <label htmlFor="email" className="block text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-2">
           Email
         </label>
         <input
           id="email"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
+          onBlur={(e) => validateEmail(e.target.value)}
           required
           autoComplete="email"
-          className="mt-1 block w-full px-4 py-3 border border-[var(--color-border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--color-info)] focus:border-[var(--color-info)]"
+          className={`block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all mono text-sm ${
+            emailError ? 'border-[var(--color-negative)]' : 'border-[var(--color-border)]'
+          }`}
           placeholder="you@example.com"
         />
+        {emailError && (
+          <p className="mt-1 text-xs text-[var(--color-negative)] mono">{emailError}</p>
+        )}
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-[var(--color-text-secondary)]">
+        <label htmlFor="password" className="block text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-2">
           Password
         </label>
         <input
@@ -98,15 +115,15 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
           required
           minLength={6}
           autoComplete="new-password"
-          className="mt-1 block w-full px-4 py-3 border border-[var(--color-border)] rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--color-info)] focus:border-[var(--color-info)]"
+          className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all mono text-sm"
           placeholder="••••••••"
         />
         <PasswordStrengthBar password={password} />
-        <p className="mt-1 text-xs text-[var(--color-text-muted)]">Must be at least 6 characters</p>
+        <p className="mt-1 text-xs text-[var(--color-text-muted)] mono">Must be at least 6 characters</p>
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-[var(--color-text-secondary)]">
+        <label htmlFor="confirmPassword" className="block text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-2">
           Confirm Password
         </label>
         <div className="relative">
@@ -117,7 +134,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             autoComplete="new-password"
-            className={`mt-1 block w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-[var(--color-info)] focus:border-[var(--color-info)] ${
+            className={`block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all mono text-sm ${
               confirmPassword.length > 0 && !passwordsMatch
                 ? 'border-[var(--color-negative)]'
                 : 'border-[var(--color-border)]'
@@ -134,12 +151,16 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
       </div>
 
       {displayError && (
-        <div className={`p-3 rounded-lg border ${
-          displayError.includes('check your email')
-            ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)]'
-            : 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]'
-        }`}>
-          <p className={`text-sm ${
+        <div className="p-3 rounded-sm" style={{
+          backgroundColor: displayError.includes('check your email')
+            ? 'color-mix(in srgb, var(--color-positive) 10%, transparent)'
+            : 'color-mix(in srgb, var(--color-negative) 10%, transparent)',
+          borderWidth: '1px',
+          borderColor: displayError.includes('check your email')
+            ? 'color-mix(in srgb, var(--color-positive) 20%, transparent)'
+            : 'color-mix(in srgb, var(--color-negative) 20%, transparent)',
+        }}>
+          <p className={`text-sm mono ${
             displayError.includes('check your email')
               ? 'text-[var(--color-positive)]'
               : 'text-[var(--color-negative)]'
@@ -153,12 +174,12 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         {loading ? <><Spinner className="w-5 h-5 inline mr-2" />Creating account...</> : 'Create Account'}
       </Button>
 
-      <p className="text-center text-sm text-[var(--color-text-secondary)]">
+      <p className="text-center text-sm text-[var(--color-text-muted)]">
         Already have an account?{' '}
         <button
           type="button"
           onClick={onSwitchToLogin}
-          className="text-[var(--color-info)] hover:text-[var(--color-info)] font-medium"
+          className="text-[var(--color-accent-secondary)] hover:text-[var(--color-accent)] font-medium transition-colors"
         >
           Sign in
         </button>

@@ -1,3 +1,5 @@
+import type React from 'react';
+
 /**
  * Metaventions AI Design System — Theme Constants
  *
@@ -173,6 +175,15 @@ export const fonts = {
   sans: "'Inter', system-ui, -apple-system, sans-serif",
   mono: "'JetBrains Mono', monospace",
 } as const;
+
+// ─── Recharts Shared Styles ──────────────────────────────────────────
+// Reuse across all Recharts <Tooltip contentStyle={...} /> instances
+export const rechartsTooltipStyle: React.CSSProperties = {
+  backgroundColor: 'var(--color-bg, #fff)',
+  border: '1px solid var(--color-border)',
+  borderRadius: '8px',
+  fontSize: '12px',
+};
 
 // ─── Full Theme Export ────────────────────────────────────────────────
 export const theme = {

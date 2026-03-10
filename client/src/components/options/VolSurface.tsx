@@ -265,6 +265,9 @@ function VolSurfaceInner({ points }: VolSurfaceProps) {
       .attr('font-size', '10px')
       .attr('font-family', labelStyle.fontFamily)
       .text(`${(ivMax * 100).toFixed(0)}%`);
+    return () => {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+    };
   }, [points, rotation, strikes, expirations, pointMap]);
 
   return (

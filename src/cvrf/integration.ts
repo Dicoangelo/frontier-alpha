@@ -16,7 +16,10 @@ import type {
   OptimizationResult,
   FactorExposure,
   CognitiveExplanation,
+  Price,
 } from '../types/index.js';
+import { PortfolioOptimizer } from '../optimizer/PortfolioOptimizer.js';
+import type { BeliefConstraints } from '../optimizer/PortfolioOptimizer.js';
 import { logger } from '../lib/logger.js';
 
 // ============================================================================
@@ -144,6 +147,50 @@ export function validateOptimizationWithCVRF(
     warnings,
     adjustedWeights,
   };
+}
+
+// ============================================================================
+// BELIEF-WIRED PORTFOLIO OPTIMIZATION
+// ============================================================================
+
+/**
+ * Run portfolio optimization with CVRF beliefs wired in.
+ *
+ * Extracts factorWeights and factorConfidences from getCurrentBeliefs()
+ * and passes them as prior constraints into the optimizer. Falls back to
+ * unconstrained optimization when beliefs are unavailable or empty.
+ */
+export async function optimizeWithBeliefs(
+  optimizer: PortfolioOptimizer,
+  symbols: string[],
+  prices: Map<string, Price[]>,
+  config: OptimizationConfig,
+  cvrfManager: CVRFManager
+): Promise<OptimizationResult> {
+  let beliefs: BeliefConstraints | undefined;
+
+  try {
+    const currentBeliefs = cvrfManager.getCurrentBeliefs();
+
+    if (currentBeliefs.factorWeights.size > 0) {
+      beliefs = {
+        factorWeights: currentBeliefs.factorWeights,
+        factorConfidences: currentBeliefs.factorConfidences,
+      };
+
+      logger.info({
+        factors: Array.from(currentBeliefs.factorWeights.keys()),
+        regime: currentBeliefs.currentRegime,
+        regimeConfidence: currentBeliefs.regimeConfidence,
+      }, 'Wiring CVRF beliefs into optimizer');
+    } else {
+      logger.info('No CVRF factor beliefs available — running unconstrained');
+    }
+  } catch (err) {
+    logger.warn({ error: err }, 'Failed to load CVRF beliefs — falling back to unconstrained');
+  }
+
+  return optimizer.optimize(symbols, prices, config, beliefs);
 }
 
 // ============================================================================

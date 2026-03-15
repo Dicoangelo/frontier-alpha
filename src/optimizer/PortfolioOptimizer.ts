@@ -15,6 +15,20 @@ import type {
 import { FactorEngine } from '../factors/FactorEngine.js';
 
 // ============================================================================
+// CVRF BELIEF CONSTRAINTS
+// ============================================================================
+
+/**
+ * Belief priors from the CVRF system.
+ * factorWeights: desired factor exposure levels (0-1 scale)
+ * factorConfidences: how strongly to enforce each belief (0-1, higher = tighter)
+ */
+export interface BeliefConstraints {
+  factorWeights: Map<string, number>;
+  factorConfidences: Map<string, number>;
+}
+
+// ============================================================================
 // PORTFOLIO OPTIMIZER
 // ============================================================================
 
@@ -29,25 +43,39 @@ export class PortfolioOptimizer {
 
   /**
    * Main optimization entry point
+   *
+   * @param symbols Asset tickers to optimize over
+   * @param prices Historical price data per symbol
+   * @param config Optimization objective and parameters
+   * @param beliefs Optional CVRF belief constraints. When provided,
+   *   factorWeights are injected as soft prior constraints on expected returns
+   *   and factorConfidences control how tightly each constraint binds.
+   *   When absent, optimization runs unconstrained (graceful fallback).
    */
   async optimize(
     symbols: string[],
     prices: Map<string, Price[]>,
-    config: OptimizationConfig
+    config: OptimizationConfig,
+    beliefs?: BeliefConstraints
   ): Promise<OptimizationResult> {
     // Calculate returns matrix
     const returns = this.calculateReturnsMatrix(symbols, prices);
-    
+
     // Calculate expected returns and covariance
-    const mu = this.calculateMeanReturns(returns);
+    let mu = this.calculateMeanReturns(returns);
     const sigma = this.calculateCovariance(returns);
-    
+
     // Apply Ledoit-Wolf shrinkage to covariance
     const shrunkSigma = this.ledoitWolfShrinkage(sigma);
-    
+
+    // Apply belief constraints as Bayesian prior tilts on expected returns
+    if (beliefs && beliefs.factorWeights.size > 0) {
+      mu = this.applyBeliefPriors(symbols, mu, prices, beliefs);
+    }
+
     // Optimize based on objective
     let weights: number[];
-    
+
     switch (config.objective) {
       case 'max_sharpe':
         weights = this.maxSharpe(mu, shrunkSigma, config.riskFreeRate);
@@ -64,27 +92,32 @@ export class PortfolioOptimizer {
       default:
         weights = this.equalWeight(symbols.length);
     }
-    
+
+    // Apply belief-based weight constraints (concentration / min-position)
+    if (beliefs && beliefs.factorWeights.size > 0) {
+      weights = this.applyBeliefWeightConstraints(weights, beliefs);
+    }
+
     // Validate with Monte Carlo
     const monteCarlo = this.monteCarloSimulation(returns, weights, 10000);
-    
+
     // Calculate metrics
     const expectedReturn = this.portfolioReturn(weights, mu);
     const expectedVol = this.portfolioVolatility(weights, shrunkSigma);
     const sharpe = (expectedReturn - config.riskFreeRate) / expectedVol;
-    
+
     // Calculate factor exposures
     const factorExposures = await this.calculateFactorExposures(symbols, weights, prices);
-    
+
     // Generate explanation
     const explanation = this.generateExplanation(
       symbols, weights, expectedReturn, expectedVol, sharpe, factorExposures
     );
-    
+
     // Convert to Map
     const weightsMap = new Map<string, number>();
     symbols.forEach((s, i) => weightsMap.set(s, weights[i]));
-    
+
     return {
       weights: weightsMap,
       expectedReturn: expectedReturn * 252,  // Annualize
@@ -242,6 +275,108 @@ export class PortfolioOptimizer {
    */
   private equalWeight(n: number): number[] {
     return new Array(n).fill(1 / n);
+  }
+
+  // ============================================================================
+  // CVRF BELIEF INTEGRATION
+  // ============================================================================
+
+  /**
+   * Apply CVRF factor beliefs as Bayesian prior tilts on expected returns.
+   *
+   * For each asset, compute its alignment with the belief factor weights
+   * (using factor exposures). Assets aligned with high-conviction beliefs
+   * get a return boost; misaligned assets get penalized. The magnitude of
+   * the tilt scales with factorConfidence — low confidence beliefs barely
+   * nudge the returns, high confidence beliefs push hard.
+   *
+   * This is the Black-Litterman intuition: beliefs act as views that blend
+   * with the sample estimates proportional to conviction.
+   */
+  private applyBeliefPriors(
+    symbols: string[],
+    mu: number[],
+    prices: Map<string, Price[]>,
+    beliefs: BeliefConstraints
+  ): number[] {
+    const adjusted = [...mu];
+    const n = symbols.length;
+
+    // Build a simple factor-exposure proxy per asset using recent returns
+    // correlation with a momentum signal (most universal factor)
+    for (let i = 0; i < n; i++) {
+      const symbolPrices = prices.get(symbols[i]) || [];
+      if (symbolPrices.length < 60) continue;
+
+      let beliefTilt = 0;
+      let totalConfidence = 0;
+
+      for (const [factor, beliefWeight] of beliefs.factorWeights) {
+        const confidence = beliefs.factorConfidences.get(factor) ?? 0.5;
+        // Convert belief weight (0-1) to a directional signal (-0.5 to +0.5)
+        const signal = beliefWeight * 2 - 1;
+
+        // Asset-factor alignment: use price momentum as a proxy
+        // Short-horizon momentum for the asset
+        const recentSlice = symbolPrices.slice(-60);
+        const startPrice = recentSlice[0]?.close ?? 1;
+        const endPrice = recentSlice[recentSlice.length - 1]?.close ?? 1;
+        const assetMomentum = (endPrice - startPrice) / startPrice;
+
+        // Factor-aligned assets get a positive tilt, counter-aligned get negative
+        const alignment = factor.includes('momentum') || factor.includes('growth')
+          ? assetMomentum
+          : factor.includes('value') || factor.includes('quality')
+            ? -assetMomentum  // Value tends to be anti-momentum
+            : assetMomentum * 0.5;  // Generic: half-weight alignment
+
+        beliefTilt += signal * alignment * confidence;
+        totalConfidence += confidence;
+      }
+
+      if (totalConfidence > 0) {
+        // Scale the tilt: max adjustment is ~50% of the original mean return
+        // Higher aggregate confidence = stronger tilt
+        const tiltStrength = Math.min(totalConfidence / beliefs.factorWeights.size, 1);
+        const maxTilt = Math.abs(mu[i]) * 0.5;
+        const clampedTilt = Math.max(-maxTilt, Math.min(maxTilt, beliefTilt / totalConfidence));
+        adjusted[i] = mu[i] + clampedTilt * tiltStrength;
+      }
+    }
+
+    return adjusted;
+  }
+
+  /**
+   * Apply belief-based weight constraints after optimization.
+   *
+   * Uses the average confidence across all belief factors as a
+   * concentration damper: high conviction beliefs tighten max-weight
+   * limits (preventing over-concentration in a single name when the
+   * model is confident about factor views). Re-normalizes after clamping.
+   */
+  private applyBeliefWeightConstraints(
+    weights: number[],
+    beliefs: BeliefConstraints
+  ): number[] {
+    const confidences = Array.from(beliefs.factorConfidences.values());
+    if (confidences.length === 0) return weights;
+
+    const avgConfidence = confidences.reduce((a, b) => a + b, 0) / confidences.length;
+
+    // Higher confidence = tighter concentration limit (0.5 at 0 confidence, 0.25 at full)
+    const maxWeight = 0.5 - avgConfidence * 0.25;
+    const constrained = weights.map(w => Math.min(w, maxWeight));
+
+    // Re-normalize
+    const sum = constrained.reduce((a, b) => a + b, 0);
+    if (sum > 0) {
+      for (let i = 0; i < constrained.length; i++) {
+        constrained[i] /= sum;
+      }
+    }
+
+    return constrained;
   }
 
   // ============================================================================

@@ -8,8 +8,6 @@
     "deploymentEnabled": false
   },
   "rewrites": [
-    { "source": "/api/edge/:path*", "destination": "/api/edge/:path*" },
-    { "source": "/api/:path*", "destination": "/api/:path*" },
     { "source": "/health", "destination": "/api/health" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],

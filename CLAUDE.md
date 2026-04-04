@@ -177,9 +177,6 @@ Dark mode: CSS variable–based (no `dark:` Tailwind prefixes needed). Light/Dar
 ### Critical
 - **Dual API surface** — 48 Fastify routes + 69 Vercel serverless functions. CVRF routes now aligned (commit `84f4766`), but 38 Vercel-only + 25 Fastify-only endpoints remain unsynced. Changes must be applied to both.
 
-### Moderate
-- **README metrics stale** — Claims "80+ factors" (76), "29+ endpoints" (48), "5 stores" (6)
-
 ### Resolved (Sprint 2026-04-03)
 - ~~**Version mismatch**~~ — Fixed: `/health` now reads from `package.json` (`d763465`)
 - ~~**Monolith route file**~~ — Fixed: 14 route modules extracted, `src/index.ts` 2800→333 lines (`4e04157`)
@@ -190,6 +187,7 @@ Dark mode: CSS variable–based (no `dark:` Tailwind prefixes needed). Light/Dar
 - ~~**Duplicate NotificationSettings**~~ — Fixed: `components/notifications/` copy archived to `.graveyard/` (`a0e996b`)
 - ~~**CVRF state divergence**~~ — Fixed: Fastify now uses PersistentCVRFManager, response shapes aligned with Vercel (`84f4766`)
 - ~~**Subscription gates missing**~~ — Fixed: pro-only routes now enforce `requirePlan('pro')` (`a0e996b`)
+- ~~**README metrics stale**~~ — Fixed: updated to 76 factors, 265 tests, 48 endpoints (`66b7726`)
 
 ### Low
 - Vercel auto-deploy **disabled** (`acf6987`) — deploy manually to save build credits

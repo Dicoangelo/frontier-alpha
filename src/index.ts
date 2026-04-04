@@ -16,9 +16,12 @@
  * - /ws/quotes - Real-time quote streaming
  */
 
+import { readFileSync } from 'fs';
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import websocket from '@fastify/websocket';
+
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8')) as { version: string };
 
 import { FactorEngine } from './factors/FactorEngine.js';
 import { PortfolioOptimizer } from './optimizer/PortfolioOptimizer.js';
@@ -216,7 +219,7 @@ export class FrontierAlphaServer {
     // Health Check
     // ========================================
     this.app.get('/health', async () => {
-      return { status: 'ok', timestamp: new Date().toISOString(), version: '1.0.3-debug' };
+      return { status: 'ok', timestamp: new Date().toISOString(), version: pkg.version };
     });
 
     // ========================================
@@ -2691,7 +2694,7 @@ export class FrontierAlphaServer {
         host: this.config.host,
         port: this.config.port,
         environment: process.env.NODE_ENV || 'development',
-        version: '1.0.3-debug',
+        version: pkg.version,
       }, 'Frontier Alpha server started');
 
       logger.info({

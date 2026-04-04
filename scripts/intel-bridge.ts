@@ -25,7 +25,8 @@ import type { Price, OptimizationConfig } from '../src/types/index.js';
 // POLYGON DATA FETCHER (direct, no server needed)
 // ============================================================================
 
-const POLYGON_KEY = process.env.POLYGON_API_KEY || 'CmAs6neUzMxwYd2dHRMFHn7zrgRz8dKt';
+const POLYGON_KEY = process.env.POLYGON_API_KEY;
+if (!POLYGON_KEY) throw new Error('POLYGON_API_KEY environment variable is required');
 
 interface PolygonBar {
   o: number; h: number; l: number; c: number; v: number; t: number;

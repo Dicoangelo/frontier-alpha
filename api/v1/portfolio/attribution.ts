@@ -90,6 +90,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(204).end();
   }
 
+  const user = await requireAuth(req, res);
+  if (!user) return;
+
   const start = Date.now();
   const period = (req.query.period as string) || '1M';
   const days = PERIOD_DAYS[period] || 30;

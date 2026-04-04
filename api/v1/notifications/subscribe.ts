@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireAuth } from '../../lib/auth.js';
 import { getPushService, type PushSubscriptionData } from '../../../src/notifications/PushService';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -17,15 +18,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  const user = await requireAuth(req, res);
+  if (!user) return;
+
   const start = Date.now();
 
   try {
-    const { subscription, userId } = req.body as {
+    const { subscription } = req.body as {
       subscription?: {
         endpoint?: string;
         keys?: { auth?: string; p256dh?: string };
       };
-      userId?: string;
     };
 
     // Validate subscription object
@@ -44,10 +47,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // Extract user ID from auth token if not provided explicitly
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.replace('Bearer ', '');
-    const effectiveUserId = userId || (token ? `user-${token.slice(0, 8)}` : 'anonymous');
+    // userId is derived from the verified auth token — never from request body
+    const effectiveUserId = user.id;
 
     const subscriptionData: PushSubscriptionData = {
       endpoint: subscription.endpoint,

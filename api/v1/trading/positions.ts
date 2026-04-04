@@ -5,6 +5,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireAuth } from '../../lib/auth.js';
 import { methodNotAllowed } from '../../lib/errorHandler.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -20,6 +21,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
     return methodNotAllowed(res);
   }
+
+  const user = await requireAuth(req, res);
+  if (!user) return;
 
   const requestId = `req-${Math.random().toString(36).slice(2, 8)}`;
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import DOMPurify from 'dompurify';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   X,
   Search,
@@ -403,79 +404,33 @@ interface TopicDetailProps {
   onSelectTopic: (topic: HelpTopic) => void;
 }
 
+const helpPanelMarkdownComponents = {
+  h2: ({ children }: { children?: React.ReactNode }) => (
+    <h2 className="text-xl font-bold text-[var(--color-text)] mt-6 mb-3 first:mt-0">{children}</h2>
+  ),
+  h3: ({ children }: { children?: React.ReactNode }) => (
+    <h3 className="text-lg font-semibold text-[var(--color-text)] mt-5 mb-2">{children}</h3>
+  ),
+  p: ({ children }: { children?: React.ReactNode }) => (
+    <p className="text-[var(--color-text-secondary)] mb-3 leading-relaxed">{children}</p>
+  ),
+  strong: ({ children }: { children?: React.ReactNode }) => (
+    <strong className="font-semibold text-[var(--color-text)]">{children}</strong>
+  ),
+  ul: ({ children }: { children?: React.ReactNode }) => (
+    <ul className="list-disc list-inside space-y-1 mb-4 text-[var(--color-text-secondary)]">{children}</ul>
+  ),
+  li: ({ children }: { children?: React.ReactNode }) => <li>{children}</li>,
+  hr: () => <hr className="my-6 border-[var(--color-border)]" />,
+};
+
 function TopicDetail({ topic, onSelectTopic }: TopicDetailProps) {
-  // Simple markdown-like rendering
-  const renderContent = (content: string) => {
-    const lines = content.trim().split('\n');
-    const elements: React.ReactNode[] = [];
-    let currentList: string[] = [];
-    let listKey = 0;
-
-    const flushList = () => {
-      if (currentList.length > 0) {
-        elements.push(
-          <ul key={`list-${listKey++}`} className="list-disc list-inside space-y-1 mb-4 text-[var(--color-text-secondary)]">
-            {currentList.map((item, i) => (
-              <li key={i}>{item}</li>
-            ))}
-          </ul>
-        );
-        currentList = [];
-      }
-    };
-
-    lines.forEach((line, index) => {
-      const trimmed = line.trim();
-
-      if (trimmed.startsWith('## ')) {
-        flushList();
-        elements.push(
-          <h2 key={`h2-${index}`} className="text-xl font-bold text-[var(--color-text)] mt-6 mb-3 first:mt-0">
-            {trimmed.slice(3)}
-          </h2>
-        );
-      } else if (trimmed.startsWith('### ')) {
-        flushList();
-        elements.push(
-          <h3 key={`h3-${index}`} className="text-lg font-semibold text-[var(--color-text)] mt-5 mb-2">
-            {trimmed.slice(4)}
-          </h3>
-        );
-      } else if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
-        flushList();
-        elements.push(
-          <p key={`bold-${index}`} className="font-semibold text-[var(--color-text)] mt-4 mb-2">
-            {trimmed.slice(2, -2)}
-          </p>
-        );
-      } else if (trimmed.startsWith('- ')) {
-        currentList.push(trimmed.slice(2));
-      } else if (trimmed.startsWith('---')) {
-        flushList();
-        elements.push(<hr key={`hr-${index}`} className="my-6 border-[var(--color-border)]" />);
-      } else if (trimmed) {
-        flushList();
-        // Handle inline bold
-        const processed = trimmed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        const sanitized = DOMPurify.sanitize(processed, { ALLOWED_TAGS: ['strong'], ALLOWED_ATTR: [] });
-        elements.push(
-          <p
-            key={`p-${index}`}
-            className="text-[var(--color-text-secondary)] mb-3 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: sanitized }}
-          />
-        );
-      }
-    });
-
-    flushList();
-    return elements;
-  };
-
   return (
     <div className="p-6">
       <div className="prose prose-sm max-w-none">
-        {renderContent(topic.content)}
+        <ReactMarkdown remarkPlugins={[remarkGfm]} components={helpPanelMarkdownComponents}>
+          {topic.content}
+        </ReactMarkdown>
       </div>
 
       {/* Related Topics */}

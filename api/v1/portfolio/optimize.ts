@@ -623,6 +623,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return methodNotAllowed(res);
   }
 
+  const user = await requireAuth(req, res);
+  if (!user) return;
+
   const start = Date.now();
 
   try {

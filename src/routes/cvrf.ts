@@ -1,4 +1,6 @@
 import type { FastifyInstance } from 'fastify';
+import { authMiddleware } from '../middleware/auth.js';
+import { subscriptionGate, requirePlan } from '../middleware/subscriptionGate.js';
 import { getCVRFRiskAssessment } from '../cvrf/integration.js';
 import { logger } from '../observability/logger.js';
 import type { APIResponse } from '../types/index.js';
@@ -12,6 +14,11 @@ interface RouteContext {
 
 export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
   const { server } = opts;
+
+  // Pro-only: auth + subscription gate for all CVRF routes
+  fastify.addHook('preHandler', authMiddleware);
+  fastify.addHook('preHandler', subscriptionGate);
+  fastify.addHook('preHandler', requirePlan('pro'));
 
   // GET /api/v1/cvrf/beliefs
   fastify.get<{ Reply: APIResponse<unknown> }>(

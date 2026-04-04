@@ -1,4 +1,6 @@
 import type { FastifyInstance } from 'fastify';
+import { authMiddleware } from '../middleware/auth.js';
+import { subscriptionGate, requirePlan } from '../middleware/subscriptionGate.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { logger } from '../observability/logger.js';
 import type { MarketRegime, RegimeDetectionResult } from '../ml/RegimeDetector.js';
@@ -23,6 +25,11 @@ interface RouteContext {
 
 export async function mlRoutes(fastify: FastifyInstance, opts: RouteContext) {
   const { server } = opts;
+
+  // Pro-only: auth + subscription gate for all ML routes
+  fastify.addHook('preHandler', authMiddleware);
+  fastify.addHook('preHandler', subscriptionGate);
+  fastify.addHook('preHandler', requirePlan('pro'));
 
   // GET /api/v1/ml/regime
   fastify.get<{

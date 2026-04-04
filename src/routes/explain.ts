@@ -1,4 +1,6 @@
 import type { FastifyInstance } from 'fastify';
+import { authMiddleware } from '../middleware/auth.js';
+import { subscriptionGate, requirePlan } from '../middleware/subscriptionGate.js';
 import { logger } from '../observability/logger.js';
 import type { ExplanationRequest, ExplanationType } from '../services/ExplanationService.js';
 import type { APIResponse, Price } from '../types/index.js';
@@ -18,6 +20,11 @@ interface RouteContext {
 
 export async function explainRoutes(fastify: FastifyInstance, opts: RouteContext) {
   const { server } = opts;
+
+  // Pro-only: auth + subscription gate for all explain routes (GPT-4o usage)
+  fastify.addHook('preHandler', authMiddleware);
+  fastify.addHook('preHandler', subscriptionGate);
+  fastify.addHook('preHandler', requirePlan('pro'));
 
   // POST /api/v1/portfolio/explain — Cognitive explanation
   fastify.post<{

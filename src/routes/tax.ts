@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { authMiddleware } from '../middleware/auth.js';
+import { subscriptionGate, requirePlan } from '../middleware/subscriptionGate.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { logger } from '../observability/logger.js';
 import type { TaxLotTracker } from '../tax/TaxLotTracker.js';
@@ -21,12 +22,17 @@ interface RouteContext {
 export async function taxRoutes(fastify: FastifyInstance, opts: RouteContext) {
   const { server } = opts;
 
+  // Pro-only: subscription gate for all tax routes (auth already per-route)
+  fastify.addHook('preHandler', authMiddleware);
+  fastify.addHook('preHandler', subscriptionGate);
+  fastify.addHook('preHandler', requirePlan('pro'));
+
   // GET /api/v1/tax/lots
   fastify.get<{
     Querystring: { symbol?: string };
   }>(
     '/api/v1/tax/lots',
-    { preHandler: authMiddleware },
+
     async (request, reply) => {
       const start = Date.now();
       const symbol = request.query.symbol?.trim().toUpperCase();
@@ -110,7 +116,7 @@ export async function taxRoutes(fastify: FastifyInstance, opts: RouteContext) {
     Querystring: { symbols?: string };
   }>(
     '/api/v1/tax/harvest',
-    { preHandler: authMiddleware },
+
     async (request, reply) => {
       const start = Date.now();
 
@@ -175,7 +181,7 @@ export async function taxRoutes(fastify: FastifyInstance, opts: RouteContext) {
     };
   }>(
     '/api/v1/tax/harvest',
-    { preHandler: authMiddleware },
+
     async (request, reply) => {
       const start = Date.now();
       const { symbol, shares, salePrice, method, lotIds } = request.body || {};
@@ -233,7 +239,7 @@ export async function taxRoutes(fastify: FastifyInstance, opts: RouteContext) {
   // GET /api/v1/tax/wash-sales
   fastify.get(
     '/api/v1/tax/wash-sales',
-    { preHandler: authMiddleware },
+
     async (request, reply) => {
       const start = Date.now();
 
@@ -277,7 +283,7 @@ export async function taxRoutes(fastify: FastifyInstance, opts: RouteContext) {
     Querystring: { year?: string; format?: string };
   }>(
     '/api/v1/tax/report',
-    { preHandler: authMiddleware },
+
     async (request, reply) => {
       const start = Date.now();
       const taxYear = request.query.year

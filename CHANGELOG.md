@@ -7,6 +7,129 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.4] - 2026-03-15
+
+### Intelligence
+
+- Wired CVRF belief system into portfolio optimizer — beliefs now directly constrain weight allocations and factor targets in real-time.
+
+## [1.0.3] - 2026-03-10
+
+### Performance
+
+- UX optimization round 6: 100% CSS variable compliance across all remaining components, console cleanup, route prefetch hints, CLS prevention.
+- UX optimization round 5: React.memo applied to expensive components; accessibility improvements.
+
+### Bug Fixes
+
+- UX optimization round 4: eliminated all remaining hardcoded hex/rgba colors; unified shared chart color palette.
+
+## [1.0.2] - 2026-03-09
+
+### UX
+
+- UX optimization round 3: performance caching improvements, DRY refactors, form validation hardening.
+- UX optimization round 2: dark mode chart fixes, page decomposition, form validation, mobile nav improvements.
+- UX optimization pass: component decomposition, memoized charts, standardized animation curves, interaction polish.
+
+### Bug Fixes
+
+- Eliminated 255 of 260 remaining hardcoded `rgba()` values — full CSS variable compliance.
+
+## [1.0.1] - 2026-03-07
+
+### Platform
+
+- Phase 1 marked complete — all Week 3–4 tasks done.
+- Disabled Vercel auto-deploy to batch deploys and conserve build credits.
+
+### PRD Completion
+
+- All 31 PRD stories shipped: CSS variable compliance, skeleton loading states, micro-interactions.
+- Fix `SkeletonProps` missing `style` prop — resolved Vercel build TS2322 error.
+
+## [1.0.0] - 2026-02-19
+
+### Design System
+
+- Full migration to CSS variable design system — 46 components migrated in one pass, remaining pages and hooks migrated in follow-up.
+- CSS variable compliance + animations + hover polish across 8 tabs.
+- Tax, Options, Trading tabs: CSS variable compliance, staggered animations, hover polish.
+- Eliminated 37 hardcoded colors from Options tab.
+- Global animation `fill-mode` fix; eliminated all remaining hardcoded colors.
+
+### Dashboard & Pages
+
+- Dashboard upgrade to Bloomberg/Stripe standard — 6 stories: larger stat cards, cleaner donut center, calmer offline state.
+- Portfolio page: icon stat cards, countUp animations, polished position table.
+- Stat cards and animations upgraded across 6 pages — icon backgrounds, `animationFillMode`.
+- Help, SharedPortfolio, and Alerts pages: staggered animations, CSS variable banners, refined table headers.
+- Options, Tax, Settings, Social, Earnings, CVRF: icon stat cards, `lg:text-3xl` headers, `animationFillMode`.
+- Added Appearance card to Settings (Light / Dark / System); fixed light-mode contrast on Pricing and Landing pages.
+- Skeleton loading, Login light mode fix, accessibility polish (Tier 2/3).
+
+### Trading Tab
+
+- Upgraded to Bloomberg-grade execution terminal — 6 stories shipped.
+
+### Bug Fixes
+
+- `HelpTooltip` invisible in light mode — fixed with explicit dark background.
+- Replaced last hardcoded `text-gray-500` with CSS variable in regime color fallback.
+- Removed redundant `dark:` prefixes where CSS variables already handle both themes.
+- Resolved TypeScript errors breaking CI build.
+
+### WeightAllocation
+
+- Updated `WeightAllocation` component; added README screenshots.
+
+## [0.9.0] - 2026-02-18
+
+### v2 World-Class Upgrade
+
+- Complete v2 world-class upgrade — 16/16 remaining stories shipped.
+
+## [0.8.0] - 2026-02-14
+
+### Documentation
+
+- Added modular architecture section to README (ZeroClaw-style subsystem breakdown).
+
+## [0.7.0] - 2026-02-12
+
+### v2 World-Class PRD — Full Completion
+
+- All 30 PRD stories complete + 4 bonus pages.
+- 30-story world-class PRD shipped: security hardening, infrastructure improvements, UX polish, CVRF enhancements.
+- Resolved TypeScript build errors and cleaned `vercel.json` for deploy.
+- Fixed env var hoisting in Zod validation tests (`vi.hoisted`).
+- Fixed `ConvictionTimeline` crash when `cycle` is possibly `undefined`.
+
+## [0.6.0] - 2026-02-09
+
+### Branding & Infrastructure
+
+- Gold standard README: Mermaid architecture diagram, animated dividers, HTML component cards.
+- Added LICENSE and FUNDING.yml; updated all URLs to `metaventionsai.com` domain.
+- Full README overhaul with Metaventions AI ecosystem branding (gem/diamond theme).
+- Rebranded from cowboy to gem/diamond theme; fixed CI/CD pipeline.
+- Switched CI deploy to manual-only to conserve Vercel build minutes.
+
+## [0.5.0] - 2026-02-08
+
+### Platform Launch
+
+- Wired `ExplanationService` into Fastify server routes.
+- Resolved strict TypeScript errors in client build.
+- Merged `feat/live-data` branch into main.
+- Added Phase 1 planning docs and session kickoff files.
+- Phase 1 complete — full platform build (all 6 weeks).
+- Added database migrations for CVRF tables, push subscriptions, and API keys.
+- Added GitHub Actions CI/CD pipeline.
+- Wired real-time quote streaming via WebSocket (Polygon.io).
+
+---
+
 ## [0.1.0] - 2026-02-08
 
 Phase 1 complete: Foundation through Platform Polish.

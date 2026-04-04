@@ -45,7 +45,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       regimeConfidence: cycle.newBeliefState.regimeConfidence,
       riskTolerance: cycle.newBeliefState.riskTolerance,
       volatilityTarget: cycle.newBeliefState.volatilityTarget,
-      beliefUpdates: cycle.beliefUpdates.map((update) => ({
+      beliefUpdates: cycle.beliefUpdates.map((update: any) => ({
         factor: update.factor || update.dimension,
         oldValue: update.oldValue,
         newValue: update.newValue,

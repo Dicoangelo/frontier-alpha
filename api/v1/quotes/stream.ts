@@ -36,7 +36,7 @@ async function fetchPolygonQuotes(symbols: string[], apiKey: string): Promise<{ 
       return { quotes: [], error: errorMsg };
     }
 
-    const data = await response.json();
+    const data: any = await response.json();
 
     if (data.tickers) {
       for (const ticker of data.tickers) {

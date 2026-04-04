@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireAuth } from '../../lib/auth.js';
-import { getPushService, type PushSubscriptionData } from '../../../src/notifications/PushService';
+import { getPushService, type PushSubscriptionData } from '../../../src/notifications/PushService.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');

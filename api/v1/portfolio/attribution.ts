@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireAuth } from '../../lib/auth.js';
-import { PerformanceAttribution } from '../../../src/analytics/PerformanceAttribution';
+import { PerformanceAttribution } from '../../../src/analytics/PerformanceAttribution.js';
 
 interface PortfolioPosition {
   symbol: string;
@@ -29,7 +29,7 @@ async function fetchHistoricalReturns(
     const response = await fetch(url);
     if (!response.ok) return null;
 
-    const data = await response.json();
+    const data: any = await response.json();
     if (data.status !== 'OK' || !data.results || data.results.length < 2) {
       return null;
     }

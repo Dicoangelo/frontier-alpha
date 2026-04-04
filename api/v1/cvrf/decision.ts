@@ -32,7 +32,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const decision = await manager.recordDecision({
       timestamp: new Date(),
       symbol,
-      action,
+      action: action as any,
       weightBefore: weightBefore || 0,
       weightAfter: weightAfter || 0,
       reason: reason || '',

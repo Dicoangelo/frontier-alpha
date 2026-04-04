@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { EarningsOracle } from '../../../../../src/earnings/EarningsOracle';
+import { EarningsOracle } from '../../../../../src/earnings/EarningsOracle.js';
 
 interface EarningsForecast {
   symbol: string;
@@ -137,10 +137,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const oracle = new EarningsOracle(alphaVantageKey, polygonKey);
 
       // Clear cached pattern for this symbol to force fresh data
-      // @ts-expect-error accessing private map for cache invalidation
-      oracle.historicalReactions.delete(upperSymbol);
-      // @ts-expect-error accessing private map for cache invalidation
-      oracle.priceCache.delete(upperSymbol);
+      (oracle as any).historicalReactions?.delete(upperSymbol);
+      (oracle as any).priceCache?.delete(upperSymbol);
 
       const forecastDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       forecast = await oracle.generateForecast(upperSymbol, forecastDate);

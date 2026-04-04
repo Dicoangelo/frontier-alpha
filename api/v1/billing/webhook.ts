@@ -85,7 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             stripe_subscription_id: subscription.id,
             plan,
             status: 'active',
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
           }, { onConflict: 'user_id' });
 
         break;
@@ -109,7 +109,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             plan,
             status,
             stripe_subscription_id: subscription.id,
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
           })
           .eq('stripe_customer_id', customerId);
 

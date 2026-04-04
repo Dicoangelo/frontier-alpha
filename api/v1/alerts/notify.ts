@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { AlertDelivery, type AlertPayload, type UserNotificationSettings } from '../../../src/notifications/AlertDelivery';
+import { AlertDelivery, type AlertPayload, type UserNotificationSettings } from '../../../src/notifications/AlertDelivery.js';
 
 // Temporary in-memory store for user settings (should be in database)
 const userSettingsStore = new Map<string, UserNotificationSettings>();

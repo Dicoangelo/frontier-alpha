@@ -66,7 +66,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const polygonUrl = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${tickersParam}&apiKey=${polygonApiKey}`;
           const polygonResponse = await fetch(polygonUrl);
           if (polygonResponse.ok) {
-            const polygonData = await polygonResponse.json();
+            const polygonData: any = await polygonResponse.json();
             if (polygonData.tickers) {
               for (const ticker of polygonData.tickers) {
                 quotesMap.set(ticker.ticker, {

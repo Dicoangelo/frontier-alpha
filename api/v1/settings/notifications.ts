@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireAuth } from '../../lib/auth.js';
-import type { UserNotificationSettings } from '../../../src/notifications/AlertDelivery';
+import type { UserNotificationSettings } from '../../../src/notifications/AlertDelivery.js';
 
 // In production, this would be stored in Supabase
 // For now, use in-memory store with localStorage sync on client

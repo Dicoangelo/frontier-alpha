@@ -123,7 +123,7 @@ async function fetchPolygonHistoricalPrices(
       return null;
     }
 
-    const data = await response.json();
+    const data: any = await response.json();
     if (!data.results || data.results.length === 0) {
       return null;
     }

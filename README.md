@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=600&size=22&duration=3000&pause=1000&color=00D9FF&center=true&vCenter=true&multiline=false&repeat=true&width=700&height=40&lines=80%2B+Factors+%E2%80%A2+Self-Improving+Beliefs+%E2%80%A2+Explainable+AI" alt="Typing SVG" />
+<img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=600&size=22&duration=3000&pause=1000&color=00D9FF&center=true&vCenter=true&multiline=false&repeat=true&width=700&height=40&lines=76+Factors+%E2%80%A2+Self-Improving+Beliefs+%E2%80%A2+Explainable+AI" alt="Typing SVG" />
 
 <br/>
 
@@ -13,7 +13,7 @@
 
 <br/>
 
-<img src="https://img.shields.io/badge/Tests-205-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Tests" />
+<img src="https://img.shields.io/badge/Tests-265-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Tests" />
 <img src="https://img.shields.io/badge/Lines-62,000+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Lines" />
 <img src="https://img.shields.io/badge/Files-242+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Files" />
 <img src="https://img.shields.io/badge/Endpoints-48-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Endpoints" />
@@ -47,7 +47,7 @@
 ┌────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                │
 │   ANALYZE           →          LEARN            →          EXPLAIN            │
-│   80+ quantitative              from every                  every decision    │
+│   76 quantitative               from every                  every decision    │
 │   factors                       episode                     in plain language  │
 │                                                                                │
 │   ══════════════════════════════════════════════════════════════════════════   │
@@ -153,7 +153,7 @@ Every subsystem is a **module** — swap implementations with a config change, z
 
 | Subsystem | Module | Ships with | Extend |
 |-----------|--------|------------|--------|
-| **Factor Analysis** | `FactorEngine` | 80+ factors across 6 categories (momentum, value, quality, volatility, size, sentiment), Fama-French + custom | Custom factor plugins via `factors/` |
+| **Factor Analysis** | `FactorEngine` | 76 factors across 6 categories (momentum, value, quality, volatility, size, sentiment), Fama-French + custom | Custom factor plugins via `factors/` |
 | **CVRF Intelligence** | `CVRFManager` | Belief updater, concept extractor, episode manager, persistent storage, conviction tracking | Custom belief models via `cvrf/` |
 | **Cognitive Explainer** | `ExplanationService` | GPT-4o + template dual-mode, confidence scores, source attribution | Any OpenAI-compatible LLM |
 | **Portfolio Optimization** | `PortfolioOptimizer` | Monte Carlo simulation, max Sharpe, min variance, risk parity, CVRF-weighted | Custom objective functions |
@@ -477,7 +477,7 @@ curl https://frontier-alpha.metaventionsai.com/api/v1/earnings/forecast/NVDA
 curl https://frontier-alpha.metaventionsai.com/api/v1/cvrf/beliefs
 ```
 
-See the full [API Reference](docs/API.md) for all 29+ endpoints, request/response formats, and error codes.
+See the full [API Reference](docs/API.md) for all 48 endpoints, request/response formats, and error codes.
 
 </details>
 
@@ -550,7 +550,7 @@ npm run ml:start         # Optional Python ML engine (port 8000)
 
 </div>
 
-- [x] Factor Engine (80+ factors across 6 categories)
+- [x] Factor Engine (76 factors across 6 categories)
 - [x] Portfolio Optimizer (Monte Carlo, max Sharpe, min variance, risk parity)
 - [x] CVRF Intelligence (episodic learning, belief persistence)
 - [x] Cognitive Explainer (GPT-4o + template dual-mode)

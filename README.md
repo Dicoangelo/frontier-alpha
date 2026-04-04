@@ -16,8 +16,8 @@
 <img src="https://img.shields.io/badge/Tests-205-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Tests" />
 <img src="https://img.shields.io/badge/Lines-62,000+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Lines" />
 <img src="https://img.shields.io/badge/Files-242+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Files" />
-<img src="https://img.shields.io/badge/Endpoints-29+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Endpoints" />
-<img src="https://img.shields.io/badge/Factors-80+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Factors" />
+<img src="https://img.shields.io/badge/Endpoints-48-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Endpoints" />
+<img src="https://img.shields.io/badge/Factors-76-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Factors" />
 <img src="https://img.shields.io/badge/Version-1.0.4-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
 
 <br/><br/>
@@ -231,7 +231,7 @@ ML_RETRAIN_INTERVAL=30
 |-------|---------------|
 | **Pages** | 19 views — Dashboard, Portfolio, Factors, CVRF, Earnings, Options, Tax, Trading, Backtest, ML, Social, Settings |
 | **Components** | 68 React 19 components across 18 domains (portfolio, charts, cvrf, trading, risk, earnings, options + more) |
-| **State** | 5 Zustand stores — `portfolioStore`, `quotesStore`, `alertsStore`, `authStore`, `themeStore` |
+| **State** | 6 Zustand stores — `portfolioStore`, `quotesStore`, `alertsStore`, `authStore`, `themeStore`, `dataSourceStore` |
 | **Data Fetching** | React Query + custom hooks — `useQuotes`, `useTrading`, `useNotifications` + 6 more |
 | **Real-time** | WebSocket → SSE → Polling progressive fallback via `wsClient` |
 | **API Layer** | 7 typed API modules — `client`, `cvrf`, `earnings`, `factors`, `portfolio`, `websocket` + trading hooks |
@@ -259,7 +259,7 @@ ML_RETRAIN_INTERVAL=30
 `FactorEngine.ts` `SentimentAnalyzer.ts`
 
 <br/>
-<img src="https://img.shields.io/badge/Factors-80+-00d9ff?style=for-the-badge&labelColor=0d1117"/>
+<img src="https://img.shields.io/badge/Factors-76-00d9ff?style=for-the-badge&labelColor=0d1117"/>
 </td>
 <td width="50%" align="center">
 <img src="https://user-images.githubusercontent.com/74038190/216122065-2f028bae-25d6-4a3c-bc9f-175394ed5011.png" width="80"/>

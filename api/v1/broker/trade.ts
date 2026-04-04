@@ -10,6 +10,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireAuth } from '../../lib/auth.js';
 import { badRequest, methodNotAllowed, notFound, internalError } from '../../lib/errorHandler.js';
 import { validateBody, schemas } from '../../lib/validation.js';
 
@@ -88,6 +89,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
+
+  const user = await requireAuth(req, res);
+  if (!user) return;
 
   const requestId = `req-${Math.random().toString(36).slice(2, 8)}`;
 

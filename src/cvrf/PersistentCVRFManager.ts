@@ -325,7 +325,7 @@ export class PersistentCVRFManager {
       profitableTrades,
       losingTrades,
     };
-    return result as EpisodeComparison;
+    return result;
   }
 
   private generateCycleExplanation(

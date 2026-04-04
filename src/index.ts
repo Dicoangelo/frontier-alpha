@@ -45,7 +45,7 @@ import { WashSaleDetector } from './tax/WashSaleDetector.js';
 import { TaxReportGenerator } from './tax/TaxReportGenerator.js';
 
 // CVRF (Conceptual Verbal Reinforcement Framework)
-import { CVRFManager } from './cvrf/CVRFManager.js';
+import { PersistentCVRFManager, getPersistentCVRFManager } from './cvrf/PersistentCVRFManager.js';
 
 import type { Portfolio } from './types/index.js';
 
@@ -95,7 +95,7 @@ export class FrontierAlphaServer {
   private explanationService: ExplanationService;
   private earningsOracle: EarningsOracle;
   private dataProvider: MarketDataProvider;
-  private cvrfManager: CVRFManager;
+  private cvrfManager: PersistentCVRFManager | null = null;
   private regimeDetector: RegimeDetector;
   private factorAttribution: FactorAttribution;
   private _trainingPipeline: TrainingPipeline;
@@ -122,7 +122,8 @@ export class FrontierAlphaServer {
       polygonApiKey: this.config.polygonApiKey,
       alphaVantageApiKey: this.config.alphaVantageApiKey,
     });
-    this.cvrfManager = new CVRFManager();
+    // PersistentCVRFManager is initialized async in start()
+    this.cvrfManager = null;
     this.regimeDetector = new RegimeDetector();
     this.factorAttribution = new FactorAttribution();
     this._trainingPipeline = new TrainingPipeline();
@@ -225,6 +226,9 @@ export class FrontierAlphaServer {
 
   async start(): Promise<void> {
     try {
+      // Initialize PersistentCVRFManager (Supabase-backed)
+      this.cvrfManager = await getPersistentCVRFManager();
+
       await this.app.listen({
         port: this.config.port,
         host: this.config.host,

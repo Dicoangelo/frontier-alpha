@@ -37,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       weightAfter: weightAfter || 0,
       reason: reason || '',
       confidence: confidence || 0.5,
-      factors: factors || [],
+      factors: (factors || []) as any,
     });
 
     return res.status(200).json({

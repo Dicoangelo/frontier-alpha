@@ -4,11 +4,11 @@ import { subscriptionGate, requirePlan } from '../middleware/subscriptionGate.js
 import { getCVRFRiskAssessment } from '../cvrf/integration.js';
 import { logger } from '../observability/logger.js';
 import type { APIResponse } from '../types/index.js';
-import type { CVRFManager } from '../cvrf/CVRFManager.js';
+import type { PersistentCVRFManager } from '../cvrf/PersistentCVRFManager.js';
 
 interface RouteContext {
   server: {
-    cvrfManager: CVRFManager;
+    cvrfManager: PersistentCVRFManager;
   };
 }
 
@@ -48,12 +48,13 @@ export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
     '/api/v1/cvrf/episode/start',
     async (request, _reply) => {
       const start = Date.now();
-      const episode = server.cvrfManager.startEpisode();
+      const episode = await server.cvrfManager.startEpisode();
 
       return {
         success: true,
         data: {
           id: episode.id,
+          episodeNumber: episode.episodeNumber ?? 0,
           startDate: episode.startDate,
           message: 'CVRF episode started. Record decisions and close when complete.',
         },
@@ -68,17 +69,25 @@ export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
 
   // POST /api/v1/cvrf/episode/close
   fastify.post<{
-    Body: { runCvrfCycle?: boolean };
+    Body: {
+      runCvrfCycle?: boolean;
+      metrics?: {
+        portfolioReturn?: number;
+        sharpeRatio?: number;
+        maxDrawdown?: number;
+        volatility?: number;
+      };
+    };
     Reply: APIResponse<unknown>;
   }>(
     '/api/v1/cvrf/episode/close',
     async (request, reply) => {
       const start = Date.now();
-      const { runCvrfCycle = true } = request.body || {};
+      const { runCvrfCycle = true, metrics } = request.body || {};
 
       try {
         const { episode, cvrfResult } = await server.cvrfManager.closeEpisode(
-          undefined,
+          metrics,
           runCvrfCycle
         );
 
@@ -87,6 +96,7 @@ export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
           data: {
             episode: {
               id: episode.id,
+              episodeNumber: episode.episodeNumber ?? 0,
               startDate: episode.startDate,
               endDate: episode.endDate,
               decisionsCount: episode.decisions.length,
@@ -136,7 +146,7 @@ export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
       const { symbol, action, weightBefore, weightAfter, reason, confidence, factors } = request.body;
 
       try {
-        const decision = server.cvrfManager.recordDecision({
+        const decision = await server.cvrfManager.recordDecision({
           timestamp: new Date(),
           symbol,
           action,
@@ -204,14 +214,31 @@ export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
 
       const assessment = getCVRFRiskAssessment(
         portfolioValue,
-        portfolioReturns,
+        portfolioReturns || [],
         positions,
-        server.cvrfManager
+        server.cvrfManager as any
       );
+
+      // Serialize Maps in overEpisode to plain objects (matches Vercel surface)
+      const serializedAssessment = {
+        ...assessment,
+        overEpisode: {
+          ...assessment.overEpisode,
+          metaPrompt: {
+            ...assessment.overEpisode.metaPrompt,
+            factorAdjustments: assessment.overEpisode.metaPrompt.factorAdjustments instanceof Map
+              ? Object.fromEntries(assessment.overEpisode.metaPrompt.factorAdjustments)
+              : assessment.overEpisode.metaPrompt.factorAdjustments,
+          },
+          beliefDeltas: assessment.overEpisode.beliefDeltas instanceof Map
+            ? Object.fromEntries(assessment.overEpisode.beliefDeltas)
+            : assessment.overEpisode.beliefDeltas,
+        },
+      };
 
       return {
         success: true,
-        data: assessment,
+        data: serializedAssessment,
         meta: {
           timestamp: new Date(),
           requestId: request.id,
@@ -232,8 +259,8 @@ export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
         success: true,
         data: history.map(cycle => ({
           timestamp: cycle.timestamp,
-          betterEpisodeReturn: cycle.episodeComparison.betterEpisode.portfolioReturn,
-          worseEpisodeReturn: cycle.episodeComparison.worseEpisode.portfolioReturn,
+          previousEpisodeReturn: cycle.episodeComparison.previousEpisodeReturn,
+          currentEpisodeReturn: cycle.episodeComparison.currentEpisodeReturn,
           performanceDelta: cycle.episodeComparison.performanceDelta,
           decisionOverlap: cycle.episodeComparison.decisionOverlap,
           insightsCount: cycle.extractedInsights.length,

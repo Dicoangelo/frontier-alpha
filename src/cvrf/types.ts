@@ -56,10 +56,16 @@ export interface Episode {
  * Comparison of two consecutive episodes
  */
 export interface EpisodeComparison {
+  previousEpisodeId?: string;
+  currentEpisodeId?: string;
+  previousEpisodeReturn?: number;
+  currentEpisodeReturn?: number;
   betterEpisode: Episode;
   worseEpisode: Episode;
   performanceDelta: number;
   decisionOverlap: number; // τ - learning rate
+  sharedSymbols?: string[];
+  divergentDecisions?: unknown[];
   profitableTrades: TradingDecision[];
   losingTrades: TradingDecision[];
 }

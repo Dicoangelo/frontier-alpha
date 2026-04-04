@@ -1,125 +1,14 @@
 import type { FastifyInstance } from 'fastify';
 import { authMiddleware } from '../middleware/auth.js';
-import { sharingService, createPortfolioShare, getPortfolioShareByToken } from '../services/SharingService.js';
+import { createPortfolioShare, getPortfolioShareByToken } from '../services/SharingService.js';
 import { leaderboardService } from '../services/LeaderboardService.js';
 import type { LeaderboardMetric, LeaderboardPeriod } from '../services/LeaderboardService.js';
-import type { SharedPortfolioVisibility } from '../lib/supabase.js';
-import { supabaseAdmin } from '../lib/supabase.js';
 
 interface RouteContext {
   server: unknown;
 }
 
 export async function socialRoutes(fastify: FastifyInstance, _opts: RouteContext) {
-  // POST /api/v1/portfolios/share
-  fastify.post<{
-    Body: {
-      portfolio_data: Record<string, unknown>;
-      visibility?: SharedPortfolioVisibility;
-    };
-  }>(
-    '/api/v1/portfolios/share',
-    { preHandler: authMiddleware },
-    async (request, reply) => {
-      const start = Date.now();
-
-      const { portfolio_data, visibility } = request.body || {};
-
-      if (!portfolio_data || typeof portfolio_data !== 'object') {
-        reply.code(400);
-        return {
-          data: null,
-          error: 'portfolio_data is required and must be an object',
-          meta: {
-            timestamp: new Date(),
-            requestId: request.id,
-            latencyMs: Date.now() - start,
-          },
-        };
-      }
-
-      const shared = await sharingService.sharePortfolio(request.user!.id, {
-        portfolio_data,
-        visibility,
-      });
-
-      if (!shared) {
-        reply.code(500);
-        return {
-          data: null,
-          error: 'Failed to share portfolio',
-          meta: {
-            timestamp: new Date(),
-            requestId: request.id,
-            latencyMs: Date.now() - start,
-          },
-        };
-      }
-
-      reply.code(201);
-      return {
-        data: shared,
-        meta: {
-          timestamp: new Date(),
-          requestId: request.id,
-          latencyMs: Date.now() - start,
-        },
-      };
-    }
-  );
-
-  // GET /api/v1/portfolios/shared/:token
-  fastify.get<{
-    Params: { token: string };
-  }>(
-    '/api/v1/portfolios/shared/:token',
-    async (request, reply) => {
-      const start = Date.now();
-
-      const { token } = request.params;
-
-      // Extract requester ID if authenticated (optional)
-      let requesterId: string | undefined;
-      const authHeader = request.headers.authorization;
-      if (authHeader?.startsWith('Bearer ')) {
-        // Try to get user from token — don't fail if not authenticated
-        try {
-          const userToken = authHeader.slice(7);
-          const { data: { user } } = await supabaseAdmin.auth.getUser(userToken);
-          if (user) {
-            requesterId = user.id;
-          }
-        } catch {
-          // Not authenticated — that's fine for public/private shares
-        }
-      }
-
-      const shared = await sharingService.getSharedByToken(token, requesterId);
-
-      if (!shared) {
-        reply.code(404);
-        return {
-          data: null,
-          error: 'Shared portfolio not found or access denied',
-          meta: {
-            timestamp: new Date(),
-            requestId: request.id,
-            latencyMs: Date.now() - start,
-          },
-        };
-      }
-
-      return {
-        data: shared,
-        meta: {
-          timestamp: new Date(),
-          requestId: request.id,
-          latencyMs: Date.now() - start,
-        },
-      };
-    }
-  );
-
   // POST /api/v1/portfolio/share — Token-based sharing (US-010)
   fastify.post<{
     Body: { snapshot_json: Record<string, unknown> };

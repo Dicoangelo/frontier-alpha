@@ -350,7 +350,7 @@ async function tryLLM(
 
     if (!response.ok) return null;
 
-    const data = await response.json();
+    const data: any = await response.json();
     const text = data.choices?.[0]?.message?.content?.trim();
     if (!text) return null;
 

@@ -49,7 +49,7 @@ async function fetchHistoricalPrices(
       const response = await fetch(url);
       if (!response.ok) return;
 
-      const data = await response.json();
+      const data: any = await response.json();
       if (data.results) {
         const closes = data.results.map((r: any) => r.c);
         pricesMap.set(symbol, closes);

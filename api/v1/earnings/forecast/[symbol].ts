@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { EarningsOracle } from '../../../../src/earnings/EarningsOracle';
+import { EarningsOracle } from '../../../../src/earnings/EarningsOracle.js';
 
 interface EarningsForecast {
   symbol: string;

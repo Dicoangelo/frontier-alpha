@@ -1,4 +1,6 @@
 import type { FastifyInstance } from 'fastify';
+import { authMiddleware } from '../middleware/auth.js';
+import { subscriptionGate, requirePlan } from '../middleware/subscriptionGate.js';
 import { optionsDataProvider } from '../options/OptionsDataProvider.js';
 import { greeksCalculator } from '../options/GreeksCalculator.js';
 import type { OptionPosition } from '../options/GreeksCalculator.js';
@@ -15,6 +17,11 @@ interface RouteContext {
 
 export async function optionsRoutes(fastify: FastifyInstance, opts: RouteContext) {
   const { server } = opts;
+
+  // Pro-only: auth + subscription gate for all options routes
+  fastify.addHook('preHandler', authMiddleware);
+  fastify.addHook('preHandler', subscriptionGate);
+  fastify.addHook('preHandler', requirePlan('pro'));
 
   // GET /api/v1/options/chain
   fastify.get<{

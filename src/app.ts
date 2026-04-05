@@ -54,6 +54,11 @@ import { tradingRoutes } from './routes/trading.js';
 import { billingRoutes } from './routes/billing.js';
 import { notificationsRoutes } from './routes/notifications.js';
 import { socialRoutes } from './routes/social.js';
+import { backtestRoutes } from './routes/backtest.js';
+import { cacheRoutes } from './routes/cache.js';
+import { sentimentRoutes } from './routes/sentiment.js';
+import { brokerRoutes } from './routes/broker.js';
+import { secRoutes } from './routes/sec.js';
 import { websocketRoutes } from './routes/websocket.js';
 
 const pkg = JSON.parse(
@@ -204,6 +209,11 @@ export async function buildApp(
   app.register(billingRoutes, ctx);
   app.register(notificationsRoutes, ctx);
   app.register(socialRoutes, ctx);
+  app.register(backtestRoutes, ctx);
+  app.register(cacheRoutes, ctx);
+  app.register(sentimentRoutes, ctx);
+  app.register(brokerRoutes, ctx);
+  app.register(secRoutes, ctx);
   if (websockets) {
     app.register(websocketRoutes, ctx);
   }

@@ -1,18 +1,20 @@
 /**
- * SEC EDGAR Filings API
+ * SEC EDGAR filings routes.
  *
- * Endpoints for fetching SEC filings for portfolio symbols.
- *
- * GET /api/v1/sec/filings?symbols=AAPL,MSFT - Get recent filings for symbols
- * GET /api/v1/sec/filings/recent - Get all recent filings (last 24h)
+ * Ported from `api/v1/sec/filings.ts` to unify on the single Fastify surface
+ * exposed via `buildApp()`. Preserves the CIK cache, fallback ticker map, and
+ * both filing retrieval paths (per-symbol JSON submissions + Atom RSS recent
+ * feed). SEC requires a descriptive User-Agent per their fair-access policy.
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { FastifyInstance } from 'fastify';
 import axios from 'axios';
+import { logger } from '../observability/logger.js';
+import type { APIResponse } from '../types/index.js';
 
-// ============================================================================
-// TYPES
-// ============================================================================
+interface RouteContext {
+  server: unknown;
+}
 
 interface SECFiling {
   id: string;
@@ -41,15 +43,10 @@ interface FilingAlert {
   typeDescription: string;
 }
 
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
 const SEC_BASE_URL = 'https://www.sec.gov';
 const SEC_DATA_URL = 'https://data.sec.gov';
 const USER_AGENT = 'Frontier-Alpha/1.0 (https://frontier-alpha.com; contact@frontier-alpha.com)';
 
-// Filing type severity mapping
 const FILING_SEVERITY: Record<string, 'critical' | 'high' | 'medium' | 'low'> = {
   '8-K': 'high',
   '8-K/A': 'high',
@@ -66,7 +63,7 @@ const FILING_SEVERITY: Record<string, 'critical' | 'high' | 'medium' | 'low'> = 
   '13F-HR': 'low',
   '13F-HR/A': 'low',
   'DEF 14A': 'medium',
-  'DEFA14A': 'medium',
+  DEFA14A: 'medium',
   'S-1': 'high',
   'S-1/A': 'high',
   'S-3': 'medium',
@@ -74,7 +71,6 @@ const FILING_SEVERITY: Record<string, 'critical' | 'high' | 'medium' | 'low'> = 
   'NT 10-Q': 'high',
 };
 
-// Filing type descriptions
 const FILING_DESCRIPTIONS: Record<string, string> = {
   '8-K': 'Current Report (Material Events)',
   '10-K': 'Annual Report',
@@ -91,7 +87,6 @@ const FILING_DESCRIPTIONS: Record<string, string> = {
   'NT 10-Q': 'Late Filing Notification (Quarterly)',
 };
 
-// Suggested actions by filing type
 const SUGGESTED_ACTIONS: Record<string, string> = {
   '8-K': 'Review material event disclosure for potential portfolio impact.',
   '10-K': 'Review annual report for financial performance and forward guidance.',
@@ -106,17 +101,6 @@ const SUGGESTED_ACTIONS: Record<string, string> = {
   'NT 10-Q': 'Late quarterly report - may indicate issues.',
 };
 
-// ============================================================================
-// CIK MAPPING CACHE
-// ============================================================================
-
-let tickerToCikCache: Map<string, string> = new Map();
-let cikToTickerCache: Map<string, string> = new Map();
-let cikToNameCache: Map<string, string> = new Map();
-let cacheLastUpdated: Date | null = null;
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-// Popular company CIKs as fallback
 const FALLBACK_MAPPINGS: Record<string, { cik: string; name: string }> = {
   AAPL: { cik: '320193', name: 'Apple Inc.' },
   MSFT: { cik: '789019', name: 'Microsoft Corporation' },
@@ -162,9 +146,13 @@ const FALLBACK_MAPPINGS: Record<string, { cik: string; name: string }> = {
   CRWD: { cik: '1535527', name: 'CrowdStrike Holdings, Inc.' },
 };
 
-/**
- * Load CIK mappings from SEC
- */
+// Module-level caches (persist across requests in the same runtime).
+let tickerToCikCache: Map<string, string> = new Map();
+let cikToTickerCache: Map<string, string> = new Map();
+let cikToNameCache: Map<string, string> = new Map();
+let cacheLastUpdated: Date | null = null;
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
 async function loadCIKMappings(): Promise<void> {
   if (cacheLastUpdated && Date.now() - cacheLastUpdated.getTime() < CACHE_TTL_MS) {
     return;
@@ -172,14 +160,10 @@ async function loadCIKMappings(): Promise<void> {
 
   try {
     const response = await axios.get(`${SEC_DATA_URL}/company_tickers.json`, {
-      headers: {
-        'User-Agent': USER_AGENT,
-        Accept: 'application/json',
-      },
+      headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
       timeout: 15000,
     });
-
-    const data = response.data;
+    const data = response.data as Record<string, { cik_str: number | string; ticker?: string; title?: string }>;
     tickerToCikCache = new Map();
     cikToTickerCache = new Map();
     cikToNameCache = new Map();
@@ -189,21 +173,16 @@ async function loadCIKMappings(): Promise<void> {
       const cik = String(entry.cik_str);
       const ticker = entry.ticker?.toUpperCase();
       const name = entry.title;
-
       if (ticker && cik) {
         tickerToCikCache.set(ticker, cik);
         cikToTickerCache.set(cik, ticker);
-        if (name) {
-          cikToNameCache.set(cik, name);
-        }
+        if (name) cikToNameCache.set(cik, name);
       }
     }
-
     cacheLastUpdated = new Date();
-    console.log(`[SEC API] Loaded ${tickerToCikCache.size} CIK mappings`);
+    logger.info({ count: tickerToCikCache.size }, 'SEC CIK mappings loaded');
   } catch (error) {
-    console.error('[SEC API] Failed to load CIK mappings:', error);
-    // Load fallback mappings
+    logger.warn({ err: error }, 'SEC CIK mapping load failed, using fallback');
     for (const [ticker, { cik, name }] of Object.entries(FALLBACK_MAPPINGS)) {
       tickerToCikCache.set(ticker, cik);
       cikToTickerCache.set(cik, ticker);
@@ -212,60 +191,45 @@ async function loadCIKMappings(): Promise<void> {
   }
 }
 
-/**
- * Get CIK for ticker
- */
 async function getCIK(ticker: string): Promise<string | null> {
   await loadCIKMappings();
-  const upperTicker = ticker.toUpperCase();
-
-  // Check cache first
-  if (tickerToCikCache.has(upperTicker)) {
-    return tickerToCikCache.get(upperTicker) || null;
-  }
-
-  // Check fallback
-  if (FALLBACK_MAPPINGS[upperTicker]) {
-    return FALLBACK_MAPPINGS[upperTicker].cik;
-  }
-
+  const upper = ticker.toUpperCase();
+  if (tickerToCikCache.has(upper)) return tickerToCikCache.get(upper) || null;
+  if (FALLBACK_MAPPINGS[upper]) return FALLBACK_MAPPINGS[upper].cik;
   return null;
 }
 
-// ============================================================================
-// FILING FETCHER
-// ============================================================================
-
-/**
- * Fetch filings from SEC using their JSON API
- */
 async function fetchFilingsFromSEC(
   cik: string,
   symbol: string,
-  maxFilings: number = 20,
-  maxDaysOld: number = 30
+  maxFilings = 20,
+  maxDaysOld = 30
 ): Promise<FilingAlert[]> {
   const alerts: FilingAlert[] = [];
-
   try {
     const normalizedCIK = cik.padStart(10, '0');
     const url = `${SEC_DATA_URL}/submissions/CIK${normalizedCIK}.json`;
-
     const response = await axios.get(url, {
-      headers: {
-        'User-Agent': USER_AGENT,
-        Accept: 'application/json',
-      },
+      headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
       timeout: 15000,
     });
-
-    const data = response.data;
+    const data = response.data as {
+      name?: string;
+      filings?: {
+        recent?: {
+          form?: string[];
+          filingDate?: string[];
+          accessionNumber?: string[];
+          primaryDocument?: string[];
+        };
+      };
+    };
     const companyName = data.name || symbol;
-    const recentFilings = data.filings?.recent || {};
-    const forms = recentFilings.form || [];
-    const filingDates = recentFilings.filingDate || [];
-    const accessionNumbers = recentFilings.accessionNumber || [];
-    const primaryDocuments = recentFilings.primaryDocument || [];
+    const recent = data.filings?.recent || {};
+    const forms = recent.form || [];
+    const filingDates = recent.filingDate || [];
+    const accessionNumbers = recent.accessionNumber || [];
+    const primaryDocuments = recent.primaryDocument || [];
 
     const cutoffDate = new Date(Date.now() - maxDaysOld * 24 * 60 * 60 * 1000);
     let count = 0;
@@ -308,43 +272,39 @@ async function fetchFilingsFromSEC(
         suggestedAction: SUGGESTED_ACTIONS[filingType] || 'Review filing for potential portfolio impact.',
         typeDescription: FILING_DESCRIPTIONS[filingType] || filingType,
       });
-
       count++;
     }
   } catch (error) {
-    console.error(`[SEC API] Error fetching filings for ${symbol}:`, error);
+    logger.warn({ err: error, symbol }, 'SEC filing fetch failed');
   }
-
   return alerts;
 }
 
-/**
- * Fetch recent filings from RSS feed
- */
-async function fetchRecentFilingsFromRSS(hoursBack: number = 24): Promise<FilingAlert[]> {
-  const alerts: FilingAlert[] = [];
+function decodeXmlEntities(str: string): string {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'");
+}
 
+async function fetchRecentFilingsFromRSS(hoursBack = 24): Promise<FilingAlert[]> {
+  const alerts: FilingAlert[] = [];
   try {
     const url = `${SEC_BASE_URL}/cgi-bin/browse-edgar?action=getcurrent&output=atom&count=100`;
-
     const response = await axios.get(url, {
-      headers: {
-        'User-Agent': USER_AGENT,
-        Accept: 'application/atom+xml',
-      },
+      headers: { 'User-Agent': USER_AGENT, Accept: 'application/atom+xml' },
       timeout: 15000,
     });
-
-    const xml = response.data;
+    const xml = response.data as string;
     const cutoffTime = Date.now() - hoursBack * 60 * 60 * 1000;
 
-    // Parse Atom feed
     const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
-    let match;
-
+    let match: RegExpExecArray | null;
     while ((match = entryRegex.exec(xml)) !== null) {
       const entry = match[1];
-
       const titleMatch = entry.match(/<title[^>]*>([^<]+)<\/title>/);
       const linkMatch = entry.match(/<link[^>]*href="([^"]+)"/);
       const updatedMatch = entry.match(/<updated>([^<]+)<\/updated>/);
@@ -352,34 +312,22 @@ async function fetchRecentFilingsFromRSS(hoursBack: number = 24): Promise<Filing
 
       if (titleMatch && linkMatch && updatedMatch) {
         const title = decodeXmlEntities(titleMatch[1]);
-        const url = linkMatch[1];
+        const entryUrl = linkMatch[1];
         const filedAt = new Date(updatedMatch[1]);
-
-        // Skip if older than cutoff
         if (filedAt.getTime() < cutoffTime) continue;
 
-        // Parse filing type
         const typeMatch = title.match(/^([A-Z0-9-/]+(?:\/A)?)\s*-/);
         const filingType = typeMatch ? typeMatch[1].trim() : 'UNKNOWN';
-
-        // Extract company name
         const companyMatch = title.match(/-\s*(.+?)\s*\(/);
         const companyName = companyMatch ? companyMatch[1].trim() : 'Unknown Company';
 
-        // Extract CIK
         let cik = '';
         const cikFromTitle = title.match(/\((\d{10})\)/);
-        if (cikFromTitle) {
-          cik = cikFromTitle[1].replace(/^0+/, '');
-        }
+        if (cikFromTitle) cik = cikFromTitle[1].replace(/^0+/, '');
 
-        // Get ticker symbol
         const symbol = cik ? cikToTickerCache.get(cik) : undefined;
-
-        // Extract accession number
-        const accessionMatch = url.match(/(\d{10}-\d{2}-\d{6})/);
+        const accessionMatch = entryUrl.match(/(\d{10}-\d{2}-\d{6})/);
         const accessionNumber = accessionMatch ? accessionMatch[1] : '';
-
         const severity = FILING_SEVERITY[filingType] || 'low';
 
         alerts.push({
@@ -396,7 +344,7 @@ async function fetchRecentFilingsFromRSS(hoursBack: number = 24): Promise<Filing
             title,
             accessionNumber,
             filedAt: filedAt.toISOString(),
-            url,
+            url: entryUrl,
             cik,
             symbol,
             companyName,
@@ -408,189 +356,163 @@ async function fetchRecentFilingsFromRSS(hoursBack: number = 24): Promise<Filing
       }
     }
   } catch (error) {
-    console.error('[SEC API] Error fetching recent filings:', error);
+    logger.warn({ err: error }, 'SEC RSS fetch failed');
   }
-
   return alerts;
 }
 
-function decodeXmlEntities(str: string): string {
-  return str
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'");
+interface GetQuery {
+  symbols?: string;
+  recent?: string;
+  days?: string;
+  limit?: string;
+  hours?: string;
 }
 
-// ============================================================================
-// API HANDLER
-// ============================================================================
+interface PostBody {
+  symbols?: string[];
+  maxDays?: number;
+}
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+export async function secRoutes(fastify: FastifyInstance, _opts: RouteContext) {
+  // GET /api/v1/sec/filings
+  fastify.get<{ Querystring: GetQuery; Reply: APIResponse<unknown> }>(
+    '/api/v1/sec/filings',
+    async (request, reply) => {
+      const start = Date.now();
+      const { symbols: symbolsParam, recent, days, limit: limitStr, hours } = request.query;
+      const maxDays = parseInt(days || '', 10) || 30;
+      const limit = Math.min(parseInt(limitStr || '', 10) || 50, 100);
 
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
+      try {
+        await loadCIKMappings();
 
-  const requestId = `req-${Math.random().toString(36).slice(2, 8)}`;
-
-  try {
-    // Load CIK mappings
-    await loadCIKMappings();
-
-    if (req.method === 'GET') {
-      const symbolsParam = req.query.symbols as string;
-      const recent = req.query.recent as string;
-      const maxDays = parseInt(req.query.days as string) || 30;
-      const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
-
-      // GET /api/v1/sec/filings/recent - Get all recent filings
-      if (recent === 'true' || req.url?.includes('/recent')) {
-        const hoursBack = parseInt(req.query.hours as string) || 24;
-        const alerts = await fetchRecentFilingsFromRSS(hoursBack);
-
-        return res.status(200).json({
-          success: true,
-          data: {
-            filings: alerts.slice(0, limit),
-            summary: {
-              total: alerts.length,
-              critical: alerts.filter(a => a.severity === 'critical').length,
-              high: alerts.filter(a => a.severity === 'high').length,
-              medium: alerts.filter(a => a.severity === 'medium').length,
-              low: alerts.filter(a => a.severity === 'low').length,
+        if (recent === 'true' || request.url.includes('/recent')) {
+          const hoursBack = parseInt(hours || '', 10) || 24;
+          const alerts = await fetchRecentFilingsFromRSS(hoursBack);
+          return {
+            success: true,
+            data: {
+              filings: alerts.slice(0, limit),
+              summary: {
+                total: alerts.length,
+                critical: alerts.filter((a) => a.severity === 'critical').length,
+                high: alerts.filter((a) => a.severity === 'high').length,
+                medium: alerts.filter((a) => a.severity === 'medium').length,
+                low: alerts.filter((a) => a.severity === 'low').length,
+              },
             },
-          },
-          meta: {
-            timestamp: new Date().toISOString(),
-            requestId,
-            hoursBack,
-          },
-        });
-      }
-
-      // GET /api/v1/sec/filings?symbols=AAPL,MSFT
-      const symbols = symbolsParam
-        ? symbolsParam.split(',').map(s => s.trim().toUpperCase())
-        : ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN']; // Default watchlist
-
-      const allAlerts: FilingAlert[] = [];
-
-      for (const symbol of symbols.slice(0, 20)) {
-        const cik = await getCIK(symbol);
-        if (!cik) {
-          console.warn(`[SEC API] No CIK found for ${symbol}`);
-          continue;
+            meta: {
+              timestamp: new Date(),
+              requestId: request.id,
+              latencyMs: Date.now() - start,
+            },
+          };
         }
 
-        const alerts = await fetchFilingsFromSEC(cik, symbol, 15, maxDays);
-        allAlerts.push(...alerts);
+        const symbols = symbolsParam
+          ? symbolsParam.split(',').map((s) => s.trim().toUpperCase())
+          : ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN'];
 
-        // Rate limit
-        await new Promise(resolve => setTimeout(resolve, 120));
+        const allAlerts: FilingAlert[] = [];
+        for (const symbol of symbols.slice(0, 20)) {
+          const cik = await getCIK(symbol);
+          if (!cik) continue;
+          const alerts = await fetchFilingsFromSEC(cik, symbol, 15, maxDays);
+          allAlerts.push(...alerts);
+          await new Promise((resolve) => setTimeout(resolve, 120));
+        }
+
+        allAlerts.sort(
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+
+        const summary = {
+          total: allAlerts.length,
+          critical: allAlerts.filter((a) => a.severity === 'critical').length,
+          high: allAlerts.filter((a) => a.severity === 'high').length,
+          medium: allAlerts.filter((a) => a.severity === 'medium').length,
+          low: allAlerts.filter((a) => a.severity === 'low').length,
+          byType: {} as Record<string, number>,
+          bySymbol: {} as Record<string, number>,
+        };
+        for (const alert of allAlerts) {
+          const type = alert.filing.type;
+          const symbol = alert.filing.symbol || 'UNKNOWN';
+          summary.byType[type] = (summary.byType[type] || 0) + 1;
+          summary.bySymbol[symbol] = (summary.bySymbol[symbol] || 0) + 1;
+        }
+
+        return {
+          success: true,
+          data: { filings: allAlerts.slice(0, limit), summary },
+          meta: { timestamp: new Date(), requestId: request.id, latencyMs: Date.now() - start },
+        };
+      } catch (error) {
+        logger.error({ err: error }, 'SEC filings GET error');
+        return reply.status(500).send({
+          success: false,
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: error instanceof Error ? error.message : 'Failed to fetch SEC filings',
+          },
+        });
       }
-
-      // Sort by date descending
-      allAlerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-      // Calculate summary
-      const summary = {
-        total: allAlerts.length,
-        critical: allAlerts.filter(a => a.severity === 'critical').length,
-        high: allAlerts.filter(a => a.severity === 'high').length,
-        medium: allAlerts.filter(a => a.severity === 'medium').length,
-        low: allAlerts.filter(a => a.severity === 'low').length,
-        byType: {} as Record<string, number>,
-        bySymbol: {} as Record<string, number>,
-      };
-
-      // Count by type and symbol
-      for (const alert of allAlerts) {
-        const type = alert.filing.type;
-        const symbol = alert.filing.symbol || 'UNKNOWN';
-        summary.byType[type] = (summary.byType[type] || 0) + 1;
-        summary.bySymbol[symbol] = (summary.bySymbol[symbol] || 0) + 1;
-      }
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          filings: allAlerts.slice(0, limit),
-          summary,
-        },
-        meta: {
-          timestamp: new Date().toISOString(),
-          requestId,
-          symbols,
-          daysBack: maxDays,
-        },
-      });
     }
+  );
 
-    if (req.method === 'POST') {
-      const { symbols, maxDays = 30 } = req.body as {
-        symbols: string[];
-        maxDays?: number;
-      };
+  // POST /api/v1/sec/filings
+  fastify.post<{ Body: PostBody; Reply: APIResponse<unknown> }>(
+    '/api/v1/sec/filings',
+    async (request, reply) => {
+      const start = Date.now();
+      const { symbols, maxDays = 30 } = request.body || {};
 
       if (!symbols || !Array.isArray(symbols) || symbols.length === 0) {
-        return res.status(400).json({
+        return reply.status(400).send({
           success: false,
-          error: 'symbols array is required',
-          meta: { requestId },
+          error: { code: 'VALIDATION_ERROR', message: 'symbols array is required' },
         });
       }
 
-      const allAlerts: FilingAlert[] = [];
+      try {
+        await loadCIKMappings();
+        const allAlerts: FilingAlert[] = [];
+        for (const symbol of symbols.slice(0, 20)) {
+          const cik = await getCIK(symbol.toUpperCase());
+          if (!cik) continue;
+          const alerts = await fetchFilingsFromSEC(cik, symbol.toUpperCase(), 15, maxDays);
+          allAlerts.push(...alerts);
+          await new Promise((resolve) => setTimeout(resolve, 120));
+        }
+        allAlerts.sort(
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
 
-      for (const symbol of symbols.slice(0, 20)) {
-        const cik = await getCIK(symbol.toUpperCase());
-        if (!cik) continue;
-
-        const alerts = await fetchFilingsFromSEC(cik, symbol.toUpperCase(), 15, maxDays);
-        allAlerts.push(...alerts);
-
-        await new Promise(resolve => setTimeout(resolve, 120));
-      }
-
-      allAlerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-      return res.status(200).json({
-        success: true,
-        data: {
-          filings: allAlerts,
-          summary: {
-            total: allAlerts.length,
-            critical: allAlerts.filter(a => a.severity === 'critical').length,
-            high: allAlerts.filter(a => a.severity === 'high').length,
-            medium: allAlerts.filter(a => a.severity === 'medium').length,
-            low: allAlerts.filter(a => a.severity === 'low').length,
+        return {
+          success: true,
+          data: {
+            filings: allAlerts,
+            summary: {
+              total: allAlerts.length,
+              critical: allAlerts.filter((a) => a.severity === 'critical').length,
+              high: allAlerts.filter((a) => a.severity === 'high').length,
+              medium: allAlerts.filter((a) => a.severity === 'medium').length,
+              low: allAlerts.filter((a) => a.severity === 'low').length,
+            },
           },
-        },
-        meta: {
-          timestamp: new Date().toISOString(),
-          requestId,
-        },
-      });
+          meta: { timestamp: new Date(), requestId: request.id, latencyMs: Date.now() - start },
+        };
+      } catch (error) {
+        logger.error({ err: error }, 'SEC filings POST error');
+        return reply.status(500).send({
+          success: false,
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: error instanceof Error ? error.message : 'Failed to fetch SEC filings',
+          },
+        });
+      }
     }
-
-    return res.status(405).json({
-      success: false,
-      error: 'Method not allowed',
-      meta: { requestId },
-    });
-  } catch (error) {
-    console.error('[SEC API] Handler error:', error);
-    return res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Internal server error',
-      meta: { requestId },
-    });
-  }
+  );
 }

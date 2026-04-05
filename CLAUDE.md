@@ -127,7 +127,7 @@ npm run ml:start         # uvicorn on port 8000
 - **Production URL:** https://frontier-alpha.metaventionsai.com
 - **Deployment:** Vercel (auto-deploy disabled to save build credits — deploy manually)
 - **Tests:** 54 test files (server + client), 265 tests passing (84 server + 181 client)
-- **API surface:** Unified via `src/app.ts::buildApp()` — single source of truth for standalone Fastify and Vercel serverless. 43 Fastify routes serve all primary endpoints; `api/fastify.ts` catch-all handles them in Vercel. 46 hand-written Vercel functions remain only for subsystems without Fastify equivalents.
+- **API surface:** Unified via `src/app.ts::buildApp()` — single source of truth for standalone Fastify and Vercel serverless. ~60 Fastify route paths serve all primary endpoints; `api/fastify.ts` catch-all handles them in Vercel. 18 hand-written Vercel functions remain only for subsystems with no Fastify twin (alerts/factor-drift, alerts/notify, alerts/sec-filings, cvrf/belief-history, cvrf/beliefs/correlations, cvrf/beliefs/current, cvrf/beliefs/timeline, cvrf/episodes, cvrf/meta-prompt, cvrf/stats, earnings/forecast/:symbol/refresh, earnings/history/:symbol, errors/report, options/iv, portfolio/attribution, portfolio/risk, portfolio/share/:id, settings/notifications), plus runtime-specific edge/quotes and Vercel-platform health checks.
 - **Server files:** 79 .ts files
 - **Supabase migrations:** 11
 

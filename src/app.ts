@@ -51,6 +51,7 @@ import { taxRoutes } from './routes/tax.js';
 import { apiKeysRoutes } from './routes/api-keys.js';
 import { authRoutes } from './routes/auth.js';
 import { tradingRoutes } from './routes/trading.js';
+import { billingRoutes } from './routes/billing.js';
 import { socialRoutes } from './routes/social.js';
 import { websocketRoutes } from './routes/websocket.js';
 
@@ -199,6 +200,7 @@ export async function buildApp(
   app.register(apiKeysRoutes, ctx);
   app.register(authRoutes, ctx);
   app.register(tradingRoutes, ctx);
+  app.register(billingRoutes, ctx);
   app.register(socialRoutes, ctx);
   if (websockets) {
     app.register(websocketRoutes, ctx);

@@ -127,7 +127,7 @@ npm run ml:start         # uvicorn on port 8000
 - **Production URL:** https://frontier-alpha.metaventionsai.com
 - **Deployment:** Vercel (auto-deploy disabled to save build credits — deploy manually)
 - **Tests:** 54 test files (server + client), 265 tests passing (84 server + 181 client)
-- **API surface:** Unified via `src/app.ts::buildApp()` — single source of truth for standalone Fastify and Vercel serverless. ~60 Fastify route paths serve all primary endpoints; `api/fastify.ts` catch-all handles them in Vercel. 18 hand-written Vercel functions remain only for subsystems with no Fastify twin (alerts/factor-drift, alerts/notify, alerts/sec-filings, cvrf/belief-history, cvrf/beliefs/correlations, cvrf/beliefs/current, cvrf/beliefs/timeline, cvrf/episodes, cvrf/meta-prompt, cvrf/stats, earnings/forecast/:symbol/refresh, earnings/history/:symbol, errors/report, options/iv, portfolio/attribution, portfolio/risk, portfolio/share/:id, settings/notifications), plus runtime-specific edge/quotes and Vercel-platform health checks.
+- **API surface:** Fully unified via `src/app.ts::buildApp()` — single source of truth for standalone Fastify and Vercel serverless. 81 unique Fastify route paths across 19 route modules; `api/fastify.ts` catch-all handles them in Vercel. Only 10 Vercel .ts files remain: infrastructure (fastify catch-all, lib/auth, lib/errorHandler, lib/rateLimiter, lib/validation, docs, openapi), runtime-specific (edge/quotes), and platform health checks (api/health, api/v1/health). Zero hand-written Vercel endpoint handlers remain — all business logic lives in `src/routes/`.
 - **Server files:** 79 .ts files
 - **Supabase migrations:** 11
 
@@ -178,7 +178,7 @@ Dark mode: CSS variable–based (no `dark:` Tailwind prefixes needed). Light/Dar
 - _None currently tracked._
 
 ### Resolved (Sprint 2026-04-04)
-- ~~**Dual API surface**~~ — Fixed: extracted `src/app.ts::buildApp()` as single source of truth; added `api/fastify.ts` catch-all that routes unmatched `/api/*` through `fastify.inject()`; deleted 20 Fastify-duplicated Vercel functions (CVRF + alerts + earnings + explain + portfolio + quotes). Vercel's filesystem precedence keeps the 51 genuinely Vercel-only functions intact. (`49d1c79`, `306a49f`, `28c5e4b`, `bfc01b1`)
+- ~~**Dual API surface**~~ — Fixed: extracted `src/app.ts::buildApp()` as single source of truth; added `api/fastify.ts` catch-all; ported all 27 Vercel-only subsystems (auth, billing, trading, notifications, backtest, broker, cache, sec, sentiment, 7 CVRF viz endpoints, 3 alert subsystems, 2 earnings endpoints, options/iv, 3 portfolio endpoints, settings/notifications, errors/report) into `src/routes/*.ts` Fastify plugins. Zero hand-written Vercel handlers remain.
 
 ### Resolved (Sprint 2026-04-03)
 - ~~**Version mismatch**~~ — Fixed: `/health` now reads from `package.json` (`d763465`)

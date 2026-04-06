@@ -60,6 +60,7 @@ import { sentimentRoutes } from './routes/sentiment.js';
 import { brokerRoutes } from './routes/broker.js';
 import { secRoutes } from './routes/sec.js';
 import { websocketRoutes } from './routes/websocket.js';
+import { errorsRoutes } from './routes/errors.js';
 
 const pkg = JSON.parse(
   readFileSync(new URL('../package.json', import.meta.url), 'utf-8')
@@ -214,6 +215,7 @@ export async function buildApp(
   app.register(sentimentRoutes, ctx);
   app.register(brokerRoutes, ctx);
   app.register(secRoutes, ctx);
+  app.register(errorsRoutes, ctx);
   if (websockets) {
     app.register(websocketRoutes, ctx);
   }

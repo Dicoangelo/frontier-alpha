@@ -3,6 +3,7 @@ import { authMiddleware } from '../middleware/auth.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { logger } from '../observability/logger.js';
 import type { APIResponse } from '../types/index.js';
+import type { UserNotificationSettings } from '../notifications/AlertDelivery.js';
 
 interface RouteContext {
   server: unknown;
@@ -90,6 +91,129 @@ export async function settingsRoutes(fastify: FastifyInstance, _opts: RouteConte
       return {
         success: true,
         data,
+        meta: {
+          timestamp: new Date(),
+          requestId: request.id,
+          latencyMs: Date.now() - start,
+        },
+      };
+    }
+  );
+
+  // ─── Notification Settings ─────────────────────────────────────────
+
+  const settingsStore = new Map<string, UserNotificationSettings>();
+
+  const getDefaultSettings = (userId: string): Omit<UserNotificationSettings, 'email'> => ({
+    userId,
+    emailEnabled: true,
+    severityThreshold: 'medium',
+    alertTypes: [],
+    digestFrequency: 'immediate',
+  });
+
+  // GET /api/v1/settings/notifications
+  fastify.get(
+    '/api/v1/settings/notifications',
+    { preHandler: authMiddleware },
+    async (request) => {
+      const start = Date.now();
+      const userId = request.user.id;
+
+      let settings = settingsStore.get(userId);
+
+      if (!settings) {
+        settings = {
+          ...getDefaultSettings(userId),
+          email: '',
+        };
+      }
+
+      return {
+        success: true,
+        data: settings,
+        meta: {
+          timestamp: new Date(),
+          requestId: request.id,
+          latencyMs: Date.now() - start,
+        },
+      };
+    }
+  );
+
+  // PUT /api/v1/settings/notifications
+  fastify.put<{
+    Body: Partial<UserNotificationSettings>;
+  }>(
+    '/api/v1/settings/notifications',
+    { preHandler: authMiddleware },
+    async (request, reply) => {
+      const start = Date.now();
+      const userId = request.user.id;
+      const updates = request.body;
+
+      let settings = settingsStore.get(userId);
+
+      if (!settings) {
+        settings = {
+          ...getDefaultSettings(userId),
+          email: updates.email || '',
+        };
+      }
+
+      // Validate and apply updates
+      if (updates.email !== undefined) {
+        if (updates.email && !updates.email.includes('@')) {
+          return reply.status(400).send({
+            success: false,
+            error: { code: 'INVALID_EMAIL', message: 'Invalid email format' },
+          });
+        }
+        settings.email = updates.email;
+      }
+
+      if (updates.emailEnabled !== undefined) {
+        settings.emailEnabled = Boolean(updates.emailEnabled);
+      }
+
+      if (updates.severityThreshold !== undefined) {
+        const validThresholds = ['critical', 'high', 'medium', 'low'];
+        if (!validThresholds.includes(updates.severityThreshold)) {
+          return reply.status(400).send({
+            success: false,
+            error: { code: 'INVALID_THRESHOLD', message: 'Invalid severity threshold' },
+          });
+        }
+        settings.severityThreshold = updates.severityThreshold;
+      }
+
+      if (updates.alertTypes !== undefined) {
+        if (!Array.isArray(updates.alertTypes)) {
+          return reply.status(400).send({
+            success: false,
+            error: { code: 'INVALID_TYPES', message: 'alertTypes must be an array' },
+          });
+        }
+        settings.alertTypes = updates.alertTypes;
+      }
+
+      if (updates.digestFrequency !== undefined) {
+        const validFrequencies = ['immediate', 'hourly', 'daily'];
+        if (!validFrequencies.includes(updates.digestFrequency)) {
+          return reply.status(400).send({
+            success: false,
+            error: { code: 'INVALID_FREQUENCY', message: 'Invalid digest frequency' },
+          });
+        }
+        settings.digestFrequency = updates.digestFrequency;
+      }
+
+      // Save updated settings
+      settingsStore.set(userId, settings);
+
+      return {
+        success: true,
+        data: settings,
         meta: {
           timestamp: new Date(),
           requestId: request.id,

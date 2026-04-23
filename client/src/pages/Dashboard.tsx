@@ -13,6 +13,7 @@ import { WeightAllocation } from '@/components/portfolio/WeightAllocation';
 import { SkeletonDashboard } from '@/components/shared/Skeleton';
 import { EmptyPortfolio, DataLoadError } from '@/components/shared/EmptyState';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
+import { MarketStatusStrip } from '@/components/dashboard/MarketStatusStrip';
 
 // Types
 interface Position {
@@ -441,8 +442,12 @@ export function Dashboard() {
 
   return (
     <PullToRefresh onRefresh={loadPortfolioData} className="min-h-screen">
+      <MarketStatusStrip
+        isConnected={isConnected}
+        lastUpdate={lastUpdate ? lastUpdate.getTime() : null}
+      />
       <div
-        className="space-y-6 transition-opacity duration-300 ease-out"
+        className="space-y-6 transition-opacity duration-300 ease-out pt-6"
         style={{ opacity: contentVisible ? 1 : 0 }}
       >
 

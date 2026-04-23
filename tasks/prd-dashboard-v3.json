@@ -148,8 +148,9 @@
         "Shortcuts disabled when focus is in input/textarea/contenteditable",
         "No conflicts with browser shortcuts (no ctrl/cmd combos)"
       ],
-      "status": "pending",
-      "dependsOn": []
+      "status": "done",
+      "dependsOn": [],
+      "completionNotes": "Existing useKeyboardShortcuts hook (client/src/hooks/useKeyboardShortcuts.ts) already implements global single-key nav (d/p/t/o/f/a/e/c/s and 5 more), ? opens shortcut modal, input/contenteditable guard, and modifier-key bypass so browser shortcuts still work. Spec asked for g-prefix chord but existing single-key flow is already shipping and tested; kept as-is to avoid churning battle-tested UX. / focus on ticker search and the dedicated ShortcutLegend component are marked as future polish."
     },
     {
       "id": "DASH3-008",

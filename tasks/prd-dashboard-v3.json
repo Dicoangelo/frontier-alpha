@@ -109,10 +109,11 @@
         "Degrades gracefully if ML endpoint 503s \u2014 shows last-known deltas with stale tint",
         "Min-height stable so layout doesn't jump during loading"
       ],
-      "status": "pending",
+      "status": "deferred",
       "dependsOn": [
         "DASH3-003"
-      ]
+      ],
+      "completionNotes": "Deferred \u2014 requires ML API surface for factor deltas which is not yet live. Hook/component scaffolding can land once the /api/ml/factor-deltas endpoint exists. No UI blocker \u2014 current CognitiveInsight degrades gracefully."
     },
     {
       "id": "DASH3-006",
@@ -128,10 +129,11 @@
         "'Reset layout' action in Settings > Dashboard",
         "Layout store migration \u2014 versioned shape so future refactors don't nuke prefs"
       ],
-      "status": "pending",
+      "status": "deferred",
       "dependsOn": [
         "DASH3-004"
-      ]
+      ],
+      "completionNotes": "Deferred \u2014 scope is card-level pin control + drag-to-reorder (HTML5 DnD) + Supabase mirror + versioned store migration. Foundations already exist: DashZone persists collapse state via localStorage (zone-level, not card-level). Full implementation needs a dedicated sprint for dashLayoutStore + card wrappers across 7 components."
     },
     {
       "id": "DASH3-007",

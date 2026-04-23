@@ -10,7 +10,9 @@ type Mode = 'request' | 'recover' | 'done';
 
 export function ResetPassword() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>('request');
+  const [mode, setMode] = useState<Mode>(() =>
+    typeof window !== 'undefined' && window.location.hash.includes('type=recovery') ? 'recover' : 'request'
+  );
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [password, setPassword] = useState('');
@@ -19,19 +21,13 @@ export function ResetPassword() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  // Detect PASSWORD_RECOVERY session from email link
+  // Detect PASSWORD_RECOVERY event — session may be set mid-flight
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setMode('recover');
       }
     });
-
-    // Also check for existing recovery session on mount (in case event fired before listener)
-    if (window.location.hash.includes('type=recovery')) {
-      setMode('recover');
-    }
-
     return () => subscription.unsubscribe();
   }, []);
 

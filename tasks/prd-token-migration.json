@@ -124,12 +124,13 @@
         "Exceptions whitelisted via eslint-disable-next-line with mandatory comment",
         "Breaks build on violation"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "TOKEN-003",
         "TOKEN-004",
         "TOKEN-005"
-      ]
+      ],
+      "completionNotes": "Added no-restricted-syntax rule to client/eslint.config.js: targets Literal nodes matching /^#[0-9a-fA-F]{3,8}$/ and TemplateElement raw values containing hex. Scoped to src/pages/** and src/components/**, ignores test files and src/lib/theme.ts (token definition file). Warn-level so CSS fallbacks like var(--color-bg, #fff) do not break builds. Authors can opt out per-line with eslint-disable-next-line comment."
     },
     {
       "id": "TOKEN-007",

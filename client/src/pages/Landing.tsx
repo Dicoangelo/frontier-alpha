@@ -259,7 +259,7 @@ export function Landing() {
 
 function FeatureCard({ title, body, tint, icon }: { title: string; body: string; tint: string; icon: React.ReactNode }) {
   return (
-    <div className="glass-slab rounded-sm p-5 sm:p-6 md:p-8 text-center group hover:-translate-y-1 transition-all duration-500">
+    <div className="glass-slab rounded-sm p-5 sm:p-6 md:p-8 text-center group md:animate-lift transition-all duration-500">
       <div
         className="w-12 h-12 mx-auto mb-4 rounded-sm flex items-center justify-center"
         style={{ backgroundColor: `color-mix(in srgb, ${tint} 10%, transparent)` }}

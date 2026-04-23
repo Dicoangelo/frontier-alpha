@@ -277,9 +277,9 @@
     width: 100%;
   }
 
-  /* ── Click Feedback ── */
+  /* ── Click Feedback (legacy alias — prefer .animate-press in new code) ── */
   .click-feedback {
-    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform var(--motion-duration-fast) var(--motion-ease-out);
   }
   .click-feedback:active {
     transform: scale(0.96);

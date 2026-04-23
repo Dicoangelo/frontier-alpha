@@ -1,0 +1,138 @@
+{
+  "name": "frontier-alpha-mobile-portfolio",
+  "description": "Mobile portfolio — card/list hybrid that makes 375px usable. Replaces the overflowing desktop table with per-row cards, tap-to-expand via existing BottomSheet, swipe actions, and pull-to-refresh. Preserves the desktop table unchanged.",
+  "project": "~/projects/frontier-alpha",
+  "target": "client/src/pages/Portfolio.tsx + new components/portfolio/mobile/",
+  "priority": "P2",
+  "estimated_days": 3,
+  "verification": [
+    "cd client && npm run build",
+    "cd client && npm test",
+    "Visual QA at 320px, 390px, 768px, 1024px viewports"
+  ],
+  "stories": [
+    {
+      "id": "MOBILE-001",
+      "title": "Breakpoint switch — render card layout under 768px",
+      "files": [
+        "client/src/pages/Portfolio.tsx",
+        "client/src/components/portfolio/mobile/PortfolioMobile.tsx"
+      ],
+      "criteria": [
+        "Portfolio.tsx detects viewport via useMediaQuery('(max-width: 767px)') — no duplicate data fetching",
+        "Mobile branch renders PortfolioMobile, desktop branch keeps current table",
+        "Same store/hooks feed both — single source of truth",
+        "SSR-safe guard (optional since Vite is SPA, but future-proof)",
+        "No horizontal scroll at 320px"
+      ],
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "MOBILE-002",
+      "title": "Position card — symbol, weight, PnL hero, mini sparkline",
+      "files": [
+        "client/src/components/portfolio/mobile/PositionCard.tsx"
+      ],
+      "criteria": [
+        "Each card: row 1 = symbol (bold, 20px) + weight% (mono, right-aligned), row 2 = PnL$ + PnL% (color-coded), row 3 = sparkline (60x20) spanning the card",
+        "Cards separated by 1px border — no drop shadow at this breakpoint",
+        "PnL color: var(--color-positive) up, var(--color-negative) down",
+        "Sparkline reuses existing svg polyline logic from PositionList — extract to shared Sparkline.tsx",
+        "Loading state: skeleton card with shimmer",
+        "Touch target ≥44x44 on the main tap zone"
+      ],
+      "status": "pending",
+      "dependsOn": ["MOBILE-001"]
+    },
+    {
+      "id": "MOBILE-003",
+      "title": "Tap card to expand — BottomSheet with full detail",
+      "files": [
+        "client/src/components/portfolio/mobile/PositionSheet.tsx",
+        "client/src/components/portfolio/mobile/PositionCard.tsx"
+      ],
+      "criteria": [
+        "Tap card opens BottomSheet (existing component) with full position detail",
+        "Sheet content: full EquityCurve (80vw), factor exposures mini-chart, cost basis, unrealized PnL, realized PnL, avg fill, last trade, alerts count",
+        "Actions in sheet footer: Trade, Add Alert, View Options, Sell — each navigates or opens sub-sheet",
+        "Sheet respects safe-area-insets (notch, home indicator)",
+        "Swipe-down-to-dismiss gesture — threshold 50% of sheet height",
+        "Keyboard/A11y: esc closes, focus moves into sheet on open, returns to card on close"
+      ],
+      "status": "pending",
+      "dependsOn": ["MOBILE-002"]
+    },
+    {
+      "id": "MOBILE-004",
+      "title": "Swipe-left actions — Sell / Trade / Alert",
+      "files": [
+        "client/src/components/portfolio/mobile/PositionCard.tsx",
+        "client/src/hooks/useSwipeActions.ts"
+      ],
+      "criteria": [
+        "Horizontal swipe-left on card reveals 3 action buttons (Sell, Trade, Alert) sliding in from right",
+        "Swipe threshold 25% of card width — below = snap back, above = reveal, past 60% = commit default action (Trade)",
+        "Haptic feedback on reveal + commit (navigator.vibrate guarded)",
+        "useSwipeActions hook — pointer + touch events, no external lib",
+        "Tap outside closes revealed actions",
+        "Respects prefers-reduced-motion — falls back to long-press menu"
+      ],
+      "status": "pending",
+      "dependsOn": ["MOBILE-002"]
+    },
+    {
+      "id": "MOBILE-005",
+      "title": "Pull-to-refresh — wire existing PullToRefresh",
+      "files": [
+        "client/src/pages/Portfolio.tsx",
+        "client/src/components/portfolio/mobile/PortfolioMobile.tsx"
+      ],
+      "criteria": [
+        "PullToRefresh wraps the PortfolioMobile list on mobile only",
+        "Pull threshold triggers refetch of portfolio + quotes queries",
+        "Visual: var(--color-accent) spinner, 'Refreshing…' mono uppercase label",
+        "Completes within 3s or shows error toast with retry",
+        "Does not interfere with swipe-actions or card-tap gestures",
+        "Ignored when any sheet is open"
+      ],
+      "status": "pending",
+      "dependsOn": ["MOBILE-002", "MOBILE-004"]
+    },
+    {
+      "id": "MOBILE-006",
+      "title": "Sticky filter + sort bar on scroll",
+      "files": [
+        "client/src/components/portfolio/mobile/FilterBar.tsx",
+        "client/src/components/portfolio/mobile/PortfolioMobile.tsx"
+      ],
+      "criteria": [
+        "FilterBar sticky under MarketStatusStrip: sort pills (Weight, PnL$, PnL%, Alpha), filter chip (All / Winners / Losers), search input",
+        "Scroll behavior: slides in from top when user scrolls down past 200px, stays visible; hides on scroll-up into hero",
+        "Sort updates portfolio list order in-place with 200ms stagger-reorder animation",
+        "Search filters positions by symbol substring (case-insensitive)",
+        "'Clear filters' X appears when any filter active"
+      ],
+      "status": "pending",
+      "dependsOn": ["MOBILE-002"]
+    },
+    {
+      "id": "MOBILE-007",
+      "title": "Mobile bottom tab nav — replaces sidebar",
+      "files": [
+        "client/src/components/layout/BottomTabs.tsx",
+        "client/src/components/layout/AppShell.tsx"
+      ],
+      "criteria": [
+        "5 tabs visible under 768px: Dashboard, Portfolio, Trade, Factors, More",
+        "'More' opens a sheet with remaining pages (Options, CVRF, Earnings, Alerts, Backtest, ML, Social, Tax, Settings, Help)",
+        "Active tab gets var(--color-accent) tint + top 2px accent bar",
+        "Safe-area-inset-bottom padding for iOS home indicator",
+        "Sidebar hidden on mobile — no double nav",
+        "Transition: slide-up on mount, slide-down on route change"
+      ],
+      "status": "pending",
+      "dependsOn": []
+    }
+  ]
+}

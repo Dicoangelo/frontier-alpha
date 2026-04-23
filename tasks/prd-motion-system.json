@@ -1,0 +1,133 @@
+{
+  "name": "frontier-alpha-motion-system",
+  "description": "Unified motion grammar — one vocabulary of durations, easings, and choreographies used across every page. Codifies stagger timing, page transitions, micro-interactions, and prefers-reduced-motion behavior. Replaces the ad-hoc animations scattered across components.",
+  "project": "~/projects/frontier-alpha",
+  "target": "client/src/index.css + client/src/hooks/useStagger.ts + audit across components/",
+  "priority": "P3",
+  "estimated_days": 2,
+  "verification": [
+    "cd client && npm run build",
+    "cd client && npm test",
+    "Manual QA: tab between Dashboard / Portfolio / Trading / Options — feels like one product"
+  ],
+  "stories": [
+    {
+      "id": "MOTION-001",
+      "title": "Codify motion tokens in CSS",
+      "files": [
+        "client/src/index.css",
+        "docs/MOTION-SYSTEM.md"
+      ],
+      "criteria": [
+        "Under :root: --motion-duration-fast: 150ms, --motion-duration-base: 240ms, --motion-duration-slow: 400ms, --motion-duration-hero: 620ms",
+        "--motion-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1) — decelerating enter",
+        "--motion-ease-in: cubic-bezier(0.4, 0, 1, 1) — accelerating exit",
+        "--motion-ease-inout: cubic-bezier(0.4, 0, 0.2, 1) — standard transform",
+        "--motion-stagger-step: 60ms — per-item delay for lists",
+        "MOTION-SYSTEM.md documents intent + when to use each duration"
+      ],
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "MOTION-002",
+      "title": "Utility classes — animate-enter, animate-exit, animate-stagger",
+      "files": [
+        "client/src/index.css"
+      ],
+      "criteria": [
+        ".animate-enter → opacity + translateY(8px) → 0, duration var(--motion-duration-base), ease var(--motion-ease-out)",
+        ".animate-exit → reverse of enter, pointer-events disabled during exit",
+        ".animate-stagger > * → --motion-stagger-step cascade via nth-child(N)",
+        ".animate-press → scale(0.96) + transition var(--motion-duration-fast) var(--motion-ease-out) on :active",
+        ".animate-lift → translateY(-2px) on :hover with subtle shadow",
+        "All classes respect prefers-reduced-motion (durations clamp to 0.01ms)"
+      ],
+      "status": "pending",
+      "dependsOn": ["MOTION-001"]
+    },
+    {
+      "id": "MOTION-003",
+      "title": "useStagger hook — data-driven list stagger",
+      "files": [
+        "client/src/hooks/useStagger.ts"
+      ],
+      "criteria": [
+        "useStagger(count, { step = 60, initial = 0 }) returns an array of style objects [{ animationDelay: '0ms' }, { animationDelay: '60ms' }, ...]",
+        "Supports `mode: 'enter' | 'reorder'` — reorder uses translate from old→new position",
+        "Caps total stagger at 600ms — late items snap in without delay",
+        "Unit test with n=10, step=50 → expected delay sequence"
+      ],
+      "status": "pending",
+      "dependsOn": ["MOTION-002"]
+    },
+    {
+      "id": "MOTION-004",
+      "title": "Page transitions — route enter/exit choreography",
+      "files": [
+        "client/src/components/layout/PageTransition.tsx",
+        "client/src/App.tsx"
+      ],
+      "criteria": [
+        "PageTransition wraps <Outlet /> (or equivalent) — captures location, animates on change",
+        "Enter: animate-enter on child route root",
+        "Exit: previous route fades out in <80ms before new enters — no visible overlap blink",
+        "Navigation history preserved (back/forward work)",
+        "No extra re-renders of non-routed components (memoize shell)",
+        "Respects prefers-reduced-motion — swaps instantly"
+      ],
+      "status": "pending",
+      "dependsOn": ["MOTION-002"]
+    },
+    {
+      "id": "MOTION-005",
+      "title": "Roll out animate-press + animate-lift across all interactive elements",
+      "files": [
+        "client/src/components/**"
+      ],
+      "criteria": [
+        "Every <button> gains .animate-press (unless already using click-feedback — that's deprecated, merged into animate-press)",
+        "Every card/slab gains .animate-lift on :hover at md breakpoint and above (disabled on touch to avoid sticky hover)",
+        "Codemod / grep-sweep to find buttons missing the class and add it",
+        "click-feedback CSS class deleted — replaced everywhere",
+        "No regression in disabled-state visuals"
+      ],
+      "status": "pending",
+      "dependsOn": ["MOTION-002"]
+    },
+    {
+      "id": "MOTION-006",
+      "title": "Holographic pulse on primary metrics",
+      "files": [
+        "client/src/components/portfolio/PortfolioOverview.tsx",
+        "client/src/components/dashboard/MarketStatusStrip.tsx",
+        "client/src/components/explainer/CognitiveInsight.tsx"
+      ],
+      "criteria": [
+        "Main portfolio value + daily change on Dashboard use .holo-pulse (already exists) when a new data tick arrives",
+        "Pulse duration matches the quote-flash-up/down — no double-animation stutter",
+        "Only ONE element per page at a time carries pulse — prevents dashboard-wide flicker",
+        "Opt-out prop `noPulse` for components embedded in report/PDF contexts"
+      ],
+      "status": "pending",
+      "dependsOn": ["MOTION-001"]
+    },
+    {
+      "id": "MOTION-007",
+      "title": "prefers-reduced-motion audit + expansion",
+      "files": [
+        "client/src/index.css",
+        "docs/MOTION-SYSTEM.md"
+      ],
+      "criteria": [
+        "Existing @media (prefers-reduced-motion: reduce) block expanded — explicitly name each animation class that gets clamped",
+        "Functional equivalents preserved (e.g., fade-in still renders final state; list enter still shows every item)",
+        "Hero factor-bar backdrop respects reduced motion — bars appear at final height without grow+breathe",
+        "Typing ticker demo respects reduced motion — instantly shows symbol + factors, no typing animation",
+        "A11y review: no essential information conveyed only via motion"
+      ],
+      "status": "pending",
+      "dependsOn": ["MOTION-001", "MOTION-002"]
+    }
+  ]
+}

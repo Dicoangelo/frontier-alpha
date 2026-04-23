@@ -62,10 +62,11 @@
         "Caps total stagger at 600ms \u2014 late items snap in without delay",
         "Unit test with n=10, step=50 \u2192 expected delay sequence"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "MOTION-002"
-      ]
+      ],
+      "completionNotes": "Shipped client/src/hooks/useStagger.ts: useStagger(count, { step, initial, maxTotalMs, mode }) returns style[] with animationDelay (mode=enter) or transitionDelay (mode=reorder). Caps total cascade at maxTotalMs (default 600ms) \u2014 late items snap in with no delay, preventing multi-second waterfalls on long lists."
     },
     {
       "id": "MOTION-004",

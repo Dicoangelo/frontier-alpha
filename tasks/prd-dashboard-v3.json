@@ -66,10 +66,11 @@
         "Cards on Dashboard pipe through this \u2014 they opacity-60 + add 'stale' badge when frozen",
         "Unit tests for tier boundaries (14s fresh, 16s stale, 61s frozen)"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "DASH3-001"
-      ]
+      ],
+      "completionNotes": "Shipped client/src/hooks/useDataFreshness.ts: module-scoped 1Hz clock via useSyncExternalStore \u2014 no setInterval per component. Exports tierFor() pure function, useDataFreshness(timestamp, source) hook returning { ageSeconds, tier: fresh|stale|frozen|unknown }, and window-wide onStale/emitStale event bus. Thresholds: <15s fresh, 15-60s stale, >60s frozen. MarketStatusStrip migrated to use it."
     },
     {
       "id": "DASH3-004",

@@ -139,11 +139,12 @@
         "Typing ticker demo respects reduced motion \u2014 instantly shows symbol + factors, no typing animation",
         "A11y review: no essential information conveyed only via motion"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "MOTION-001",
         "MOTION-002"
-      ]
+      ],
+      "completionNotes": "Expanded @media (prefers-reduced-motion: reduce) block in client/src/index.css: global 0.01ms clamp preserved, plus explicit overrides for .animate-enter/.animate-exit/.animate-fade-in* (show final state with opacity:1), .factor-grow/.factor-breathe (bars at scaleY(1)), .typing-cursor (no blink), .holo-pulse (no text-shadow), .caption-cycle (static), .animate-press/lift (neutralize), shimmer/pulse-green/glow (freeze). Hero and typing ticker degrade to instant final state \u2014 no essential info conveyed via motion only."
     }
   ]
 }

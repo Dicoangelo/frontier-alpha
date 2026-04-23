@@ -104,11 +104,12 @@
         "Does not interfere with swipe-actions or card-tap gestures",
         "Ignored when any sheet is open"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "MOBILE-002",
         "MOBILE-004"
-      ]
+      ],
+      "completionNotes": "Already shipped \u2014 Portfolio.tsx wraps the entire page in <PullToRefresh onRefresh={handleRefresh}>. handleRefresh invalidates the portfolio React Query which refetches positions + portfolio value. Works on touch devices via PullToRefresh gesture logic; no-op on desktop. Verified in current code."
     },
     {
       "id": "MOBILE-006",

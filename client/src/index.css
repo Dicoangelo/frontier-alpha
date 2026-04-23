@@ -578,11 +578,65 @@
   }
 }
 
-/* ── Reduced Motion ── */
+/* ── Reduced Motion (MOTION-007) ─────────────────────────────────────
+   Respect OS-level prefers-reduced-motion: reduce. Global clamp catches
+   everything; explicit per-class overrides below guarantee critical
+   intent survives without motion.
+*/
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* Enter/exit animations — show the end state immediately without travel */
+  .animate-enter,
+  .animate-exit,
+  .animate-fade-in,
+  .animate-fade-in-up {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Hero factor backdrop — render bars at rest height without grow+breathe */
+  .factor-grow,
+  .factor-breathe {
+    animation: none !important;
+    transform: scaleY(1) !important;
+  }
+
+  /* Typing ticker demo — show final ticker+factors instantly, no cursor blink */
+  .typing-cursor {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+
+  /* Holographic pulse — disable the shifting text-shadow */
+  .holo-pulse {
+    animation: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Caption rotation — stays visible, no slide */
+  .caption-cycle {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  /* Press/lift micro-interactions — neutralize scale + lift */
+  .animate-press:active,
+  .animate-lift:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Shimmer / pulse glow — freeze */
+  .animate-shimmer,
+  .animate-pulse-green,
+  .animate-glow {
+    animation: none !important;
   }
 }

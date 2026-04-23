@@ -60,7 +60,7 @@ export function DashZone({
   return (
     <section
       aria-labelledby={`${id}-title`}
-      className={`rounded-sm border ${WEIGHT_STYLES[weight]} ${className}`}
+      className={`rounded-sm border md:animate-lift ${WEIGHT_STYLES[weight]} ${className}`}
     >
       <header
         className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3 border-b border-[var(--color-border-light)]"

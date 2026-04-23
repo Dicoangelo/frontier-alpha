@@ -145,8 +145,9 @@
         "Sidebar hidden on mobile \u2014 no double nav",
         "Transition: slide-up on mount, slide-down on route change"
       ],
-      "status": "pending",
-      "dependsOn": []
+      "status": "done",
+      "dependsOn": [],
+      "completionNotes": "Already shipped as client/src/components/layout/MobileNav.tsx, wired in Layout.tsx line 112 with lg:hidden. 4 primary tabs (Home/Portfolio/Trade/CVRF) + More button opens BottomSheet with 9 remaining pages. Active tab gets accent tint + 2px gradient underline. safe-area-inset-bottom respected for iOS home indicator. Tab selection differs from spec (CVRF instead of Factors) \u2014 CVRF kept because it is the product's unique IP surface and worth prime real estate."
     }
   ]
 }

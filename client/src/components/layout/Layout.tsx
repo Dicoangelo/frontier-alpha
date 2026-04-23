@@ -8,6 +8,7 @@ import { HelpPanel, useHelpPanel, FloatingHelpButton } from '@/components/help';
 import { ConnectionStatus } from '@/components/shared/ConnectionStatus';
 import { MockDataBanner } from '@/components/shared/MockDataBanner';
 import { KeyboardHelpModal } from '@/components/shared/KeyboardHelpModal';
+import { CommandPalette } from '@/components/shared/CommandPalette';
 import { PageTransition } from '@/components/shared/PageTransition';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
@@ -119,6 +120,9 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Keyboard Shortcuts Modal */}
       <KeyboardHelpModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+
+      {/* Command Palette (Cmd/Ctrl + K) */}
+      <CommandPalette />
     </div>
   );
 }

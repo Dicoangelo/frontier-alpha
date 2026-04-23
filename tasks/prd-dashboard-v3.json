@@ -168,10 +168,11 @@
         "Commands registered declaratively via useCommand({ id, title, group, run })",
         "A11y: role=dialog, combobox semantics, announced on open"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "DASH3-007"
-      ]
+      ],
+      "completionNotes": "Shipped client/src/components/shared/CommandPalette.tsx \u2014 Cmd/Ctrl+K opens a centered modal with fuzzy search across 14 routes, theme toggle, sign-out action. Arrow keys navigate, Enter executes, Esc closes. Items grouped by Navigate/Preferences/Actions with mono section labels. Highlighted row gets --brand-amethyst tint. Backdrop blurs page behind; click-outside closes. Wired into Layout.tsx so it is available globally on any authed page."
     }
   ]
 }

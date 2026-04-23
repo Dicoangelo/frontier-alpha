@@ -47,10 +47,11 @@
         "Empty state: 'No active alerts' with var(--color-positive) checkmark",
         "A11y: role=dialog, escape to close, focus trap"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "DASH3-001"
-      ]
+      ],
+      "completionNotes": "AlertDropdown already shipped at client/src/components/alerts/AlertDropdown.tsx (172 lines, wired into Header, React Query with 30s refetch, severity tokens, acknowledge mutation). This sprint wired the strip badge \u2014 clicking navigates to /alerts, and the badge flashes (animate-pulse-green + warning\u2192negative color swap for 600ms) when new alerts arrive."
     },
     {
       "id": "DASH3-003",

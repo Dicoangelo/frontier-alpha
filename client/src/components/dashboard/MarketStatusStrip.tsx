@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAlertsStore } from '@/stores/alertsStore';
 import { useDataFreshness } from '@/hooks/useDataFreshness';
 
@@ -103,6 +104,18 @@ export function MarketStatusStrip({ isConnected, lastUpdate }: MarketStatusStrip
   const unreadAlerts = useAlertsStore((s) => s.unreadCount);
   const freshness = useDataFreshness(lastUpdate, 'market-strip');
   const now = useMemo(() => new Date(), [freshness.ageSeconds]);
+  const navigate = useNavigate();
+  const [flash, setFlash] = useState(false);
+  const prevAlerts = useRef(unreadAlerts);
+
+  useEffect(() => {
+    if (unreadAlerts > prevAlerts.current) {
+      setFlash(true);
+      const id = setTimeout(() => setFlash(false), 600);
+      return () => clearTimeout(id);
+    }
+    prevAlerts.current = unreadAlerts;
+  }, [unreadAlerts]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -176,15 +189,18 @@ export function MarketStatusStrip({ isConnected, lastUpdate }: MarketStatusStrip
           </span>
 
           {unreadAlerts > 0 && (
-            <span
-              className="flex items-center gap-1 px-2 py-0.5 rounded-sm"
+            <button
+              type="button"
+              onClick={() => navigate('/alerts')}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-sm transition-transform duration-200 hover:scale-[1.04] ${flash ? 'animate-pulse-green' : ''}`}
               style={{
-                color: 'var(--color-warning)',
-                backgroundColor: 'color-mix(in srgb, var(--color-warning) 12%, transparent)',
+                color: flash ? 'var(--color-negative)' : 'var(--color-warning)',
+                backgroundColor: `color-mix(in srgb, ${flash ? 'var(--color-negative)' : 'var(--color-warning)'} 14%, transparent)`,
               }}
+              aria-label={`View ${unreadAlerts} unread alert${unreadAlerts === 1 ? '' : 's'}`}
             >
               {unreadAlerts} Alert{unreadAlerts === 1 ? '' : 's'}
-            </span>
+            </button>
           )}
 
           <button

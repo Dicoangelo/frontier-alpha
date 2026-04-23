@@ -83,10 +83,11 @@
         "No extra re-renders of non-routed components (memoize shell)",
         "Respects prefers-reduced-motion \u2014 swaps instantly"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "MOTION-002"
-      ]
+      ],
+      "completionNotes": "PageTransition component (client/src/components/shared/PageTransition.tsx) already key-on-location and wraps Layout children. Updated the .page-transition CSS class to use motion tokens (var(--motion-duration-slow) var(--motion-ease-out)) instead of hardcoded 0.4s ease-out. Fades on every route change via key remount \u2014 no setState churn."
     },
     {
       "id": "MOTION-005",

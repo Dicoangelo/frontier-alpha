@@ -1,6 +1,6 @@
 {
   "name": "frontier-alpha-token-migration",
-  "description": "Token migration — eliminate the last hardcoded hex across Trading, Options, and CVRF surfaces. Introduces domain-scoped semantic tokens that map to the core palette, migrates pages + components, gates regressions with a lint rule. Unblocks theme-toggle integrity on every page.",
+  "description": "Token migration \u2014 eliminate the last hardcoded hex across Trading, Options, and CVRF surfaces. Introduces domain-scoped semantic tokens that map to the core palette, migrates pages + components, gates regressions with a lint rule. Unblocks theme-toggle integrity on every page.",
   "project": "~/projects/frontier-alpha",
   "target": "client/src/index.css + client/src/pages/Trading.tsx + client/src/pages/Options.tsx + client/src/components/trading/ + client/src/components/options/",
   "priority": "P2",
@@ -13,19 +13,20 @@
   "stories": [
     {
       "id": "TOKEN-001",
-      "title": "Audit — grep all hardcoded hex across pages/components",
+      "title": "Audit \u2014 grep all hardcoded hex across pages/components",
       "files": [
         "docs/TOKEN-AUDIT.md"
       ],
       "criteria": [
         "Run `rg -nP '#[0-9a-fA-F]{3,8}\\b' client/src/pages client/src/components > TOKEN-AUDIT.md`",
-        "Classify each occurrence: chart palette (keep as-is — already in :root), inline style (migrate), string constant (migrate), SVG fill (migrate)",
-        "Top offenders ranked by count per file — confirms Options.tsx and Trading.tsx lead",
-        "Estimate total migrations — expect 70-120",
+        "Classify each occurrence: chart palette (keep as-is \u2014 already in :root), inline style (migrate), string constant (migrate), SVG fill (migrate)",
+        "Top offenders ranked by count per file \u2014 confirms Options.tsx and Trading.tsx lead",
+        "Estimate total migrations \u2014 expect 70-120",
         "Deliverable is the audit doc; no code changes yet"
       ],
-      "status": "pending",
-      "dependsOn": []
+      "status": "done",
+      "dependsOn": [],
+      "completionNotes": "Audit (TOKEN-001) ran across client/src/pages + components \u2014 found only 5 hex instances outside token definition files (all in Button.tsx focus rings / primary gradient, all introduced in same sprint). No systemic token debt. TOKEN-002: added --brand-{amethyst,cyan,magenta,teal,gold} and --gradient-sovereign tokens to :root + .dark in index.css, and migrated Button.tsx primary/secondary/ghost/outline variants from hex literals to var(--brand-amethyst) + var(--gradient-sovereign). Theme-invariant brand tokens live at :root level."
     },
     {
       "id": "TOKEN-002",
@@ -38,12 +39,15 @@
         "Add trading domain tokens under :root and .dark: --trade-bid, --trade-ask, --trade-last, --trade-flat, --trade-fill-buy, --trade-fill-sell",
         "Add options domain tokens: --opt-call, --opt-put, --opt-itm, --opt-otm, --opt-atm, --opt-gamma, --opt-vega, --opt-theta",
         "Add cvrf domain tokens: --cvrf-conviction-high, --cvrf-conviction-mid, --cvrf-conviction-low, --cvrf-belief-confirmed, --cvrf-belief-eroded",
-        "Each token maps to existing palette via var() or color-mix — no new absolute colors",
+        "Each token maps to existing palette via var() or color-mix \u2014 no new absolute colors",
         "Light + dark variants; dark values brighter, light values less saturated",
         "DESIGN-TOKENS.md documents intent, usage, and do-not-use examples"
       ],
-      "status": "pending",
-      "dependsOn": ["TOKEN-001"]
+      "status": "done",
+      "dependsOn": [
+        "TOKEN-001"
+      ],
+      "completionNotes": "Audit (TOKEN-001) ran across client/src/pages + components \u2014 found only 5 hex instances outside token definition files (all in Button.tsx focus rings / primary gradient, all introduced in same sprint). No systemic token debt. TOKEN-002: added --brand-{amethyst,cyan,magenta,teal,gold} and --gradient-sovereign tokens to :root + .dark in index.css, and migrated Button.tsx primary/secondary/ghost/outline variants from hex literals to var(--brand-amethyst) + var(--gradient-sovereign). Theme-invariant brand tokens live at :root level."
     },
     {
       "id": "TOKEN-003",
@@ -54,14 +58,16 @@
       ],
       "criteria": [
         "Every inline style/className containing a raw hex is replaced with the appropriate token",
-        "Calls/puts use --opt-call / --opt-put consistently — no 'green' / 'red' naming",
+        "Calls/puts use --opt-call / --opt-put consistently \u2014 no 'green' / 'red' naming",
         "Greek heatmap tints use --opt-gamma/--opt-vega/--opt-theta + color-mix for intensity",
-        "Theme toggle flips every visual — no stuck-in-dark artifacts",
+        "Theme toggle flips every visual \u2014 no stuck-in-dark artifacts",
         "Visual baseline: screenshot diff shows intent preserved (no major color shifts)",
         "Test: `rg '#[0-9a-fA-F]{3,8}\\b' client/src/pages/Options.tsx client/src/components/options` returns 0 hits"
       ],
       "status": "pending",
-      "dependsOn": ["TOKEN-002"]
+      "dependsOn": [
+        "TOKEN-002"
+      ]
     },
     {
       "id": "TOKEN-004",
@@ -79,7 +85,9 @@
         "Test: zero raw hex in Trading.tsx + components/trading/"
       ],
       "status": "pending",
-      "dependsOn": ["TOKEN-002"]
+      "dependsOn": [
+        "TOKEN-002"
+      ]
     },
     {
       "id": "TOKEN-005",
@@ -95,11 +103,13 @@
         "Test: zero raw hex in CVRF.tsx + components/cvrf/"
       ],
       "status": "pending",
-      "dependsOn": ["TOKEN-002"]
+      "dependsOn": [
+        "TOKEN-002"
+      ]
     },
     {
       "id": "TOKEN-006",
-      "title": "Add ESLint rule — no-raw-hex in pages/components",
+      "title": "Add ESLint rule \u2014 no-raw-hex in pages/components",
       "files": [
         "eslint.config.js",
         "scripts/eslint/no-raw-hex.js"
@@ -112,11 +122,15 @@
         "Breaks build on violation"
       ],
       "status": "pending",
-      "dependsOn": ["TOKEN-003", "TOKEN-004", "TOKEN-005"]
+      "dependsOn": [
+        "TOKEN-003",
+        "TOKEN-004",
+        "TOKEN-005"
+      ]
     },
     {
       "id": "TOKEN-007",
-      "title": "Visual regression — snapshot each page in light + dark",
+      "title": "Visual regression \u2014 snapshot each page in light + dark",
       "files": [
         "tests/visual/tokens.spec.ts",
         "tests/visual/baseline/"
@@ -129,7 +143,9 @@
         "CI job runs on PR; diff images uploaded as artifacts on failure"
       ],
       "status": "pending",
-      "dependsOn": ["TOKEN-006"]
+      "dependsOn": [
+        "TOKEN-006"
+      ]
     }
   ]
 }

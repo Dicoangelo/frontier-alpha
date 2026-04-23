@@ -49,7 +49,14 @@
     --color-bg-tooltip: #0F1219;
     --color-text-inverse: #ffffff;
 
-    /* Brand */
+    /* Brand — Metaventions AI sovereign spectrum (theme-invariant) */
+    --brand-amethyst: #7B2CFF;
+    --brand-cyan: #18E6FF;
+    --brand-magenta: #FF3DF2;
+    --brand-teal: #00FFC6;
+    --brand-gold: #D7B26D;
+    --gradient-sovereign: linear-gradient(90deg, #FF3DF2 0%, #7B2CFF 50%, #18E6FF 100%);
+    /* Legacy alias */
     --color-brand-teal: #00FFC6;
 
     /* Chart extras */
@@ -119,7 +126,14 @@
     --color-bg-tooltip: #1a1f2e;
     --color-text-inverse: #0B1020;
 
-    /* Brand */
+    /* Brand — Metaventions AI sovereign spectrum (theme-invariant) */
+    --brand-amethyst: #7B2CFF;
+    --brand-cyan: #18E6FF;
+    --brand-magenta: #FF3DF2;
+    --brand-teal: #00FFC6;
+    --brand-gold: #D7B26D;
+    --gradient-sovereign: linear-gradient(90deg, #FF3DF2 0%, #7B2CFF 50%, #18E6FF 100%);
+    /* Legacy alias */
     --color-brand-teal: #00FFC6;
 
     /* Chart extras */

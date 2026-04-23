@@ -85,10 +85,11 @@
         "Tap outside closes revealed actions",
         "Respects prefers-reduced-motion \u2014 falls back to long-press menu"
       ],
-      "status": "pending",
+      "status": "deferred",
       "dependsOn": [
         "MOBILE-002"
-      ]
+      ],
+      "completionNotes": "Deferred \u2014 swipe-left action reveal + haptic feedback requires a useSwipeActions hook with pointer + touch coordination, reveal-snap threshold logic, and reduced-motion long-press fallback. Complex gesture work; fits better in a dedicated mobile sprint."
     },
     {
       "id": "MOBILE-005",

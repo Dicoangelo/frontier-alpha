@@ -6,6 +6,7 @@ import '@/stores/themeStore'; // Initialize theme (dark mode) on load
 import { Layout } from '@/components/layout/Layout';
 import { Landing } from '@/pages/Landing';
 import { Login } from '@/pages/Login';
+import { ResetPassword } from '@/pages/ResetPassword';
 import { Spinner } from '@/components/shared/Spinner';
 import { ToastContainer } from '@/components/shared/Toast';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -99,6 +100,10 @@ function AppRoutes() {
             <Login />
           </PublicRoute>
         }
+      />
+      <Route
+        path="/reset-password"
+        element={<ResetPassword />}
       />
       <Route
         path="/dashboard"

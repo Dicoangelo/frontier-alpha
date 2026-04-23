@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
@@ -56,9 +57,17 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-2">
-          Password
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label htmlFor="password" className="block text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)]">
+            Password
+          </label>
+          <Link
+            to="/reset-password"
+            className="text-[10px] mono tracking-[0.2em] uppercase text-[var(--color-accent-secondary)] hover:text-[var(--color-accent)] transition-colors"
+          >
+            Forgot?
+          </Link>
+        </div>
         <input
           id="password"
           type="password"

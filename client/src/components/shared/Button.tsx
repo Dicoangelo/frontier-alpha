@@ -13,32 +13,32 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants = {
   primary: `
-    bg-gradient-to-r from-brand-magenta via-brand-amethyst to-brand-cyan text-white
+    bg-[linear-gradient(90deg,#FF3DF2_0%,#7B2CFF_50%,#18E6FF_100%)] text-white
     hover:opacity-90
     active:opacity-80
     shadow-md hover:shadow-lg active:shadow-sm
-    focus:ring-2 focus:ring-brand-amethyst focus:ring-offset-2 dark:focus:ring-offset-surface-dark
+    focus:ring-2 focus:ring-[#7B2CFF] focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]
   `,
   secondary: `
-    bg-theme-tertiary text-theme
+    bg-[var(--color-bg-tertiary)] text-[var(--color-text)]
     hover:opacity-80 active:opacity-70
-    focus:ring-2 focus:ring-brand-amethyst/40 focus:ring-offset-2 dark:focus:ring-offset-surface-dark
+    focus:ring-2 focus:ring-[#7B2CFF]/40 focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]
   `,
   danger: `
     bg-[var(--color-negative)] text-white
     hover:bg-[var(--color-negative)] active:bg-[var(--color-negative)]
     shadow-md hover:shadow-lg active:shadow-sm
-    focus:ring-2 focus:ring-[var(--color-negative)] focus:ring-offset-2 dark:focus:ring-offset-surface-dark
+    focus:ring-2 focus:ring-[var(--color-negative)] focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]
   `,
   ghost: `
-    bg-transparent text-theme-secondary
-    hover:bg-theme-tertiary active:opacity-70
-    focus:ring-2 focus:ring-brand-amethyst/40 focus:ring-offset-2 dark:focus:ring-offset-surface-dark
+    bg-transparent text-[var(--color-text-secondary)]
+    hover:bg-[var(--color-bg-tertiary)] active:opacity-70
+    focus:ring-2 focus:ring-[#7B2CFF]/40 focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]
   `,
   outline: `
-    bg-theme-secondary text-theme border border-theme
-    hover:bg-theme-tertiary hover:border-brand-amethyst/30 active:opacity-80
-    focus:ring-2 focus:ring-brand-amethyst/40 focus:ring-offset-2 dark:focus:ring-offset-surface-dark
+    bg-[var(--color-bg-secondary)] text-[var(--color-text)] border border-[var(--color-border)]
+    hover:bg-[var(--color-bg-tertiary)] hover:border-[#7B2CFF]/30 active:opacity-80
+    focus:ring-2 focus:ring-[#7B2CFF]/40 focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]
   `,
 };
 

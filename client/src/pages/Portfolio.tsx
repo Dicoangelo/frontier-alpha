@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/useToast';
 import { TradeReasoning, WhyButton } from '@/components/explainer/TradeReasoning';
 import { PositionCard } from '@/components/portfolio/mobile/PositionCard';
 import { PositionSheet } from '@/components/portfolio/mobile/PositionSheet';
+import { FilterBar, type SortKey, type FilterKey } from '@/components/portfolio/mobile/FilterBar';
 
 interface Position {
   id: string;
@@ -47,6 +48,9 @@ export function Portfolio() {
   const [formData, setFormData] = useState({ symbol: '', shares: '', avgCost: '' });
   const [whySymbol, setWhySymbol] = useState<string | null>(null);
   const [sheetPositionId, setSheetPositionId] = useState<string | null>(null);
+  const [mobileSort, setMobileSort] = useState<SortKey>('weight');
+  const [mobileFilter, setMobileFilter] = useState<FilterKey>('all');
+  const [mobileQuery, setMobileQuery] = useState('');
 
   const { data: portfolio, isLoading, error, refetch } = useQuery<{ data: PortfolioData }>({
     queryKey: ['portfolio'],
@@ -159,6 +163,27 @@ export function Portfolio() {
   const positions = portfolio?.data?.positions || [];
   const cashBalance = portfolio?.data?.cash || 0;
   const totalValue = portfolio?.data?.totalValue || 0;
+
+  const mobileVisible = useMemo(() => {
+    const q = mobileQuery.trim();
+    let list = positions.filter((p) => {
+      if (q && !p.symbol.includes(q)) return false;
+      if (mobileFilter === 'winners' && (p.unrealizedPnL || 0) < 0) return false;
+      if (mobileFilter === 'losers' && (p.unrealizedPnL || 0) >= 0) return false;
+      return true;
+    });
+    const pnlPct = (p: Position) => {
+      const basis = (p.costBasis || 0) * (p.shares || 0);
+      return basis ? (p.unrealizedPnL || 0) / basis : 0;
+    };
+    list = [...list].sort((a, b) => {
+      if (mobileSort === 'alpha') return a.symbol.localeCompare(b.symbol);
+      if (mobileSort === 'pnl') return (b.unrealizedPnL || 0) - (a.unrealizedPnL || 0);
+      if (mobileSort === 'pnlpct') return pnlPct(b) - pnlPct(a);
+      return (b.weight || 0) - (a.weight || 0);
+    });
+    return list;
+  }, [positions, mobileQuery, mobileFilter, mobileSort]);
 
   const totalPnL = useMemo(
     () => positions.reduce((sum, p) => sum + (p.unrealizedPnL || 0), 0),
@@ -387,7 +412,21 @@ export function Portfolio() {
               <EmptyPortfolio onAddPosition={handleAddPositionClick} />
             </Card>
           ) : (
-            positions.map((position) => (
+            <>
+              <FilterBar
+                sort={mobileSort}
+                onSortChange={setMobileSort}
+                filter={mobileFilter}
+                onFilterChange={setMobileFilter}
+                query={mobileQuery}
+                onQueryChange={setMobileQuery}
+              />
+              {mobileVisible.length === 0 ? (
+                <Card className="p-6 text-center text-sm text-[var(--color-text-muted)]">
+                  No positions match your filter.
+                </Card>
+              ) : (
+                mobileVisible.map((position) => (
               <Card key={position.id} className="p-4">
                 {editingId === position.id ? (
                   <form onSubmit={handleUpdate} className="space-y-3">
@@ -462,6 +501,8 @@ export function Portfolio() {
                 )}
               </Card>
             ))
+              )}
+            </>
           )}
         </div>
       ) : (

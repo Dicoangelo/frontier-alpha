@@ -126,10 +126,11 @@
         "Search filters positions by symbol substring (case-insensitive)",
         "'Clear filters' X appears when any filter active"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "MOBILE-002"
-      ]
+      ],
+      "completionNotes": "Shipped client/src/components/portfolio/mobile/FilterBar.tsx \u2014 sticky under MarketStatusStrip (top-9) with search input (filters by symbol substring, uppercase), 4 sort pills (Weight/PnL$/PnL%/A-Z), 3 filter chips (All/Winners/Losers with positive/negative/accent tints), and a Clear X that appears when any filter is active. Wired into Portfolio.tsx mobile branch with mobileVisible memo computing filtered + sorted list. Scroll-hide-on-upward logic deferred as future polish (sticky-always is simpler)."
     },
     {
       "id": "MOBILE-007",

@@ -1,0 +1,162 @@
+{
+  "name": "frontier-alpha-dashboard-v3",
+  "description": "Dashboard v3 — hierarchical read + operator-grade chrome. Builds on v2 (DASH-001..006 complete). Adds a global status strip, alert queue, data-freshness signals, zone hierarchy, command palette, and keyboard shortcuts. Target: cockpit feel without losing the explainable AI read.",
+  "project": "~/projects/frontier-alpha",
+  "target": "client/src/pages/Dashboard.tsx + new components/dashboard/",
+  "priority": "P1",
+  "estimated_days": 5,
+  "verification": [
+    "cd client && npm run build",
+    "cd client && npm test",
+    "cd client && npm run lint"
+  ],
+  "stories": [
+    {
+      "id": "DASH3-001",
+      "title": "Global market status strip (sticky top)",
+      "files": [
+        "client/src/components/dashboard/MarketStatusStrip.tsx",
+        "client/src/pages/Dashboard.tsx"
+      ],
+      "criteria": [
+        "Strip is full-width, ~36px tall, sticky at top under sovereign-bar",
+        "Segments: market status (open/closed/pre/post) pill, session timer (countdown to open/close), data freshness (e.g., 'quote 2s ago'), WebSocket dot, alert count badge",
+        "Market status pill tinted by state — var(--color-positive) when open, var(--color-warning) pre/post, var(--color-text-muted) closed",
+        "WS dot: green + animate-pulse-green when connected, red static when disconnected, yellow when reconnecting",
+        "Data freshness text flips to var(--color-warning) if >15s stale, var(--color-danger) if >60s",
+        "All tokens — zero hardcoded hex",
+        "Keyboard: pressing '?' opens a tooltip listing segment meanings"
+      ],
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "DASH3-002",
+      "title": "Alert queue + dropdown panel",
+      "files": [
+        "client/src/components/dashboard/AlertQueue.tsx",
+        "client/src/stores/alertStore.ts"
+      ],
+      "criteria": [
+        "Alert count badge in status strip, animates when new alert arrives (scale + color flash)",
+        "Click opens dropdown panel — list of last 10 alerts, grouped by severity (critical/warning/info)",
+        "Each row shows: icon, symbol (if any), short message, time ago, dismiss button",
+        "Zustand store `alertStore` with actions: push, dismiss, clearAll, markRead",
+        "Mock data from /api/v1/alerts with SWR-style revalidation every 30s",
+        "Empty state: 'No active alerts' with var(--color-positive) checkmark",
+        "A11y: role=dialog, escape to close, focus trap"
+      ],
+      "status": "pending",
+      "dependsOn": ["DASH3-001"]
+    },
+    {
+      "id": "DASH3-003",
+      "title": "Data freshness + stale-data guard",
+      "files": [
+        "client/src/hooks/useDataFreshness.ts",
+        "client/src/components/dashboard/MarketStatusStrip.tsx"
+      ],
+      "criteria": [
+        "useDataFreshness(timestamp) returns { ageSeconds, tier: 'fresh' | 'stale' | 'frozen' }",
+        "Component re-renders on 1s tick via useSyncExternalStore subscribed to a shared clock (no setInterval per-component)",
+        "Exposes window-wide event bus: onStale({source, age}) so cards can dim",
+        "Cards on Dashboard pipe through this — they opacity-60 + add 'stale' badge when frozen",
+        "Unit tests for tier boundaries (14s fresh, 16s stale, 61s frozen)"
+      ],
+      "status": "pending",
+      "dependsOn": ["DASH3-001"]
+    },
+    {
+      "id": "DASH3-004",
+      "title": "Hierarchical zones — Primary/Secondary/Tertiary grid",
+      "files": [
+        "client/src/pages/Dashboard.tsx",
+        "client/src/components/dashboard/DashZone.tsx"
+      ],
+      "criteria": [
+        "Dashboard.tsx refactor — introduce three zones with distinct visual weight",
+        "Primary zone (col-span-2, 2x weight): Portfolio Overview + EquityCurve",
+        "Secondary zone (col-span-1): Position List + Weight Donut",
+        "Tertiary zone (col-span-full, collapsible): Factor Exposures + Risk Metrics + Cognitive Insight",
+        "DashZone component — renders title strip in mono/uppercase, handles collapse state, persists to localStorage",
+        "Zone titles: 'TODAY' / 'POSITIONS' / 'WHY' (one-word labels, mono tracking-[0.3em])",
+        "Responsive: zones stack on < 1024px, preserving priority order",
+        "No regressions in DASH-001..006 behavior"
+      ],
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "DASH3-005",
+      "title": "Cognitive Insight v2 — factor-change surfacing",
+      "files": [
+        "client/src/components/explainer/CognitiveInsight.tsx",
+        "client/src/hooks/useFactorDeltas.ts"
+      ],
+      "criteria": [
+        "Shows top-3 factor changes in the last session: e.g., 'Momentum +8pts, Quality -3pts, Sentiment +12pts'",
+        "Each delta has sparkline trend + one-line explanation ('because NVDA revisions pulled the portfolio higher')",
+        "Tinted backdrop when net beliefs shifted >1σ from trailing 20d baseline",
+        "useFactorDeltas(portfolioId, window='1d') hook — computes deltas from ML API or mock stream",
+        "Degrades gracefully if ML endpoint 503s — shows last-known deltas with stale tint",
+        "Min-height stable so layout doesn't jump during loading"
+      ],
+      "status": "pending",
+      "dependsOn": ["DASH3-003"]
+    },
+    {
+      "id": "DASH3-006",
+      "title": "Dashboard personalization — pinned cards + layout memory",
+      "files": [
+        "client/src/stores/dashLayoutStore.ts",
+        "client/src/components/dashboard/DashZone.tsx"
+      ],
+      "criteria": [
+        "Each card gets a 📌 pin control (icon-only, hover-reveal)",
+        "Pinned cards render first within their zone; order persisted per-user in localStorage + mirrored to Supabase when authed",
+        "Drag-to-reorder within a zone (pointer + touch), using HTML5 DnD or a minimal abstraction — no heavy library",
+        "'Reset layout' action in Settings > Dashboard",
+        "Layout store migration — versioned shape so future refactors don't nuke prefs"
+      ],
+      "status": "pending",
+      "dependsOn": ["DASH3-004"]
+    },
+    {
+      "id": "DASH3-007",
+      "title": "Keyboard shortcuts — global G-prefix navigation",
+      "files": [
+        "client/src/hooks/useKeyboardShortcuts.ts",
+        "client/src/components/shared/ShortcutLegend.tsx"
+      ],
+      "criteria": [
+        "Global hotkeys using g-prefix chord: g+d dashboard, g+p portfolio, g+t trading, g+o options, g+f factors, g+a alerts",
+        "Slash '/' focuses a global ticker search input (new, in MarketStatusStrip)",
+        "Escape closes any dropdown, modal, panel",
+        "'?' opens a ShortcutLegend overlay — list of all shortcuts, theme-aware",
+        "Shortcuts disabled when focus is in input/textarea/contenteditable",
+        "No conflicts with browser shortcuts (no ctrl/cmd combos)"
+      ],
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "DASH3-008",
+      "title": "Command palette (Cmd/Ctrl+K)",
+      "files": [
+        "client/src/components/shared/CommandPalette.tsx",
+        "client/src/stores/commandStore.ts"
+      ],
+      "criteria": [
+        "Cmd+K / Ctrl+K opens a centered palette with a search input + fuzzy-scored command list",
+        "Commands grouped: Navigation, Portfolio Actions, Data, Theme",
+        "Min 20 initial commands: go to every page, toggle theme, clear cache, refresh quotes, load demo, sign out, etc.",
+        "Arrow keys navigate results, Enter runs, Esc closes",
+        "Palette inherits var(--color-bg-secondary) + glass-slab, keyboard-first",
+        "Commands registered declaratively via useCommand({ id, title, group, run })",
+        "A11y: role=dialog, combobox semantics, announced on open"
+      ],
+      "status": "pending",
+      "dependsOn": ["DASH3-007"]
+    }
+  ]
+}

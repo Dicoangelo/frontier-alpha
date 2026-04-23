@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAlertsStore } from '@/stores/alertsStore';
+import { useDataFreshness } from '@/hooks/useDataFreshness';
 
 type MarketPhase = 'pre' | 'open' | 'post' | 'closed';
 
@@ -98,14 +99,10 @@ const PHASE_COLOR: Record<MarketPhase, string> = {
 };
 
 export function MarketStatusStrip({ isConnected, lastUpdate }: MarketStatusStripProps) {
-  const [now, setNow] = useState<Date>(() => new Date());
   const [helpOpen, setHelpOpen] = useState(false);
   const unreadAlerts = useAlertsStore((s) => s.unreadCount);
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
+  const freshness = useDataFreshness(lastUpdate, 'market-strip');
+  const now = useMemo(() => new Date(), [freshness.ageSeconds]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -123,11 +120,11 @@ export function MarketStatusStrip({ isConnected, lastUpdate }: MarketStatusStrip
   const countdown = formatCountdown(nextChange.getTime() - now.getTime());
   const freshnessMs = lastUpdate ? now.getTime() - lastUpdate : null;
   const freshnessColor =
-    freshnessMs === null
+    freshness.tier === 'unknown'
       ? 'var(--color-text-muted)'
-      : freshnessMs > 60_000
+      : freshness.tier === 'frozen'
       ? 'var(--color-danger)'
-      : freshnessMs > 15_000
+      : freshness.tier === 'stale'
       ? 'var(--color-warning)'
       : 'var(--color-text-muted)';
 

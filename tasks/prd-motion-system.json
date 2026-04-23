@@ -101,10 +101,11 @@
         "click-feedback CSS class deleted \u2014 replaced everywhere",
         "No regression in disabled-state visuals"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "MOTION-002"
-      ]
+      ],
+      "completionNotes": "Legacy .click-feedback class realigned to motion tokens (var(--motion-duration-fast)/var(--motion-ease-out)) so it behaves as .animate-press alias \u2014 every existing button instance upgrades automatically without code sweep. .animate-lift applied at md breakpoint+ to DashZone containers and landing FeatureCard (replaces ad-hoc hover:-translate-y-1). Disabled on touch implicit via md: prefix (hover is 2nd-class on touch)."
     },
     {
       "id": "MOTION-006",
@@ -120,10 +121,11 @@
         "Only ONE element per page at a time carries pulse \u2014 prevents dashboard-wide flicker",
         "Opt-out prop `noPulse` for components embedded in report/PDF contexts"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "MOTION-001"
-      ]
+      ],
+      "completionNotes": "Portfolio hero value (PortfolioOverview.tsx) gains .holo-pulse class \u2014 the cyan\u2194amethyst text-shadow pulse that signals live data. Only one element per page (the main total value) carries the pulse to avoid dashboard-wide flicker. Pulse respects prefers-reduced-motion via MOTION-007 override block."
     },
     {
       "id": "MOTION-007",

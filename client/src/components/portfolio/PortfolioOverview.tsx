@@ -106,7 +106,7 @@ export function PortfolioOverview({ portfolio }: PortfolioOverviewProps) {
       <div className="gradient-brand-subtle rounded-xl p-6 mb-5 border border-[var(--color-border-light)]">
         <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Total Value</p>
         <div className="flex items-baseline gap-3 flex-wrap">
-          <p className="text-4xl lg:text-5xl font-bold text-[var(--color-text)] tracking-tight">
+          <p className="text-4xl lg:text-5xl font-bold text-[var(--color-text)] tracking-tight holo-pulse">
             $<span ref={heroCountRef}>0</span>
           </p>
           <span

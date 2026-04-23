@@ -64,10 +64,11 @@
         "Swipe-down-to-dismiss gesture \u2014 threshold 50% of sheet height",
         "Keyboard/A11y: esc closes, focus moves into sheet on open, returns to card on close"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "MOBILE-002"
-      ]
+      ],
+      "completionNotes": "Shipped client/src/components/portfolio/mobile/PositionSheet.tsx \u2014 uses existing BottomSheet (with drag-to-dismiss + esc close + focus trap already built in). Tap a PositionCard \u2192 sheet opens with: price hero, PnL$+% color-coded, wide Sparkline with baseline, 4-metric grid (Shares/Cost Basis/Position Value/Weight), 3 action buttons (Trade/Alert/Edit \u2192 route or sub-sheet), and Close Position destructive action. Honors safe-area-inset-bottom. Wired into Portfolio.tsx with sheetPositionId state."
     },
     {
       "id": "MOBILE-004",

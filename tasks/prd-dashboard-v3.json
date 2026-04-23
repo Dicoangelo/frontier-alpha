@@ -88,8 +88,9 @@
         "Responsive: zones stack on < 1024px, preserving priority order",
         "No regressions in DASH-001..006 behavior"
       ],
-      "status": "pending",
-      "dependsOn": []
+      "status": "done",
+      "dependsOn": [],
+      "completionNotes": "Shipped DashZone.tsx + Dashboard refactor: 3 zones with distinct visual weight. Primary (col-span-2) wraps Portfolio Overview + EquityCurve. Secondary (col-span-1) wraps Weight Allocation + Position List. Tertiary (col-span-full, collapsible with localStorage persist) wraps FactorExposures + RiskMetrics + CognitiveInsight as 3-col grid. Each zone has accent-bar title strip (mono/uppercase)."
     },
     {
       "id": "DASH3-005",

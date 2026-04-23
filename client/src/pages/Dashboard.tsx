@@ -14,6 +14,7 @@ import { SkeletonDashboard } from '@/components/shared/Skeleton';
 import { EmptyPortfolio, DataLoadError } from '@/components/shared/EmptyState';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { MarketStatusStrip } from '@/components/dashboard/MarketStatusStrip';
+import { DashZone } from '@/components/dashboard/DashZone';
 
 // Types
 interface Position {
@@ -489,35 +490,61 @@ export function Dashboard() {
           </div>
         </div>
 
-        <div data-tour="portfolio-overview" className="animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
-          <PortfolioOverview portfolio={portfolio} />
+        {/* Primary zone — portfolio value + equity curve (2x weight) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+          <DashZone
+            id="overview"
+            title="Portfolio Overview"
+            subtitle="Total value · PnL · Allocation"
+            weight="primary"
+            className="lg:col-span-2"
+          >
+            <div data-tour="portfolio-overview">
+              <PortfolioOverview portfolio={portfolio} />
+            </div>
+            <div data-tour="equity-curve" className="mt-5">
+              <EquityCurve portfolioValue={portfolio.totalValue} />
+            </div>
+          </DashZone>
+
+          {/* Secondary zone — positions + weights (1x weight) */}
+          <DashZone
+            id="allocation"
+            title="Holdings & Weights"
+            subtitle="Positions · Allocation"
+            weight="secondary"
+            className="lg:col-span-1"
+          >
+            <div data-tour="weight-allocation">
+              <WeightAllocation positions={portfolio.positions} totalValue={portfolio.totalValue} />
+            </div>
+            <div data-tour="positions" className="mt-5">
+              <PositionList positions={portfolio.positions} quotes={quotes} />
+            </div>
+          </DashZone>
         </div>
 
-        <div data-tour="equity-curve" className="animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
-          <EquityCurve portfolioValue={portfolio.totalValue} />
-        </div>
-
-        <div data-tour="weight-allocation" className="animate-fade-in-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
-          <WeightAllocation positions={portfolio.positions} totalValue={portfolio.totalValue} />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
-          <div data-tour="positions">
-            <PositionList positions={portfolio.positions} quotes={quotes} />
+        {/* Tertiary zone — collapsible analytics */}
+        <DashZone
+          id="analytics"
+          title="Analytics & Insight"
+          subtitle="Factor exposures · Risk · Cognitive explainer"
+          weight="tertiary"
+          collapsible
+          className="animate-fade-in-up"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div data-tour="factors">
+              <FactorExposures factors={factors} insight={insight} />
+            </div>
+            <div data-tour="risk-metrics">
+              <RiskMetrics metrics={metrics} />
+            </div>
+            <div data-tour="cognitive-insight">
+              <CognitiveInsight symbols={portfolio.positions.map((p) => p.symbol)} factors={factors} />
+            </div>
           </div>
-          <div data-tour="factors">
-            <FactorExposures factors={factors} insight={insight} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
-          <div data-tour="risk-metrics">
-            <RiskMetrics metrics={metrics} />
-          </div>
-          <div data-tour="cognitive-insight">
-            <CognitiveInsight symbols={portfolio.positions.map((p) => p.symbol)} factors={factors} />
-          </div>
-        </div>
+        </DashZone>
       </div>
     </PullToRefresh>
   );

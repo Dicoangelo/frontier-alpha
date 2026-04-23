@@ -16,6 +16,7 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import { useToast } from '@/hooks/useToast';
 import { TradeReasoning, WhyButton } from '@/components/explainer/TradeReasoning';
 import { PositionCard } from '@/components/portfolio/mobile/PositionCard';
+import { PositionSheet } from '@/components/portfolio/mobile/PositionSheet';
 
 interface Position {
   id: string;
@@ -45,6 +46,7 @@ export function Portfolio() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ symbol: '', shares: '', avgCost: '' });
   const [whySymbol, setWhySymbol] = useState<string | null>(null);
+  const [sheetPositionId, setSheetPositionId] = useState<string | null>(null);
 
   const { data: portfolio, isLoading, error, refetch } = useQuery<{ data: PortfolioData }>({
     queryKey: ['portfolio'],
@@ -432,7 +434,10 @@ export function Portfolio() {
                   </form>
                 ) : (
                   <div>
-                    <PositionCard position={position} />
+                    <PositionCard
+                      position={position}
+                      onClick={() => setSheetPositionId(position.id)}
+                    />
                     <div className="mt-2 flex items-center gap-1 justify-end border-t border-[var(--color-border-light)] pt-2">
                       <span className="text-[10px] text-[var(--color-text-muted)] mr-auto">
                         {position.shares.toFixed(2)} sh · ${(position.currentPrice || position.costBasis).toFixed(2)}
@@ -606,6 +611,20 @@ export function Portfolio() {
         symbol={whySymbol || ''}
         isOpen={!!whySymbol}
         onClose={() => setWhySymbol(null)}
+      />
+
+      {/* Mobile position detail sheet */}
+      <PositionSheet
+        position={positions.find((p) => p.id === sheetPositionId) || null}
+        onClose={() => setSheetPositionId(null)}
+        onEdit={() => {
+          const p = positions.find((x) => x.id === sheetPositionId);
+          if (p) startEdit(p);
+          setSheetPositionId(null);
+        }}
+        onDelete={(id) => {
+          if (id) deletePositionMutation.mutate(id);
+        }}
       />
     </div>
   );

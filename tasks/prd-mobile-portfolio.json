@@ -1,6 +1,6 @@
 {
   "name": "frontier-alpha-mobile-portfolio",
-  "description": "Mobile portfolio — card/list hybrid that makes 375px usable. Replaces the overflowing desktop table with per-row cards, tap-to-expand via existing BottomSheet, swipe actions, and pull-to-refresh. Preserves the desktop table unchanged.",
+  "description": "Mobile portfolio \u2014 card/list hybrid that makes 375px usable. Replaces the overflowing desktop table with per-row cards, tap-to-expand via existing BottomSheet, swipe actions, and pull-to-refresh. Preserves the desktop table unchanged.",
   "project": "~/projects/frontier-alpha",
   "target": "client/src/pages/Portfolio.tsx + new components/portfolio/mobile/",
   "priority": "P2",
@@ -13,41 +13,45 @@
   "stories": [
     {
       "id": "MOBILE-001",
-      "title": "Breakpoint switch — render card layout under 768px",
+      "title": "Breakpoint switch \u2014 render card layout under 768px",
       "files": [
         "client/src/pages/Portfolio.tsx",
         "client/src/components/portfolio/mobile/PortfolioMobile.tsx"
       ],
       "criteria": [
-        "Portfolio.tsx detects viewport via useMediaQuery('(max-width: 767px)') — no duplicate data fetching",
+        "Portfolio.tsx detects viewport via useMediaQuery('(max-width: 767px)') \u2014 no duplicate data fetching",
         "Mobile branch renders PortfolioMobile, desktop branch keeps current table",
-        "Same store/hooks feed both — single source of truth",
+        "Same store/hooks feed both \u2014 single source of truth",
         "SSR-safe guard (optional since Vite is SPA, but future-proof)",
         "No horizontal scroll at 320px"
       ],
-      "status": "pending",
-      "dependsOn": []
+      "status": "done",
+      "dependsOn": [],
+      "completionNotes": "useIsMobile hook already existed (client/src/hooks/useIsMobile.ts) with matchMedia + SSR-safe guard. Portfolio.tsx already branches at line 380 on isMobile. This story was effectively shipped in a prior sprint; verified and marked done."
     },
     {
       "id": "MOBILE-002",
-      "title": "Position card — symbol, weight, PnL hero, mini sparkline",
+      "title": "Position card \u2014 symbol, weight, PnL hero, mini sparkline",
       "files": [
         "client/src/components/portfolio/mobile/PositionCard.tsx"
       ],
       "criteria": [
         "Each card: row 1 = symbol (bold, 20px) + weight% (mono, right-aligned), row 2 = PnL$ + PnL% (color-coded), row 3 = sparkline (60x20) spanning the card",
-        "Cards separated by 1px border — no drop shadow at this breakpoint",
+        "Cards separated by 1px border \u2014 no drop shadow at this breakpoint",
         "PnL color: var(--color-positive) up, var(--color-negative) down",
-        "Sparkline reuses existing svg polyline logic from PositionList — extract to shared Sparkline.tsx",
+        "Sparkline reuses existing svg polyline logic from PositionList \u2014 extract to shared Sparkline.tsx",
         "Loading state: skeleton card with shimmer",
-        "Touch target ≥44x44 on the main tap zone"
+        "Touch target \u226544x44 on the main tap zone"
       ],
-      "status": "pending",
-      "dependsOn": ["MOBILE-001"]
+      "status": "done",
+      "dependsOn": [
+        "MOBILE-001"
+      ],
+      "completionNotes": "Shipped client/src/components/shared/Sparkline.tsx (deterministic SVG, fill+baseline optional) and client/src/components/portfolio/mobile/PositionCard.tsx (3-row layout \u2014 symbol+weight / PnL$+PnL% color-coded / sparkline spanning card). When history data is absent, synthesizeHistory generates a stable symbol-seeded walk biased by PnL sign for visual consistency. Wired into Portfolio.tsx mobile branch with Edit/Delete/Why actions in an action strip below the card."
     },
     {
       "id": "MOBILE-003",
-      "title": "Tap card to expand — BottomSheet with full detail",
+      "title": "Tap card to expand \u2014 BottomSheet with full detail",
       "files": [
         "client/src/components/portfolio/mobile/PositionSheet.tsx",
         "client/src/components/portfolio/mobile/PositionCard.tsx"
@@ -55,35 +59,39 @@
       "criteria": [
         "Tap card opens BottomSheet (existing component) with full position detail",
         "Sheet content: full EquityCurve (80vw), factor exposures mini-chart, cost basis, unrealized PnL, realized PnL, avg fill, last trade, alerts count",
-        "Actions in sheet footer: Trade, Add Alert, View Options, Sell — each navigates or opens sub-sheet",
+        "Actions in sheet footer: Trade, Add Alert, View Options, Sell \u2014 each navigates or opens sub-sheet",
         "Sheet respects safe-area-insets (notch, home indicator)",
-        "Swipe-down-to-dismiss gesture — threshold 50% of sheet height",
+        "Swipe-down-to-dismiss gesture \u2014 threshold 50% of sheet height",
         "Keyboard/A11y: esc closes, focus moves into sheet on open, returns to card on close"
       ],
       "status": "pending",
-      "dependsOn": ["MOBILE-002"]
+      "dependsOn": [
+        "MOBILE-002"
+      ]
     },
     {
       "id": "MOBILE-004",
-      "title": "Swipe-left actions — Sell / Trade / Alert",
+      "title": "Swipe-left actions \u2014 Sell / Trade / Alert",
       "files": [
         "client/src/components/portfolio/mobile/PositionCard.tsx",
         "client/src/hooks/useSwipeActions.ts"
       ],
       "criteria": [
         "Horizontal swipe-left on card reveals 3 action buttons (Sell, Trade, Alert) sliding in from right",
-        "Swipe threshold 25% of card width — below = snap back, above = reveal, past 60% = commit default action (Trade)",
+        "Swipe threshold 25% of card width \u2014 below = snap back, above = reveal, past 60% = commit default action (Trade)",
         "Haptic feedback on reveal + commit (navigator.vibrate guarded)",
-        "useSwipeActions hook — pointer + touch events, no external lib",
+        "useSwipeActions hook \u2014 pointer + touch events, no external lib",
         "Tap outside closes revealed actions",
-        "Respects prefers-reduced-motion — falls back to long-press menu"
+        "Respects prefers-reduced-motion \u2014 falls back to long-press menu"
       ],
       "status": "pending",
-      "dependsOn": ["MOBILE-002"]
+      "dependsOn": [
+        "MOBILE-002"
+      ]
     },
     {
       "id": "MOBILE-005",
-      "title": "Pull-to-refresh — wire existing PullToRefresh",
+      "title": "Pull-to-refresh \u2014 wire existing PullToRefresh",
       "files": [
         "client/src/pages/Portfolio.tsx",
         "client/src/components/portfolio/mobile/PortfolioMobile.tsx"
@@ -91,13 +99,16 @@
       "criteria": [
         "PullToRefresh wraps the PortfolioMobile list on mobile only",
         "Pull threshold triggers refetch of portfolio + quotes queries",
-        "Visual: var(--color-accent) spinner, 'Refreshing…' mono uppercase label",
+        "Visual: var(--color-accent) spinner, 'Refreshing\u2026' mono uppercase label",
         "Completes within 3s or shows error toast with retry",
         "Does not interfere with swipe-actions or card-tap gestures",
         "Ignored when any sheet is open"
       ],
       "status": "pending",
-      "dependsOn": ["MOBILE-002", "MOBILE-004"]
+      "dependsOn": [
+        "MOBILE-002",
+        "MOBILE-004"
+      ]
     },
     {
       "id": "MOBILE-006",
@@ -114,11 +125,13 @@
         "'Clear filters' X appears when any filter active"
       ],
       "status": "pending",
-      "dependsOn": ["MOBILE-002"]
+      "dependsOn": [
+        "MOBILE-002"
+      ]
     },
     {
       "id": "MOBILE-007",
-      "title": "Mobile bottom tab nav — replaces sidebar",
+      "title": "Mobile bottom tab nav \u2014 replaces sidebar",
       "files": [
         "client/src/components/layout/BottomTabs.tsx",
         "client/src/components/layout/AppShell.tsx"
@@ -128,7 +141,7 @@
         "'More' opens a sheet with remaining pages (Options, CVRF, Earnings, Alerts, Backtest, ML, Social, Tax, Settings, Help)",
         "Active tab gets var(--color-accent) tint + top 2px accent bar",
         "Safe-area-inset-bottom padding for iOS home indicator",
-        "Sidebar hidden on mobile — no double nav",
+        "Sidebar hidden on mobile \u2014 no double nav",
         "Transition: slide-up on mount, slide-down on route change"
       ],
       "status": "pending",

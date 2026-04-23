@@ -15,6 +15,7 @@ import { BottomSheet, useBottomSheet } from '@/components/shared/BottomSheet';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useToast } from '@/hooks/useToast';
 import { TradeReasoning, WhyButton } from '@/components/explainer/TradeReasoning';
+import { PositionCard } from '@/components/portfolio/mobile/PositionCard';
 
 interface Position {
   id: string;
@@ -430,25 +431,12 @@ export function Portfolio() {
                     </div>
                   </form>
                 ) : (
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span className="font-bold text-lg text-[var(--color-text)]">{position.symbol}</span>
-                        <span className={`text-sm font-semibold ${
-                          (position.unrealizedPnL || 0) >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'
-                        }`}>
-                          {(position.unrealizedPnL || 0) >= 0 ? '+' : ''}
-                          ${(position.unrealizedPnL || 0).toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="text-sm text-[var(--color-text-secondary)]">
-                        {position.shares.toFixed(2)} shares
-                      </div>
-                      <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                        Cost ${position.costBasis.toFixed(2)} · Current ${(position.currentPrice || position.costBasis).toFixed(2)}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
+                  <div>
+                    <PositionCard position={position} />
+                    <div className="mt-2 flex items-center gap-1 justify-end border-t border-[var(--color-border-light)] pt-2">
+                      <span className="text-[10px] text-[var(--color-text-muted)] mr-auto">
+                        {position.shares.toFixed(2)} sh · ${(position.currentPrice || position.costBasis).toFixed(2)}
+                      </span>
                       <WhyButton symbol={position.symbol} onClick={setWhySymbol} />
                       <button
                         onClick={() => startEdit(position)}

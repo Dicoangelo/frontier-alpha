@@ -1,0 +1,135 @@
+{
+  "name": "frontier-alpha-token-migration",
+  "description": "Token migration — eliminate the last hardcoded hex across Trading, Options, and CVRF surfaces. Introduces domain-scoped semantic tokens that map to the core palette, migrates pages + components, gates regressions with a lint rule. Unblocks theme-toggle integrity on every page.",
+  "project": "~/projects/frontier-alpha",
+  "target": "client/src/index.css + client/src/pages/Trading.tsx + client/src/pages/Options.tsx + client/src/components/trading/ + client/src/components/options/",
+  "priority": "P2",
+  "estimated_days": 3,
+  "verification": [
+    "cd client && npm run build",
+    "cd client && npm run lint",
+    "rg -nP '#[0-9a-fA-F]{3,8}\\b' client/src/pages/Trading.tsx client/src/pages/Options.tsx client/src/components/trading client/src/components/options || echo 'CLEAN'"
+  ],
+  "stories": [
+    {
+      "id": "TOKEN-001",
+      "title": "Audit — grep all hardcoded hex across pages/components",
+      "files": [
+        "docs/TOKEN-AUDIT.md"
+      ],
+      "criteria": [
+        "Run `rg -nP '#[0-9a-fA-F]{3,8}\\b' client/src/pages client/src/components > TOKEN-AUDIT.md`",
+        "Classify each occurrence: chart palette (keep as-is — already in :root), inline style (migrate), string constant (migrate), SVG fill (migrate)",
+        "Top offenders ranked by count per file — confirms Options.tsx and Trading.tsx lead",
+        "Estimate total migrations — expect 70-120",
+        "Deliverable is the audit doc; no code changes yet"
+      ],
+      "status": "pending",
+      "dependsOn": []
+    },
+    {
+      "id": "TOKEN-002",
+      "title": "Spec domain-scoped semantic tokens",
+      "files": [
+        "client/src/index.css",
+        "docs/DESIGN-TOKENS.md"
+      ],
+      "criteria": [
+        "Add trading domain tokens under :root and .dark: --trade-bid, --trade-ask, --trade-last, --trade-flat, --trade-fill-buy, --trade-fill-sell",
+        "Add options domain tokens: --opt-call, --opt-put, --opt-itm, --opt-otm, --opt-atm, --opt-gamma, --opt-vega, --opt-theta",
+        "Add cvrf domain tokens: --cvrf-conviction-high, --cvrf-conviction-mid, --cvrf-conviction-low, --cvrf-belief-confirmed, --cvrf-belief-eroded",
+        "Each token maps to existing palette via var() or color-mix — no new absolute colors",
+        "Light + dark variants; dark values brighter, light values less saturated",
+        "DESIGN-TOKENS.md documents intent, usage, and do-not-use examples"
+      ],
+      "status": "pending",
+      "dependsOn": ["TOKEN-001"]
+    },
+    {
+      "id": "TOKEN-003",
+      "title": "Migrate Options.tsx (1443 lines, ~37 hex)",
+      "files": [
+        "client/src/pages/Options.tsx",
+        "client/src/components/options/"
+      ],
+      "criteria": [
+        "Every inline style/className containing a raw hex is replaced with the appropriate token",
+        "Calls/puts use --opt-call / --opt-put consistently — no 'green' / 'red' naming",
+        "Greek heatmap tints use --opt-gamma/--opt-vega/--opt-theta + color-mix for intensity",
+        "Theme toggle flips every visual — no stuck-in-dark artifacts",
+        "Visual baseline: screenshot diff shows intent preserved (no major color shifts)",
+        "Test: `rg '#[0-9a-fA-F]{3,8}\\b' client/src/pages/Options.tsx client/src/components/options` returns 0 hits"
+      ],
+      "status": "pending",
+      "dependsOn": ["TOKEN-002"]
+    },
+    {
+      "id": "TOKEN-004",
+      "title": "Migrate Trading.tsx (806 lines) + trading components",
+      "files": [
+        "client/src/pages/Trading.tsx",
+        "client/src/components/trading/"
+      ],
+      "criteria": [
+        "Order book colors use --trade-bid / --trade-ask",
+        "Fill history row tints use --trade-fill-buy / --trade-fill-sell",
+        "Last price flash uses existing quote-flash-up/down (already token-based)",
+        "PriceChart.tsx keeps its Recharts palette token-referenced",
+        "Market status progress bar uses --color-positive / --color-warning / --color-text-muted",
+        "Test: zero raw hex in Trading.tsx + components/trading/"
+      ],
+      "status": "pending",
+      "dependsOn": ["TOKEN-002"]
+    },
+    {
+      "id": "TOKEN-005",
+      "title": "Migrate CVRF surface",
+      "files": [
+        "client/src/pages/CVRF.tsx",
+        "client/src/components/cvrf/"
+      ],
+      "criteria": [
+        "Conviction heatmap uses --cvrf-conviction-* tokens",
+        "Belief state dots use --cvrf-belief-confirmed / --cvrf-belief-eroded",
+        "Constellation chart stroke/fill use tokens + color-mix",
+        "Test: zero raw hex in CVRF.tsx + components/cvrf/"
+      ],
+      "status": "pending",
+      "dependsOn": ["TOKEN-002"]
+    },
+    {
+      "id": "TOKEN-006",
+      "title": "Add ESLint rule — no-raw-hex in pages/components",
+      "files": [
+        "eslint.config.js",
+        "scripts/eslint/no-raw-hex.js"
+      ],
+      "criteria": [
+        "Custom rule or regex-based no-restricted-syntax that flags /#[0-9a-f]{3,8}/i in string literals and JSX attributes",
+        "Scoped to client/src/pages/** and client/src/components/**; excludes __tests__, .test.*, visual regression fixtures, and anything in charts palette config",
+        "Runs in CI via `npm run lint`",
+        "Exceptions whitelisted via eslint-disable-next-line with mandatory comment",
+        "Breaks build on violation"
+      ],
+      "status": "pending",
+      "dependsOn": ["TOKEN-003", "TOKEN-004", "TOKEN-005"]
+    },
+    {
+      "id": "TOKEN-007",
+      "title": "Visual regression — snapshot each page in light + dark",
+      "files": [
+        "tests/visual/tokens.spec.ts",
+        "tests/visual/baseline/"
+      ],
+      "criteria": [
+        "Playwright test that loads each page at 1440x900, toggles theme, captures screenshot",
+        "Pages covered: Landing, Dashboard, Portfolio, Trading, Options, CVRF, Earnings, Factors, Alerts",
+        "Baseline stored in tests/visual/baseline/ (git-tracked, PNG lossless)",
+        "Diff tolerance <1% per channel (tune after first run)",
+        "CI job runs on PR; diff images uploaded as artifacts on failure"
+      ],
+      "status": "pending",
+      "dependsOn": ["TOKEN-006"]
+    }
+  ]
+}

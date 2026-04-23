@@ -421,6 +421,81 @@
   .page-transition {
     animation: fade-in-up 0.4s ease-out both;
   }
+
+  /* ── Fade/Reveal Keyframes ── */
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  @keyframes fade-in-up {
+    0% {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ── Hero Factor Bar (animated backdrop) ──
+     Each bar grows from 0 to its target height, then breathes. */
+  .factor-bar {
+    transform-origin: bottom;
+    animation: factor-grow 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both,
+               factor-breathe 5.4s ease-in-out infinite 1.1s;
+  }
+
+  @keyframes factor-grow {
+    0% { transform: scaleY(0); opacity: 0; }
+    60% { opacity: 1; }
+    100% { transform: scaleY(1); opacity: 1; }
+  }
+
+  @keyframes factor-breathe {
+    0%, 100% { transform: scaleY(1); filter: brightness(1); }
+    50% { transform: scaleY(0.92); filter: brightness(1.15); }
+  }
+
+  /* ── Typing cursor (hero ticker demo) ── */
+  .typing-cursor {
+    display: inline-block;
+    width: 0.08em;
+    height: 1em;
+    background: var(--color-accent-secondary);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: cursor-blink 1s steps(1) infinite;
+  }
+
+  @keyframes cursor-blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+
+  /* ── Holographic pulse (primary metrics) ── */
+  .holo-pulse {
+    animation: holo-pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes holo-pulse {
+    0%, 100% {
+      text-shadow: 0 0 18px color-mix(in srgb, var(--color-accent) 30%, transparent);
+    }
+    50% {
+      text-shadow: 0 0 22px color-mix(in srgb, var(--color-accent-secondary) 45%, transparent);
+    }
+  }
+
+  /* ── Caption fade (rotating "because..." line) ── */
+  .caption-cycle {
+    animation: caption-cycle 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  @keyframes caption-cycle {
+    0% { opacity: 0; transform: translateY(6px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
 }
 
 /* ── Reduced Motion ── */

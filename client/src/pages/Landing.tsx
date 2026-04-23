@@ -136,8 +136,9 @@ export function Landing() {
       </section>
 
       {/* ── Analyze your portfolio (preserved from v1) ───────────────────── */}
-      <section className="relative px-4 py-16 sm:py-20 border-t border-[var(--color-border-light)]">
-        <div className="w-full max-w-2xl mx-auto">
+      <section className="relative px-4 sm:px-6 py-16 sm:py-20 border-t border-[var(--color-border-light)]">
+        <div className="w-full max-w-6xl mx-auto">
+         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text)]">
               Paste a portfolio. Get the model's read.
@@ -188,11 +189,12 @@ export function Landing() {
               ))}
             </div>
           </div>
+         </div>
         </div>
       </section>
 
       {/* ── Features grid (preserved) ────────────────────────────────────── */}
-      <section className="px-4 pb-20 max-w-4xl mx-auto w-full" aria-labelledby="features-heading">
+      <section className="px-4 sm:px-6 pb-20 max-w-6xl mx-auto w-full" aria-labelledby="features-heading">
         <h2 id="features-heading" className="sr-only">Platform Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           <FeatureCard
@@ -222,8 +224,8 @@ export function Landing() {
         </div>
       </section>
 
-      <footer className="mt-auto border-t border-[var(--color-border-light)] py-6 px-4">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <footer className="mt-auto border-t border-[var(--color-border-light)] py-6 px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-[10px] text-[var(--color-text-muted)] mono tracking-[0.2em] uppercase">
             Powered by <span className="text-[var(--color-accent)]">Metaventions AI</span> — institutional-grade factor models
           </div>

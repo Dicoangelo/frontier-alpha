@@ -59,6 +59,21 @@
     /* Misc */
     --color-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
     --font-mono: 'JetBrains Mono', monospace;
+
+    /* ── Motion System (MOTION-001) ─────────────────────────────────────
+       Durations and easings for the unified motion grammar.
+       Usage:
+         transition: transform var(--motion-duration-fast) var(--motion-ease-out);
+         animation-delay: calc(var(--index) * var(--motion-stagger-step));
+    */
+    --motion-duration-fast: 150ms;   /* presses, focus-rings, micro-hovers */
+    --motion-duration-base: 240ms;   /* card enter, tab switch, dropdowns */
+    --motion-duration-slow: 400ms;   /* route transitions, panel expand */
+    --motion-duration-hero: 620ms;   /* landing hero reveals only */
+    --motion-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);   /* decelerating enter */
+    --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);        /* accelerating exit */
+    --motion-ease-inout: cubic-bezier(0.4, 0, 0.2, 1);   /* standard transform */
+    --motion-stagger-step: 60ms;     /* per-item delay for list reveals */
   }
 
   .dark {
@@ -495,6 +510,57 @@
   @keyframes caption-cycle {
     0% { opacity: 0; transform: translateY(6px); }
     100% { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* ── Motion utility classes (MOTION-002) ────────────────────────────── */
+@layer utilities {
+  .animate-enter {
+    animation: motion-enter var(--motion-duration-base) var(--motion-ease-out) both;
+  }
+  .animate-exit {
+    animation: motion-exit var(--motion-duration-fast) var(--motion-ease-in) both;
+    pointer-events: none;
+  }
+  @keyframes motion-enter {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes motion-exit {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(8px); }
+  }
+
+  /* Stagger children — apply .animate-stagger to the parent.
+     Each immediate child gets an incremental delay (up to 12).
+     Children should also carry .animate-enter to be animated. */
+  .animate-stagger > *:nth-child(1)  { animation-delay: calc(var(--motion-stagger-step) * 0); }
+  .animate-stagger > *:nth-child(2)  { animation-delay: calc(var(--motion-stagger-step) * 1); }
+  .animate-stagger > *:nth-child(3)  { animation-delay: calc(var(--motion-stagger-step) * 2); }
+  .animate-stagger > *:nth-child(4)  { animation-delay: calc(var(--motion-stagger-step) * 3); }
+  .animate-stagger > *:nth-child(5)  { animation-delay: calc(var(--motion-stagger-step) * 4); }
+  .animate-stagger > *:nth-child(6)  { animation-delay: calc(var(--motion-stagger-step) * 5); }
+  .animate-stagger > *:nth-child(7)  { animation-delay: calc(var(--motion-stagger-step) * 6); }
+  .animate-stagger > *:nth-child(8)  { animation-delay: calc(var(--motion-stagger-step) * 7); }
+  .animate-stagger > *:nth-child(9)  { animation-delay: calc(var(--motion-stagger-step) * 8); }
+  .animate-stagger > *:nth-child(10) { animation-delay: calc(var(--motion-stagger-step) * 9); }
+  .animate-stagger > *:nth-child(11) { animation-delay: calc(var(--motion-stagger-step) * 10); }
+  .animate-stagger > *:nth-child(12) { animation-delay: calc(var(--motion-stagger-step) * 11); }
+
+  .animate-press {
+    transition: transform var(--motion-duration-fast) var(--motion-ease-out);
+  }
+  .animate-press:active {
+    transform: scale(0.96);
+  }
+
+  .animate-lift {
+    transition: transform var(--motion-duration-base) var(--motion-ease-out),
+                box-shadow var(--motion-duration-base) var(--motion-ease-out);
+  }
+  .animate-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--color-accent) 12%, transparent);
   }
 }
 

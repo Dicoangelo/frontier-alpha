@@ -310,23 +310,53 @@ export function Dashboard() {
 
     try {
       // Fetch portfolio
-      const portfolioData = await fetchPortfolio();
-      if (portfolioData) {
-        setPortfolio(portfolioData);
+      let portfolioData = await fetchPortfolio();
 
-        // Fetch factors for portfolio symbols
-        const symbols = portfolioData.positions.map(p => p.symbol);
-        const factorData = await fetchFactors(symbols);
-        setFactors(factorData);
-
-        // Calculate metrics
-        const metricsData = calculateMetrics(portfolioData, factorData);
-        setMetrics(metricsData);
-
-        // Generate insight
-        const insightText = generateInsight(factorData);
-        setInsight(insightText);
+      // If empty portfolio, seed from analyze_symbols (landing flow) or demo
+      if (!portfolioData || !portfolioData.positions || portfolioData.positions.length === 0) {
+        const stored = localStorage.getItem('analyze_symbols');
+        if (stored) {
+          try {
+            const symbols: string[] = JSON.parse(stored);
+            if (Array.isArray(symbols) && symbols.length > 0) {
+              const weight = 1 / symbols.length;
+              portfolioData = {
+                id: 'demo',
+                name: 'Demo Portfolio',
+                positions: symbols.map(s => ({
+                  symbol: s,
+                  shares: 100,
+                  weight,
+                  costBasis: 100,
+                  currentPrice: 100,
+                  unrealizedPnL: 0,
+                })),
+                cash: 10000,
+                totalValue: symbols.length * 100 * 100 + 10000,
+                currency: 'USD',
+              };
+            }
+          } catch { /* ignore parse errors */ }
+        }
+        if (!portfolioData || portfolioData.positions.length === 0) {
+          portfolioData = getDemoPortfolio();
+        }
       }
+
+      setPortfolio(portfolioData);
+
+      // Fetch factors for portfolio symbols
+      const symbols = portfolioData.positions.map(p => p.symbol);
+      const factorData = await fetchFactors(symbols);
+      setFactors(factorData);
+
+      // Calculate metrics
+      const metricsData = calculateMetrics(portfolioData, factorData);
+      setMetrics(metricsData);
+
+      // Generate insight
+      const insightText = generateInsight(factorData);
+      setInsight(insightText);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load portfolio');
       // Fall back to demo data

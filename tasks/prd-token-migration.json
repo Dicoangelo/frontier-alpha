@@ -146,10 +146,11 @@
         "Diff tolerance <1% per channel (tune after first run)",
         "CI job runs on PR; diff images uploaded as artifacts on failure"
       ],
-      "status": "pending",
+      "status": "deferred",
       "dependsOn": [
         "TOKEN-006"
-      ]
+      ],
+      "completionNotes": "Deferred \u2014 visual regression snapshotting per page in light+dark requires Playwright visual-diff infrastructure and baseline captures. Blocked by the design-engineer workflow and would add ~20 min to every CI run. Consider spinning up as a nightly CI job rather than per-PR."
     }
   ]
 }

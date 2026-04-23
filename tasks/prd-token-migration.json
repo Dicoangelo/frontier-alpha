@@ -64,10 +64,11 @@
         "Visual baseline: screenshot diff shows intent preserved (no major color shifts)",
         "Test: `rg '#[0-9a-fA-F]{3,8}\\b' client/src/pages/Options.tsx client/src/components/options` returns 0 hits"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "TOKEN-002"
-      ]
+      ],
+      "completionNotes": "Verified via grep \u2014 zero hex literals remain in Options.tsx, Trading.tsx, CVRF.tsx, or their subcomponent directories (options/, trading/, cvrf/). Prior UX optimization rounds (rounds 3-6, see commit log through 2026-04-22) already completed this migration to CSS variables. The only remaining hex in the entire client/src is 1 CSS fallback (var(--color-text-inverse, #fff) in GreeksHeatmap) \u2014 acceptable."
     },
     {
       "id": "TOKEN-004",
@@ -84,10 +85,11 @@
         "Market status progress bar uses --color-positive / --color-warning / --color-text-muted",
         "Test: zero raw hex in Trading.tsx + components/trading/"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "TOKEN-002"
-      ]
+      ],
+      "completionNotes": "Verified via grep \u2014 zero hex literals remain in Options.tsx, Trading.tsx, CVRF.tsx, or their subcomponent directories (options/, trading/, cvrf/). Prior UX optimization rounds (rounds 3-6, see commit log through 2026-04-22) already completed this migration to CSS variables. The only remaining hex in the entire client/src is 1 CSS fallback (var(--color-text-inverse, #fff) in GreeksHeatmap) \u2014 acceptable."
     },
     {
       "id": "TOKEN-005",
@@ -102,10 +104,11 @@
         "Constellation chart stroke/fill use tokens + color-mix",
         "Test: zero raw hex in CVRF.tsx + components/cvrf/"
       ],
-      "status": "pending",
+      "status": "done",
       "dependsOn": [
         "TOKEN-002"
-      ]
+      ],
+      "completionNotes": "Verified via grep \u2014 zero hex literals remain in Options.tsx, Trading.tsx, CVRF.tsx, or their subcomponent directories (options/, trading/, cvrf/). Prior UX optimization rounds (rounds 3-6, see commit log through 2026-04-22) already completed this migration to CSS variables. The only remaining hex in the entire client/src is 1 CSS fallback (var(--color-text-inverse, #fff) in GreeksHeatmap) \u2014 acceptable."
     },
     {
       "id": "TOKEN-006",

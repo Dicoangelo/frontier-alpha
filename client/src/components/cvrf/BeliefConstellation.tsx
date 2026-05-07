@@ -83,36 +83,37 @@ function DetailPanel({ node, onClose }: DetailPanelProps) {
   const isPositive = node.weight >= 0;
 
   return (
-    <div className="absolute top-4 right-4 w-72 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-xl shadow-lg z-10 overflow-hidden">
+    <div className="absolute top-4 right-4 w-72 glass-slab-floating rounded-xl shadow-lg z-10 overflow-hidden animate-enter">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)]">
         <div className="flex items-center gap-2">
           <div
             className="w-3 h-3 rounded-full"
             style={{ backgroundColor: CATEGORY_COLORS[node.category] }}
+            aria-hidden="true"
           />
-          <span className="font-semibold text-sm text-[var(--color-text)]">
+          <span className="font-semibold text-sm text-theme">
             {node.label}
           </span>
         </div>
         <button
           onClick={onClose}
-          className="p-1 hover:bg-[var(--color-bg-tertiary)] rounded"
+          className="p-1 hover:bg-[var(--color-bg-tertiary)] rounded animate-press transition-[background-color] duration-150"
           aria-label="Close factor details"
         >
-          <X className="w-4 h-4 text-[var(--color-text-muted)]" aria-hidden="true" />
+          <X className="w-4 h-4 text-theme-muted" aria-hidden="true" />
         </button>
       </div>
       <div className="px-4 py-3 space-y-3">
         {/* Belief text */}
         {node.beliefText && (
           <div className="p-2 bg-[var(--color-bg-tertiary)] rounded-lg">
-            <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">{node.beliefText}</p>
+            <p className="text-xs text-theme-muted leading-relaxed">{node.beliefText}</p>
           </div>
         )}
         <div className="flex justify-between items-center">
-          <span className="text-xs text-[var(--color-text-muted)]">Category</span>
+          <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Category</span>
           <span
-            className="text-xs font-medium px-2 py-0.5 rounded"
+            className="text-xs font-medium px-2 py-0.5 rounded mono tracking-[0.05em]"
             style={{
               backgroundColor: CATEGORY_COLORS[node.category] + '20',
               color: CATEGORY_COLORS[node.category],
@@ -122,21 +123,21 @@ function DetailPanel({ node, onClose }: DetailPanelProps) {
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-xs text-[var(--color-text-muted)]">Conviction</span>
-          <span className={`text-sm font-mono font-medium ${isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+          <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Conviction</span>
+          <span className={`text-sm mono font-medium tabular-nums ${isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {isPositive ? '+' : ''}{(node.weight * 100).toFixed(1)}%
           </span>
         </div>
         <div>
           <div className="flex justify-between items-center mb-1">
-            <span className="text-xs text-[var(--color-text-muted)]">Confidence</span>
-            <span className="text-xs font-mono text-[var(--color-text)]">
+            <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Confidence</span>
+            <span className="text-xs mono text-theme tabular-nums">
               {(node.confidence * 100).toFixed(0)}%
             </span>
           </div>
           <div className="h-1.5 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
             <div
-              className="h-full rounded-full transition-all"
+              className="h-full rounded-full transition-[width] duration-300"
               style={{
                 width: `${node.confidence * 100}%`,
                 backgroundColor: CATEGORY_COLORS[node.category],
@@ -145,15 +146,15 @@ function DetailPanel({ node, onClose }: DetailPanelProps) {
           </div>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-xs text-[var(--color-text-muted)]">Direction</span>
-          <span className={`text-xs font-medium ${isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+          <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Direction</span>
+          <span className={`mono text-[10px] tracking-[0.2em] uppercase font-medium ${isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {isPositive ? 'Bullish' : 'Bearish'}
           </span>
         </div>
         {/* History sparkline */}
         {node.history && node.history.length > 1 && (
           <div>
-            <span className="text-xs text-[var(--color-text-muted)]">History</span>
+            <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">History</span>
             <div className="mt-1 flex items-end gap-0.5 h-8">
               {node.history.slice(-8).map((h, i) => {
                 const maxAbs = Math.max(...node.history!.map(x => Math.abs(x.value)), 0.01);
@@ -175,8 +176,8 @@ function DetailPanel({ node, onClose }: DetailPanelProps) {
         )}
         {node.lastUpdated && (
           <div className="flex justify-between items-center">
-            <span className="text-xs text-[var(--color-text-muted)]">Last Updated</span>
-            <span className="text-xs text-[var(--color-text-muted)]">
+            <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Updated</span>
+            <span className="text-xs text-theme-muted tabular-nums">
               {new Date(node.lastUpdated).toLocaleDateString()}
             </span>
           </div>
@@ -469,12 +470,17 @@ export const BeliefConstellation = React.memo(function BeliefConstellation() {
   // Loading
   if (isLoading) {
     return (
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Orbit className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="font-semibold text-[var(--color-text)]">Belief Constellation</h3>
+      <Card className="p-6 sm:p-8">
+        <div className="mb-4">
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Force Graph
+          </p>
+          <h3 className="font-semibold text-theme flex items-center gap-2">
+            <Orbit className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            Belief Constellation
+          </h3>
         </div>
-        <div className="flex items-center justify-center h-[400px]">
+        <div className="min-h-[400px] flex items-center justify-center">
           <Spinner className="w-8 h-8" />
         </div>
       </Card>
@@ -484,40 +490,52 @@ export const BeliefConstellation = React.memo(function BeliefConstellation() {
   // Error
   if (isError || !beliefs) {
     return (
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Orbit className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="font-semibold text-[var(--color-text)]">Belief Constellation</h3>
-        </div>
-        <div className="flex items-center justify-center h-[400px] text-[var(--color-text-muted)]">
-          <p className="text-sm">Failed to load belief data</p>
-        </div>
-      </Card>
+      <div
+        className="glass-slab-floating relative overflow-hidden rounded-2xl pl-5 pr-4 py-6 shadow-[0_18px_60px_-20px_rgba(239,68,68,0.45)] before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-negative)]"
+        role="alert"
+      >
+        <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+          Force Graph
+        </p>
+        <h3 className="font-semibold text-theme flex items-center gap-2 mb-2">
+          <Orbit className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+          Belief Constellation
+        </h3>
+        <p className="text-sm text-[var(--color-negative)]">Failed to load belief data</p>
+      </div>
     );
   }
 
   return (
     <Card className="p-0 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-[var(--color-border)]">
         <div className="flex items-center gap-3">
-          <Orbit className="w-5 h-5 text-[var(--color-accent)]" />
+          <Orbit className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
           <div>
-            <h3 className="font-semibold text-[var(--color-text)]">Belief Constellation</h3>
-            <p className="text-xs text-[var(--color-text-muted)]">
-              {nodes.length} factors &middot; Regime: {regime.label} ({regime.confidence})
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">
+              Force Graph
+            </p>
+            <h3 className="font-semibold text-theme">Belief Constellation</h3>
+            <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted tabular-nums mt-0.5">
+              {nodes.length} factors · Regime: {regime.label} ({regime.confidence})
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
-          <Info className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Drag to explore &middot; Scroll to zoom &middot; Click for details</span>
+        <div className="flex items-center gap-2 mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">
+          <Info className="w-3.5 h-3.5" aria-hidden="true" />
+          <span className="hidden sm:inline">Drag to explore · Scroll to zoom · Click for details</span>
           <span className="sm:hidden">Tap for details</span>
         </div>
       </div>
 
       {/* Graph */}
-      <div ref={containerRef} className="relative" role="img" aria-label={`Belief constellation showing ${nodes.length} factors across categories. Regime: ${regime.label}`}>
+      <div
+        ref={containerRef}
+        className="relative min-h-[400px]"
+        role="img"
+        aria-label={`Belief constellation showing ${nodes.length} factors across categories. Regime: ${regime.label}`}
+      >
         <svg
           ref={svgRef}
           width={dimensions.width}
@@ -529,17 +547,18 @@ export const BeliefConstellation = React.memo(function BeliefConstellation() {
         {/* Detail Panel */}
         <DetailPanel node={selectedNode} onClose={() => setSelectedNode(null)} />
 
-        {/* Hover Tooltip: name, conviction 0-1, last updated */}
+        {/* Hover Tooltip: backdrop-blurred */}
         {hoveredNode && !selectedNode && (
-          <div className="absolute bottom-4 left-4 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2 shadow-lg pointer-events-none z-10">
+          <div className="absolute bottom-4 left-4 backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-text-inverse)] border border-theme-light rounded-lg px-3 py-2 shadow-lg pointer-events-none z-10">
             <div className="flex items-center gap-2">
               <div
                 className="w-2.5 h-2.5 rounded-full"
                 style={{ backgroundColor: CATEGORY_COLORS[hoveredNode.category] }}
+                aria-hidden="true"
               />
-              <span className="text-sm font-medium text-[var(--color-text)]">{hoveredNode.label}</span>
+              <span className="text-sm font-medium">{hoveredNode.label}</span>
               <span
-                className="text-xs px-1.5 py-0.5 rounded"
+                className="text-xs px-1.5 py-0.5 rounded mono tracking-[0.05em]"
                 style={{
                   backgroundColor: CATEGORY_COLORS[hoveredNode.category] + '20',
                   color: CATEGORY_COLORS[hoveredNode.category],
@@ -548,18 +567,19 @@ export const BeliefConstellation = React.memo(function BeliefConstellation() {
                 {CATEGORY_LABELS[hoveredNode.category]}
               </span>
             </div>
-            <div className="flex gap-3 mt-1 text-xs text-[var(--color-text-muted)]">
+            <div className="flex gap-3 mt-1 text-xs opacity-70">
               <span>
-                Conviction: <span className="text-[var(--color-text)] font-mono">
+                Conviction:{' '}
+                <span className="mono tabular-nums">
                   {hoveredNode.confidence.toFixed(2)}
                 </span>
               </span>
-              <span className={hoveredNode.weight >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}>
+              <span className={`mono tabular-nums ${hoveredNode.weight >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
                 {hoveredNode.weight >= 0 ? '+' : ''}{(hoveredNode.weight * 100).toFixed(1)}%
               </span>
             </div>
             {hoveredNode.lastUpdated && (
-              <div className="text-[10px] text-[var(--color-text-muted)] mt-0.5">
+              <div className="mono text-[10px] tracking-[0.2em] uppercase opacity-50 mt-0.5 tabular-nums">
                 Updated {new Date(hoveredNode.lastUpdated).toLocaleDateString()}
               </div>
             )}
@@ -574,23 +594,23 @@ export const BeliefConstellation = React.memo(function BeliefConstellation() {
           if (count === 0) return null;
           return (
             <div key={cat} className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
-              <span className="text-xs text-[var(--color-text-secondary)]">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
+              <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-secondary tabular-nums">
                 {CATEGORY_LABELS[cat]} ({count})
               </span>
             </div>
           );
         })}
         <div className="flex items-center gap-1.5 ml-auto">
-          <div className="w-3 h-3 rounded-full bg-[var(--color-positive)]" />
-          <span className="text-xs text-[var(--color-text-muted)]">Bullish</span>
+          <div className="w-3 h-3 rounded-full bg-[var(--color-positive)]" aria-hidden="true" />
+          <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Bullish</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-[var(--color-negative)]" />
-          <span className="text-xs text-[var(--color-text-muted)]">Bearish</span>
+          <div className="w-3 h-3 rounded-full bg-[var(--color-negative)]" aria-hidden="true" />
+          <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Bearish</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-[var(--color-text-muted)]">Size = weight magnitude</span>
+          <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Size = magnitude</span>
         </div>
       </div>
     </Card>

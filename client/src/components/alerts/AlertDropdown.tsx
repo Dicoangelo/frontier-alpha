@@ -16,11 +16,36 @@ interface Alert {
 }
 
 const severityConfig = {
-  critical: { icon: AlertTriangle, color: 'text-[var(--color-negative)]', bg: 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)]' },
-  high: { icon: AlertTriangle, color: 'text-[var(--color-warning)]', bg: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]' },
-  medium: { icon: AlertCircle, color: 'text-[var(--color-warning)]', bg: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]' },
-  low: { icon: Info, color: 'text-[var(--color-info)]', bg: 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]' },
-  info: { icon: Info, color: 'text-[var(--color-text-secondary)]', bg: 'bg-[var(--color-bg-tertiary)]' },
+  critical: {
+    icon: AlertTriangle,
+    color: 'text-[var(--color-negative)]',
+    iconTint: 'color-mix(in srgb, var(--color-negative) 12%, transparent)',
+    rail: 'before:bg-[var(--color-negative)]',
+  },
+  high: {
+    icon: AlertTriangle,
+    color: 'text-[var(--color-warning)]',
+    iconTint: 'color-mix(in srgb, var(--color-warning) 12%, transparent)',
+    rail: 'before:bg-[var(--color-warning)]',
+  },
+  medium: {
+    icon: AlertCircle,
+    color: 'text-[var(--color-warning)]',
+    iconTint: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
+    rail: 'before:bg-[var(--color-warning)]',
+  },
+  low: {
+    icon: Info,
+    color: 'text-[var(--color-info)]',
+    iconTint: 'color-mix(in srgb, var(--color-info) 10%, transparent)',
+    rail: 'before:bg-[var(--color-info)]',
+  },
+  info: {
+    icon: Info,
+    color: 'text-theme-secondary',
+    iconTint: 'color-mix(in srgb, var(--color-info) 8%, transparent)',
+    rail: 'before:bg-[image:var(--gradient-sovereign)]',
+  },
 };
 
 export function AlertDropdown() {
@@ -78,38 +103,47 @@ export function AlertDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-lg"
+        className="relative p-2 text-theme-muted hover:text-theme-secondary hover:bg-theme-secondary rounded-lg transition-colors duration-200 animate-press"
         aria-label={`Alerts${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
         <Bell className="w-5 h-5" aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 w-5 h-5 bg-[var(--color-negative)] text-white text-xs rounded-full flex items-center justify-center">
+          <span className="absolute top-0 right-0 min-w-5 h-5 px-1 mono tabular-nums bg-[var(--color-negative)] text-white text-[10px] font-semibold rounded-full flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-[var(--color-bg)] rounded-xl shadow-lg border z-50">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="font-semibold text-[var(--color-text)]">Alerts</h3>
+        <div className="glass-slab-floating absolute right-0 mt-2 w-96 rounded-xl overflow-hidden z-50 shadow-[0_18px_60px_-20px_rgba(0,0,0,0.25)] animate-enter">
+          <div className="sovereign-bar" />
+          <div className="flex items-center justify-between p-4 border-b border-theme-light">
+            <div>
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Notifications</p>
+              <h3 className="font-semibold text-theme mt-0.5">Alerts</h3>
+            </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] rounded"
+              className="p-1 text-theme-muted hover:text-theme-secondary rounded transition-colors duration-200 animate-press"
               aria-label="Close alerts"
             >
               <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
 
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto animate-stagger">
             {alerts.length === 0 ? (
-              <div className="p-8 text-center">
-                <CheckCircle className="w-12 h-12 text-[var(--color-positive)] mx-auto mb-3" />
-                <p className="text-[var(--color-text-muted)]">No alerts</p>
-                <p className="text-sm text-[var(--color-text-muted)]">You're all caught up!</p>
+              <div className="gradient-brand-subtle p-8 text-center animate-enter">
+                <div
+                  className="inline-flex p-3 rounded-full mb-3"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--color-positive) 12%, transparent)' }}
+                >
+                  <CheckCircle className="w-8 h-8 text-[var(--color-positive)]" aria-hidden="true" />
+                </div>
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">All clear</p>
+                <p className="text-sm text-theme-secondary mt-1">You're all caught up</p>
               </div>
             ) : (
               alerts.slice(0, 20).map((alert) => {
@@ -119,32 +153,43 @@ export function AlertDropdown() {
                 return (
                   <div
                     key={alert.id}
-                    className={`p-4 border-b last:border-0 ${
-                      alert.acknowledged_at ? 'opacity-60' : ''
-                    }`}
+                    className={`
+                      glass-slab-floating relative overflow-hidden mx-2 my-2 p-4 pl-5 rounded-lg animate-enter animate-press
+                      before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]
+                      ${config.rail}
+                      ${alert.acknowledged_at ? 'opacity-60' : ''}
+                    `}
                   >
                     <div className="flex gap-3">
-                      <div className={`p-2 rounded-lg ${config.bg}`}>
-                        <Icon className={`w-4 h-4 ${config.color}`} />
+                      <div
+                        className="p-2 rounded-lg flex-shrink-0"
+                        style={{ backgroundColor: config.iconTint }}
+                      >
+                        <Icon className={`w-4 h-4 ${config.color}`} aria-hidden="true" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="font-medium text-[var(--color-text)] text-sm truncate">
-                            {alert.title}
-                          </p>
+                          <div className="min-w-0">
+                            <p className={`mono text-[10px] tracking-[0.3em] uppercase ${config.color}`}>
+                              {alert.severity}
+                            </p>
+                            <p className="font-semibold text-theme text-sm truncate mt-0.5">
+                              {alert.title}
+                            </p>
+                          </div>
                           {!alert.acknowledged_at && (
                             <button
                               onClick={(e) => handleAcknowledge(alert.id, e)}
-                              className="text-xs text-[var(--color-info)] hover:text-[var(--color-info)] whitespace-nowrap"
+                              className="mono text-[10px] tracking-[0.2em] uppercase text-[var(--color-info)] hover:opacity-80 whitespace-nowrap transition-opacity duration-200 animate-press"
                             >
                               Dismiss
                             </button>
                           )}
                         </div>
-                        <p className="text-sm text-[var(--color-text-muted)] mt-1 line-clamp-2">
+                        <p className="text-sm text-theme-secondary mt-1 line-clamp-2 leading-relaxed">
                           {alert.message}
                         </p>
-                        <p className="text-xs text-[var(--color-text-muted)] mt-2">
+                        <p className="mono tabular-nums text-[10px] text-theme-muted mt-2">
                           {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
                         </p>
                       </div>
@@ -156,10 +201,10 @@ export function AlertDropdown() {
           </div>
 
           {alerts.length > 0 && (
-            <div className="p-3 border-t">
+            <div className="p-3 border-t border-theme-light">
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-full text-center text-sm text-[var(--color-info)] hover:text-[var(--color-info)] font-medium"
+                className="w-full py-2 mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-info)] hover:opacity-80 font-semibold transition-opacity duration-200 animate-press"
               >
                 View all alerts
               </button>

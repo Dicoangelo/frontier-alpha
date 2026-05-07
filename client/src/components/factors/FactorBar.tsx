@@ -43,14 +43,14 @@ const FACTOR_INFO: Record<string, { category: string; color: string; description
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Momentum: 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]',
-  Quality: 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)] border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)]',
-  Value: 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)] border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]',
-  Volatility: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] text-[var(--color-warning)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]',
-  Size: 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)] border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]',
-  Macro: 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)] border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]',
-  Sector: 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]',
-  Other: 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] border-[var(--color-border)]',
+  Momentum: 'bg-[color-mix(in_srgb,var(--color-info)_12%,transparent)] text-[var(--color-info)]',
+  Quality: 'bg-[color-mix(in_srgb,var(--color-positive)_12%,transparent)] text-[var(--color-positive)]',
+  Value: 'bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)]',
+  Volatility: 'bg-[color-mix(in_srgb,var(--color-warning)_12%,transparent)] text-[var(--color-warning)]',
+  Size: 'bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)]',
+  Macro: 'bg-[color-mix(in_srgb,var(--color-negative)_12%,transparent)] text-[var(--color-negative)]',
+  Sector: 'bg-[color-mix(in_srgb,var(--color-info)_12%,transparent)] text-[var(--color-info)]',
+  Other: 'bg-theme-tertiary text-theme-secondary',
 };
 
 const BAR_COLORS: Record<string, { positive: string; negative: string }> = {
@@ -82,59 +82,63 @@ export function FactorBar({ factor, showCategory = true }: FactorBarProps) {
   // Signal strength indicator
   const signalStrength = Math.abs(factor.tStat);
   const signalLabel = signalStrength >= 2 ? 'Strong' : signalStrength >= 1 ? 'Moderate' : 'Weak';
-  const signalColor = signalStrength >= 2 ? 'text-[var(--color-positive)]' : signalStrength >= 1 ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-muted)]';
+  const signalColor = signalStrength >= 2 ? 'text-[var(--color-positive)]' : signalStrength >= 1 ? 'text-[var(--color-warning)]' : 'text-theme-muted';
 
   return (
     <div className="space-y-1.5">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           {showCategory && (
-            <span className={`text-xs px-1.5 py-0.5 rounded border ${categoryColor}`}>
+            <span className={`mono text-[10px] tracking-[0.2em] uppercase font-semibold px-1.5 py-0.5 rounded ${categoryColor}`}>
               {info.category}
             </span>
           )}
-          <span className="text-sm font-medium text-[var(--color-text-secondary)] capitalize">
+          <span className="mono text-xs tracking-wider uppercase font-semibold text-theme-secondary truncate">
             {factor.factor.replace(/_/g, ' ')}
           </span>
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             <button
+              type="button"
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
-              className="text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+              onFocus={() => setShowTooltip(true)}
+              onBlur={() => setShowTooltip(false)}
+              className="text-theme-muted hover:text-theme-secondary transition-colors duration-200 animate-press"
+              aria-label={`More info about ${info.category}`}
             >
-              <Info className="w-3.5 h-3.5" />
+              <Info className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
             {showTooltip && (
-              <div className="absolute left-0 bottom-full mb-2 w-64 p-2.5 bg-[var(--color-bg)] text-[var(--color-text)] text-xs rounded-lg shadow-lg border border-[var(--color-border)] z-20">
-                <p>{info.description}</p>
-                <div className="absolute left-2 top-full w-2 h-2 bg-[var(--color-bg)] border-b border-r border-[var(--color-border)] transform rotate-45 -translate-y-1" />
+              <div className="glass-slab-floating absolute left-0 bottom-full mb-2 w-64 p-3 rounded-lg z-20 shadow-[0_18px_60px_-20px_rgba(0,0,0,0.25)] animate-enter">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">Definition</p>
+                <p className="text-xs text-theme leading-relaxed">{info.description}</p>
               </div>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className={`text-xs ${signalColor}`}>{signalLabel}</span>
-          <span className={`text-sm font-bold tabular-nums ${isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <span className={`mono text-[10px] tracking-wider uppercase ${signalColor}`}>{signalLabel}</span>
+          <span className={`mono tabular-nums text-sm font-bold ${isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {isPositive ? '+' : ''}{factor.exposure.toFixed(2)}
           </span>
         </div>
       </div>
 
-      <div className="relative h-3 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
+      <div className="relative h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden border border-theme-light">
         {/* Background grid */}
-        <div className="absolute inset-0 flex">
-          <div className="w-1/4 border-r border-[var(--color-border)]" />
-          <div className="w-1/4 border-r border-[var(--color-border)]" />
-          <div className="w-1/4 border-r border-[var(--color-border)]" />
+        <div className="absolute inset-0 flex" aria-hidden="true">
+          <div className="w-1/4 border-r border-theme-light" />
+          <div className="w-1/4 border-r border-theme-light" />
+          <div className="w-1/4 border-r border-theme-light" />
           <div className="w-1/4" />
         </div>
 
         {/* Center line */}
-        <div className="absolute top-0 left-1/2 w-0.5 h-full bg-[var(--color-text-muted)] z-10" />
+        <div className="absolute top-0 left-1/2 w-0.5 h-full bg-theme-muted z-10" aria-hidden="true" />
 
         {/* Bar */}
         <div
-          className={`absolute top-0 h-full rounded-full transition-all duration-500 ${
+          className={`absolute top-0 h-full rounded-full transition-[width,left] duration-500 ${
             isPositive ? barColor.positive : barColor.negative
           }`}
           style={{
@@ -144,23 +148,25 @@ export function FactorBar({ factor, showCategory = true }: FactorBarProps) {
         />
       </div>
 
-      <div className="flex justify-between items-center text-xs text-[var(--color-text-muted)]">
-        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+      <div className="flex justify-between items-center mono text-[10px] tracking-wider uppercase text-theme-muted">
+        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-semibold ${
           signalStrength >= 2
-            ? 'bg-[var(--color-positive)]/15 text-[var(--color-positive)]'
+            ? 'bg-[color-mix(in_srgb,var(--color-positive)_12%,transparent)] text-[var(--color-positive)]'
             : signalStrength >= 1
-              ? 'bg-[var(--color-warning)]/15 text-[var(--color-warning)]'
-              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
+              ? 'bg-[color-mix(in_srgb,var(--color-warning)_12%,transparent)] text-[var(--color-warning)]'
+              : 'bg-theme-tertiary text-theme-muted'
         }`}>
           {signalLabel} Signal
         </span>
         <span>
-          contribution: <span className={factor.contribution > 0 ? 'text-[var(--color-positive)]' : factor.contribution < 0 ? 'text-[var(--color-negative)]' : ''}>
+          contribution ·{' '}
+          <span className={`tabular-nums ${factor.contribution > 0 ? 'text-[var(--color-positive)]' : factor.contribution < 0 ? 'text-[var(--color-negative)]' : ''}`}>
             {factor.contribution > 0 ? '+' : ''}{(factor.contribution * 100).toFixed(1)}%
           </span>
         </span>
         <span>
-          confidence: <span className={factor.confidence >= 0.8 ? 'text-[var(--color-positive)] font-medium' : ''}>
+          confidence ·{' '}
+          <span className={`tabular-nums ${factor.confidence >= 0.8 ? 'text-[var(--color-positive)] font-medium' : ''}`}>
             {(factor.confidence * 100).toFixed(0)}%
           </span>
         </span>

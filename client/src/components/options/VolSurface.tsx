@@ -21,9 +21,9 @@ interface VolSurfaceProps {
 
 function StatMini({ label, value }: { label: string; value: string }) {
   return (
-    <div className="px-3 py-2 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] hover:shadow-lg transition-all duration-200 active:scale-[0.98]">
-      <div className="text-xs text-[var(--color-text-muted)]">{label}</div>
-      <div className="text-sm font-bold font-mono text-[var(--color-text)]">{value}</div>
+    <div className="glass-slab-floating rounded-xl px-3 py-2.5 transition-[transform,box-shadow] duration-200 hover:shadow-lg animate-press">
+      <div className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">{label}</div>
+      <div className="mt-1 mono text-sm font-bold tabular-nums text-theme">{value}</div>
     </div>
   );
 }
@@ -273,19 +273,25 @@ function VolSurfaceInner({ points }: VolSurfaceProps) {
   return (
     <Card>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <Activity className="w-5 h-5 text-[var(--color-accent)]" />
-          Volatility Surface
-        </h2>
-        <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
-          <Grip className="w-4 h-4" />
+        <div>
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted">
+            Volatility Surface
+          </p>
+          <h2 className="mt-1 text-lg font-semibold text-theme flex items-center gap-2">
+            <Activity className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            {UNDERLYING_SYMBOL}
+          </h2>
+        </div>
+        <div className="flex items-center gap-1.5 mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">
+          <Grip className="w-4 h-4" aria-hidden="true" />
           Drag to rotate
         </div>
       </div>
 
       <div
         ref={containerRef}
-        className="relative cursor-grab active:cursor-grabbing select-none animate-fade-in"
+        className="relative cursor-grab active:cursor-grabbing select-none animate-fade-in glass-slab-floating rounded-xl"
+        style={{ minHeight: 360 }}
         role="img"
         aria-label={`3D implied volatility surface for ${UNDERLYING_SYMBOL} showing IV across strikes and expirations`}
         onMouseDown={handleMouseDown}

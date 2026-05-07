@@ -73,11 +73,25 @@ type SeverityFilter = 'all' | 'critical' | 'high' | 'medium' | 'low';
 // CONSTANTS
 // ============================================================================
 
-const severityColors: Record<string, string> = {
-  critical: 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)] border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]',
-  high: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] text-[var(--color-warning)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]',
-  medium: 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] text-[var(--color-warning)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]',
-  low: 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]',
+const severityRails: Record<string, string> = {
+  critical: 'before:bg-[var(--color-negative)]',
+  high: 'before:bg-[var(--color-warning)]',
+  medium: 'before:bg-[var(--color-warning)]',
+  low: 'before:bg-[var(--color-info)]',
+};
+
+const severityText: Record<string, string> = {
+  critical: 'text-[var(--color-negative)]',
+  high: 'text-[var(--color-warning)]',
+  medium: 'text-[var(--color-warning)]',
+  low: 'text-[var(--color-info)]',
+};
+
+const severityIconTint: Record<string, string> = {
+  critical: 'color-mix(in srgb, var(--color-negative) 12%, transparent)',
+  high: 'color-mix(in srgb, var(--color-warning) 12%, transparent)',
+  medium: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
+  low: 'color-mix(in srgb, var(--color-info) 12%, transparent)',
 };
 
 const severityDotColors: Record<string, string> = {
@@ -112,17 +126,17 @@ const filingTypeIcons: Record<string, string> = {
 };
 
 const filingTypeBadgeColors: Record<string, string> = {
-  '8-K': 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)]',
-  '10-K': 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]',
-  '10-Q': 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)]',
-  '4': 'bg-[var(--color-accent)] text-[var(--color-accent)]',
-  'SC 13D': 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)]',
-  'SC 13G': 'bg-[var(--color-accent)] text-[var(--color-accent)]',
-  '13F-HR': 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]',
-  'DEF 14A': 'bg-[var(--color-positive)] text-[var(--color-positive)]',
-  'S-1': 'bg-[var(--color-positive)] text-[var(--color-positive)]',
-  'NT 10-K': 'bg-[var(--color-negative)] text-[var(--color-negative)]',
-  'NT 10-Q': 'bg-[var(--color-warning)] text-[var(--color-warning)]',
+  '8-K': 'bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)]',
+  '10-K': 'bg-[color-mix(in_srgb,var(--color-positive)_12%,transparent)] text-[var(--color-positive)]',
+  '10-Q': 'bg-[color-mix(in_srgb,var(--color-info)_12%,transparent)] text-[var(--color-info)]',
+  '4': 'bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)]',
+  'SC 13D': 'bg-[color-mix(in_srgb,var(--color-negative)_12%,transparent)] text-[var(--color-negative)]',
+  'SC 13G': 'bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)]',
+  '13F-HR': 'bg-theme-tertiary text-theme-secondary',
+  'DEF 14A': 'bg-[color-mix(in_srgb,var(--color-positive)_12%,transparent)] text-[var(--color-positive)]',
+  'S-1': 'bg-[color-mix(in_srgb,var(--color-positive)_12%,transparent)] text-[var(--color-positive)]',
+  'NT 10-K': 'bg-[color-mix(in_srgb,var(--color-negative)_12%,transparent)] text-[var(--color-negative)]',
+  'NT 10-Q': 'bg-[color-mix(in_srgb,var(--color-warning)_12%,transparent)] text-[var(--color-warning)]',
 };
 
 const filingTypeLabels: Record<string, string> = {
@@ -219,12 +233,12 @@ function getBaseFilingType(type: string): string {
 function FilingTypeBadge({ type }: { type: string }) {
   const baseType = getBaseFilingType(type);
   const icon = filingTypeIcons[type] || filingTypeIcons[baseType] || type.slice(0, 3).toUpperCase();
-  const colorClass = filingTypeBadgeColors[baseType] || 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]';
+  const colorClass = filingTypeBadgeColors[baseType] || 'bg-theme-tertiary text-theme-secondary';
   const isAmended = type.endsWith('/A');
 
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${colorClass}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded mono text-xs font-bold tabular-nums ${colorClass}`}
       title={filingTypeLabels[type] || type}
     >
       {icon}
@@ -240,8 +254,9 @@ function FilingTypeBadge({ type }: { type: string }) {
 function SeverityIndicator({ severity }: { severity: string }) {
   return (
     <span
-      className={`w-2 h-2 rounded-full ${severityDotColors[severity] || 'bg-[var(--color-bg-tertiary)]'}`}
+      className={`w-2 h-2 rounded-full ${severityDotColors[severity] || 'bg-theme-tertiary'}`}
       title={`${severity.charAt(0).toUpperCase() + severity.slice(1)} priority`}
+      aria-hidden="true"
     />
   );
 }
@@ -262,74 +277,96 @@ function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardPr
 
   return (
     <div
-      className={`p-3 rounded-lg border transition-all cursor-pointer hover:shadow-sm ${
-        severityColors[alert.severity]
-      } ${expanded ? 'ring-2 ring-[var(--color-info)] shadow-md' : ''}`}
+      className={`
+        glass-slab-floating relative overflow-hidden p-3 pl-5 rounded-lg cursor-pointer
+        before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]
+        ${severityRails[alert.severity]}
+        transition-[transform,box-shadow] duration-200 animate-press
+        ${expanded ? 'shadow-[0_18px_60px_-20px_rgba(123,44,255,0.35)]' : ''}
+      `}
       onClick={onToggle}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
+      aria-expanded={expanded}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <div className="flex-shrink-0 flex items-center gap-2">
+          <div
+            className="p-2 rounded-lg flex-shrink-0 flex items-center gap-2"
+            style={{ backgroundColor: severityIconTint[alert.severity] }}
+          >
             <SeverityIndicator severity={alert.severity} />
             <FilingTypeBadge type={alert.filing.type} />
           </div>
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-[var(--color-text)] truncate">
+              <span className="mono uppercase tracking-wider font-semibold text-theme truncate">
                 {alert.filing.symbol || alert.filing.companyName}
               </span>
               {isRecent && (
-                <span className="px-1.5 py-0.5 text-[10px] font-bold bg-[var(--color-positive)] text-white rounded animate-pulse-subtle">
+                <span className="mono px-1.5 py-0.5 text-[10px] font-bold tracking-wider bg-[var(--color-positive)] text-white rounded animate-pulse-subtle">
                   NEW
                 </span>
               )}
               {alert.severity === 'critical' && (
-                <AlertTriangle className="w-4 h-4 text-[var(--color-negative)]" />
+                <AlertTriangle className="w-4 h-4 text-[var(--color-negative)]" aria-hidden="true" />
               )}
             </div>
             {!compact && (
-              <p className="text-sm opacity-75 truncate">
+              <p className="text-sm text-theme-secondary truncate mt-0.5">
                 {filingTypeLabels[alert.filing.type] || alert.filing.type}
               </p>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] flex-shrink-0">
-          <Clock className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-2 mono tabular-nums text-[10px] tracking-wider uppercase text-theme-muted flex-shrink-0">
+          <Clock className="w-3.5 h-3.5" aria-hidden="true" />
           <span className="whitespace-nowrap">{formatTimeSince(alert.timestamp)}</span>
           {expanded ? (
-            <ChevronUp className="w-4 h-4" />
+            <ChevronUp className="w-4 h-4" aria-hidden="true" />
           ) : (
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDown className="w-4 h-4" aria-hidden="true" />
           )}
         </div>
       </div>
 
       {/* Expanded details */}
       {expanded && (
-        <div className="mt-3 pt-3 border-t border-current/20 space-y-3">
-          <div className="flex items-center gap-2 text-sm">
-            <Building2 className="w-4 h-4" />
+        <div className="mt-3 pt-3 border-t border-theme-light space-y-3 animate-enter">
+          <div className="flex items-center gap-2 text-sm text-theme">
+            <Building2 className="w-4 h-4 text-theme-muted" aria-hidden="true" />
             <span className="font-medium">{alert.filing.companyName}</span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm">
-            <Calendar className="w-4 h-4" />
-            <span>Filed: {formatDate(alert.timestamp)}</span>
+          <div className="flex items-center gap-2 text-sm text-theme-secondary">
+            <Calendar className="w-4 h-4 text-theme-muted" aria-hidden="true" />
+            <span className="mono tabular-nums">Filed: {formatDate(alert.timestamp)}</span>
           </div>
 
           {alert.filing.accessionNumber && (
-            <div className="text-xs text-[var(--color-text-secondary)]">
+            <div className="mono text-xs text-theme-muted tabular-nums">
               Accession: {alert.filing.accessionNumber}
             </div>
           )}
 
-          <div className="p-2 bg-[var(--color-bg)]/50 rounded text-sm">
-            <TrendingUp className="w-4 h-4 inline mr-2" />
-            <span className="font-medium">Suggested Action: </span>
-            {alert.suggestedAction}
+          <div className="glass-slab rounded-lg p-3 text-sm text-theme">
+            <div className="flex items-start gap-2">
+              <TrendingUp className="w-4 h-4 mt-0.5 text-[var(--color-accent)]" aria-hidden="true" />
+              <div>
+                <p className={`mono text-[10px] tracking-[0.3em] uppercase ${severityText[alert.severity]} mb-1`}>
+                  Suggested Action
+                </p>
+                <p className="text-theme-secondary leading-relaxed">{alert.suggestedAction}</p>
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -338,10 +375,10 @@ function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardPr
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-[var(--color-info)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-info)] transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-[image:var(--gradient-sovereign)] text-white text-sm font-medium rounded-lg shadow-[0_4px_18px_-6px_rgba(123,44,255,0.55)] transition-[transform,box-shadow] duration-200 animate-press"
             >
               View Filing
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
             </a>
             {alert.filing.formUrl && (
               <a
@@ -349,10 +386,10 @@ function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardPr
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] text-sm font-medium rounded-lg hover:bg-[var(--color-border)] transition-colors"
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-theme-tertiary text-theme-secondary border border-theme text-sm font-medium rounded-lg hover:bg-theme-secondary transition-colors duration-200 animate-press"
               >
                 All Documents
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
               </a>
             )}
           </div>
@@ -466,15 +503,23 @@ export const SECFilingAlert = React.memo(function SECFilingAlert({
   }, [allAlerts]);
 
   return (
-    <Card className={`p-6 ${className}`}>
+    <Card className={className}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <FileText className="w-5 h-5 text-[var(--color-info)]" />
-          <h3 className="text-lg font-semibold text-[var(--color-text)]">SEC Filings</h3>
+          <div
+            className="p-2 rounded-lg flex-shrink-0"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 12%, transparent)' }}
+          >
+            <FileText className="w-5 h-5 text-[var(--color-info)]" aria-hidden="true" />
+          </div>
+          <div>
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Filings · 30-day window</p>
+            <h3 className="text-lg font-semibold text-theme mt-0.5">SEC Filings</h3>
+          </div>
           {summary.total > 0 && (
-            <span className="text-sm text-[var(--color-text-muted)]">
-              {summary.total} filing{summary.total !== 1 ? 's' : ''} (last 30 days)
+            <span className="mono tabular-nums text-xs text-theme-muted">
+              {summary.total} filing{summary.total !== 1 ? 's' : ''}
             </span>
           )}
         </div>
@@ -493,54 +538,61 @@ export const SECFilingAlert = React.memo(function SECFilingAlert({
       {summary.total > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {summary.critical > 0 && (
-            <Badge variant="danger">{summary.critical} Critical</Badge>
+            <Badge variant="danger">
+              <span className="tabular-nums">{summary.critical}</span> Critical
+            </Badge>
           )}
           {summary.high > 0 && (
-            <Badge variant="warning">{summary.high} High</Badge>
+            <Badge variant="warning">
+              <span className="tabular-nums">{summary.high}</span> High
+            </Badge>
           )}
           {summary.medium > 0 && (
-            <span className="px-2 py-1 text-xs font-medium bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] text-[var(--color-warning)] rounded-full">
-              {summary.medium} Medium
+            <span className="mono px-2 py-1 text-xs font-medium tracking-wider uppercase bg-[color-mix(in_srgb,var(--color-warning)_12%,transparent)] text-[var(--color-warning)] rounded-full">
+              <span className="tabular-nums">{summary.medium}</span> Medium
             </span>
           )}
           {summary.low > 0 && (
-            <Badge variant="info">{summary.low} Low</Badge>
+            <Badge variant="info">
+              <span className="tabular-nums">{summary.low}</span> Low
+            </Badge>
           )}
         </div>
       )}
 
       {/* Filters */}
       {showFilters && allAlerts.length > 0 && (
-        <div className="mb-4 p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
+        <div className="glass-slab rounded-lg p-3 mb-4">
           <div className="flex items-center gap-2 mb-2">
-            <Filter className="w-4 h-4 text-[var(--color-text-muted)]" />
-            <span className="text-sm font-medium text-[var(--color-text-secondary)]">Filter by type:</span>
+            <Filter className="w-4 h-4 text-theme-muted" aria-hidden="true" />
+            <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Filter by type</span>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setFilterType('all')}
               aria-label="Show all filing types"
               aria-pressed={filterType === 'all'}
-              className={`px-2 py-1 text-xs rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] ${
+              className={`px-2 py-1 mono text-xs tracking-wider uppercase rounded-full transition-[background-color,color] duration-200 animate-press focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] ${
                 filterType === 'all'
-                  ? 'bg-[var(--color-info)] text-white'
-                  : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
+                  ? 'bg-[image:var(--gradient-sovereign)] text-white shadow-[0_4px_18px_-6px_rgba(123,44,255,0.55)]'
+                  : 'bg-theme-tertiary text-theme-secondary hover:bg-theme-secondary'
               }`}
             >
-              All ({allAlerts.length})
+              All <span className="tabular-nums">({allAlerts.length})</span>
             </button>
             {['8-K', '10-K', '10-Q', '4', 'SC 13D'].map((type) =>
               typeCounts[type] ? (
                 <button
                   key={type}
                   onClick={() => setFilterType(type as FilterType)}
-                  className={`px-2 py-1 text-xs rounded-full transition-colors ${
+                  aria-pressed={filterType === type}
+                  className={`px-2 py-1 mono text-xs tracking-wider uppercase rounded-full transition-[background-color,color] duration-200 animate-press ${
                     filterType === type
-                      ? 'bg-[var(--color-info)] text-white'
-                      : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
+                      ? 'bg-[image:var(--gradient-sovereign)] text-white shadow-[0_4px_18px_-6px_rgba(123,44,255,0.55)]'
+                      : 'bg-theme-tertiary text-theme-secondary hover:bg-theme-secondary'
                   }`}
                 >
-                  {type} ({typeCounts[type]})
+                  {type} <span className="tabular-nums">({typeCounts[type]})</span>
                 </button>
               ) : null
             )}
@@ -549,10 +601,11 @@ export const SECFilingAlert = React.memo(function SECFilingAlert({
             ) && (
               <button
                 onClick={() => setFilterType('other')}
-                className={`px-2 py-1 text-xs rounded-full transition-colors ${
+                aria-pressed={filterType === 'other'}
+                className={`px-2 py-1 mono text-xs tracking-wider uppercase rounded-full transition-[background-color,color] duration-200 animate-press ${
                   filterType === 'other'
-                    ? 'bg-[var(--color-info)] text-white'
-                    : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
+                    ? 'bg-[image:var(--gradient-sovereign)] text-white shadow-[0_4px_18px_-6px_rgba(123,44,255,0.55)]'
+                    : 'bg-theme-tertiary text-theme-secondary hover:bg-theme-secondary'
                 }`}
               >
                 Other
@@ -564,17 +617,17 @@ export const SECFilingAlert = React.memo(function SECFilingAlert({
 
       {/* Loading state */}
       {isLoading && (
-        <div className="py-8 text-center text-[var(--color-text-muted)]">
-          <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin" />
-          <p>Loading SEC filings...</p>
+        <div className="py-8 text-center text-theme-muted">
+          <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin" aria-hidden="true" />
+          <p className="mono text-[10px] tracking-[0.3em] uppercase">Loading SEC filings…</p>
         </div>
       )}
 
       {/* Error state */}
       {error && (
-        <div className="py-6 text-center">
-          <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-[var(--color-warning)]" />
-          <p className="text-[var(--color-text-secondary)]">Failed to load SEC filings</p>
+        <div className="glass-slab-floating relative overflow-hidden rounded-lg pl-5 py-6 px-4 text-center before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-warning)]">
+          <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-[var(--color-warning)]" aria-hidden="true" />
+          <p className="text-theme-secondary">Failed to load SEC filings</p>
           <Button
             variant="secondary"
             size="sm"
@@ -588,15 +641,16 @@ export const SECFilingAlert = React.memo(function SECFilingAlert({
 
       {/* Empty state */}
       {!isLoading && !error && filteredAlerts.length === 0 && (
-        <div className="py-8 text-center text-[var(--color-text-muted)]">
-          <FileText className="w-8 h-8 mx-auto mb-2 text-[var(--color-text-muted)]" />
+        <div className="glass-slab gradient-brand-subtle rounded-2xl p-8 text-center">
+          <FileText className="w-8 h-8 mx-auto mb-2 text-theme-muted" aria-hidden="true" />
           {filterType !== 'all' || filterSeverity !== 'all' ? (
             <>
-              <p>No filings match the current filters</p>
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">No matches</p>
+              <p className="text-sm text-theme-secondary mt-1">No filings match the current filters</p>
               <Button
                 variant="secondary"
                 size="sm"
-                className="mt-2"
+                className="mt-3"
                 onClick={() => {
                   setFilterType('all');
                   setFilterSeverity('all');
@@ -607,10 +661,9 @@ export const SECFilingAlert = React.memo(function SECFilingAlert({
             </>
           ) : (
             <>
-              <p>No recent SEC filings for your portfolio</p>
-              <p className="text-sm mt-1">
-                Filings from the last 30 days will appear here
-              </p>
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">All quiet</p>
+              <p className="text-sm text-theme-secondary mt-1">No recent SEC filings for your portfolio</p>
+              <p className="text-xs text-theme-muted mt-1">Filings from the last 30 days will appear here</p>
             </>
           )}
         </div>
@@ -618,15 +671,16 @@ export const SECFilingAlert = React.memo(function SECFilingAlert({
 
       {/* Filing list */}
       {visibleAlerts.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-3 animate-stagger">
           {visibleAlerts.map((alert) => (
-            <FilingCard
-              key={alert.id}
-              alert={alert}
-              expanded={expandedAlert === alert.id}
-              onToggle={() => toggleExpand(alert.id)}
-              compact={compact}
-            />
+            <div key={alert.id} className="animate-enter">
+              <FilingCard
+                alert={alert}
+                expanded={expandedAlert === alert.id}
+                onToggle={() => toggleExpand(alert.id)}
+                compact={compact}
+              />
+            </div>
           ))}
         </div>
       )}
@@ -635,7 +689,7 @@ export const SECFilingAlert = React.memo(function SECFilingAlert({
       {filteredAlerts.length > maxAlerts && (
         <button
           onClick={() => setShowAllFilings(!showAllFilings)}
-          className="w-full mt-3 py-2 text-sm text-[var(--color-info)] hover:text-[var(--color-info)] font-medium transition-colors"
+          className="w-full mt-3 py-2 mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-info)] hover:opacity-80 font-semibold transition-opacity duration-200 animate-press"
           aria-expanded={showAllFilings}
         >
           {showAllFilings
@@ -646,18 +700,18 @@ export const SECFilingAlert = React.memo(function SECFilingAlert({
 
       {/* Footer */}
       {symbols.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-[var(--color-border-light)] text-xs text-[var(--color-text-muted)] flex items-center justify-between">
-          <span>
-            Monitoring: {symbols.slice(0, 5).join(', ')}
+        <div className="mt-4 pt-3 border-t border-theme-light mono text-[10px] tracking-[0.2em] uppercase text-theme-muted flex items-center justify-between gap-3">
+          <span className="truncate">
+            Monitoring · {symbols.slice(0, 5).join(', ')}
             {symbols.length > 5 && ` +${symbols.length - 5} more`}
           </span>
           <a
             href="https://www.sec.gov/edgar/searchedgar/companysearch"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[var(--color-info)] hover:underline"
+            className="text-[var(--color-info)] hover:underline whitespace-nowrap animate-press"
           >
-            SEC EDGAR Search
+            SEC EDGAR
           </a>
         </div>
       )}

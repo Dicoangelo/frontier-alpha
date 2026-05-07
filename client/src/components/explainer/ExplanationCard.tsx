@@ -210,13 +210,19 @@ export function ExplanationCard({
 
       {/* State: Error */}
       {!isLoading && error && (
-        <div className="flex items-start gap-3 p-3 rounded-lg bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]">
-          <AlertTriangle className="w-5 h-5 text-[var(--color-negative)] flex-shrink-0 mt-0.5" />
+        <div
+          className="glass-slab-floating relative overflow-hidden flex items-start gap-3 p-3 pl-5 rounded-xl before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--color-negative) 8%, transparent)',
+          }}
+        >
+          <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--color-negative)]" />
+          <AlertTriangle className="w-5 h-5 text-[var(--color-negative)] flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div>
-            <p className="text-sm text-[var(--color-negative)]">{error}</p>
+            <p className="text-sm leading-relaxed text-[var(--color-negative)]">{error}</p>
             <button
               onClick={fetchExplanation}
-              className="text-xs text-[var(--color-negative)] underline hover:text-[var(--color-negative)] mt-1"
+              className="text-xs text-[var(--color-negative)] underline hover:opacity-80 mt-1 animate-press transition-opacity duration-200"
             >
               Try again
             </button>
@@ -227,10 +233,10 @@ export function ExplanationCard({
       {/* State: Empty (no result yet) */}
       {!isLoading && !error && !result && (
         <div className="text-center py-6">
-          <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full bg-theme-tertiary mb-3 ${config.color}`}>
+          <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full glass-slab-floating mb-3 ${config.color}`}>
             {config.icon}
           </div>
-          <p className="text-sm text-[var(--color-text-muted)]">
+          <p className="text-sm leading-relaxed text-theme-muted">
             Click &quot;Generate&quot; to get an AI-powered {config.label.toLowerCase()} explanation
             {symbol ? ` for ${symbol}` : ''}.
           </p>
@@ -238,92 +244,108 @@ export function ExplanationCard({
       )}
 
       {/* State: Result */}
-      {!isLoading && !error && result && (
-        <div className="space-y-4">
-          {/* Type badge + AI/Template badge */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${config.color}`}>
-              {config.icon}
-              {config.label}
-            </span>
-
-            {symbol && (
-              <span className="text-xs font-mono font-bold text-[var(--color-text)]">
-                {result.symbol}
+      {!isLoading && !error && result && (() => {
+        const confidenceRail =
+          result.confidence >= 0.8 ? 'var(--color-positive)' :
+          result.confidence >= 0.6 ? 'var(--color-warning)' :
+          'var(--color-negative)';
+        return (
+          <div
+            className="glass-slab-floating relative overflow-hidden rounded-xl p-4 space-y-4"
+          >
+            {/* Sovereign top bar */}
+            <div className="sovereign-bar absolute left-0 right-0 top-0" aria-hidden="true" />
+            {/* Type badge + AI/Template badge */}
+            <div className="flex items-center gap-2 flex-wrap pt-1">
+              <span className={`inline-flex items-center gap-1.5 mono text-[10px] tracking-[0.3em] uppercase font-medium ${config.color}`}>
+                {config.icon}
+                {config.label}
               </span>
-            )}
 
-            {isAIPowered ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] text-[var(--color-accent)] border border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)]">
-                <Sparkles className="w-3 h-3" />
-                AI-powered
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[color-mix(in_srgb,var(--color-info)_20%,transparent)] text-[var(--color-info)] border border-[color-mix(in_srgb,var(--color-info)_30%,transparent)]">
-                <Brain className="w-3 h-3" />
-                Template-based
-              </span>
-            )}
-
-            {result.cached && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[color-mix(in_srgb,var(--color-text-muted)_20%,transparent)] text-[var(--color-text-muted)] border border-[color-mix(in_srgb,var(--color-text-muted)_30%,transparent)]">
-                <CheckCircle2 className="w-3 h-3" />
-                Cached
-              </span>
-            )}
-          </div>
-
-          {/* Explanation text */}
-          <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            {result.text}
-          </p>
-
-          {/* Confidence indicator */}
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-[var(--color-text-muted)]">Confidence</span>
-            <div className="flex-1 h-1.5 rounded-full bg-theme-tertiary overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${
-                  result.confidence >= 0.8
-                    ? 'bg-[var(--color-positive)]'
-                    : result.confidence >= 0.6
-                    ? 'bg-[var(--color-warning)]'
-                    : 'bg-[var(--color-negative)]'
-                }`}
-                style={{ width: getConfidenceBarWidth(result.confidence) }}
-              />
-            </div>
-            <span className={`text-xs font-medium ${getConfidenceColor(result.confidence)}`}>
-              {(result.confidence * 100).toFixed(0)}%
-            </span>
-          </div>
-
-          {/* Source badges */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-[var(--color-text-muted)]">Sources:</span>
-            {result.sources.map((source) => {
-              const sourceMeta = SOURCE_LABELS[source] || {
-                label: source.replace(/_/g, ' '),
-                color: 'bg-[color-mix(in_srgb,var(--color-text-muted)_20%,transparent)] text-[var(--color-text-muted)] border-[color-mix(in_srgb,var(--color-text-muted)_30%,transparent)]',
-              };
-              return (
-                <span
-                  key={source}
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border ${sourceMeta.color}`}
-                >
-                  {sourceMeta.label}
+              {symbol && (
+                <span className="mono text-xs font-bold tabular-nums text-theme">
+                  {result.symbol}
                 </span>
-              );
-            })}
-          </div>
+              )}
 
-          {/* Timestamp */}
-          <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
-            <Clock className="w-3 h-3" />
-            Generated at {formatTimestamp(result.generatedAt)}
+              {isAIPowered ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full mono text-[10px] tracking-[0.2em] uppercase font-medium bg-[color-mix(in_srgb,var(--color-accent)_15%,transparent)] text-[var(--color-accent)] border border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)]">
+                  <Sparkles className="w-3 h-3" aria-hidden="true" />
+                  AI-powered
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full mono text-[10px] tracking-[0.2em] uppercase font-medium bg-[color-mix(in_srgb,var(--color-info)_15%,transparent)] text-[var(--color-info)] border border-[color-mix(in_srgb,var(--color-info)_25%,transparent)]">
+                  <Brain className="w-3 h-3" aria-hidden="true" />
+                  Template-based
+                </span>
+              )}
+
+              {result.cached && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full mono text-[10px] tracking-[0.2em] uppercase font-medium glass-slab-floating text-theme-muted">
+                  <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
+                  Cached
+                </span>
+              )}
+            </div>
+
+            {/* Explanation text */}
+            <p className="text-sm leading-relaxed text-theme-secondary">
+              {result.text}
+            </p>
+
+            {/* Confidence pill — type-rail pattern */}
+            <div className="flex items-center gap-3">
+              <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Confidence</span>
+              <div className="flex-1 h-1.5 rounded-full bg-theme-tertiary overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-[width] duration-500 ease-out"
+                  style={{
+                    width: getConfidenceBarWidth(result.confidence),
+                    backgroundColor: confidenceRail,
+                  }}
+                />
+              </div>
+              <span
+                className="glass-slab-floating relative inline-flex items-center pl-3 pr-2.5 py-0.5 rounded-full mono text-[10px] tabular-nums font-medium overflow-hidden before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]"
+                style={{
+                  backgroundColor: `color-mix(in srgb, ${confidenceRail} 8%, transparent)`,
+                  color: confidenceRail,
+                }}
+              >
+                <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: confidenceRail }} />
+                <span className={`text-xs font-medium ${getConfidenceColor(result.confidence)}`}>
+                  {(result.confidence * 100).toFixed(0)}%
+                </span>
+              </span>
+            </div>
+
+            {/* Source badges */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Sources</span>
+              {result.sources.map((source) => {
+                const sourceMeta = SOURCE_LABELS[source] || {
+                  label: source.replace(/_/g, ' '),
+                  color: 'bg-[color-mix(in_srgb,var(--color-text-muted)_15%,transparent)] text-[var(--color-text-muted)] border-[color-mix(in_srgb,var(--color-text-muted)_25%,transparent)]',
+                };
+                return (
+                  <span
+                    key={source}
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full mono text-[10px] tracking-[0.2em] uppercase border ${sourceMeta.color}`}
+                  >
+                    {sourceMeta.label}
+                  </span>
+                );
+              })}
+            </div>
+
+            {/* Timestamp */}
+            <div className="flex items-center gap-1.5 mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">
+              <Clock className="w-3 h-3" aria-hidden="true" />
+              Generated at {formatTimestamp(result.generatedAt)}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </Card>
   );
 }

@@ -61,15 +61,20 @@ function StrategySelectorInner() {
   return (
     <Card>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <Target className="w-5 h-5 text-[var(--color-accent)]" />
-          Strategy P&L
-        </h2>
+        <div>
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted">
+            Strategy P&amp;L
+          </p>
+          <h2 className="mt-1 text-lg font-semibold text-theme flex items-center gap-2">
+            <Target className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            {strategy.name}
+          </h2>
+        </div>
         <div className="relative">
           <select
             value={selectedStrategy}
             onChange={(e) => setSelectedStrategy(e.target.value as StrategyType)}
-            className="appearance-none bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg px-3 py-2 pr-8 text-sm text-[var(--color-text)] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+            className="appearance-none glass-slab-floating rounded-lg px-3 py-2 pr-8 text-sm text-theme min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] animate-press transition-[border-color,box-shadow] duration-200"
             aria-label="Select options strategy"
           >
             {STRATEGY_LIST.map((s) => (
@@ -78,20 +83,23 @@ function StrategySelectorInner() {
               </option>
             ))}
           </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)] pointer-events-none" />
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted pointer-events-none" />
         </div>
       </div>
 
       {/* Strategy Info */}
-      <div className="mb-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)] animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
-        <div className="text-sm text-[var(--color-text)]">{strategy.description}</div>
-        <div className="mt-2 flex flex-wrap gap-2 text-xs">
+      <div
+        className="mb-4 glass-slab-floating rounded-xl p-4 animate-fade-in-up"
+        style={{ animationDelay: '50ms', animationFillMode: 'both' }}
+      >
+        <div className="text-sm text-theme leading-relaxed">{strategy.description}</div>
+        <div className="mt-3 flex flex-wrap gap-2">
           <span
-            className="px-2 py-0.5 rounded-full transition-colors duration-200"
+            className="px-2.5 py-1 mono text-[10px] tracking-[0.2em] uppercase rounded-full"
             style={{
-              backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
+              backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
               color: 'var(--color-accent)',
-              border: '1px solid color-mix(in srgb, var(--color-accent) 20%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--color-accent) 22%, transparent)',
             }}
           >
             {strategy.outlook}
@@ -99,18 +107,18 @@ function StrategySelectorInner() {
           {strategy.legs.map((leg, i) => (
             <span
               key={i}
-              className="px-2 py-0.5 rounded-full border transition-colors duration-200"
+              className="px-2.5 py-1 mono text-[10px] tracking-[0.2em] uppercase rounded-full border tabular-nums"
               style={
                 leg.quantity > 0
                   ? {
-                      backgroundColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)',
+                      backgroundColor: 'color-mix(in srgb, var(--color-positive) 12%, transparent)',
                       color: 'var(--color-positive)',
-                      borderColor: 'color-mix(in srgb, var(--color-positive) 20%, transparent)',
+                      borderColor: 'color-mix(in srgb, var(--color-positive) 22%, transparent)',
                     }
                   : {
-                      backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)',
+                      backgroundColor: 'color-mix(in srgb, var(--color-negative) 12%, transparent)',
                       color: 'var(--color-negative)',
-                      borderColor: 'color-mix(in srgb, var(--color-negative) 20%, transparent)',
+                      borderColor: 'color-mix(in srgb, var(--color-negative) 22%, transparent)',
                     }
               }
             >
@@ -123,79 +131,95 @@ function StrategySelectorInner() {
       </div>
 
       {/* P&L Chart */}
-      <div className="h-64 mb-4 animate-fade-in" role="img" aria-label={`P&L payoff diagram for ${strategy.name} strategy`}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={pnlData} margin={{ top: 10, right: 10, bottom: 5, left: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" vertical={false} />
-            <XAxis
-              dataKey="price"
-              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
-              tickFormatter={(v: number) => `$${v.toFixed(0)}`}
-              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
-            />
-            <YAxis
-              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
-              tickFormatter={(v: number) => `$${v.toFixed(0)}`}
-              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
-            />
-            <Tooltip
-              contentStyle={rechartsTooltipStyle}
-              formatter={(value: unknown) => [`$${Number(value).toFixed(2)}`, 'P&L']}
-              labelFormatter={(label: unknown) => `Price: $${Number(label).toFixed(2)}`}
-            />
-            <ReferenceLine y={0} stroke="var(--color-text-muted, var(--color-text-muted))" strokeDasharray="2 2" />
-            <ReferenceLine
-              x={UNDERLYING_PRICE}
-              stroke="var(--color-text-muted, var(--color-text-muted))"
-              strokeDasharray="2 2"
-              label={{ value: 'Current', position: 'top', fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 10 }}
-            />
-            {breakevens.map((be, i) => (
-              <ReferenceLine
-                key={i}
-                x={be}
-                stroke="var(--color-warning)"
-                strokeDasharray="4 4"
-                label={{ value: `BE: $${be.toFixed(0)}`, position: 'top', fill: 'var(--color-warning)', fontSize: 10 }}
+      <div
+        className="glass-slab-floating rounded-xl p-3 mb-4 animate-fade-in"
+        style={{ minHeight: 280 }}
+        role="img"
+        aria-label={`P&L payoff diagram for ${strategy.name} strategy`}
+      >
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={pnlData} margin={{ top: 10, right: 10, bottom: 5, left: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" vertical={false} />
+              <XAxis
+                dataKey="price"
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                tickFormatter={(v: number) => `$${v.toFixed(0)}`}
+                axisLine={{ stroke: 'var(--color-border)' }}
               />
-            ))}
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="profit"
-              name="P&L at Expiry"
-              stroke="var(--color-accent)"
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 4, fill: 'var(--color-accent)' }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+              <YAxis
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                tickFormatter={(v: number) => `$${v.toFixed(0)}`}
+                axisLine={{ stroke: 'var(--color-border)' }}
+              />
+              <Tooltip
+                contentStyle={rechartsTooltipStyle}
+                formatter={(value: unknown) => [`$${Number(value).toFixed(2)}`, 'P&L']}
+                labelFormatter={(label: unknown) => `Price: $${Number(label).toFixed(2)}`}
+              />
+              <ReferenceLine y={0} stroke="var(--color-text-muted)" strokeDasharray="2 2" />
+              <ReferenceLine
+                x={UNDERLYING_PRICE}
+                stroke="var(--color-text-muted)"
+                strokeDasharray="2 2"
+                label={{ value: 'Current', position: 'top', fill: 'var(--color-text-muted)', fontSize: 10 }}
+              />
+              {breakevens.map((be, i) => (
+                <ReferenceLine
+                  key={i}
+                  x={be}
+                  stroke="var(--color-warning)"
+                  strokeDasharray="4 4"
+                  label={{ value: `BE: $${be.toFixed(0)}`, position: 'top', fill: 'var(--color-warning)', fontSize: 10 }}
+                />
+              ))}
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="profit"
+                name="P&L at Expiry"
+                stroke="var(--color-accent)"
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4, fill: 'var(--color-accent)' }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Strategy Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="px-3 py-2 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
-          <div className="text-xs text-[var(--color-text-muted)]">Max Profit</div>
-          <div className="text-sm font-bold font-mono text-[var(--color-positive)]">
+        <div className="glass-slab-floating rounded-xl px-3 py-2.5">
+          <div className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Max Profit</div>
+          <div
+            className="mt-1 mono text-base font-bold tabular-nums"
+            style={{ color: 'var(--color-positive)' }}
+          >
             {maxProfit >= 1e6 ? 'Unlimited' : `$${maxProfit.toFixed(0)}`}
           </div>
         </div>
-        <div className="px-3 py-2 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
-          <div className="text-xs text-[var(--color-text-muted)]">Max Loss</div>
-          <div className="text-sm font-bold font-mono text-[var(--color-negative)]">
+        <div className="glass-slab-floating rounded-xl px-3 py-2.5">
+          <div className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Max Loss</div>
+          <div
+            className="mt-1 mono text-base font-bold tabular-nums"
+            style={{ color: 'var(--color-negative)' }}
+          >
             ${maxLoss.toFixed(0)}
           </div>
         </div>
-        <div className="px-3 py-2 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
-          <div className="text-xs text-[var(--color-text-muted)]">Breakeven</div>
-          <div className="text-sm font-bold font-mono text-[var(--color-text)]">
+        <div className="glass-slab-floating rounded-xl px-3 py-2.5">
+          <div className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Breakeven</div>
+          <div className="mt-1 mono text-base font-bold tabular-nums text-theme">
             {breakevens.length > 0 ? breakevens.map((b) => `$${b.toFixed(1)}`).join(', ') : 'N/A'}
           </div>
         </div>
-        <div className="px-3 py-2 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]">
-          <div className="text-xs text-[var(--color-text-muted)]">Net Debit</div>
-          <div className={`text-sm font-bold font-mono ${netDebit > 0 ? 'text-[var(--color-negative)]' : 'text-[var(--color-positive)]'}`}>
+        <div className="glass-slab-floating rounded-xl px-3 py-2.5">
+          <div className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Net Debit</div>
+          <div
+            className="mt-1 mono text-base font-bold tabular-nums"
+            style={{ color: netDebit > 0 ? 'var(--color-negative)' : 'var(--color-positive)' }}
+          >
             {netDebit > 0 ? `-$${netDebit.toFixed(2)}` : `+$${Math.abs(netDebit).toFixed(2)}`}
           </div>
         </div>

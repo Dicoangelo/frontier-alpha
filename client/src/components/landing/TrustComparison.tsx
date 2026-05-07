@@ -296,7 +296,7 @@ export function TrustComparison({ className = '' }: TrustComparisonProps) {
           id="why-frontier-alpha-heading"
           className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.05]"
         >
-          <span className="text-gradient-brand">Built for cognition,</span>{' '}
+          <span className="text-gradient-halo">Built for cognition,</span>{' '}
           <span className="text-theme">not just compute</span>
         </h2>
         <p className="mt-4 text-base sm:text-lg text-theme-secondary max-w-2xl mx-auto">
@@ -371,7 +371,7 @@ export function TrustComparison({ className = '' }: TrustComparisonProps) {
             </span>
             <h3
               id="trust-frontier-title"
-              className="mt-3 text-xl sm:text-2xl font-bold text-gradient-brand"
+              className="mt-3 text-xl sm:text-2xl font-bold text-gradient-halo"
             >
               Self-improving cognition
             </h3>
@@ -446,7 +446,7 @@ function MetricPillarTile({
 
   const numberClass =
     pillar.tone === 'brand'
-      ? 'text-gradient-brand'
+      ? 'text-gradient-halo'
       : pillar.tone === 'halo'
         ? 'text-gradient-halo'
         : pillar.tone === 'gold'

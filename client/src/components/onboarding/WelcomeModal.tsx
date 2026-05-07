@@ -1,5 +1,4 @@
 import { X, ArrowRight, TrendingUp, BarChart2, Bell, Zap } from 'lucide-react';
-import { Button } from '@/components/shared/Button';
 
 interface WelcomeModalProps {
   isOpen: boolean;
@@ -48,75 +47,98 @@ export function WelcomeModal({ isOpen, onClose, onStartTour, onTryDemo }: Welcom
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Modal */}
-      <div className="relative bg-[var(--color-bg)] rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-scale-in">
+      <div
+        className="glass-modal relative max-w-lg w-full rounded-2xl overflow-hidden animate-enter shadow-[0_30px_80px_-20px_rgba(123,44,255,0.45)]"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Welcome to Frontier Alpha"
+      >
+        {/* Sovereign top rail */}
+        <div className="sovereign-bar absolute top-0 left-0 right-0" />
+
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors z-10"
+          className="absolute top-4 right-4 p-2 text-white/80 hover:text-white rounded-lg transition-colors animate-press z-10"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Header with gradient */}
-        <div className="px-8 py-10 text-white" style={{ background: 'linear-gradient(to bottom right, var(--color-accent), var(--color-info))' }}>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-[var(--color-bg)]/20 rounded-xl flex items-center justify-center">
-              <TrendingUp className="w-6 h-6" />
+        {/* Header — sovereign gradient field */}
+        <div
+          className="relative px-8 py-10 text-white overflow-hidden"
+          style={{ background: 'var(--gradient-sovereign)' }}
+        >
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 opacity-40 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(circle at 20% 0%, rgba(255,255,255,0.4), transparent 60%)',
+            }}
+          />
+          <div className="relative">
+            <p className="text-[10px] mono tracking-[0.3em] uppercase text-white/80 mb-3">
+              ONBOARDING · Welcome
+            </p>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-6 h-6" />
+              </div>
+              <span className="text-lg font-semibold">Frontier Alpha</span>
             </div>
-            <span className="text-lg font-semibold">Frontier Alpha</span>
+            <h1 className="text-2xl font-bold mb-2">
+              Institutional-grade intelligence
+            </h1>
+            <p className="text-white/90 leading-relaxed">
+              See what the quants see. Understand what they will not explain.
+            </p>
           </div>
-          <h1 className="text-2xl font-bold mb-2">
-            Welcome to Institutional-Grade Intelligence
-          </h1>
-          <p className="text-[var(--color-info)]">
-            See what the quants see. Understand what they won't explain.
-          </p>
         </div>
 
         {/* Features */}
         <div className="p-6">
-          <h2 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-4">
-            What you'll get
-          </h2>
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {features.map((feature, index) => (
+          <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted mb-4">
+            What you will get
+          </p>
+          <div className="grid grid-cols-2 gap-3 mb-6 animate-stagger">
+            {features.map((feature) => (
               <div
                 key={feature.title}
-                className="p-4 bg-[var(--color-bg-tertiary)] rounded-xl hover:bg-[var(--color-bg-secondary)] transition-colors animate-fade-in-up"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="glass-slab rounded-2xl p-4 animate-enter"
               >
-                <feature.icon className="w-6 h-6 text-[var(--color-info)] mb-2" />
-                <h3 className="font-semibold text-[var(--color-text)] text-sm">{feature.title}</h3>
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">{feature.description}</p>
+                <feature.icon className="w-6 h-6 text-[var(--color-accent)] mb-2" aria-hidden="true" />
+                <h3 className="font-semibold text-theme text-sm">{feature.title}</h3>
+                <p className="text-xs text-theme-secondary leading-relaxed mt-1">{feature.description}</p>
               </div>
             ))}
           </div>
 
           {/* Actions */}
           <div className="space-y-3">
-            <Button
+            <button
               onClick={handleTryDemo}
-              fullWidth
-              rightIcon={<ArrowRight className="w-4 h-4" />}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[image:var(--gradient-sovereign)] text-white font-medium animate-press animate-lift shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:brightness-110 hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)]"
             >
               Try with Demo Portfolio
-            </Button>
-            <Button
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
               onClick={handleStartTour}
-              variant="outline"
-              fullWidth
+              className="glass-slab w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-theme animate-press animate-lift hover:border-[color:var(--color-border-hover)]"
             >
               Take a Quick Tour
-            </Button>
+            </button>
             <button
               onClick={onClose}
-              className="w-full text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] py-2"
+              className="w-full text-sm text-theme-muted hover:text-theme py-2 animate-press"
             >
               Skip for now
             </button>

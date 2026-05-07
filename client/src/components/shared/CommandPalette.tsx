@@ -140,39 +140,52 @@ export function CommandPalette() {
   return (
     <div
       role="dialog"
+      aria-modal="true"
       aria-label="Command palette"
       className="fixed inset-0 z-[100] flex items-start justify-center pt-[12vh] px-4"
       onClick={close}
     >
-      <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--color-bg)_70%,black_30%)] backdrop-blur-sm" />
+      {/* Backdrop */}
       <div
-        className="relative w-full max-w-xl rounded-sm border border-[var(--color-border)] bg-[var(--color-bg-secondary)] shadow-2xl animate-enter"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+        aria-hidden="true"
+      />
+
+      {/* Modal shell */}
+      <div
+        className="relative w-full max-w-xl glass-modal rounded-2xl overflow-hidden animate-enter"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--color-border-light)]">
-          <Search className="w-4 h-4 text-[var(--color-text-muted)] shrink-0" />
+        {/* Sovereign 3px gradient rail */}
+        <div className="sovereign-bar" aria-hidden="true" />
+
+        {/* Search input */}
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-theme">
+          <Search className="w-4 h-4 text-theme-muted shrink-0" aria-hidden="true" />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Jump to page, run command…"
-            className="flex-1 bg-transparent outline-none text-[var(--color-text)] placeholder-[var(--color-text-muted)] text-sm"
+            aria-label="Command palette search"
+            className="flex-1 bg-transparent outline-none text-theme placeholder-theme-muted text-lg mono"
           />
-          <kbd className="hidden sm:inline text-[9px] mono tracking-[0.2em] uppercase px-2 py-0.5 rounded-sm bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]">
+          <kbd className="hidden sm:inline glass-slab rounded px-2 py-0.5 mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">
             Esc
           </kbd>
         </div>
 
+        {/* Results */}
         <div ref={listRef} className="max-h-[50vh] overflow-y-auto py-1">
           {filtered.length === 0 ? (
-            <div className="px-4 py-10 text-center text-[var(--color-text-muted)] text-sm">
+            <div className="px-6 py-10 text-center text-theme-muted text-sm">
               No matches
             </div>
           ) : (
             Object.entries(grouped).map(([group, items]) => (
               <div key={group} className="py-1">
-                <div className="px-4 pt-2 pb-1 text-[9px] mono tracking-[0.35em] uppercase text-[var(--color-text-muted)]">
+                <div className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted px-6 pt-4 pb-2">
                   {group}
                 </div>
                 {items.map((item) => {
@@ -184,18 +197,22 @@ export function CommandPalette() {
                       type="button"
                       onClick={() => item.perform()}
                       onMouseMove={() => setActive(idx)}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
-                        isActive
-                          ? 'bg-[color-mix(in_srgb,var(--brand-amethyst)_14%,transparent)] text-[var(--color-text)]'
-                          : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
-                      }`}
+                      className={`
+                        w-full flex items-center gap-3 px-6 py-3 text-left text-sm
+                        transition-colors duration-150 animate-press
+                        focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset
+                        ${isActive
+                          ? 'bg-[var(--color-accent-light)] text-theme'
+                          : 'text-theme-secondary hover:text-theme'
+                        }
+                      `}
                     >
-                      <span className="shrink-0 text-[var(--color-text-muted)]">
+                      <span className="shrink-0 text-theme-muted">
                         {item.icon ?? <ArrowRight className="w-4 h-4" />}
                       </span>
                       <span className="flex-1 min-w-0 truncate">{item.label}</span>
                       {isActive && (
-                        <kbd className="text-[9px] mono tracking-[0.2em] uppercase px-2 py-0.5 rounded-sm bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]">
+                        <kbd className="glass-slab rounded px-2 py-0.5 mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">
                           ↵
                         </kbd>
                       )}
@@ -207,12 +224,17 @@ export function CommandPalette() {
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-3 px-4 py-2 border-t border-[var(--color-border-light)] text-[9px] mono tracking-[0.2em] uppercase text-[var(--color-text-muted)]">
+        {/* Footer hints */}
+        <div className="flex items-center justify-between gap-3 px-6 py-3 border-t border-theme mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">
           <span className="flex items-center gap-2">
-            <CommandIcon className="w-3 h-3" />
-            Cmd / Ctrl + K to open anywhere
+            <CommandIcon className="w-3 h-3" aria-hidden="true" />
+            <span>Cmd / Ctrl + K to open anywhere</span>
           </span>
-          <span>↑ ↓ Enter</span>
+          <span className="flex items-center gap-2">
+            <kbd className="glass-slab rounded px-2 py-0.5 mono text-[10px] text-theme-muted">↑</kbd>
+            <kbd className="glass-slab rounded px-2 py-0.5 mono text-[10px] text-theme-muted">↓</kbd>
+            <kbd className="glass-slab rounded px-2 py-0.5 mono text-[10px] text-theme-muted">↵</kbd>
+          </span>
         </div>
       </div>
     </div>

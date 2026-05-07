@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Card } from '@/components/shared/Card';
 import { useThemeStore } from '@/stores/themeStore';
 
 interface DataPoint {
@@ -414,42 +413,33 @@ export const EquityCurve = React.memo(function EquityCurve({
   };
 
   return (
-    <Card title="Portfolio Performance" className="animate-fade-in-up">
-      {/* Header metrics */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-6">
-          <div>
-            <p className="text-sm text-[var(--color-text-muted)]">Total Return</p>
-            <p className={`text-xl font-bold ${totalReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
-              {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(2)}%
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-[var(--color-text-muted)]">vs S&P 500</p>
-            <p className={`text-xl font-bold ${alpha >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
-              {alpha >= 0 ? '+' : ''}{alpha.toFixed(2)}%
-            </p>
-          </div>
-          {hoveredPoint && (
-            <div className="border-l pl-4 border-[var(--color-border)]">
-              <p className="text-sm text-[var(--color-text-muted)]">{new Date(hoveredPoint.date).toLocaleDateString()}</p>
-              <p className="text-lg font-semibold text-[var(--color-text)]">
-                ${hoveredPoint.portfolio.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-              </p>
-            </div>
-          )}
+    <section
+      className="glass-slab rounded-2xl p-4 sm:p-6 animate-enter"
+      aria-label="Portfolio Performance"
+    >
+      {/* Title row */}
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+        <div>
+          <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">
+            Equity Curve
+          </p>
+          <h3 className="text-lg font-semibold text-theme mt-1">Portfolio Performance</h3>
         </div>
 
-        {/* Timeframe selector */}
-        <div className="flex gap-1 bg-[var(--color-bg-tertiary)] rounded-lg p-1" role="group" aria-label="Chart timeframe">
+        {/* Timeframe selector — segmented control */}
+        <div
+          className="flex gap-1 glass-slab-floating rounded-lg p-1"
+          role="group"
+          aria-label="Chart timeframe"
+        >
           {(['1W', '1M', '3M', '6M', '1Y', 'YTD'] as const).map((tf) => (
             <button
               key={tf}
               onClick={() => setSelectedTimeframe(tf)}
-              className={`px-3 py-2 min-h-[36px] text-xs rounded-md transition-colors touch-manipulation ${
+              className={`px-3 py-1.5 min-h-[32px] text-[10px] mono tracking-[0.2em] uppercase rounded-md animate-press transition-[color,background-color] duration-200 touch-manipulation ${
                 selectedTimeframe === tf
-                  ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]'
-                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                  : 'text-theme-secondary hover:text-theme'
               }`}
               aria-pressed={selectedTimeframe === tf}
             >
@@ -459,8 +449,56 @@ export const EquityCurve = React.memo(function EquityCurve({
         </div>
       </div>
 
-      {/* Chart */}
-      <div ref={containerRef} className="h-64 w-full relative" role="img" aria-label={`Portfolio equity curve showing ${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(1)}% total return over ${selectedTimeframe} timeframe`}>
+      {/* Stats row */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
+        <div>
+          <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">
+            Total Return
+          </p>
+          <p
+            className="text-xl font-bold tabular-nums mt-1"
+            style={{
+              color: totalReturn >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
+            }}
+          >
+            {totalReturn >= 0 ? '+' : ''}
+            {totalReturn.toFixed(2)}%
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">
+            vs S&amp;P 500
+          </p>
+          <p
+            className="text-xl font-bold tabular-nums mt-1"
+            style={{ color: alpha >= 0 ? 'var(--color-positive)' : 'var(--color-negative)' }}
+          >
+            {alpha >= 0 ? '+' : ''}
+            {alpha.toFixed(2)}%
+          </p>
+        </div>
+        {hoveredPoint && (
+          <div className="border-l pl-3 border-theme-light col-span-2 sm:col-span-1">
+            <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">
+              {new Date(hoveredPoint.date).toLocaleDateString()}
+            </p>
+            <p className="text-lg font-semibold text-theme tabular-nums mt-1">
+              $
+              {hoveredPoint.portfolio.toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+              })}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Chart — fixed height wrapper for CLS safety */}
+      <div
+        ref={containerRef}
+        className="h-64 sm:h-72 w-full relative"
+        role="img"
+        aria-label={`Portfolio equity curve showing ${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(1)}% total return over ${selectedTimeframe} timeframe`}
+      >
         <canvas
           ref={canvasRef}
           className="w-full h-full cursor-crosshair touch-none"
@@ -474,7 +512,7 @@ export const EquityCurve = React.memo(function EquityCurve({
         {/* Tooltip near cursor */}
         {hoveredPoint && hoveredX !== null && (() => {
           const padding = { left: 60, right: 20 };
-          const tooltipWidth = 160;
+          const tooltipWidth = 168;
           // Clamp tooltip to canvas bounds
           const rawLeft = hoveredX + 12;
           const clampedLeft = Math.min(
@@ -486,14 +524,37 @@ export const EquityCurve = React.memo(function EquityCurve({
             : 0;
           return (
             <div
-              className="pointer-events-none absolute top-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg shadow-lg px-3 py-2 text-xs z-10"
+              className="pointer-events-none absolute top-2 backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-text-inverse)] border border-theme-light rounded-lg shadow-lg px-3 py-2 text-xs z-10"
               style={{ left: clampedLeft, width: tooltipWidth }}
             >
-              <p className="text-[var(--color-text-muted)] mb-1">{new Date(hoveredPoint.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-              <p className="font-semibold text-[var(--color-text)]">${hoveredPoint.portfolio.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-              <p className="text-[var(--color-text-muted)]">Benchmark: ${hoveredPoint.benchmark.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-              <p className={dailyChange >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}>
-                {dailyChange >= 0 ? '+' : ''}{dailyChange.toFixed(2)}%
+              <p className="text-[9px] mono tracking-[0.3em] uppercase opacity-70 mb-1">
+                {new Date(hoveredPoint.date).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </p>
+              <p className="font-semibold tabular-nums">
+                $
+                {hoveredPoint.portfolio.toLocaleString(undefined, {
+                  maximumFractionDigits: 0,
+                })}
+              </p>
+              <p className="opacity-70 tabular-nums text-[11px]">
+                Bench: $
+                {hoveredPoint.benchmark.toLocaleString(undefined, {
+                  maximumFractionDigits: 0,
+                })}
+              </p>
+              <p
+                className="tabular-nums font-semibold"
+                style={{
+                  color:
+                    dailyChange >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
+                }}
+              >
+                {dailyChange >= 0 ? '+' : ''}
+                {dailyChange.toFixed(2)}%
               </p>
             </div>
           );
@@ -501,16 +562,20 @@ export const EquityCurve = React.memo(function EquityCurve({
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-center gap-6 mt-4 text-sm">
+      <div className="flex items-center justify-center gap-6 mt-4">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 bg-[var(--color-info)]" />
-          <span className="text-[var(--color-text-secondary)]">Portfolio</span>
+          <div className="w-4 h-0.5 bg-[var(--color-accent)]" />
+          <span className="text-[10px] mono tracking-[0.3em] uppercase text-theme-secondary">
+            Portfolio
+          </span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 border-dashed border-t-2 border-[var(--color-text-muted)]" />
-          <span className="text-[var(--color-text-secondary)]">S&P 500</span>
+          <div className="w-4 h-0.5 border-dashed border-t-2 border-theme" />
+          <span className="text-[10px] mono tracking-[0.3em] uppercase text-theme-secondary">
+            S&amp;P 500
+          </span>
         </div>
       </div>
-    </Card>
+    </section>
   );
 });

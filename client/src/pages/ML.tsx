@@ -3,9 +3,14 @@
  *
  * Orchestrator showing current market regime, model performance
  * metrics, training history, and factor attribution waterfall chart.
+ *
+ * Layout-wrapped (see App.tsx) — page chrome (grid bg, sovereign bar)
+ * is provided by the parent Layout. This page contributes the hero,
+ * stats bar, status banner, and section grid. The visualization
+ * subcomponents under `components/ml/` are intentionally untouched.
  */
 
-import { Activity, TrendingUp, Target, Clock, RefreshCw } from 'lucide-react';
+import { Activity, TrendingUp, Target, Clock, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
 import { RegimeDetector, REGIME_CONFIG } from '@/components/ml/RegimeDetector';
 import type { RegimeState } from '@/components/ml/RegimeDetector';
@@ -13,6 +18,11 @@ import { ModelVersions } from '@/components/ml/ModelVersions';
 import type { ModelVersion } from '@/components/ml/ModelVersions';
 import { FactorAttribution } from '@/components/ml/FactorAttribution';
 import type { WaterfallBar, AttributionDriver } from '@/components/ml/FactorAttribution';
+
+// ── Tokens ──────────────────────────────────────────────────────
+
+const kickerClass =
+  'mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2';
 
 // ── MetricCard ──────────────────────────────────────────────────
 
@@ -27,14 +37,74 @@ interface MetricCardProps {
 function MetricCard({ label, value, subtitle, icon, color }: MetricCardProps) {
   const resolvedColor = color ?? 'var(--color-text)';
   return (
-    <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
-      <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: `color-mix(in srgb, ${resolvedColor} 12%, transparent)` }}>
+    <div className="glass-slab rounded-xl p-4 flex items-center gap-3 animate-enter">
+      <div
+        className="p-2.5 rounded-lg flex-shrink-0"
+        style={{ backgroundColor: `color-mix(in srgb, ${resolvedColor} 12%, transparent)` }}
+      >
         <span style={{ color: resolvedColor }}>{icon}</span>
       </div>
       <div className="min-w-0">
-        <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">{label}</p>
-        <p className="text-xl font-bold mt-0.5" style={{ color: resolvedColor }}>{value}</p>
-        {subtitle && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>}
+        <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">{label}</p>
+        <p className="text-xl font-bold mt-0.5 tabular-nums" style={{ color: resolvedColor }}>{value}</p>
+        {subtitle && <p className="text-xs text-theme-muted mt-0.5">{subtitle}</p>}
+      </div>
+    </div>
+  );
+}
+
+// ── Status Banner ───────────────────────────────────────────────
+
+type ModelTrainingStatus = 'complete' | 'training' | 'failed';
+
+interface ModelStatusBannerProps {
+  status: ModelTrainingStatus;
+  title: string;
+  message: string;
+}
+
+const statusStyles: Record<
+  ModelTrainingStatus,
+  { rail: string; icon: string; glow: string; Icon: typeof CheckCircle2 }
+> = {
+  complete: {
+    rail: 'before:bg-[var(--color-positive)]',
+    icon: 'text-[var(--color-positive)]',
+    glow: 'shadow-[0_18px_60px_-20px_rgba(16,185,129,0.45)]',
+    Icon: CheckCircle2,
+  },
+  training: {
+    rail: 'before:bg-[var(--color-warning)]',
+    icon: 'text-[var(--color-warning)]',
+    glow: 'shadow-[0_18px_60px_-20px_rgba(245,158,11,0.45)]',
+    Icon: RefreshCw,
+  },
+  failed: {
+    rail: 'before:bg-[var(--color-negative)]',
+    icon: 'text-[var(--color-negative)]',
+    glow: 'shadow-[0_18px_60px_-20px_rgba(239,68,68,0.45)]',
+    Icon: Activity,
+  },
+};
+
+function ModelStatusBanner({ status, title, message }: ModelStatusBannerProps) {
+  const style = statusStyles[status];
+  const StatusIcon = style.Icon;
+  return (
+    <div
+      className={`glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-4 ${style.glow} before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] ${style.rail}`}
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex items-start gap-3">
+        <StatusIcon
+          className={`w-5 h-5 flex-shrink-0 mt-0.5 ${style.icon} ${status === 'training' ? 'animate-spin' : ''}`}
+          aria-hidden="true"
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-theme">{title}</p>
+          <p className="text-sm mt-1 text-theme-secondary leading-relaxed">{message}</p>
+        </div>
       </div>
     </div>
   );
@@ -145,82 +215,100 @@ export function ML() {
     .map((m) => new Date(m.trainedAt).getTime())
     .reduce((a, b) => Math.max(a, b), 0);
 
+  const validatedCount = models.filter((m) => m.status === 'validated').length;
+  const bannerStatus: ModelTrainingStatus = 'complete';
+  const bannerTitle = validatedCount > 0
+    ? `${validatedCount} model${validatedCount === 1 ? '' : 's'} ready to deploy`
+    : 'All deployed models healthy';
+  const bannerMessage = validatedCount > 0
+    ? 'Validated against held-out folds. Promote to production from the Models card.'
+    : `${deployedModels.length} models in production · last trained ${new Date(lastTrained).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* ── Header ──────────────────────────────────────────────────────── */}
       <div
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up"
+        className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 animate-fade-in-up"
         style={{ animationDelay: '0ms', animationFillMode: 'both' }}
       >
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Machine Learning</h1>
-          <p className="text-[var(--color-text-muted)] mt-1">
-            Regime detection, model performance &amp; factor attribution
+          <p className={kickerClass}>
+            Machine Learning · <span className="text-[color:var(--color-accent-secondary)]">Regime &amp; Attribution</span>
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
+            <span className="text-gradient-brand">Adaptive</span>{' '}
+            <span className="text-theme">Models</span>
+          </h1>
+          <p className="mt-3 text-sm sm:text-base text-theme-secondary leading-relaxed max-w-2xl">
+            Regime detection, model performance, and factor attribution.
+            Every deployed model is fold-validated before it touches a portfolio.
           </p>
         </div>
-        <Button disabled>
-          <RefreshCw className="w-4 h-4 mr-2" />
+        <Button disabled aria-label="Retrain all models">
+          <RefreshCw className="w-4 h-4 mr-2" aria-hidden="true" />
           Retrain
         </Button>
       </div>
 
-      {/* Stats Bar */}
+      {/* ── Status Banner ───────────────────────────────────────────────── */}
       <div
-        className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up"
-        style={{ animationDelay: '50ms', animationFillMode: 'both' }}
+        className="animate-fade-in-up"
+        style={{ animationDelay: '40ms', animationFillMode: 'both' }}
       >
-        <MetricCard
-          label="Current Regime"
-          value={REGIME_CONFIG[regime.regime].label}
-          subtitle={`${Math.round(regime.confidence * 100)}% confidence`}
-          icon={<Activity className="w-4 h-4" />}
-          color={REGIME_CONFIG[regime.regime].color}
-        />
-        <MetricCard
-          label="Best Accuracy"
-          value={`${(bestAccuracy * 100).toFixed(1)}%`}
-          subtitle="Deployed model"
-          icon={<Target className="w-4 h-4" />}
-          color="var(--color-accent)"
-        />
-        <MetricCard
-          label="Sharpe Improvement"
-          value={`+${(avgSharpeImprovement * 100).toFixed(0)}%`}
-          subtitle="Avg deployed"
-          icon={<TrendingUp className="w-4 h-4" />}
-          color="var(--color-positive)"
-        />
-        <MetricCard
-          label="Last Trained"
-          value={new Date(lastTrained).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          subtitle={new Date(lastTrained).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-          icon={<Clock className="w-4 h-4" />}
-        />
+        <ModelStatusBanner status={bannerStatus} title={bannerTitle} message={bannerMessage} />
       </div>
 
-      {/* Three-section grid: Regime | Models | Attribution */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* ── Stats Bar ───────────────────────────────────────────────────── */}
+      <section
+        className="animate-fade-in-up"
+        style={{ animationDelay: '80ms', animationFillMode: 'both' }}
+      >
+        <p className={kickerClass}>Snapshot · Live</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-stagger">
+          <MetricCard
+            label="Current Regime"
+            value={REGIME_CONFIG[regime.regime].label}
+            subtitle={`${Math.round(regime.confidence * 100)}% confidence`}
+            icon={<Activity className="w-4 h-4" />}
+            color={REGIME_CONFIG[regime.regime].color}
+          />
+          <MetricCard
+            label="Best Accuracy"
+            value={`${(bestAccuracy * 100).toFixed(1)}%`}
+            subtitle="Deployed model"
+            icon={<Target className="w-4 h-4" />}
+            color="var(--color-accent)"
+          />
+          <MetricCard
+            label="Sharpe Improvement"
+            value={`+${(avgSharpeImprovement * 100).toFixed(0)}%`}
+            subtitle="Avg deployed"
+            icon={<TrendingUp className="w-4 h-4" />}
+            color="var(--color-positive)"
+          />
+          <MetricCard
+            label="Last Trained"
+            value={new Date(lastTrained).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            subtitle={new Date(lastTrained).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+            icon={<Clock className="w-4 h-4" />}
+          />
+        </div>
+      </section>
+
+      {/* ── Three-section grid: Regime | Models | Attribution ───────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-stagger">
         {/* Regime Section */}
-        <div
-          className="lg:col-span-4 animate-fade-in-up"
-          style={{ animationDelay: '100ms', animationFillMode: 'both' }}
-        >
+        <div className="lg:col-span-4 animate-enter">
           <RegimeDetector regime={regime} />
         </div>
 
         {/* Models Section */}
-        <div
-          className="lg:col-span-4 animate-fade-in-up"
-          style={{ animationDelay: '150ms', animationFillMode: 'both' }}
-        >
+        <div className="lg:col-span-4 animate-enter">
           <ModelVersions models={models} />
         </div>
 
         {/* Attribution Section */}
-        <div
-          className="lg:col-span-4 animate-fade-in-up"
-          style={{ animationDelay: '200ms', animationFillMode: 'both' }}
-        >
+        <div className="lg:col-span-4 animate-enter">
           <FactorAttribution waterfall={waterfall} topDrivers={topDrivers} />
         </div>
       </div>

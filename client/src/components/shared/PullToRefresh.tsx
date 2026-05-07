@@ -27,6 +27,7 @@ export function PullToRefresh({
 
   const progress = Math.min(pullDistance / threshold, 1);
   const rotation = progress * 360;
+  const ready = progress >= 1;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -100,29 +101,35 @@ export function PullToRefresh({
       <div
         className={`
           absolute top-0 left-0 right-0 flex items-center justify-center
+          pointer-events-none
           transition-opacity duration-200
-          ${pullDistance > 0 ? 'opacity-100' : 'opacity-0'}
+          ${pullDistance > 0 || isRefreshing ? 'opacity-100' : 'opacity-0'}
         `}
         style={{
           height: pullDistance,
           transform: `translateY(-${Math.max(0, threshold * 0.6 - pullDistance)}px)`,
         }}
+        aria-live="polite"
+        aria-label={isRefreshing ? 'Refreshing' : ready ? 'Release to refresh' : 'Pull to refresh'}
       >
         <div
           className={`
-            w-10 h-10 rounded-full bg-[var(--color-bg)] shadow-lg
-            flex items-center justify-center
+            glass-slab-floating rounded-full p-3
+            shadow-[0_8px_30px_-10px_rgba(123,44,255,0.4)]
             transition-transform duration-200
-            ${isRefreshing ? 'animate-spin' : ''}
           `}
           style={{
             transform: isRefreshing ? undefined : `rotate(${rotation}deg)`,
           }}
         >
           <RefreshCw
-            className={`w-5 h-5 ${
-              progress >= 1 ? 'text-[var(--color-info)]' : 'text-[var(--color-text-muted)]'
-            }`}
+            className={`
+              w-5 h-5
+              ${isRefreshing ? 'animate-spin text-[var(--color-accent)]' : ''}
+              ${!isRefreshing && ready ? 'text-[var(--color-accent)]' : ''}
+              ${!isRefreshing && !ready ? 'text-theme-muted' : ''}
+            `}
+            aria-hidden="true"
           />
         </div>
       </div>
@@ -131,7 +138,9 @@ export function PullToRefresh({
       <div
         style={{
           transform: `translateY(${pullDistance}px)`,
-          transition: isPulling ? 'none' : 'transform 0.3s ease-out',
+          transition: isPulling
+            ? 'none'
+            : 'transform var(--motion-duration-slow) var(--motion-ease-out)',
         }}
       >
         {children}

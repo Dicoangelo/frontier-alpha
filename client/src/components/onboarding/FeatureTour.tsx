@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
-import { Button } from '@/components/shared/Button';
 
 interface TourStep {
   id: string;
@@ -87,7 +86,7 @@ export function FeatureTour({ isActive, onComplete, onSkip }: FeatureTourProps) 
 
     // Calculate tooltip position
     const tooltipWidth = 320;
-    const tooltipHeight = 180;
+    const tooltipHeight = 200;
     const padding = 16;
 
     let top = 0;
@@ -161,7 +160,7 @@ export function FeatureTour({ isActive, onComplete, onSkip }: FeatureTourProps) 
       {/* Backdrop with spotlight */}
       <div className="fixed inset-0 z-40 pointer-events-none">
         {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
 
         {/* Spotlight cutout */}
         {highlightRect && (
@@ -182,84 +181,97 @@ export function FeatureTour({ isActive, onComplete, onSkip }: FeatureTourProps) 
       {/* Highlight ring */}
       {highlightRect && (
         <div
-          className="fixed z-50 pointer-events-none border-2 border-[var(--color-info)] rounded-xl animate-pulse-subtle"
+          className="fixed z-50 pointer-events-none border-2 border-[var(--color-accent)] rounded-xl animate-pulse-subtle"
           style={{
             top: highlightRect.top - 8,
             left: highlightRect.left - 8,
             width: highlightRect.width + 16,
             height: highlightRect.height + 16,
+            boxShadow: '0 0 40px rgba(123,44,255,0.4)',
           }}
         />
       )}
 
       {/* Tooltip */}
       <div
-        className="fixed z-50 w-80 bg-[var(--color-bg)] rounded-xl shadow-2xl animate-scale-in"
+        className="glass-modal fixed z-50 w-80 rounded-2xl overflow-hidden animate-enter shadow-[0_30px_80px_-20px_rgba(123,44,255,0.45)]"
         style={{
           top: tooltipPosition.top,
           left: tooltipPosition.left,
         }}
+        role="dialog"
+        aria-modal="true"
+        aria-label={step.title}
       >
+        {/* Sovereign top rail */}
+        <div className="sovereign-bar absolute top-0 left-0 right-0" />
+
         {/* Skip button */}
         <button
           onClick={onSkip}
-          className="absolute top-3 right-3 p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+          className="absolute top-3 right-3 p-1.5 text-theme-muted hover:text-theme rounded-lg transition-colors animate-press"
           aria-label="Skip tour"
         >
           <X className="w-4 h-4" />
         </button>
 
         <div className="p-5">
-          {/* Progress */}
-          <div className="flex items-center gap-1.5 mb-3">
+          {/* Kicker */}
+          <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted mb-3">
+            ONBOARDING · Step {currentStep + 1} / {tourSteps.length}
+          </p>
+
+          {/* Progress dots */}
+          <div className="flex items-center gap-1.5 mb-4" aria-hidden="true">
             {tourSteps.map((_, index) => (
               <div
                 key={index}
-                className={`h-1.5 rounded-full transition-all ${
+                className="h-1.5 rounded-full transition-[width,background] duration-200"
+                style={
                   index <= currentStep
-                    ? 'w-6 bg-[var(--color-info)]'
-                    : 'w-1.5 bg-[var(--color-border)]'
-                }`}
+                    ? {
+                        width: '24px',
+                        background: 'var(--gradient-sovereign)',
+                      }
+                    : {
+                        width: '6px',
+                        background: 'var(--color-bg-tertiary)',
+                      }
+                }
               />
             ))}
           </div>
 
           {/* Content */}
-          <h3 className="text-lg font-semibold text-[var(--color-text)] mb-2">
+          <h3 className="text-lg font-bold text-theme mb-2">
             {step.title}
           </h3>
-          <p className="text-[var(--color-text-secondary)] text-sm mb-4">
+          <p className="text-theme-secondary text-sm leading-relaxed mb-5">
             {step.content}
           </p>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <button
               onClick={handlePrev}
               disabled={currentStep === 0}
-              className="flex items-center gap-1 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 text-sm text-theme-muted hover:text-theme disabled:opacity-40 disabled:cursor-not-allowed animate-press px-2 py-1.5 rounded-md"
             >
               <ChevronLeft className="w-4 h-4" />
               Back
             </button>
 
-            <span className="text-xs text-[var(--color-text-muted)]">
-              {currentStep + 1} of {tourSteps.length}
-            </span>
-
-            <Button
+            <button
               onClick={handleNext}
-              size="sm"
-              rightIcon={
-                currentStep === tourSteps.length - 1 ? (
-                  <Check className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )
-              }
+              className="flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[image:var(--gradient-sovereign)] text-white text-sm font-medium animate-press animate-lift shadow-[0_4px_24px_rgba(123,44,255,0.35)] hover:brightness-110"
             >
               {currentStep === tourSteps.length - 1 ? 'Done' : 'Next'}
-            </Button>
+              {currentStep === tourSteps.length - 1 ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </button>
           </div>
         </div>
       </div>

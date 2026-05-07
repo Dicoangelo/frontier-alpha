@@ -60,7 +60,7 @@ function MetricCard({ label, value, subtitle, icon, color = 'text-[var(--color-t
   const cssColor = colorMatch ? `var(${colorMatch[1]})` : 'var(--color-text-muted)';
 
   return (
-    <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)] hover:shadow-lg transition-all duration-200 active:scale-[0.98]">
+    <div className="glass-slab rounded-xl p-4 sm:p-6 flex items-center gap-3 animate-enter animate-press transition-[border-color,box-shadow] duration-200">
       <div
         className="p-2.5 rounded-lg flex-shrink-0"
         style={{ backgroundColor: `color-mix(in srgb, ${cssColor} 12%, transparent)` }}
@@ -68,9 +68,9 @@ function MetricCard({ label, value, subtitle, icon, color = 'text-[var(--color-t
         <span style={{ color: cssColor }}>{icon}</span>
       </div>
       <div className="min-w-0">
-        <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">{label}</p>
-        <p className={`text-xl font-bold mt-0.5 ${color}`}>{value}</p>
-        {subtitle && <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>}
+        <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">{label}</p>
+        <p className={`mono tabular-nums text-xl font-bold mt-1 ${color}`}>{value}</p>
+        {subtitle && <p className="text-xs text-theme-muted mt-0.5">{subtitle}</p>}
       </div>
     </div>
   );
@@ -97,16 +97,21 @@ export function Options() {
         style={{ animationDelay: '0ms', animationFillMode: 'both' }}
       >
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Options</h1>
-          <p className="text-[var(--color-text-muted)] mt-1">
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Execution \u00B7 Options
+          </p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-theme">
+            <span className="text-gradient-brand">Options</span>
+          </h1>
+          <p className="text-sm text-theme-secondary mt-1">
             Chain, Greeks, volatility surface &amp; strategy analysis
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="px-3 py-1.5 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
-            <span className="text-xs text-[var(--color-text-muted)]">Underlying</span>
-            <span className="ml-2 text-sm font-bold text-[var(--color-text)]">{UNDERLYING_SYMBOL}</span>
-            <span className="ml-1 text-sm font-mono text-[var(--color-text-muted)]">${UNDERLYING_PRICE.toFixed(2)}</span>
+          <div className="glass-slab-floating rounded-xl px-4 py-2.5 flex items-center gap-2">
+            <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Underlying</span>
+            <span className="mono uppercase text-sm font-bold text-theme">{UNDERLYING_SYMBOL}</span>
+            <span className="mono tabular-nums text-sm text-theme-muted">${UNDERLYING_PRICE.toFixed(2)}</span>
           </div>
           <Button variant="outline" disabled>
             <RefreshCw className="w-4 h-4 mr-2" />
@@ -117,7 +122,7 @@ export function Options() {
 
       {/* Summary Stats */}
       <div
-        className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up"
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-stagger animate-fade-in-up"
         style={{ animationDelay: '50ms', animationFillMode: 'both' }}
       >
         <MetricCard
@@ -147,26 +152,27 @@ export function Options() {
         />
       </div>
 
-      {/* Tab Navigation */}
+      {/* Tab Navigation \u2014 segmented control */}
       <div
-        className="flex overflow-x-auto border-b border-[var(--color-border)] animate-fade-in-up"
+        className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] animate-fade-in-up"
         style={{ animationDelay: '100ms', animationFillMode: 'both' }}
         role="tablist"
         aria-label="Options sections"
       >
         {TABS.map((tab) => {
           const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               role="tab"
-              aria-selected={activeTab === tab.id}
+              aria-selected={isActive}
               aria-controls={`panel-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors active:scale-[0.97] min-h-[44px] ${
-                activeTab === tab.id
-                  ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
-                  : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-border)]'
+              className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md min-h-[44px] mono text-[11px] tracking-[0.2em] uppercase font-semibold animate-press transition-colors duration-200 ${
+                isActive
+                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                  : 'text-theme-secondary hover:text-theme'
               }`}
             >
               <Icon className="w-4 h-4" />

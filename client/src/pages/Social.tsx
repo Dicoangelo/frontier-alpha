@@ -22,8 +22,10 @@ import {
   Shield,
   Star,
 } from 'lucide-react';
-import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
+
+const kickerClass =
+  'text-[10px] mono tracking-[0.3em] uppercase text-theme-muted';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -155,11 +157,14 @@ function UserProfileCard({ profile, onToggleFollow }: {
   onToggleFollow: (userId: string) => void;
 }) {
   return (
-    // SOC-003: hover shadow polish
-    <Card className="hover:shadow-lg transition-shadow duration-200">
+    // SOC-003: family-aesthetic glass slab
+    <div className="glass-slab rounded-2xl p-6 animate-enter animate-lift">
       <div className="flex flex-col sm:flex-row items-start gap-4">
         {/* Avatar */}
-        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-magenta to-brand-cyan flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0 shadow-[0_8px_30px_-10px_rgba(123,44,255,0.45)]"
+          style={{ background: 'var(--gradient-sovereign)' }}
+        >
           {profile.display_name.charAt(0).toUpperCase()}
         </div>
 
@@ -167,10 +172,11 @@ function UserProfileCard({ profile, onToggleFollow }: {
           {/* Name + follow */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
             <div>
-              <h3 className="text-lg font-bold text-[var(--color-text)]">{profile.display_name}</h3>
-              <div className="flex items-center gap-3 text-sm text-[var(--color-text-muted)]">
-                <span><strong>{profile.follower_count}</strong> followers</span>
-                <span><strong>{profile.following_count}</strong> following</span>
+              <p className={kickerClass}>TRADER</p>
+              <h3 className="text-lg font-bold text-theme mt-0.5">{profile.display_name}</h3>
+              <div className="flex items-center gap-3 text-sm text-theme-secondary">
+                <span><strong className="text-theme">{profile.follower_count}</strong> followers</span>
+                <span><strong className="text-theme">{profile.following_count}</strong> following</span>
               </div>
             </div>
             <Button
@@ -180,6 +186,7 @@ function UserProfileCard({ profile, onToggleFollow }: {
                 ? <UserMinus className="w-4 h-4" aria-hidden="true" />
                 : <UserPlus className="w-4 h-4" aria-hidden="true" />}
               onClick={() => onToggleFollow(profile.user_id)}
+              className="animate-press"
               aria-label={profile.is_following ? `Unfollow ${profile.display_name}` : `Follow ${profile.display_name}`}
             >
               {profile.is_following ? 'Unfollow' : 'Follow'}
@@ -188,25 +195,25 @@ function UserProfileCard({ profile, onToggleFollow }: {
 
           {/* Bio */}
           {profile.bio && (
-            <p className="text-sm text-[var(--color-text-muted)] mb-3">{profile.bio}</p>
+            <p className="text-sm text-theme-secondary leading-relaxed mb-3">{profile.bio}</p>
           )}
 
           {/* Stats */}
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1">
               <TrendingUp className="w-4 h-4 text-[var(--color-positive)]" aria-hidden="true" />
-              <span className="text-[var(--color-positive)] font-bold">{(profile.total_return * 100).toFixed(1)}%</span>
-              <span className="text-[var(--color-text-muted)]">return</span>
+              <span className="text-[var(--color-positive)] font-bold mono">{(profile.total_return * 100).toFixed(1)}%</span>
+              <span className="text-theme-muted">return</span>
             </div>
             <div className="flex items-center gap-1">
               <Shield className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
-              <span className="text-[var(--color-accent)] font-bold">{profile.sharpe_ratio.toFixed(2)}</span>
-              <span className="text-[var(--color-text-muted)]">Sharpe</span>
+              <span className="text-[var(--color-accent)] font-bold mono">{profile.sharpe_ratio.toFixed(2)}</span>
+              <span className="text-theme-muted">Sharpe</span>
             </div>
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -241,19 +248,19 @@ function LeaderboardTab({ entries, onToggleFollow }: {
   }
 
   return (
-    <Card>
-      <div className="overflow-x-auto -mx-6">
+    <div className="glass-slab rounded-2xl p-6 animate-enter">
+      <div className="overflow-x-auto -mx-6 px-6">
         <table className="w-full text-sm min-w-[600px]">
           <thead>
-            <tr className="border-b border-[var(--color-border)]">
+            <tr className="border-b border-theme">
               {COLUMNS.map((col) => {
                 const isActive = col.sortable && col.key === sortMetric;
                 return (
                   <th
                     key={col.key}
-                    className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                      col.sortable ? 'cursor-pointer select-none hover:text-[var(--color-text)]' : ''
-                    } ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}
+                    className={`px-4 py-3 text-left text-[10px] mono tracking-[0.3em] font-medium uppercase ${
+                      col.sortable ? 'cursor-pointer select-none hover:text-theme animate-press' : ''
+                    } ${isActive ? 'text-[var(--color-accent)]' : 'text-theme-muted'}`}
                     onClick={() => handleSort(col)}
                     aria-sort={isActive ? (sortDir === 'desc' ? 'descending' : 'ascending') : undefined}
                   >
@@ -275,7 +282,7 @@ function LeaderboardTab({ entries, onToggleFollow }: {
             {sorted.map((entry) => (
               <tr
                 key={entry.user_id}
-                className="border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-bg-secondary)] transition-all duration-150"
+                className="border-b border-theme last:border-0 hover:bg-[var(--color-bg-secondary)] transition-colors duration-150"
               >
                 {/* Rank */}
                 <td className="px-4 py-3">
@@ -290,17 +297,20 @@ function LeaderboardTab({ entries, onToggleFollow }: {
                 {/* User */}
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-magenta to-brand-cyan flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                      style={{ background: 'var(--gradient-sovereign)' }}
+                    >
                       {entry.display_name.charAt(0)}
                     </div>
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-medium text-[var(--color-text)] truncate">{entry.display_name}</span>
+                      <span className="font-medium text-theme truncate">{entry.display_name}</span>
                       <button
                         onClick={() => onToggleFollow(entry.user_id)}
-                        className={`flex-shrink-0 p-1 rounded-full transition-colors min-h-[28px] min-w-[28px] flex items-center justify-center ${
+                        className={`flex-shrink-0 p-1 rounded-full transition-colors min-h-[28px] min-w-[28px] flex items-center justify-center animate-press ${
                           entry.is_following
                             ? 'text-[var(--color-accent)] hover:text-[var(--color-negative)]'
-                            : 'text-[var(--color-text-muted)] hover:text-[var(--color-accent)]'
+                            : 'text-theme-muted hover:text-[var(--color-accent)]'
                         }`}
                         aria-label={entry.is_following ? `Unfollow ${entry.display_name}` : `Follow ${entry.display_name}`}
                       >
@@ -315,7 +325,7 @@ function LeaderboardTab({ entries, onToggleFollow }: {
                 {/* Return */}
                 <td className="px-4 py-3">
                   <span
-                    className="font-mono font-bold"
+                    className="mono font-bold"
                     style={{ color: entry.total_return >= 0 ? 'var(--color-positive)' : 'var(--color-negative)' }}
                   >
                     {COLUMNS[2].format!(entry.total_return)}
@@ -323,19 +333,19 @@ function LeaderboardTab({ entries, onToggleFollow }: {
                 </td>
 
                 {/* Sharpe */}
-                <td className="px-4 py-3 font-mono text-[var(--color-text)]">
+                <td className="px-4 py-3 mono text-theme">
                   {COLUMNS[3].format!(entry.sharpe_ratio)}
                 </td>
 
                 {/* Max DD */}
                 <td className="px-4 py-3">
-                  <span className="font-mono" style={{ color: 'var(--color-negative)' }}>
+                  <span className="mono" style={{ color: 'var(--color-negative)' }}>
                     {COLUMNS[4].format!(entry.max_drawdown)}
                   </span>
                 </td>
 
                 {/* Risk-Adjusted */}
-                <td className="px-4 py-3 font-mono text-[var(--color-text)]">
+                <td className="px-4 py-3 mono text-theme">
                   {COLUMNS[5].format!(entry.risk_adjusted_return)}
                 </td>
 
@@ -347,11 +357,11 @@ function LeaderboardTab({ entries, onToggleFollow }: {
                         className="h-full rounded-full"
                         style={{
                           width: `${entry.consistency_score * 100}%`,
-                          background: 'linear-gradient(to right, var(--color-accent), var(--chart-purple))',
+                          background: 'var(--gradient-sovereign)',
                         }}
                       />
                     </div>
-                    <span className="font-mono text-xs text-[var(--color-text-muted)]">
+                    <span className="mono text-xs text-theme-muted">
                       {COLUMNS[6].format!(entry.consistency_score)}
                     </span>
                   </div>
@@ -361,23 +371,37 @@ function LeaderboardTab({ entries, onToggleFollow }: {
           </tbody>
         </table>
       </div>
-    </Card>
+    </div>
   );
 }
 
 // ── Feed Tab ───────────────────────────────────────────────────
 
 function FeedTab({ items }: { items: FeedItem[] }) {
+  if (items.length === 0) {
+    return (
+      <div className="glass-slab-floating relative overflow-hidden rounded-2xl p-12 text-center shadow-[0_18px_60px_-20px_rgba(123,44,255,0.35)]">
+        <div className="sovereign-bar absolute top-0 left-0 right-0" />
+        <Users className="w-12 h-12 text-theme-muted mx-auto mb-4" aria-hidden="true" />
+        <p className={kickerClass}>FEED</p>
+        <h3 className="text-lg font-bold text-theme mt-1 mb-2">No activity yet</h3>
+        <p className="text-theme-secondary leading-relaxed max-w-md mx-auto">
+          Follow top traders to see their portfolio updates and milestones here.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-stagger">
       {items.map((item) => {
         const config = FEED_EVENT_CONFIG[item.event_type];
         const EventIcon = config.icon;
         const relativeTime = formatRelativeTime(item.timestamp);
 
         return (
-          // SOC-003: hover shadow on feed cards
-          <Card key={item.id} className="hover:shadow-md transition-shadow duration-200">
+          // SOC-003: family glass slab card
+          <div key={item.id} className="glass-slab rounded-2xl p-5 animate-enter animate-lift">
             <div className="flex gap-3">
               {/* Event icon — SOC-001: bgColor and color applied via inline style */}
               <div
@@ -390,31 +414,34 @@ function FeedTab({ items }: { items: FeedItem[] }) {
               <div className="flex-1 min-w-0">
                 {/* Header: user + time */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-brand-magenta to-brand-cyan flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                      style={{ background: 'var(--gradient-sovereign)' }}
+                    >
                       {item.display_name.charAt(0)}
                     </div>
-                    <span className="font-semibold text-sm text-[var(--color-text)]">{item.display_name}</span>
-                    <span className="text-sm text-[var(--color-text-muted)]">{item.description}</span>
+                    <span className="font-semibold text-sm text-theme">{item.display_name}</span>
+                    <span className="text-sm text-theme-secondary">{item.description}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
+                  <div className="flex items-center gap-1 text-xs text-theme-muted mono">
                     <Clock className="w-3 h-3" aria-hidden="true" />
                     {relativeTime}
                   </div>
                 </div>
 
                 {/* Detail */}
-                <p className="text-sm text-[var(--color-text-muted)]">{item.detail}</p>
+                <p className="text-sm text-theme-secondary leading-relaxed">{item.detail}</p>
 
                 {/* Symbols */}
                 {item.symbols && item.symbols.length > 0 && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <Briefcase className="w-3 h-3 text-[var(--color-text-muted)]" aria-hidden="true" />
+                  <div className="flex items-center gap-2 mt-3">
+                    <Briefcase className="w-3 h-3 text-theme-muted" aria-hidden="true" />
                     <div className="flex flex-wrap gap-1">
                       {item.symbols.map((sym) => (
                         <span
                           key={sym}
-                          className="px-2 py-0.5 text-xs font-mono font-medium bg-[var(--color-bg-secondary)] text-[var(--color-text)] rounded-md border border-[var(--color-border)]"
+                          className="glass-slab px-2 py-0.5 text-[11px] mono font-medium text-theme rounded-md border border-theme"
                         >
                           {sym}
                         </span>
@@ -424,7 +451,7 @@ function FeedTab({ items }: { items: FeedItem[] }) {
                 )}
               </div>
             </div>
-          </Card>
+          </div>
         );
       })}
     </div>
@@ -491,22 +518,23 @@ export function Social() {
 
   return (
     <div className="space-y-6">
-      {/* Header — SOC-002: staggered entry animation delay 0ms */}
-      <div
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up"
+      {/* Header — SOC-002: staggered entry animation delay 0ms, family pattern */}
+      <header
+        className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 animate-fade-in-up"
         style={{ animationDelay: '0ms', animationFillMode: 'both' }}
       >
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Social</h1>
-          <p className="text-[var(--color-text-muted)] mt-1">
-            Top performers &amp; portfolio updates from the community
+          <p className={kickerClass}>SOCIAL · Community</p>
+          <h1 className="text-3xl lg:text-4xl font-bold text-gradient-brand mt-2">Social</h1>
+          <p className="text-theme-secondary mt-2 leading-relaxed">
+            Top performers and portfolio updates from the community.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-          <Users className="w-4 h-4" aria-hidden="true" />
-          <span>Following <strong className="text-[var(--color-text)]">{followingCount}</strong> traders</span>
+        <div className="glass-slab inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-theme-secondary self-start sm:self-end">
+          <Users className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
+          <span>Following <strong className="text-theme mono">{followingCount}</strong> traders</span>
         </div>
-      </div>
+      </header>
 
       {/* Featured Profile Card — SOC-002: staggered delay 50ms */}
       <div
@@ -525,7 +553,7 @@ export function Social() {
         className="animate-fade-in-up"
         style={{ animationDelay: '100ms', animationFillMode: 'both' }}
       >
-        <div className="flex gap-1 p-1 bg-[var(--color-bg-secondary)] rounded-lg w-fit" role="tablist" aria-label="Social tabs">
+        <div className="glass-slab flex gap-1 p-1 rounded-lg w-fit" role="tablist" aria-label="Social tabs">
           {tabs.map((tab) => {
             const TabIcon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -536,10 +564,10 @@ export function Social() {
                 aria-selected={isActive}
                 aria-controls={`tabpanel-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all min-h-[44px] ${
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-md transition-[background,color,box-shadow] duration-150 min-h-[44px] animate-press ${
                   isActive
-                    ? 'bg-[var(--color-bg)] text-[var(--color-text)] shadow-sm'
-                    : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+                    ? 'bg-[var(--color-bg)] text-theme shadow-sm'
+                    : 'text-theme-muted hover:text-theme'
                 }`}
               >
                 <TabIcon className="w-4 h-4" aria-hidden="true" />

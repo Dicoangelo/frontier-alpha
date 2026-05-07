@@ -53,18 +53,18 @@ export function MockDataBanner() {
   return (
     <div
       role="alert"
-      className="flex items-center gap-3 px-4 py-2.5 bg-[var(--color-warning)]/10 border-b border-[var(--color-warning)]/20"
+      className="glass-slab-floating relative overflow-hidden rounded-none border-y border-theme pl-5 pr-4 py-2 flex items-center justify-center gap-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-warning)] shadow-[0_2px_20px_-5px_rgba(245,158,11,0.3)]"
     >
-      <AlertTriangle className="w-4 h-4 text-[var(--color-warning)] shrink-0" />
-      <p className="text-xs sm:text-sm text-[var(--color-warning)] font-medium flex-1">
-        Demo Mode — Using simulated data. Connect API keys for live market data.
+      <AlertTriangle className="w-3.5 h-3.5 text-[var(--color-warning)] shrink-0" aria-hidden="true" />
+      <p className="mono text-[10px] sm:text-xs tracking-[0.25em] uppercase text-[var(--color-warning)] font-medium">
+        Demo Mode <span className="opacity-60">·</span> Simulated Data <span className="opacity-60">·</span> Connect API Keys for Live Market Data
       </p>
       <button
         onClick={() => setDismissed(true)}
-        className="p-1 text-[var(--color-warning)] hover:opacity-70 transition-opacity shrink-0"
+        className="p-1 text-[var(--color-warning)] hover:bg-[var(--color-bg-tertiary)] hover:opacity-80 animate-press rounded-sm transition-[opacity,background-color] duration-200 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-warning)]"
         aria-label="Dismiss mock data banner"
       >
-        <X className="w-4 h-4" />
+        <X className="w-3.5 h-3.5" />
       </button>
     </div>
   );

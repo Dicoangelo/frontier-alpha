@@ -17,8 +17,8 @@ import {
   Mail,
   ExternalLink,
   HelpCircle,
+  Keyboard,
 } from 'lucide-react';
-import { Card } from '@/components/shared/Card';
 import {
   helpSections,
   faqs,
@@ -38,6 +38,9 @@ const sectionIcons: Record<string, typeof Rocket> = {
   'earnings-oracle': Calendar,
   'alerts': Bell,
 };
+
+const kickerClass =
+  'text-[10px] mono tracking-[0.3em] uppercase text-theme-muted';
 
 export function Help() {
   const location = useLocation();
@@ -109,6 +112,11 @@ export function Help() {
     navigate('/help', { replace: true });
   };
 
+  const openShortcutsModal = () => {
+    // Trigger '?' keyboard shortcut to open the modal handled at Layout level
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: '?', shiftKey: true }));
+  };
+
   // Group FAQs by category
   const faqsByCategory = faqs.reduce((acc, faq) => {
     if (!acc[faq.category]) {
@@ -120,77 +128,85 @@ export function Help() {
 
   const markdownComponents = {
     h2: ({ children }: { children?: React.ReactNode }) => (
-      <h2 className="text-2xl font-bold text-[var(--color-text)] mt-8 mb-4 first:mt-0">{children}</h2>
+      <h2 className="text-2xl font-bold text-theme mt-8 mb-4 first:mt-0">{children}</h2>
     ),
     h3: ({ children }: { children?: React.ReactNode }) => (
-      <h3 className="text-xl font-semibold text-[var(--color-text)] mt-6 mb-3">{children}</h3>
+      <h3 className="text-xl font-semibold text-theme mt-6 mb-3">{children}</h3>
     ),
     p: ({ children }: { children?: React.ReactNode }) => (
-      <p className="text-[var(--color-text-secondary)] mb-4 leading-relaxed">{children}</p>
+      <p className="text-theme-secondary mb-4 leading-relaxed">{children}</p>
     ),
     strong: ({ children }: { children?: React.ReactNode }) => (
-      <strong className="font-semibold text-[var(--color-text)]">{children}</strong>
+      <strong className="font-semibold text-theme">{children}</strong>
     ),
     ul: ({ children }: { children?: React.ReactNode }) => (
-      <ul className="list-disc list-inside space-y-1 mb-4 text-[var(--color-text-secondary)] ml-4">{children}</ul>
+      <ul className="list-disc list-inside space-y-1 mb-4 text-theme-secondary ml-4">{children}</ul>
     ),
     li: ({ children }: { children?: React.ReactNode }) => <li>{children}</li>,
-    hr: () => <hr className="my-8 border-[var(--color-border)]" />,
+    hr: () => <hr className="my-8 border-theme" />,
   };
 
   return (
     <div className="max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
-        <div className="flex items-center gap-3 mb-2">
-          <BookOpen className="w-8 h-8 text-[var(--color-info)]" />
-          <h1 className="text-3xl font-bold text-[var(--color-text)]">Help Center</h1>
-        </div>
-        <p className="text-[var(--color-text-muted)]">
-          Learn how to use Frontier Alpha to analyze your portfolio and make better investment decisions
+      {/* Page header — family pattern */}
+      <header
+        className="mb-8 animate-fade-in-up"
+        style={{ animationDelay: '0ms', animationFillMode: 'both' }}
+      >
+        <p className={kickerClass}>HELP · Documentation</p>
+        <h1 className="text-3xl lg:text-4xl font-bold text-gradient-brand mt-2">
+          Help Center
+        </h1>
+        <p className="text-theme-secondary mt-2 leading-relaxed max-w-2xl">
+          Learn how to use Frontier Alpha to analyze your portfolio and make better investment decisions.
         </p>
-      </div>
+      </header>
 
       {/* Search */}
-      <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+      <div
+        className="mb-8 animate-fade-in-up"
+        style={{ animationDelay: '50ms', animationFillMode: 'both' }}
+      >
         <div className="relative max-w-xl">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted" aria-hidden="true" />
           <input
             type="text"
             placeholder="Search help topics, metrics, or features..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 text-lg border border-[var(--color-border)] rounded-xl focus:ring-2 focus:ring-[var(--color-info)] focus:border-[var(--color-info)] shadow-sm"
+            className="block w-full pl-12 pr-4 py-3 bg-[var(--color-bg-tertiary)] border border-theme rounded-xl text-theme placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] mono text-sm transition-[border-color,box-shadow] duration-200"
+            aria-label="Search help topics"
           />
         </div>
       </div>
 
       {/* Search Results */}
       {searchQuery && (
-        <div className="mb-8">
+        <div className="mb-8 animate-fade-in">
           {hasSearchResults ? (
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">
-                Search Results for "{searchQuery}"
+            <div className="glass-slab rounded-2xl p-6">
+              <p className={kickerClass}>SEARCH</p>
+              <h2 className="text-lg font-bold text-theme mt-1 mb-5">
+                Results for "{searchQuery}"
               </h2>
 
               {searchResults.topics.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
+                  <h3 className={`${kickerClass} mb-3`}>
                     Topics ({searchResults.topics.length})
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-2 animate-stagger">
                     {searchResults.topics.map((topic) => (
                       <button
                         key={topic.id}
                         onClick={() => selectTopic(topic)}
-                        className="w-full flex items-center gap-3 p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--color-info)_20%,transparent)] border border-transparent transition text-left"
+                        className="glass-slab w-full flex items-center gap-3 p-4 rounded-2xl hover:border-[color:var(--color-border-hover)] text-left animate-enter animate-press animate-lift"
                       >
-                        <div className="flex-1">
-                          <p className="font-medium text-[var(--color-text)]">{topic.title}</p>
-                          <p className="text-sm text-[var(--color-text-muted)]">{topic.summary}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-theme">{topic.title}</p>
+                          <p className="text-sm text-theme-secondary leading-relaxed">{topic.summary}</p>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
+                        <ChevronRight className="w-5 h-5 text-theme-muted flex-shrink-0" />
                       </button>
                     ))}
                   </div>
@@ -199,46 +215,47 @@ export function Help() {
 
               {searchResults.faqs.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
+                  <h3 className={`${kickerClass} mb-3`}>
                     FAQ ({searchResults.faqs.length})
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-3 animate-stagger">
                     {searchResults.faqs.map((faq, index) => (
-                      <div key={index} className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
-                        <p className="font-medium text-[var(--color-text)] mb-2">{faq.question}</p>
-                        <p className="text-[var(--color-text-secondary)]">{faq.answer}</p>
+                      <div key={index} className="glass-slab rounded-2xl p-4 animate-enter">
+                        <p className="font-semibold text-theme mb-2">{faq.question}</p>
+                        <p className="text-theme-secondary leading-relaxed">{faq.answer}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-            </Card>
+            </div>
           ) : (
-            <Card className="p-8 text-center">
-              <HelpCircle className="w-12 h-12 text-[var(--color-text-muted)] mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-[var(--color-text)] mb-2">No results found</h3>
-              <p className="text-[var(--color-text-muted)]">
+            <div className="glass-slab rounded-2xl p-8 text-center">
+              <HelpCircle className="w-12 h-12 text-theme-muted mx-auto mb-4" aria-hidden="true" />
+              <h3 className="text-lg font-semibold text-theme mb-2">No results found</h3>
+              <p className="text-theme-secondary leading-relaxed">
                 We could not find anything matching "{searchQuery}". Try different keywords or browse the topics below.
               </p>
-            </Card>
+            </div>
           )}
         </div>
       )}
 
       {/* Topic Detail View */}
       {selectedTopic && !searchQuery && (
-        <div className="mb-8">
+        <div className="mb-8 animate-fade-in">
           <button
             onClick={clearTopic}
-            className="flex items-center gap-2 text-[var(--color-info)] hover:text-[var(--color-info)] mb-4"
+            className="flex items-center gap-2 text-[var(--color-accent)] hover:brightness-125 mb-4 animate-press"
           >
             <ChevronRight className="w-4 h-4 rotate-180" />
             Back to all topics
           </button>
 
-          <Card className="p-8">
-            <h1 className="text-2xl font-bold text-[var(--color-text)] mb-2">{selectedTopic.title}</h1>
-            <p className="text-[var(--color-text-muted)] mb-6">{selectedTopic.summary}</p>
+          <div className="glass-slab rounded-2xl p-8">
+            <p className={kickerClass}>TOPIC</p>
+            <h1 className="text-2xl font-bold text-theme mt-1 mb-2">{selectedTopic.title}</h1>
+            <p className="text-theme-secondary leading-relaxed mb-6">{selectedTopic.summary}</p>
 
             <div className="prose prose-gray max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
@@ -248,9 +265,9 @@ export function Help() {
 
             {/* Related Topics */}
             {selectedTopic.relatedTopics && selectedTopic.relatedTopics.length > 0 && (
-              <div className="mt-8 pt-6 border-t">
-                <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Related Topics</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="mt-8 pt-6 border-t border-theme">
+                <h3 className={`${kickerClass} mb-4`}>Related Topics</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-stagger">
                   {selectedTopic.relatedTopics.map((topicId) => {
                     const result = getTopicById(topicId);
                     if (!result) return null;
@@ -259,20 +276,20 @@ export function Help() {
                       <button
                         key={topicId}
                         onClick={() => selectTopic(result.topic)}
-                        className="flex items-center gap-3 p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] transition text-left"
+                        className="glass-slab flex items-center gap-3 p-4 rounded-2xl hover:border-[color:var(--color-border-hover)] text-left animate-enter animate-press animate-lift"
                       >
-                        <div className="flex-1">
-                          <p className="font-medium text-[var(--color-text)]">{result.topic.title}</p>
-                          <p className="text-sm text-[var(--color-text-muted)]">{result.topic.summary}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-theme">{result.topic.title}</p>
+                          <p className="text-sm text-theme-secondary leading-relaxed">{result.topic.summary}</p>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+                        <ChevronRight className="w-4 h-4 text-theme-muted flex-shrink-0" />
                       </button>
                     );
                   })}
                 </div>
               </div>
             )}
-          </Card>
+          </div>
         </div>
       )}
 
@@ -280,7 +297,10 @@ export function Help() {
       {!searchQuery && !selectedTopic && (
         <>
           {/* Quick Start Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
+          <div
+            className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10 animate-stagger"
+            style={{ animationDelay: '100ms', animationFillMode: 'both' }}
+          >
             <QuickStartCard
               icon={Rocket}
               title="Getting Started"
@@ -311,100 +331,119 @@ export function Help() {
           </div>
 
           {/* Help Sections */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
+          <div
+            className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in-up"
+            style={{ animationDelay: '150ms', animationFillMode: 'both' }}
+          >
             {/* Left Column - Topics */}
             <div className="lg:col-span-2 space-y-4" id="topics">
-              <h2 className="text-xl font-bold text-[var(--color-text)] mb-4">Help Topics</h2>
+              <div className="mb-2">
+                <p className={kickerClass}>BROWSE</p>
+                <h2 className="text-xl font-bold text-theme mt-1">Help Topics</h2>
+              </div>
 
-              {helpSections.map((section) => {
-                const Icon = sectionIcons[section.id] || BookOpen;
-                const isExpanded = expandedSections.has(section.id);
+              <div className="space-y-3 animate-stagger">
+                {helpSections.map((section) => {
+                  const Icon = sectionIcons[section.id] || BookOpen;
+                  const isExpanded = expandedSections.has(section.id);
 
-                return (
-                  <Card key={section.id} className="overflow-hidden">
-                    <button
-                      onClick={() => toggleSection(section.id)}
-                      className="w-full flex items-center gap-4 p-5 hover:bg-[var(--color-bg-tertiary)] transition text-left"
-                    >
-                      <div className="w-12 h-12 bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-6 h-6 text-[var(--color-info)]" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-[var(--color-text)]">{section.title}</h3>
-                        <p className="text-sm text-[var(--color-text-muted)]">{section.description}</p>
-                      </div>
-                      {isExpanded ? (
-                        <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
-                      ) : (
-                        <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
+                  return (
+                    <div key={section.id} className="glass-slab rounded-2xl overflow-hidden animate-enter">
+                      <button
+                        onClick={() => toggleSection(section.id)}
+                        className="w-full flex items-center gap-4 p-5 hover:bg-[var(--color-bg-tertiary)] text-left animate-press"
+                        aria-expanded={isExpanded}
+                      >
+                        <div
+                          className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
+                        >
+                          <Icon className="w-6 h-6 text-[var(--color-accent)]" aria-hidden="true" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-theme">{section.title}</h3>
+                          <p className="text-sm text-theme-secondary leading-relaxed">{section.description}</p>
+                        </div>
+                        {isExpanded ? (
+                          <ChevronDown className="w-5 h-5 text-theme-muted" />
+                        ) : (
+                          <ChevronRight className="w-5 h-5 text-theme-muted" />
+                        )}
+                      </button>
+
+                      {isExpanded && (
+                        <div className="border-t border-theme bg-[var(--color-bg-tertiary)] divide-y divide-[var(--color-border-light)]">
+                          {section.topics.map((topic) => (
+                            <button
+                              key={topic.id}
+                              onClick={() => selectTopic(topic)}
+                              className="w-full flex items-center gap-3 p-4 pl-8 hover:bg-[var(--color-bg-secondary)] text-left animate-press"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-theme">{topic.title}</p>
+                                <p className="text-sm text-theme-secondary leading-relaxed">{topic.summary}</p>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-theme-muted flex-shrink-0" />
+                            </button>
+                          ))}
+                        </div>
                       )}
-                    </button>
-
-                    {isExpanded && (
-                      <div className="border-t bg-[var(--color-bg-tertiary)] divide-y divide-[var(--color-border-light)]">
-                        {section.topics.map((topic) => (
-                          <button
-                            key={topic.id}
-                            onClick={() => selectTopic(topic)}
-                            className="w-full flex items-center gap-3 p-4 pl-8 hover:bg-[var(--color-bg-secondary)] transition text-left"
-                          >
-                            <div className="flex-1">
-                              <p className="font-medium text-[var(--color-text)]">{topic.title}</p>
-                              <p className="text-sm text-[var(--color-text-muted)]">{topic.summary}</p>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </Card>
-                );
-              })}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Right Column - FAQ & Glossary */}
             <div className="space-y-6">
               {/* FAQ Section */}
               <div id="faq">
-                <h2 className="text-xl font-bold text-[var(--color-text)] mb-4">FAQ</h2>
-                <Card className="divide-y">
+                <div className="mb-3">
+                  <p className={kickerClass}>QUESTIONS</p>
+                  <h2 className="text-xl font-bold text-theme mt-1">FAQ</h2>
+                </div>
+                <div className="glass-slab rounded-2xl divide-y divide-[var(--color-border-light)] overflow-hidden">
                   {Object.entries(faqsByCategory).map(([category, categoryFaqs]) => (
                     <div key={category}>
                       <button
                         onClick={() => toggleFaqCategory(category)}
-                        className="w-full flex items-center justify-between p-4 hover:bg-[var(--color-bg-tertiary)] transition"
+                        className="w-full flex items-center justify-between p-4 hover:bg-[var(--color-bg-tertiary)] animate-press"
+                        aria-expanded={expandedFaqCategories.has(category)}
                       >
-                        <span className="font-medium text-[var(--color-text)] capitalize">{category}</span>
+                        <span className="font-medium text-theme capitalize">{category}</span>
                         {expandedFaqCategories.has(category) ? (
-                          <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
+                          <ChevronDown className="w-4 h-4 text-theme-muted" />
                         ) : (
-                          <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+                          <ChevronRight className="w-4 h-4 text-theme-muted" />
                         )}
                       </button>
                       {expandedFaqCategories.has(category) && (
                         <div className="px-4 pb-4 space-y-4">
                           {categoryFaqs.map((faq, index) => (
                             <div key={index}>
-                              <p className="font-medium text-[var(--color-text)] text-sm">{faq.question}</p>
-                              <p className="text-sm text-[var(--color-text-muted)] mt-1">{faq.answer}</p>
+                              <p className="font-medium text-theme text-sm">{faq.question}</p>
+                              <p className="text-sm text-theme-secondary leading-relaxed mt-1">{faq.answer}</p>
                             </div>
                           ))}
                         </div>
                       )}
                     </div>
                   ))}
-                </Card>
+                </div>
               </div>
 
               {/* Metric Glossary */}
               <div id="glossary">
-                <h2 className="text-xl font-bold text-[var(--color-text)] mb-4">Metric Glossary</h2>
-                <Card className="p-4">
+                <div className="mb-3">
+                  <p className={kickerClass}>REFERENCE</p>
+                  <h2 className="text-xl font-bold text-theme mt-1">Metric Glossary</h2>
+                </div>
+                <div className="glass-slab rounded-2xl p-4">
                   <div className="space-y-3">
                     {Object.entries(metricExplanations).slice(0, 6).map(([key, metric]) => (
                       <div key={key} className="pb-3 border-b border-[var(--color-border-light)] last:border-0 last:pb-0">
-                        <p className="font-medium text-[var(--color-text)] text-sm">{metric.title}</p>
-                        <p className="text-xs text-[var(--color-text-muted)] mt-1 line-clamp-2">{metric.explanation}</p>
+                        <p className="font-medium text-theme text-sm">{metric.title}</p>
+                        <p className="text-xs text-theme-secondary leading-relaxed mt-1 line-clamp-2">{metric.explanation}</p>
                       </div>
                     ))}
                   </div>
@@ -413,22 +452,25 @@ export function Help() {
                       const result = getTopicById('sharpe-volatility');
                       if (result) selectTopic(result.topic);
                     }}
-                    className="w-full mt-4 text-sm text-[var(--color-info)] hover:text-[var(--color-info)] font-medium"
+                    className="w-full mt-4 text-sm text-[var(--color-accent)] hover:brightness-125 font-medium animate-press"
                   >
                     View all metrics
                   </button>
-                </Card>
+                </div>
               </div>
 
               {/* Factor Categories */}
               <div id="factors">
-                <h2 className="text-xl font-bold text-[var(--color-text)] mb-4">Factor Categories</h2>
-                <Card className="p-4">
+                <div className="mb-3">
+                  <p className={kickerClass}>FACTORS</p>
+                  <h2 className="text-xl font-bold text-theme mt-1">Categories</h2>
+                </div>
+                <div className="glass-slab rounded-2xl p-4">
                   <div className="space-y-3">
                     {Object.entries(factorCategories).map(([key, category]) => (
                       <div key={key} className="pb-3 border-b border-[var(--color-border-light)] last:border-0 last:pb-0">
-                        <p className="font-medium text-[var(--color-text)] text-sm">{category.name}</p>
-                        <p className="text-xs text-[var(--color-text-muted)] mt-1">{category.description}</p>
+                        <p className="font-medium text-theme text-sm">{category.name}</p>
+                        <p className="text-xs text-theme-secondary leading-relaxed mt-1">{category.description}</p>
                       </div>
                     ))}
                   </div>
@@ -437,55 +479,84 @@ export function Help() {
                       const result = getTopicById('what-are-factors');
                       if (result) selectTopic(result.topic);
                     }}
-                    className="w-full mt-4 text-sm text-[var(--color-info)] hover:text-[var(--color-info)] font-medium"
+                    className="w-full mt-4 text-sm text-[var(--color-accent)] hover:brightness-125 font-medium animate-press"
                   >
                     Learn about factors
                   </button>
-                </Card>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Contact Section */}
-          <div className="mt-12 mb-8 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }} id="contact">
-            <Card className="p-8 border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]" style={{ background: 'linear-gradient(to right, color-mix(in srgb, var(--color-accent) 6%, transparent), color-mix(in srgb, var(--color-info) 6%, transparent))' }}>
+          <div
+            className="mt-12 mb-8 animate-fade-in-up"
+            style={{ animationDelay: '200ms', animationFillMode: 'both' }}
+            id="contact"
+          >
+            <div className="glass-slab-floating relative overflow-hidden rounded-2xl p-8 shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)]">
+              <div className="sovereign-bar absolute top-0 left-0 right-0" />
               <div className="text-center max-w-xl mx-auto">
-                <MessageCircle className="w-12 h-12 text-[var(--color-info)] mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-[var(--color-text)] mb-2">Still need help?</h2>
-                <p className="text-[var(--color-text-secondary)] mb-6">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)' }}
+                >
+                  <MessageCircle className="w-6 h-6 text-[var(--color-accent)]" aria-hidden="true" />
+                </div>
+                <p className={kickerClass}>SUPPORT</p>
+                <h2 className="text-2xl font-bold text-gradient-brand mt-1 mb-2">Still need help?</h2>
+                <p className="text-theme-secondary leading-relaxed mb-6">
                   Our support team is here to help. Reach out and we will get back to you as soon as possible.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <a
                     href="mailto:support@frontieralpha.com"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-info)] text-white rounded-lg hover:bg-[var(--color-info)] transition"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[image:var(--gradient-sovereign)] text-white font-medium animate-press animate-lift shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:brightness-110"
                   >
-                    <Mail className="w-5 h-5" />
+                    <Mail className="w-5 h-5" aria-hidden="true" />
                     Email Support
                   </a>
                   <a
                     href="https://twitter.com/frontieralpha"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg hover:bg-[var(--color-bg-tertiary)] transition"
+                    className="glass-slab inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-theme animate-press animate-lift hover:border-[color:var(--color-border-hover)]"
                   >
-                    <ExternalLink className="w-5 h-5" />
+                    <ExternalLink className="w-5 h-5" aria-hidden="true" />
                     Twitter / X
                   </a>
                 </div>
               </div>
-            </Card>
+            </div>
           </div>
 
           {/* Keyboard Shortcuts */}
-          <Card className="p-6 mb-8 animate-fade-in-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
-            <h2 className="text-lg font-semibold text-[var(--color-text)] mb-4">Keyboard Shortcuts</h2>
+          <section
+            className="glass-slab rounded-2xl p-6 mb-8 animate-fade-in-up"
+            style={{ animationDelay: '250ms', animationFillMode: 'both' }}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5">
+              <div>
+                <p className={kickerClass}>SHORTCUTS</p>
+                <h2 className="text-lg font-bold text-theme mt-1">Keyboard Shortcuts</h2>
+                <p className="text-sm text-theme-secondary leading-relaxed mt-1">
+                  A few quick keys to move faster.
+                </p>
+              </div>
+              <button
+                onClick={openShortcutsModal}
+                className="glass-slab inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-theme animate-press animate-lift hover:border-[color:var(--color-border-hover)] self-start"
+              >
+                <Keyboard className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
+                Open keyboard shortcuts
+              </button>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              <KeyboardShortcut keys={['?']} description="Open/close help panel" />
+              <KeyboardShortcut keys={['?']} description="Open keyboard shortcuts" />
               <KeyboardShortcut keys={['Esc']} description="Close dialogs and panels" />
               <KeyboardShortcut keys={['/']} description="Focus search (coming soon)" />
             </div>
-          </Card>
+          </section>
         </>
       )}
     </div>
@@ -507,13 +578,16 @@ function QuickStartCard({
   return (
     <button
       onClick={onClick}
-      className="p-6 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] hover:border-[color-mix(in_srgb,var(--color-info)_30%,transparent)] hover:shadow-lg transition-all text-left group"
+      className="glass-slab rounded-2xl p-6 text-left animate-enter animate-press animate-lift hover:border-[color:var(--color-border-hover)]"
     >
-      <div className="w-12 h-12 bg-[var(--color-bg-tertiary)] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-        <Icon className="w-6 h-6 text-[var(--color-info)]" />
+      <div
+        className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+        style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)' }}
+      >
+        <Icon className="w-6 h-6 text-[var(--color-accent)]" aria-hidden="true" />
       </div>
-      <h3 className="font-semibold text-[var(--color-text)] mb-1">{title}</h3>
-      <p className="text-sm text-[var(--color-text-muted)]">{description}</p>
+      <h3 className="font-semibold text-theme mb-1">{title}</h3>
+      <p className="text-sm text-theme-secondary leading-relaxed">{description}</p>
     </button>
   );
 }
@@ -526,13 +600,13 @@ function KeyboardShortcut({ keys, description }: { keys: string[]; description: 
         {keys.map((key, index) => (
           <kbd
             key={index}
-            className="px-2 py-1 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded text-sm font-mono text-[var(--color-text-secondary)]"
+            className="glass-slab rounded px-2 py-0.5 mono text-[11px] text-theme-secondary border border-theme"
           >
             {key}
           </kbd>
         ))}
       </div>
-      <span className="text-sm text-[var(--color-text-secondary)]">{description}</span>
+      <span className="text-sm text-theme-secondary">{description}</span>
     </div>
   );
 }

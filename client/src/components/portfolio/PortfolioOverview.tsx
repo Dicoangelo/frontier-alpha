@@ -1,6 +1,5 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { Card } from '@/components/shared/Card';
 import type { Portfolio } from '@/types';
 
 interface PortfolioOverviewProps {
@@ -66,19 +65,35 @@ function StatCard({
 
   return (
     <div
-      className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] animate-fade-in-up"
+      className="glass-slab rounded-xl p-4 flex items-center gap-3 animate-enter transition-[transform,box-shadow] duration-200"
       style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
     >
-      <div className="p-3 rounded-lg flex-shrink-0" style={ICON_BG_STYLES[iconBg] ?? {}}>
+      <div
+        className="p-3 rounded-lg flex-shrink-0"
+        style={ICON_BG_STYLES[iconBg] ?? {}}
+        aria-hidden="true"
+      >
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">{label}</p>
+        <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">
+          {label}
+        </p>
         <p
-          className="text-xl font-bold mt-0.5"
-          style={{ color: isPositive ? 'var(--color-positive)' : value === 0 ? 'var(--color-text)' : 'var(--color-negative)' }}
+          className="text-xl font-bold tabular-nums mt-1"
+          style={{
+            color:
+              isPositive
+                ? 'var(--color-positive)'
+                : value === 0
+                ? 'var(--color-text)'
+                : 'var(--color-negative)',
+          }}
         >
-          {prefix}{value < 0 ? '-' : ''}<span ref={countRef}>0</span>{suffix}
+          {prefix}
+          {value < 0 ? '-' : ''}
+          <span ref={countRef}>0</span>
+          {suffix}
         </p>
       </div>
     </div>
@@ -99,35 +114,68 @@ export function PortfolioOverview({ portfolio }: PortfolioOverviewProps) {
   }, [portfolio]);
 
   const heroCountRef = useCountUp(stats.totalValue, 1000);
+  const isUp = stats.dailyChange >= 0;
+  const deltaColor = isUp ? 'var(--color-positive)' : 'var(--color-negative)';
+  const deltaBg = `color-mix(in srgb, ${deltaColor} 10%, transparent)`;
 
   return (
-    <Card title="Portfolio Overview">
-      {/* Hero Value — full width, prominent */}
-      <div className="gradient-brand-subtle rounded-xl p-6 mb-5 border border-[var(--color-border-light)]">
-        <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Total Value</p>
+    <section
+      className="glass-slab rounded-2xl p-6 sm:p-8 animate-enter"
+      aria-label="Portfolio Overview"
+    >
+      {/* Kicker */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">
+          Portfolio
+        </p>
+        <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">
+          Live
+        </p>
+      </div>
+
+      {/* Hero metric */}
+      <div className="gradient-brand-subtle rounded-xl p-5 sm:p-6 mb-5 border border-theme-light">
+        <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted mb-2">
+          Total Value
+        </p>
         <div className="flex items-baseline gap-3 flex-wrap">
-          <p className="text-4xl lg:text-5xl font-bold text-[var(--color-text)] tracking-tight holo-pulse">
+          <p className="text-4xl sm:text-5xl font-black text-gradient-brand tabular-nums tracking-tight holo-pulse">
             $<span ref={heroCountRef}>0</span>
           </p>
+
+          {/* Daily change pill — type-rail pattern */}
           <span
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold"
+            className="glass-slab-floating relative inline-flex items-center gap-1.5 pl-4 pr-3 py-1 rounded-full text-xs font-semibold tabular-nums overflow-hidden before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]"
             style={{
-              backgroundColor: stats.dailyChange >= 0 ? 'color-mix(in srgb, var(--color-positive) 12%, transparent)' : 'color-mix(in srgb, var(--color-negative) 12%, transparent)',
-              color: stats.dailyChange >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
+              backgroundColor: deltaBg,
+              color: deltaColor,
+              ['--rail-color' as string]: deltaColor,
             }}
           >
-            {stats.dailyChange >= 0 ? (
+            <span
+              aria-hidden="true"
+              className="absolute left-0 top-0 bottom-0 w-[3px]"
+              style={{ backgroundColor: deltaColor }}
+            />
+            {isUp ? (
               <TrendingUp className="w-3.5 h-3.5 flex-shrink-0" />
             ) : (
               <TrendingDown className="w-3.5 h-3.5 flex-shrink-0" />
             )}
-            {stats.dailyChange >= 0 ? '+' : ''}${Math.abs(stats.dailyChange).toLocaleString(undefined, { maximumFractionDigits: 0 })} ({stats.dailyChangePercent >= 0 ? '+' : ''}{stats.dailyChangePercent.toFixed(2)}%) today
+            <span className="mono tracking-[0.1em]">
+              {isUp ? '+' : ''}$
+              {Math.abs(stats.dailyChange).toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+              })}{' '}
+              ({stats.dailyChangePercent >= 0 ? '+' : ''}
+              {stats.dailyChangePercent.toFixed(2)}%) Today
+            </span>
           </span>
         </div>
       </div>
 
-      {/* Supporting metrics — 2 column with card backgrounds */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Supporting metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 animate-stagger">
         <StatCard
           label="Unrealized P&L"
           value={stats.totalPnL}
@@ -161,6 +209,6 @@ export function PortfolioOverview({ portfolio }: PortfolioOverviewProps) {
           delay={160}
         />
       </div>
-    </Card>
+    </section>
   );
 }

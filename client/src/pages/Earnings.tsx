@@ -80,78 +80,105 @@ export function Earnings() {
   const content = (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
+      <div
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in-up"
+        style={{ animationFillMode: 'both' }}
+      >
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Earnings Calendar</h1>
-          <p className="text-[var(--color-text-muted)] mt-1">
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Execution · Earnings
+          </p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-theme">
+            <span className="text-gradient-brand">Earnings Calendar</span>
+          </h1>
+          <p className="text-sm text-theme-secondary mt-1">
             Track upcoming earnings and their expected impact on your portfolio
           </p>
         </div>
-        <select
-          value={daysAhead}
-          onChange={(e) => setDaysAhead(Number(e.target.value))}
-          className="px-4 py-2.5 min-h-[44px] border rounded-lg bg-[var(--color-bg)] text-[var(--color-text-secondary)] text-base"
-        >
-          <option value={7}>Next 7 days</option>
-          <option value={14}>Next 14 days</option>
-          <option value={30}>Next 30 days</option>
-          <option value={60}>Next 60 days</option>
-          <option value={90}>Next 90 days</option>
-        </select>
+        <div>
+          <label htmlFor="earnings-days-ahead" className="sr-only">Days ahead</label>
+          <select
+            id="earnings-days-ahead"
+            value={daysAhead}
+            onChange={(e) => setDaysAhead(Number(e.target.value))}
+            className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm"
+          >
+            <option value={7}>Next 7 days</option>
+            <option value={14}>Next 14 days</option>
+            <option value={30}>Next 30 days</option>
+            <option value={60}>Next 60 days</option>
+            <option value={90}>Next 90 days</option>
+          </select>
+        </div>
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
-        <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
-          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)' }}>
-            <Calendar className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+      <div
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-stagger animate-fade-in-up"
+        style={{ animationDelay: '50ms', animationFillMode: 'both' }}
+      >
+        <div className="glass-slab rounded-xl p-4 sm:p-6 flex items-center gap-3 animate-enter">
+          <div
+            className="p-2.5 rounded-lg flex-shrink-0"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
+          >
+            <Calendar className="w-5 h-5 text-[var(--color-accent)]" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Total Upcoming</p>
-            <p className="text-xl font-bold text-[var(--color-text)] mt-0.5">{earnings.length}</p>
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Total Upcoming</p>
+            <p className="mono tabular-nums text-xl font-bold text-theme mt-1">{earnings.length}</p>
           </div>
         </div>
         <div
-          className="flex items-center gap-3 p-4 rounded-xl border"
-          style={{
-            backgroundColor: earningsToday > 0 ? 'color-mix(in srgb, var(--color-negative) 8%, transparent)' : 'var(--color-bg-tertiary)',
-            borderColor: earningsToday > 0 ? 'color-mix(in srgb, var(--color-negative) 20%, transparent)' : 'var(--color-border-light)',
-          }}
+          className={`glass-slab rounded-xl p-4 sm:p-6 flex items-center gap-3 animate-enter relative overflow-hidden ${
+            earningsToday > 0
+              ? "before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-negative)]"
+              : ''
+          }`}
         >
-          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)' }}>
-            <AlertCircle className="w-5 h-5" style={{ color: 'var(--color-negative)' }} />
+          <div
+            className="p-2.5 rounded-lg flex-shrink-0"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)' }}
+          >
+            <AlertCircle className="w-5 h-5 text-[var(--color-negative)]" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Reporting Today</p>
-            <p className={`text-xl font-bold mt-0.5 ${earningsToday > 0 ? 'text-[var(--color-negative)]' : 'text-[var(--color-text)]'}`}>
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Reporting Today</p>
+            <p className={`mono tabular-nums text-xl font-bold mt-1 ${earningsToday > 0 ? 'text-[var(--color-negative)]' : 'text-theme'}`}>
               {earningsToday}
             </p>
           </div>
         </div>
         <div
-          className="flex items-center gap-3 p-4 rounded-xl border"
-          style={{
-            backgroundColor: earningsThisWeek > 0 ? 'color-mix(in srgb, var(--color-warning) 8%, transparent)' : 'var(--color-bg-tertiary)',
-            borderColor: earningsThisWeek > 0 ? 'color-mix(in srgb, var(--color-warning) 20%, transparent)' : 'var(--color-border-light)',
-          }}
+          className={`glass-slab rounded-xl p-4 sm:p-6 flex items-center gap-3 animate-enter relative overflow-hidden ${
+            earningsThisWeek > 0
+              ? "before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-warning)]"
+              : ''
+          }`}
         >
-          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)' }}>
-            <Calendar className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
+          <div
+            className="p-2.5 rounded-lg flex-shrink-0"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)' }}
+          >
+            <Calendar className="w-5 h-5 text-[var(--color-warning)]" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">This Week</p>
-            <p className={`text-xl font-bold mt-0.5 ${earningsThisWeek > 0 ? 'text-[var(--color-warning)]' : 'text-[var(--color-text)]'}`}>
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">This Week</p>
+            <p className={`mono tabular-nums text-xl font-bold mt-1 ${earningsThisWeek > 0 ? 'text-[var(--color-warning)]' : 'text-theme'}`}>
               {earningsThisWeek}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
-          <div className="p-2.5 rounded-lg flex-shrink-0" style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)' }}>
-            <Calendar className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
+        <div className="glass-slab rounded-xl p-4 sm:p-6 flex items-center gap-3 animate-enter">
+          <div
+            className="p-2.5 rounded-lg flex-shrink-0"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)' }}
+          >
+            <Calendar className="w-5 h-5 text-[var(--color-info)]" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Positions Tracked</p>
-            <p className="text-xl font-bold text-[var(--color-text)] mt-0.5">{symbols.length}</p>
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Positions Tracked</p>
+            <p className="mono tabular-nums text-xl font-bold text-theme mt-1">{symbols.length}</p>
           </div>
         </div>
       </div>
@@ -159,15 +186,15 @@ export function Earnings() {
       {/* Alert for imminent earnings */}
       {earningsToday > 0 && (
         <div
-          className="flex items-center gap-3 p-4 rounded-lg border animate-fade-in-up"
-          style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--color-negative) 20%, transparent)', animationDelay: '100ms' }}
+          className="glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-4 flex items-start gap-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-negative)] shadow-[0_18px_60px_-20px_rgba(239,68,68,0.45)] animate-fade-in-up"
+          style={{ animationDelay: '100ms', animationFillMode: 'both' }}
         >
-          <AlertCircle className="w-5 h-5 text-[var(--color-negative)] flex-shrink-0" />
+          <AlertCircle className="w-5 h-5 text-[var(--color-negative)] flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium text-[var(--color-negative)]">
+            <p className="mono text-[10px] tracking-[0.3em] uppercase font-semibold text-[var(--color-negative)]">
               {earningsToday} position{earningsToday > 1 ? 's' : ''} reporting today
             </p>
-            <p className="text-sm text-[var(--color-negative)]">
+            <p className="text-sm mt-1 text-theme-secondary">
               Review forecasts and consider adjusting positions before market close
             </p>
           </div>
@@ -176,10 +203,10 @@ export function Earnings() {
 
       {/* Empty State */}
       {!isLoading && symbols.length === 0 && (
-        <div className="bg-[var(--color-bg)] p-12 rounded-lg border text-center">
-          <Calendar className="w-12 h-12 mx-auto mb-4 text-[var(--color-text-muted)]" />
-          <h3 className="text-lg font-medium text-[var(--color-text)] mb-2">No positions to track</h3>
-          <p className="text-[var(--color-text-muted)]">
+        <div className="glass-slab rounded-2xl p-12 text-center">
+          <Calendar className="w-12 h-12 mx-auto mb-4 text-theme-muted" />
+          <h3 className="text-lg font-bold text-theme mb-2">No positions to track</h3>
+          <p className="text-sm text-theme-secondary">
             Add positions to your portfolio to see their upcoming earnings
           </p>
         </div>
@@ -187,7 +214,7 @@ export function Earnings() {
 
       {/* Heatmap */}
       {symbols.length > 0 && earnings.length > 0 && (
-        <div className="animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+        <div className="animate-fade-in-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
           <EarningsHeatmap
             earnings={earnings}
             onSelect={setSelectedSymbol}
@@ -198,7 +225,10 @@ export function Earnings() {
 
       {/* Main Content - Calendar + Forecast */}
       {symbols.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+        <div
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up"
+          style={{ animationDelay: '200ms', animationFillMode: 'both' }}
+        >
           <EarningsCalendar
             earnings={earnings}
             isLoading={isLoading}
@@ -217,7 +247,7 @@ export function Earnings() {
 
       {/* CVRF Belief Impact */}
       {symbols.length > 0 && (
-        <div className="animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+        <div className="animate-fade-in-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
           <BeliefImpactPanel
             earnings={earnings}
             selectedSymbol={selectedSymbol}
@@ -227,11 +257,8 @@ export function Earnings() {
 
       {/* No upcoming earnings message */}
       {!isLoading && symbols.length > 0 && earnings.length === 0 && (
-        <div
-          className="p-4 rounded-lg border"
-          style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--color-info) 20%, transparent)' }}
-        >
-          <p className="text-[var(--color-info)]">
+        <div className="glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-4 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)]">
+          <p className="text-sm text-theme-secondary">
             None of your {symbols.length} positions have earnings scheduled in the next {daysAhead} days.
           </p>
         </div>

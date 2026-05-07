@@ -37,10 +37,10 @@ function ConvictionGauge({ value, size = 64 }: ConvictionGaugeProps) {
       {fillPath && (
         <path d={fillPath} fill="none" stroke={color} strokeWidth={size * 0.09} strokeLinecap="round" />
       )}
-      <text x={cx} y={cy + size * 0.06} textAnchor="middle" fontSize={size * 0.22} fontWeight="600" fill="var(--color-text)">
+      <text x={cx} y={cy + size * 0.06} textAnchor="middle" fontSize={size * 0.22} fontWeight="600" fill="var(--color-text)" fontFamily="var(--font-mono)">
         {(value * 100).toFixed(0)}
       </text>
-      <text x={cx} y={cy + size * 0.22} textAnchor="middle" fontSize={size * 0.12} fill="var(--color-text-muted)">
+      <text x={cx} y={cy + size * 0.22} textAnchor="middle" fontSize={size * 0.12} fill="var(--color-text-muted)" fontFamily="var(--font-mono)">
         %
       </text>
     </svg>
@@ -144,9 +144,9 @@ export function BeliefImpactPanel({ earnings, selectedSymbol }: BeliefImpactPane
   if (!selectedSymbol) {
     return (
       <Card title="CVRF Belief Impact">
-        <div className="flex flex-col items-center justify-center h-48 text-[var(--color-text-muted)]">
-          <Brain className="w-10 h-10 mb-3 opacity-40" />
-          <p className="text-sm">No belief history — record decisions to build conviction</p>
+        <div className="glass-slab gradient-brand-subtle rounded-2xl flex flex-col items-center justify-center min-h-[192px] p-8 text-theme-muted">
+          <Brain className="w-10 h-10 mb-3 opacity-50" aria-hidden="true" />
+          <p className="text-sm text-theme-secondary">No belief history — record decisions to build conviction</p>
         </div>
       </Card>
     );
@@ -155,7 +155,7 @@ export function BeliefImpactPanel({ earnings, selectedSymbol }: BeliefImpactPane
   if (isLoading) {
     return (
       <Card title="CVRF Belief Impact">
-        <div className="flex items-center justify-center h-48">
+        <div className="flex items-center justify-center min-h-[192px]">
           <Spinner className="w-6 h-6" />
         </div>
       </Card>
@@ -165,9 +165,9 @@ export function BeliefImpactPanel({ earnings, selectedSymbol }: BeliefImpactPane
   if (!beliefs) {
     return (
       <Card title="CVRF Belief Impact">
-        <div className="flex flex-col items-center justify-center h-48 text-[var(--color-text-muted)]">
-          <Brain className="w-10 h-10 mb-3 opacity-40" />
-          <p className="text-sm">No belief history — record decisions to build conviction</p>
+        <div className="glass-slab gradient-brand-subtle rounded-2xl flex flex-col items-center justify-center min-h-[192px] p-8 text-theme-muted">
+          <Brain className="w-10 h-10 mb-3 opacity-50" aria-hidden="true" />
+          <p className="text-sm text-theme-secondary">No belief history — record decisions to build conviction</p>
         </div>
       </Card>
     );
@@ -182,29 +182,30 @@ export function BeliefImpactPanel({ earnings, selectedSymbol }: BeliefImpactPane
         {/* Header with mobile collapse toggle */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-[var(--color-text)]">
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Symbol · Earnings</p>
+            <p className="text-sm font-medium text-theme mt-0.5">
               {selectedSymbol} Earnings Impact
             </p>
-            <p className="text-xs text-[var(--color-text-muted)]">
+            <p className="mono tabular-nums text-xs text-theme-muted mt-1">
               Expected move: ±{((selectedEarning?.expectedMove || 0) * 100).toFixed(1)}%
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-xs text-[var(--color-text-muted)]">Regime</p>
-              <p className="text-sm font-medium capitalize text-[var(--color-text)]">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Regime</p>
+              <p className="text-sm font-medium capitalize text-theme mt-0.5 mono tabular-nums">
                 {regime} ({(regimeConfidence * 100).toFixed(0)}%)
               </p>
             </div>
             {isMobile && (
               <button
                 onClick={() => setCollapsed(c => !c)}
-                className="p-1.5 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
+                className="p-1.5 hover:bg-theme-tertiary rounded-lg transition-colors duration-200 animate-press"
                 aria-label={collapsed ? 'Expand panel' : 'Collapse panel'}
               >
                 {collapsed
-                  ? <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
-                  : <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
+                  ? <ChevronDown className="w-4 h-4 text-theme-muted" aria-hidden="true" />
+                  : <ChevronUp className="w-4 h-4 text-theme-muted" aria-hidden="true" />
                 }
               </button>
             )}
@@ -215,17 +216,17 @@ export function BeliefImpactPanel({ earnings, selectedSymbol }: BeliefImpactPane
           <>
             {/* Conviction gauge + historical accuracy */}
             {impacts.length > 0 && (
-              <div className="flex items-center gap-4 p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
+              <div className="glass-slab rounded-xl flex items-center gap-4 p-3 animate-enter">
                 <ConvictionGauge value={overallConviction} size={64} />
                 <div className="flex-1 space-y-1">
-                  <p className="text-xs font-medium text-[var(--color-text)]">Factor Conviction</p>
-                  <p className="text-xs text-[var(--color-text-muted)]">
-                    Avg. confidence across {impacts.length} earnings-sensitive factors
+                  <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme">Factor Conviction</p>
+                  <p className="text-xs text-theme-muted leading-relaxed">
+                    Avg. confidence across <span className="mono tabular-nums">{impacts.length}</span> earnings-sensitive factors
                   </p>
                   {historicalAccuracy !== null && (
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-[var(--color-text-muted)]">Regime accuracy:</span>
-                      <span className="text-xs font-mono font-medium text-[var(--color-text)]">
+                      <span className="mono text-[10px] tracking-wider uppercase text-theme-muted">Regime accuracy:</span>
+                      <span className="mono tabular-nums text-xs font-semibold text-theme">
                         {(historicalAccuracy * 100).toFixed(0)}%
                       </span>
                     </div>
@@ -236,35 +237,35 @@ export function BeliefImpactPanel({ earnings, selectedSymbol }: BeliefImpactPane
 
             {/* Factor impacts */}
             {impacts.length === 0 ? (
-              <p className="text-sm text-[var(--color-text-muted)] text-center py-4">
+              <p className="text-sm text-theme-muted text-center py-4">
                 No earnings-sensitive factors in current beliefs
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 animate-stagger">
                 {impacts.slice(0, 6).map((impact) => (
                   <div
                     key={impact.factor}
-                    className="flex items-center justify-between py-2 border-b border-[var(--color-border-light)] last:border-0"
+                    className="animate-enter flex items-center justify-between py-2 border-b border-theme-light last:border-0"
                   >
                     <div className="flex items-center gap-2">
                       {impact.direction === 'up' ? (
-                        <TrendingUp className="w-3.5 h-3.5 text-[var(--color-positive)]" />
+                        <TrendingUp className="w-3.5 h-3.5 text-[var(--color-positive)]" aria-hidden="true" />
                       ) : impact.direction === 'down' ? (
-                        <TrendingDown className="w-3.5 h-3.5 text-[var(--color-negative)]" />
+                        <TrendingDown className="w-3.5 h-3.5 text-[var(--color-negative)]" aria-hidden="true" />
                       ) : (
-                        <Minus className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
+                        <Minus className="w-3.5 h-3.5 text-theme-muted" aria-hidden="true" />
                       )}
-                      <span className="text-sm text-[var(--color-text)]">{formatFactor(impact.factor)}</span>
+                      <span className="mono text-xs tracking-wider uppercase text-theme">{formatFactor(impact.factor)}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-[var(--color-text-muted)]">
+                      <span className="mono tabular-nums text-xs text-theme-muted">
                         {impact.currentWeight.toFixed(2)}
                       </span>
-                      <span className="text-xs text-[var(--color-text-muted)]">&rarr;</span>
-                      <span className={`text-xs font-medium ${
+                      <span className="mono text-xs text-theme-muted" aria-hidden="true">&rarr;</span>
+                      <span className={`mono tabular-nums text-xs font-semibold ${
                         impact.direction === 'up' ? 'text-[var(--color-positive)]' :
                         impact.direction === 'down' ? 'text-[var(--color-negative)]' :
-                        'text-[var(--color-text-secondary)]'
+                        'text-theme-secondary'
                       }`}>
                         {(impact.currentWeight + impact.estimatedChange).toFixed(2)}
                       </span>
@@ -276,10 +277,10 @@ export function BeliefImpactPanel({ earnings, selectedSymbol }: BeliefImpactPane
 
             {/* Summary */}
             {impacts.length > 0 && (
-              <div className="pt-2 text-xs text-[var(--color-text-muted)] bg-[var(--color-bg-tertiary)] rounded-lg p-3">
+              <div className="glass-slab rounded-xl p-3 mono text-xs text-theme-muted leading-relaxed">
                 <p>
-                  {impacts.filter(i => i.direction === 'up').length} factors may strengthen,{' '}
-                  {impacts.filter(i => i.direction === 'down').length} may weaken after {selectedSymbol} reports.
+                  <span className="tabular-nums">{impacts.filter(i => i.direction === 'up').length}</span> factors may strengthen,{' '}
+                  <span className="tabular-nums">{impacts.filter(i => i.direction === 'down').length}</span> may weaken after {selectedSymbol} reports.
                   {(selectedEarning?.expectedMove || 0) >= 0.08 && (
                     <span className="text-[var(--color-warning)]"> High volatility expected.</span>
                   )}

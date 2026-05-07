@@ -1,5 +1,5 @@
 # ARCHITECTURE.md — Verified Ground Truth
-*Generated: 2026-03-25 | Scanner: arch-scanner | Source: direct file inspection*
+*Generated: 2026-03-25 | Last UI sweep: 2026-05-07 | Scanner: arch-scanner | Source: direct file inspection*
 
 ## Tech Stack (Verified)
 
@@ -219,6 +219,23 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 | `/shared/:token` | SharedPortfolio | Public | None |
 
 All heavy pages are lazy-loaded via `React.lazy()`.
+
+### Visual Design System (verified 2026-05-07 across 35 files)
+
+Aligned to the Metaventions AI family aesthetic (`metaventionsai.com` / `careers.metaventionsai.com` / `friendlyface.metaventionsai.com`). See `DESIGN-SYSTEM.md` for token-level spec.
+
+| Layer | Pattern | Used by |
+|-------|---------|---------|
+| **Surfaces** | `glass-slab` (subtle), `glass-slab-floating` (elevated), `glass-modal` (overlays) | All section cards, sheets, modals |
+| **Brand band** | `bg-[image:var(--gradient-sovereign)]` magenta→amethyst→cyan | Primary CTAs, active rails, headers |
+| **Top rail** | `sovereign-bar` 3px gradient | Every modal, page-shell top |
+| **Type rails** | 3px `before:` left rail in semantic color + matching shadow glow | Toast, ErrorBoundary, ConnectionStatus, ModelStatusBanner, banner alerts |
+| **Active route** | 3px gradient `before:` rail + `bg-[var(--color-accent-light)]` | Sidebar, MobileNav (top rail variant) |
+| **Motion** | `animate-press`, `animate-lift`, `animate-stagger`, `animate-enter`, `animate-fade-in`, `animate-slide-in-{left,right}`, `animate-pulse-subtle` | All interactive controls + overlays |
+| **Mono kicker** | `mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted` | Page headers, section labels, table headers |
+| **Anti-CLS** | `tabular-nums` on every numeric, explicit `min-h-[Npx]` on chart wrappers, size-matched skeletons | Dashboard widgets, all chart cards, all stat tiles |
+
+Form inputs use a single canonical class everywhere (focus ring + targeted transition). Buttons use `animate-press + animate-lift` instead of generic `transition-all + hover-scale` (which felt laggy and broke gradients).
 
 ### State Stores (6 — verified from `client/src/stores/`)
 

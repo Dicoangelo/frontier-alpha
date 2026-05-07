@@ -51,7 +51,7 @@ function RecommendationBadge({ rec }: { rec: string }) {
   };
 
   return (
-    <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${styles[rec] || styles.hold}`}>
+    <span className={`px-2.5 py-0.5 rounded-full mono text-[10px] tracking-[0.3em] uppercase font-semibold ${styles[rec] || styles.hold}`}>
       {rec}
     </span>
   );
@@ -67,66 +67,66 @@ function ChainStep({ step, index }: { step: TradeReasoningStep; index: number })
 
   return (
     <div
-      className={`border border-[var(--color-border)] rounded-lg overflow-hidden transition-all ${expanded ? 'shadow-sm' : ''}`}
+      className={`glass-slab-floating rounded-xl overflow-hidden transition-[box-shadow] duration-200 ${expanded ? 'shadow-md' : ''}`}
       data-testid={`chain-step-${step.step}`}
     >
       <button
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--color-bg-tertiary)] transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--color-bg-tertiary)] animate-press transition-[background-color] duration-150"
         onClick={() => setExpanded(!expanded)}
         aria-expanded={expanded}
       >
         <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${colorClass}`}>
-          <Icon className="w-4 h-4" />
+          <Icon className="w-4 h-4" aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-[var(--color-text-muted)] font-medium">
-              STEP {step.step}
+            <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted font-medium">
+              Step {step.step}
             </span>
-            <span className="text-sm font-medium text-[var(--color-text)]">{step.title}</span>
+            <span className="text-sm font-medium text-theme">{step.title}</span>
           </div>
           {!expanded && (
-            <p className="text-xs text-[var(--color-text-muted)] truncate mt-0.5">
+            <p className="text-xs leading-relaxed text-theme-muted truncate mt-0.5">
               {step.explanation.slice(0, 80)}...
             </p>
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-xs font-mono text-[var(--color-text-muted)]">
+          <span className="mono text-xs tabular-nums text-theme-muted">
             {(step.confidence * 100).toFixed(0)}%
           </span>
           {expanded ? (
-            <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
+            <ChevronUp className="w-4 h-4 text-theme-muted" aria-hidden="true" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
+            <ChevronDown className="w-4 h-4 text-theme-muted" aria-hidden="true" />
           )}
         </div>
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 space-y-3 border-t border-[var(--color-border)]">
-          <p className="text-sm text-[var(--color-text)] leading-relaxed pt-3">
+        <div className="px-4 pb-4 space-y-3 border-t border-theme-light">
+          <p className="text-sm leading-relaxed text-theme pt-3">
             {step.explanation}
           </p>
           <div className="flex justify-between items-center">
-            <span className="text-xs text-[var(--color-text-muted)]">Step confidence</span>
+            <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Step confidence</span>
             <div className="flex items-center gap-2">
               <div className="w-24 h-1.5 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-[var(--color-accent)]"
+                  className="h-full rounded-full bg-[var(--color-accent)] transition-[width] duration-500 ease-out"
                   style={{ width: `${step.confidence * 100}%` }}
                 />
               </div>
-              <span className="text-xs font-mono text-[var(--color-text-muted)]">
+              <span className="mono text-xs tabular-nums text-theme-muted">
                 {(step.confidence * 100).toFixed(0)}%
               </span>
             </div>
           </div>
           {step.dataPoints.length > 0 && (
-            <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-3 space-y-1">
+            <div className="glass-slab-floating rounded-lg p-3 space-y-1">
               {step.dataPoints.map((point, i) => (
-                <div key={i} className="flex items-start gap-1.5 text-xs text-[var(--color-text-muted)]">
-                  <span className="text-[var(--color-accent)] mt-0.5">•</span>
+                <div key={i} className="flex items-start gap-1.5 text-xs leading-relaxed text-theme-muted">
+                  <span className="text-[var(--color-accent)] mt-0.5" aria-hidden="true">•</span>
                   {point}
                 </div>
               ))}
@@ -155,45 +155,50 @@ export function TradeReasoning({ symbol, isOpen, onClose }: TradeReasoningProps)
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative min-h-full flex items-center justify-center p-4">
-        <Card className="relative w-full max-w-lg shadow-xl">
+        <Card className="relative w-full max-w-lg shadow-xl overflow-hidden">
+          <div className="sovereign-bar absolute left-0 right-0 top-0" aria-hidden="true" />
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
+          <div className="flex items-center justify-between border-b border-theme-light pb-4 mb-4 -mx-6 px-6 -mt-6 pt-7">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-[var(--color-accent)]/10 rounded-lg">
-                <Brain className="w-5 h-5 text-[var(--color-accent)]" />
+                <Brain className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-[var(--color-text)]">Why {symbol}?</h2>
-                <p className="text-xs text-[var(--color-text-muted)]">CVRF chain-of-thought reasoning</p>
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
+                  Trade Reasoning
+                </p>
+                <h2 className="mt-0.5 text-lg font-semibold text-theme">Why {symbol}?</h2>
+                <p className="text-xs text-theme-muted">CVRF chain-of-thought reasoning</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
+              className="p-2 min-h-[40px] min-w-[40px] hover:bg-[var(--color-bg-tertiary)] rounded-lg animate-press transition-[background-color] duration-200"
+              aria-label="Close trade reasoning"
             >
-              <X className="w-5 h-5 text-[var(--color-text-muted)]" />
+              <X className="w-5 h-5 text-theme-muted" aria-hidden="true" />
             </button>
           </div>
 
           {/* Content */}
-          <div className="px-6 py-5 space-y-4">
+          <div className="space-y-4">
             {isPending && (
               <div className="flex flex-col items-center justify-center h-48 gap-3">
                 <Spinner className="w-8 h-8" />
-                <p className="text-sm text-[var(--color-text-muted)]">Analyzing CVRF reasoning...</p>
+                <p className="mono text-[11px] tracking-[0.2em] uppercase text-theme-muted">Analyzing CVRF reasoning...</p>
               </div>
             )}
 
             {error && (
               <div className="text-center py-8">
-                <p className="text-sm text-[var(--color-danger)]">
+                <p className="text-sm text-[var(--color-danger)] leading-relaxed">
                   {getErrorMessage(error)}
                 </p>
                 <button
                   onClick={() => { reset(); fetchChain(symbol); }}
-                  className="mt-3 text-sm text-[var(--color-accent)] hover:underline"
+                  className="mt-3 text-sm text-[var(--color-accent)] hover:underline animate-press transition-[opacity] duration-200"
                 >
                   Try again
                 </button>
@@ -203,20 +208,20 @@ export function TradeReasoning({ symbol, isOpen, onClose }: TradeReasoningProps)
             {chain && (
               <>
                 {/* Recommendation + Overall Confidence */}
-                <div className="flex items-center justify-between p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
+                <div className="flex items-center justify-between glass-slab-floating rounded-xl p-3">
                   <div className="flex items-center gap-2">
                     <RecommendationBadge rec={chain.recommendation} />
                     {chain.cached && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] rounded">
+                      <span className="mono text-[10px] tracking-[0.2em] uppercase px-2 py-0.5 glass-slab-floating text-theme-muted rounded-full">
                         cached
                       </span>
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wide">
+                    <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
                       Overall confidence
                     </p>
-                    <p className="text-base font-semibold text-[var(--color-text)]">
+                    <p className="mt-0.5 mono text-base font-semibold tabular-nums text-theme">
                       {(chain.overallConfidence * 100).toFixed(0)}%
                     </p>
                   </div>
@@ -224,7 +229,7 @@ export function TradeReasoning({ symbol, isOpen, onClose }: TradeReasoningProps)
 
                 {/* 4-Step Chain of Thought (collapsed by default) */}
                 <div className="space-y-2">
-                  <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+                  <p className="mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-muted">
                     Chain of Thought — expand each step
                   </p>
                   {chain.steps.map((step, i) => (
@@ -250,11 +255,11 @@ export function WhyButton({ symbol, onClick }: { symbol: string; onClick: (symbo
         e.stopPropagation();
         onClick(symbol);
       }}
-      className="p-1.5 min-w-[44px] min-h-[44px] text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 rounded-lg flex items-center justify-center gap-1 text-xs font-medium transition-colors"
+      className="p-1.5 min-w-[44px] min-h-[44px] text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 rounded-lg flex items-center justify-center gap-1 mono text-[10px] tracking-[0.2em] uppercase font-medium animate-press transition-[background-color] duration-200"
       title={`Why ${symbol}?`}
       aria-label={`Explain ${symbol} reasoning`}
     >
-      <Brain className="w-4 h-4" />
+      <Brain className="w-4 h-4" aria-hidden="true" />
       Why?
     </button>
   );

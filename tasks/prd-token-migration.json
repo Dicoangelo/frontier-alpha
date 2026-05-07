@@ -26,7 +26,8 @@
       ],
       "status": "done",
       "dependsOn": [],
-      "completionNotes": "Audit (TOKEN-001) ran across client/src/pages + components \u2014 found only 5 hex instances outside token definition files (all in Button.tsx focus rings / primary gradient, all introduced in same sprint). No systemic token debt. TOKEN-002: added --brand-{amethyst,cyan,magenta,teal,gold} and --gradient-sovereign tokens to :root + .dark in index.css, and migrated Button.tsx primary/secondary/ghost/outline variants from hex literals to var(--brand-amethyst) + var(--gradient-sovereign). Theme-invariant brand tokens live at :root level."
+      "completionNotes": "Audit (TOKEN-001) ran across client/src/pages + components \u2014 found only 5 hex instances outside token definition files (all in Button.tsx focus rings / primary gradient, all introduced in same sprint). No systemic token debt. TOKEN-002: added --brand-{amethyst,cyan,magenta,teal,gold} and --gradient-sovereign tokens to :root + .dark in index.css, and migrated Button.tsx primary/secondary/ghost/outline variants from hex literals to var(--brand-amethyst) + var(--gradient-sovereign). Theme-invariant brand tokens live at :root level.",
+      "notes": "PR #3 (Round 1) confirmed: Button.tsx + Landing CTAs now consume the sovereign-gradient token. PR #3 (Round 2) replaced rogue --color-info blue on the ErrorBoundary Try Again button with sovereign-gradient. Audit complete \u2014 no fresh hex debt introduced. Confirmed 2026-05-07."
     },
     {
       "id": "TOKEN-002",
@@ -47,7 +48,8 @@
       "dependsOn": [
         "TOKEN-001"
       ],
-      "completionNotes": "Audit (TOKEN-001) ran across client/src/pages + components \u2014 found only 5 hex instances outside token definition files (all in Button.tsx focus rings / primary gradient, all introduced in same sprint). No systemic token debt. TOKEN-002: added --brand-{amethyst,cyan,magenta,teal,gold} and --gradient-sovereign tokens to :root + .dark in index.css, and migrated Button.tsx primary/secondary/ghost/outline variants from hex literals to var(--brand-amethyst) + var(--gradient-sovereign). Theme-invariant brand tokens live at :root level."
+      "completionNotes": "Audit (TOKEN-001) ran across client/src/pages + components \u2014 found only 5 hex instances outside token definition files (all in Button.tsx focus rings / primary gradient, all introduced in same sprint). No systemic token debt. TOKEN-002: added --brand-{amethyst,cyan,magenta,teal,gold} and --gradient-sovereign tokens to :root + .dark in index.css, and migrated Button.tsx primary/secondary/ghost/outline variants from hex literals to var(--brand-amethyst) + var(--gradient-sovereign). Theme-invariant brand tokens live at :root level.",
+      "notes": "PR #3 + PR #4 confirmed brand tokens travel everywhere: Pricing border-sovereign on Pro tier (Round 3), Toast 3px type-colored rail (Round 1), Sidebar 3px sovereign-gradient before: rail (Round 3), MobileNav sovereign-gradient top rail (Round 4), CommandPalette sovereign-bar (Round 4), and family heroes / segmented controls / sovereign-gradient CTAs across CVRF/Backtest/ML/Trading/Options/Earnings/Tax/Help/Social (Round 5). Confirmed 2026-05-07."
     },
     {
       "id": "TOKEN-003",
@@ -68,7 +70,8 @@
       "dependsOn": [
         "TOKEN-002"
       ],
-      "completionNotes": "Verified via grep \u2014 zero hex literals remain in Options.tsx, Trading.tsx, CVRF.tsx, or their subcomponent directories (options/, trading/, cvrf/). Prior UX optimization rounds (rounds 3-6, see commit log through 2026-04-22) already completed this migration to CSS variables. The only remaining hex in the entire client/src is 1 CSS fallback (var(--color-text-inverse, #fff) in GreeksHeatmap) \u2014 acceptable."
+      "completionNotes": "Verified via grep \u2014 zero hex literals remain in Options.tsx, Trading.tsx, CVRF.tsx, or their subcomponent directories (options/, trading/, cvrf/). Prior UX optimization rounds (rounds 3-6, see commit log through 2026-04-22) already completed this migration to CSS variables. The only remaining hex in the entire client/src is 1 CSS fallback (var(--color-text-inverse, #fff) in GreeksHeatmap) \u2014 acceptable.",
+      "notes": "PR #4 (Round 5) reinforced: Options page chrome aligned to family aesthetic \u2014 family hero, segmented controls, mono uppercase tables, sovereign-gradient CTAs, glass-modal on every overlay with sovereign-bar at top. Token discipline preserved (zero new hex). Confirmed 2026-05-07."
     },
     {
       "id": "TOKEN-004",
@@ -89,7 +92,8 @@
       "dependsOn": [
         "TOKEN-002"
       ],
-      "completionNotes": "Verified via grep \u2014 zero hex literals remain in Options.tsx, Trading.tsx, CVRF.tsx, or their subcomponent directories (options/, trading/, cvrf/). Prior UX optimization rounds (rounds 3-6, see commit log through 2026-04-22) already completed this migration to CSS variables. The only remaining hex in the entire client/src is 1 CSS fallback (var(--color-text-inverse, #fff) in GreeksHeatmap) \u2014 acceptable."
+      "completionNotes": "Verified via grep \u2014 zero hex literals remain in Options.tsx, Trading.tsx, CVRF.tsx, or their subcomponent directories (options/, trading/, cvrf/). Prior UX optimization rounds (rounds 3-6, see commit log through 2026-04-22) already completed this migration to CSS variables. The only remaining hex in the entire client/src is 1 CSS fallback (var(--color-text-inverse, #fff) in GreeksHeatmap) \u2014 acceptable.",
+      "notes": "PR #4 (Round 5) reinforced: Trading page chrome aligned to family aesthetic \u2014 family hero, segmented controls, mono uppercase tables, sovereign-gradient CTAs, glass-modal overlays with sovereign-bar. Token discipline preserved. Confirmed 2026-05-07."
     },
     {
       "id": "TOKEN-005",
@@ -108,7 +112,8 @@
       "dependsOn": [
         "TOKEN-002"
       ],
-      "completionNotes": "Verified via grep \u2014 zero hex literals remain in Options.tsx, Trading.tsx, CVRF.tsx, or their subcomponent directories (options/, trading/, cvrf/). Prior UX optimization rounds (rounds 3-6, see commit log through 2026-04-22) already completed this migration to CSS variables. The only remaining hex in the entire client/src is 1 CSS fallback (var(--color-text-inverse, #fff) in GreeksHeatmap) \u2014 acceptable."
+      "completionNotes": "Verified via grep \u2014 zero hex literals remain in Options.tsx, Trading.tsx, CVRF.tsx, or their subcomponent directories (options/, trading/, cvrf/). Prior UX optimization rounds (rounds 3-6, see commit log through 2026-04-22) already completed this migration to CSS variables. The only remaining hex in the entire client/src is 1 CSS fallback (var(--color-text-inverse, #fff) in GreeksHeatmap) \u2014 acceptable.",
+      "notes": "PR #4 (Round 5) reinforced: CVRF page chrome aligned to family aesthetic \u2014 family hero, segmented controls, mono uppercase tables, sovereign-gradient CTAs, glass-modal overlays with sovereign-bar. Token discipline preserved. Confirmed 2026-05-07."
     },
     {
       "id": "TOKEN-006",

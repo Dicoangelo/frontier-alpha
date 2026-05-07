@@ -32,9 +32,12 @@ interface RecordDecisionModalProps {
 const ACTION_OPTIONS = [
   { value: 'buy', label: 'Buy', icon: TrendingUp, color: 'text-[var(--color-positive)] bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)]' },
   { value: 'sell', label: 'Sell', icon: TrendingDown, color: 'text-[var(--color-negative)] bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]' },
-  { value: 'hold', label: 'Hold', icon: Minus, color: 'text-[var(--color-text-secondary)] bg-[var(--color-bg-tertiary)] border-[var(--color-border)]' },
+  { value: 'hold', label: 'Hold', icon: Minus, color: 'text-theme-secondary bg-[var(--color-bg-tertiary)] border-[var(--color-border)]' },
   { value: 'rebalance', label: 'Rebalance', icon: RotateCcw, color: 'text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]' },
 ] as const;
+
+const inputClass =
+  'w-full px-3 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-bg)] text-theme text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-[box-shadow,border-color] duration-150';
 
 function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModalProps) {
   const [symbol, setSymbol] = useState('');
@@ -102,16 +105,19 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-[var(--color-bg)] rounded-xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2">
-          <PlusCircle className="w-5 h-5 text-[var(--color-accent)]" />
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="glass-slab-floating rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto animate-enter">
+        <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+          New Decision
+        </p>
+        <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
+          <PlusCircle className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
           Record Trading Decision
         </h3>
 
         {/* Symbol */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+          <label className="block text-sm font-medium text-theme-secondary mb-1">
             Symbol <span className="text-[var(--color-negative)]">*</span>
           </label>
           <input
@@ -119,13 +125,13 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
             placeholder="e.g., AAPL, NVDA, TSLA"
             value={symbol}
             onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-            className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] font-mono"
+            className={`${inputClass} mono tracking-[0.05em]`}
           />
         </div>
 
         {/* Action */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+          <label className="block text-sm font-medium text-theme-secondary mb-2">
             Action <span className="text-[var(--color-negative)]">*</span>
           </label>
           <div className="grid grid-cols-4 gap-2">
@@ -137,14 +143,15 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
                   key={opt.value}
                   type="button"
                   onClick={() => setAction(opt.value)}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
+                  className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 animate-press transition-[background-color,border-color,color] duration-150 ${
                     isSelected
                       ? opt.color + ' border-current'
-                      : 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-border)]'
+                      : 'bg-[var(--color-bg)] border-[var(--color-border)] text-theme-muted hover:border-[var(--color-border)]'
                   }`}
+                  aria-pressed={isSelected}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="text-xs font-medium">{opt.label}</span>
+                  <Icon className="w-5 h-5" aria-hidden="true" />
+                  <span className="mono text-[10px] tracking-[0.2em] uppercase">{opt.label}</span>
                 </button>
               );
             })}
@@ -154,7 +161,7 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
         {/* Weights */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+            <label className="block text-sm font-medium text-theme-secondary mb-1">
               Weight Before (%)
             </label>
             <input
@@ -165,11 +172,11 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
               placeholder="e.g., 5.0"
               value={weightBefore}
               onChange={(e) => setWeightBefore(e.target.value)}
-              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+              className={`${inputClass} tabular-nums`}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+            <label className="block text-sm font-medium text-theme-secondary mb-1">
               Weight After (%)
             </label>
             <input
@@ -180,15 +187,15 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
               placeholder="e.g., 10.0"
               value={weightAfter}
               onChange={(e) => setWeightAfter(e.target.value)}
-              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+              className={`${inputClass} tabular-nums`}
             />
           </div>
         </div>
 
         {/* Confidence Slider */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
-            Confidence: <span className="text-[var(--color-accent)] font-bold">{confidence}%</span>
+          <label className="block text-sm font-medium text-theme-secondary mb-1">
+            Confidence: <span className="text-[var(--color-accent)] font-bold tabular-nums">{confidence}%</span>
           </label>
           <input
             type="range"
@@ -197,9 +204,9 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
             step="5"
             value={confidence}
             onChange={(e) => setConfidence(e.target.value)}
-            className="w-full h-2 bg-[var(--color-border)] rounded-lg appearance-none cursor-pointer accent-indigo-600"
+            className="w-full h-2 bg-[var(--color-border)] rounded-lg appearance-none cursor-pointer accent-[var(--color-accent)]"
           />
-          <div className="flex justify-between text-xs text-[var(--color-text-muted)] mt-1">
+          <div className="flex justify-between mono text-[10px] tracking-[0.2em] uppercase text-theme-muted mt-1">
             <span>Low</span>
             <span>Medium</span>
             <span>High</span>
@@ -208,7 +215,7 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
 
         {/* Reason */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+          <label className="block text-sm font-medium text-theme-secondary mb-1">
             Reason <span className="text-[var(--color-negative)]">*</span>
           </label>
           <textarea
@@ -216,15 +223,20 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] resize-none"
+            className={`${inputClass} resize-none`}
           />
         </div>
 
         {/* Error */}
         {error && (
-          <div className="mb-4 p-3 bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)] rounded-lg text-sm flex items-center gap-2">
-            <AlertCircle className="w-4 h-4" />
-            {error}
+          <div
+            className="mb-4 glass-slab-floating relative overflow-hidden rounded-xl pl-4 pr-3 py-3 shadow-[0_18px_60px_-20px_rgba(239,68,68,0.45)] before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-negative)]"
+            role="alert"
+          >
+            <div className="flex items-center gap-2 text-[var(--color-negative)] text-sm">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+              {error}
+            </div>
           </div>
         )}
 
@@ -233,23 +245,23 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
           <button
             onClick={handleClose}
             disabled={recordDecision.isPending}
-            className="flex-1 px-4 py-2.5 border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg text-sm font-medium hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 glass-slab-floating rounded-lg text-sm font-medium text-theme-secondary hover:text-theme animate-press transition-[color,background-color] duration-150 disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={recordDecision.isPending}
-            className="flex-1 px-4 py-2.5 bg-[var(--color-accent)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-accent)] disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2.5 bg-[image:var(--gradient-sovereign)] text-white rounded-lg text-sm font-medium animate-press animate-lift transition-[transform,box-shadow] duration-200 disabled:opacity-50 flex items-center justify-center gap-2 shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)]"
           >
             {recordDecision.isPending ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
+                <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
                 Recording...
               </>
             ) : (
               <>
-                <CheckCircle className="w-4 h-4" />
+                <CheckCircle className="w-4 h-4" aria-hidden="true" />
                 Record Decision
               </>
             )}
@@ -294,85 +306,89 @@ function CloseEpisodeModal({ isOpen, onClose, onConfirm, isClosing }: CloseEpiso
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-[var(--color-bg)] rounded-xl p-6 w-full max-w-md shadow-xl">
-        <h3 className="text-lg font-semibold text-[var(--color-text)] mb-4">Close Episode</h3>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="glass-slab-floating rounded-2xl p-6 w-full max-w-md shadow-2xl animate-enter">
+        <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+          Wrap Episode
+        </p>
+        <h3 className="text-lg font-semibold text-theme mb-4">Close Episode</h3>
 
         {/* Performance Metrics */}
         <div className="space-y-3 mb-4">
           <div>
-            <label className="block text-sm text-[var(--color-text-secondary)] mb-1">Portfolio Return (%)</label>
+            <label className="block text-sm text-theme-secondary mb-1">Portfolio Return (%)</label>
             <input
               type="number"
               step="0.01"
               placeholder="e.g., 2.5"
               value={portfolioReturn}
               onChange={(e) => setPortfolioReturn(e.target.value)}
-              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+              className={`${inputClass} tabular-nums`}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-[var(--color-text-secondary)] mb-1">Sharpe Ratio</label>
+              <label className="block text-sm text-theme-secondary mb-1">Sharpe Ratio</label>
               <input
                 type="number"
                 step="0.01"
                 placeholder="e.g., 1.5"
                 value={sharpeRatio}
                 onChange={(e) => setSharpeRatio(e.target.value)}
-                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                className={`${inputClass} tabular-nums`}
               />
             </div>
             <div>
-              <label className="block text-sm text-[var(--color-text-secondary)] mb-1">Max Drawdown (%)</label>
+              <label className="block text-sm text-theme-secondary mb-1">Max Drawdown (%)</label>
               <input
                 type="number"
                 step="0.01"
                 placeholder="e.g., -5.0"
                 value={maxDrawdown}
                 onChange={(e) => setMaxDrawdown(e.target.value)}
-                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+                className={`${inputClass} tabular-nums`}
               />
             </div>
           </div>
         </div>
 
         {/* Run CVRF Cycle Toggle */}
-        <div className="flex items-center gap-3 p-3 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-lg mb-4">
+        <label
+          htmlFor="runCycle"
+          className="flex items-center gap-3 p-3 glass-slab-floating rounded-xl mb-4 cursor-pointer animate-press transition-[background-color] duration-150"
+        >
           <input
             type="checkbox"
             id="runCycle"
             checked={runCycle}
             onChange={(e) => setRunCycle(e.target.checked)}
-            className="w-4 h-4 text-[var(--color-accent)] rounded focus:ring-[var(--color-accent)]"
+            className="w-4 h-4 accent-[var(--color-accent)] rounded"
           />
-          <label htmlFor="runCycle" className="text-sm text-[var(--color-text-secondary)]">
-            Run CVRF cycle to update beliefs
-          </label>
-        </div>
+          <span className="text-sm text-theme-secondary">Run CVRF cycle to update beliefs</span>
+        </label>
 
         {/* Actions */}
         <div className="flex gap-3">
           <button
             onClick={onClose}
             disabled={isClosing}
-            className="flex-1 px-4 py-2 border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg text-sm font-medium hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50"
+            className="flex-1 px-4 py-2 glass-slab-floating rounded-lg text-sm font-medium text-theme-secondary hover:text-theme animate-press transition-[color,background-color] duration-150 disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={isClosing}
-            className="flex-1 px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-accent)] disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2 bg-[image:var(--gradient-sovereign)] text-white rounded-lg text-sm font-medium animate-press animate-lift transition-[transform,box-shadow] duration-200 disabled:opacity-50 flex items-center justify-center gap-2 shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)]"
           >
             {isClosing ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
+                <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
                 Closing...
               </>
             ) : (
               <>
-                <StopCircle className="w-4 h-4" />
+                <StopCircle className="w-4 h-4" aria-hidden="true" />
                 Close Episode
               </>
             )}
@@ -436,14 +452,19 @@ export function CVRFEpisodeControls() {
 
   if (isLoading) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-4 animate-shimmer">
+      <div className="glass-slab rounded-2xl p-4 sm:p-6 animate-shimmer">
         <div className="h-10 bg-[var(--color-border)] rounded-lg" />
       </div>
     );
   }
 
+  // Result rail accents (Toast pattern)
+  const resultRail = result?.type === 'success'
+    ? { rail: 'before:bg-[var(--color-positive)]', icon: 'text-[var(--color-positive)]', glow: 'shadow-[0_18px_60px_-20px_rgba(16,185,129,0.45)]' }
+    : { rail: 'before:bg-[var(--color-negative)]', icon: 'text-[var(--color-negative)]', glow: 'shadow-[0_18px_60px_-20px_rgba(239,68,68,0.45)]' };
+
   return (
-    <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-4">
+    <div className="glass-slab rounded-2xl p-4 sm:p-6 animate-enter">
       {/* Status Bar */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -451,14 +472,17 @@ export function CVRFEpisodeControls() {
             className={`w-2 h-2 rounded-full ${
               hasActiveEpisode ? 'bg-[var(--color-positive)] animate-pulse-green' : 'bg-[var(--color-border)]'
             }`}
+            aria-hidden="true"
           />
-          <span className="text-sm text-[var(--color-text-secondary)]">
+          <span className="text-sm text-theme-secondary tabular-nums">
             {hasActiveEpisode
               ? `Episode ${activeEpisode?.episodeNumber} active`
               : 'No active episode'}
           </span>
         </div>
-        <span className="text-xs text-[var(--color-text-muted)]">{totalEpisodes} total episodes</span>
+        <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted tabular-nums">
+          {totalEpisodes} total
+        </span>
       </div>
 
       {/* Action Buttons */}
@@ -467,16 +491,16 @@ export function CVRFEpisodeControls() {
           <button
             onClick={handleStartEpisode}
             disabled={isStarting}
-            className="flex-1 px-4 py-2.5 bg-[var(--color-accent)] text-white rounded-lg font-medium hover:bg-[var(--color-accent)] disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+            className="flex-1 px-4 py-2.5 bg-[image:var(--gradient-sovereign)] text-white rounded-lg font-medium animate-press animate-lift transition-[transform,box-shadow] duration-200 disabled:opacity-50 flex items-center justify-center gap-2 shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)]"
           >
             {isStarting ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
+                <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
                 Starting...
               </>
             ) : (
               <>
-                <Play className="w-4 h-4" />
+                <Play className="w-4 h-4" aria-hidden="true" />
                 Start Episode
               </>
             )}
@@ -485,17 +509,17 @@ export function CVRFEpisodeControls() {
           <>
             <button
               onClick={() => setShowDecisionModal(true)}
-              className="flex-1 px-4 py-2.5 bg-[var(--color-positive)] text-white rounded-lg font-medium hover:bg-[var(--color-positive)] flex items-center justify-center gap-2 transition-colors"
+              className="flex-1 px-4 py-2.5 bg-[var(--color-positive)] text-white rounded-lg font-medium animate-press animate-lift transition-[transform,box-shadow] duration-200 flex items-center justify-center gap-2 shadow-[0_18px_60px_-20px_rgba(16,185,129,0.45)]"
             >
-              <PlusCircle className="w-4 h-4" />
+              <PlusCircle className="w-4 h-4" aria-hidden="true" />
               Record Decision
             </button>
             <button
               onClick={() => setShowCloseModal(true)}
               disabled={isClosing}
-              className="px-4 py-2.5 bg-[var(--color-negative)] text-white rounded-lg font-medium hover:bg-[var(--color-negative)] disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+              className="px-4 py-2.5 glass-slab-floating text-[var(--color-negative)] rounded-lg font-medium animate-press transition-[background-color,border-color] duration-150 disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              <StopCircle className="w-4 h-4" />
+              <StopCircle className="w-4 h-4" aria-hidden="true" />
               Close
             </button>
           </>
@@ -504,12 +528,12 @@ export function CVRFEpisodeControls() {
 
       {/* Active Episode Info */}
       {hasActiveEpisode && activeEpisode && (
-        <div className="mt-3 p-3 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-lg text-sm">
+        <div className="mt-3 glass-slab-floating rounded-xl p-3 text-sm">
           <div className="flex items-center justify-between text-[var(--color-accent)]">
-            <span>Decisions recorded:</span>
-            <span className="font-bold">{activeEpisode.decisionsCount}</span>
+            <span className="mono text-[10px] tracking-[0.3em] uppercase">Decisions recorded</span>
+            <span className="font-bold tabular-nums">{activeEpisode.decisionsCount}</span>
           </div>
-          <div className="text-xs text-[var(--color-accent)] mt-1">
+          <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted tabular-nums mt-1">
             Recording since{' '}
             {new Date(activeEpisode.startDate).toLocaleString('en-US', {
               month: 'short',
@@ -517,25 +541,25 @@ export function CVRFEpisodeControls() {
               hour: '2-digit',
               minute: '2-digit',
             })}
-          </div>
+          </p>
         </div>
       )}
 
-      {/* Result Toast */}
+      {/* Result Toast — type-rail pattern */}
       {result && (
         <div
-          className={`mt-3 p-3 rounded-lg flex items-center gap-2 text-sm ${
-            result.type === 'success'
-              ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]'
-              : 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)]'
-          }`}
+          className={`mt-3 glass-slab-floating relative overflow-hidden rounded-xl pl-4 pr-3 py-3 ${resultRail.glow} before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] ${resultRail.rail}`}
+          role="status"
+          aria-live="polite"
         >
-          {result.type === 'success' ? (
-            <CheckCircle className="w-4 h-4" />
-          ) : (
-            <AlertCircle className="w-4 h-4" />
-          )}
-          {result.message}
+          <div className="flex items-center gap-2 text-sm">
+            {result.type === 'success' ? (
+              <CheckCircle className={`w-4 h-4 flex-shrink-0 ${resultRail.icon}`} aria-hidden="true" />
+            ) : (
+              <AlertCircle className={`w-4 h-4 flex-shrink-0 ${resultRail.icon}`} aria-hidden="true" />
+            )}
+            <span className="text-theme">{result.message}</span>
+          </div>
         </div>
       )}
 

@@ -211,11 +211,11 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
     }
   };
 
-  const insightTypeStyles = {
-    risk: 'border-l-[var(--color-warning)]',
-    opportunity: 'border-l-[var(--color-positive)]',
-    action: 'border-l-[var(--color-info)]',
-    factor: 'border-l-[var(--color-primary)]',
+  const insightRailColor: Record<string, string> = {
+    risk: 'var(--color-warning)',
+    opportunity: 'var(--color-positive)',
+    action: 'var(--color-info)',
+    factor: 'var(--color-accent)',
   };
 
   const insightTypeBg: Record<string, React.CSSProperties> = {
@@ -230,50 +230,54 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
       title="AI-Powered Insights"
       action={
         <Button onClick={refreshInsights} isLoading={isLoading} size="sm" variant="secondary">
-          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
           Refresh
         </Button>
       }
     >
       {insights.length === 0 ? (
-        <div className="text-center py-8 text-[var(--color-text-muted)]">
-          <Sparkles className="w-12 h-12 mx-auto mb-3 text-[var(--color-text-muted)] opacity-50" />
-          <p>Add positions to receive AI-powered analysis of your portfolio.</p>
-          <p className="text-sm mt-2">
+        <div className="text-center py-8 text-theme-muted">
+          <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-50" aria-hidden="true" />
+          <p className="leading-relaxed">Add positions to receive AI-powered analysis of your portfolio.</p>
+          <p className="text-sm mt-2 leading-relaxed">
             Our cognitive engine analyzes 80+ factors to provide actionable insights.
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {insights.map((insight, index) => (
-            <div
-              key={index}
-              className={`p-4 rounded-lg border-l-4 animate-slide-in-left transition-shadow duration-200 hover:shadow-lg ${insightTypeStyles[insight.type]}`}
-              style={{
-                animationDelay: `${index * 50}ms`,
-                animationFillMode: 'both',
-                ...insightTypeBg[insight.type],
-              }}
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 mt-0.5">{insight.icon}</div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className="font-medium text-[var(--color-text)]">{insight.title}</h4>
-                    {insight.confidence && (
-                      <span className="text-xs text-[var(--color-text-muted)]">
-                        {(insight.confidence * 100).toFixed(0)}% confidence
-                      </span>
-                    )}
+        <div className="space-y-3">
+          {insights.map((insight, index) => {
+            const railColor = insightRailColor[insight.type];
+            return (
+              <div
+                key={index}
+                className="glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-4 animate-slide-in-left transition-[box-shadow] duration-200 hover:shadow-lg before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]"
+                style={{
+                  animationDelay: `${index * 50}ms`,
+                  animationFillMode: 'both',
+                  ...insightTypeBg[insight.type],
+                }}
+              >
+                <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: railColor }} />
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-0.5" aria-hidden="true">{insight.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                      <h4 className="font-medium text-theme">{insight.title}</h4>
+                      {insight.confidence && (
+                        <span className="mono text-[10px] tracking-[0.2em] uppercase tabular-nums text-theme-muted">
+                          {(insight.confidence * 100).toFixed(0)}% confidence
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm leading-relaxed text-theme-secondary">{insight.content}</p>
                   </div>
-                  <p className="text-sm text-[var(--color-text-secondary)]">{insight.content}</p>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {lastUpdated && (
-            <p className="text-xs text-[var(--color-text-muted)] text-right">
+            <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted text-right">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </p>
           )}

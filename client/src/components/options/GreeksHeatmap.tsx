@@ -65,105 +65,132 @@ function GreeksHeatmapInner({ cells }: GreeksHeatmapProps) {
   return (
     <Card>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
-          Greeks Heatmap
-        </h2>
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden" role="group" aria-label="Option side selector">
-            {(['call', 'put'] as const).map((side) => (
-              <button
-                key={side}
-                onClick={() => setOptionSide(side)}
-                aria-pressed={optionSide === side}
-                className={`px-3 py-2 text-xs font-medium min-h-[44px] transition-colors active:scale-[0.97] ${
-                  optionSide === side
-                    ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text)]'
-                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
-                }`}
-                style={
-                  optionSide === side
-                    ? side === 'call'
-                      ? { backgroundColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)', color: 'var(--color-positive)' }
-                      : { backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)', color: 'var(--color-negative)' }
-                    : undefined
-                }
-              >
-                {side === 'call' ? 'Calls' : 'Puts'}
-              </button>
-            ))}
+        <div>
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted">
+            Greeks Heatmap
+          </p>
+          <h2 className="mt-1 text-lg font-semibold text-theme flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            {greekLabels[selectedGreek]} surface
+          </h2>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div
+            className="flex glass-slab-floating rounded-lg p-1 gap-1"
+            role="group"
+            aria-label="Option side selector"
+          >
+            {(['call', 'put'] as const).map((side) => {
+              const active = optionSide === side;
+              return (
+                <button
+                  key={side}
+                  onClick={() => setOptionSide(side)}
+                  aria-pressed={active}
+                  className="px-3 py-1.5 min-h-[36px] mono text-[10px] tracking-[0.2em] uppercase rounded-md animate-press transition-[color,background-color] duration-200"
+                  style={
+                    active
+                      ? side === 'call'
+                        ? {
+                            backgroundColor: 'color-mix(in srgb, var(--color-positive) 12%, transparent)',
+                            color: 'var(--color-positive)',
+                          }
+                        : {
+                            backgroundColor: 'color-mix(in srgb, var(--color-negative) 12%, transparent)',
+                            color: 'var(--color-negative)',
+                          }
+                      : { color: 'var(--color-text-secondary)' }
+                  }
+                >
+                  {side === 'call' ? 'Calls' : 'Puts'}
+                </button>
+              );
+            })}
           </div>
-          <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden" role="group" aria-label="Greek selector">
-            {(['delta', 'gamma', 'theta', 'vega'] as const).map((greek) => (
-              <button
-                key={greek}
-                onClick={() => setSelectedGreek(greek)}
-                aria-pressed={selectedGreek === greek}
-                className={`px-2.5 py-2 text-xs font-medium min-h-[44px] transition-colors active:scale-[0.97] ${
-                  selectedGreek === greek
-                    ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text)]'
-                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
-                }`}
-                style={
-                  selectedGreek === greek
-                    ? { backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)', color: 'var(--color-accent)' }
-                    : undefined
-                }
-              >
-                {greekLabels[greek]}
-              </button>
-            ))}
+          <div
+            className="flex glass-slab-floating rounded-lg p-1 gap-1"
+            role="group"
+            aria-label="Greek selector"
+          >
+            {(['delta', 'gamma', 'theta', 'vega'] as const).map((greek) => {
+              const active = selectedGreek === greek;
+              return (
+                <button
+                  key={greek}
+                  onClick={() => setSelectedGreek(greek)}
+                  aria-pressed={active}
+                  className="px-2.5 py-1.5 min-h-[36px] mono text-[10px] tracking-[0.2em] uppercase rounded-md animate-press transition-[color,background-color] duration-200"
+                  style={
+                    active
+                      ? {
+                          backgroundColor: 'var(--color-accent-light)',
+                          color: 'var(--color-accent)',
+                        }
+                      : { color: 'var(--color-text-secondary)' }
+                  }
+                >
+                  {greekLabels[greek]}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto -mx-6 px-6 animate-fade-in">
-        <table
-          className="w-full text-xs"
-          role="img"
-          aria-label={`${greekLabels[selectedGreek]} heatmap for ${optionSide}s across strikes and expirations`}
-        >
-          <thead>
-            <tr className="border-b border-[var(--color-border)]">
-              <th className="text-left px-2 py-2 text-[var(--color-text-muted)] font-medium sticky left-0 bg-[var(--color-bg)] z-10">
-                Strike
-              </th>
-              {expirations.map((exp) => (
-                <th key={exp} className="text-center px-2 py-2 text-[var(--color-text-muted)] font-medium">
-                  {EXPIRATION_LABELS[exp]}
+      <div className="glass-slab-floating rounded-xl overflow-hidden" style={{ minHeight: 280 }}>
+        <div className="overflow-x-auto animate-fade-in">
+          <table
+            className="w-full text-xs"
+            role="img"
+            aria-label={`${greekLabels[selectedGreek]} heatmap for ${optionSide}s across strikes and expirations`}
+          >
+            <thead>
+              <tr className="border-b border-theme-light">
+                <th className="text-left mono text-[10px] tracking-[0.2em] uppercase px-2 py-2 text-theme-muted sticky left-0 bg-[var(--color-bg-secondary)] z-10">
+                  Strike
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {strikes.map((strike) => {
-              const isATM = Math.abs(strike - UNDERLYING_PRICE) <= 1.25;
-              return (
-                <tr key={strike} className="border-b border-[var(--color-border)]">
-                  <td className={`px-2 py-2 font-mono font-medium sticky left-0 bg-[var(--color-bg)] z-10 ${
-                    isATM ? 'text-[var(--color-accent)] font-bold' : 'text-[var(--color-text)]'
-                  }`}>
-                    {strike.toFixed(1)}
-                  </td>
-                  {expirations.map((exp) => {
-                    const cell = cellMap.get(`${strike}-${exp}`);
-                    const value = cell ? (cell[greekKey] as number) : 0;
-                    return (
-                      <td
-                        key={exp}
-                        className="text-center px-2 py-2 font-mono"
-                        style={{ backgroundColor: getColor(value), color: 'var(--color-text-inverse, #fff)' }}
-                        title={`Strike ${strike}, ${EXPIRATION_LABELS[exp]}: ${value.toFixed(4)}`}
-                      >
-                        {selectedGreek === 'gamma' ? value.toFixed(5) : value.toFixed(3)}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                {expirations.map((exp) => (
+                  <th
+                    key={exp}
+                    className="text-center mono text-[10px] tracking-[0.2em] uppercase px-2 py-2 text-theme-muted"
+                  >
+                    {EXPIRATION_LABELS[exp]}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {strikes.map((strike) => {
+                const isATM = Math.abs(strike - UNDERLYING_PRICE) <= 1.25;
+                return (
+                  <tr key={strike} className="border-b border-theme-light">
+                    <td
+                      className={`px-2 py-2 mono font-medium tabular-nums sticky left-0 bg-[var(--color-bg-secondary)] z-10 ${
+                        isATM ? 'text-[var(--color-accent)] font-bold' : 'text-theme'
+                      }`}
+                    >
+                      {strike.toFixed(1)}
+                    </td>
+                    {expirations.map((exp) => {
+                      const cell = cellMap.get(`${strike}-${exp}`);
+                      const value = cell ? (cell[greekKey] as number) : 0;
+                      return (
+                        <td
+                          key={exp}
+                          className="text-center mono px-2 py-2 tabular-nums"
+                          style={{ backgroundColor: getColor(value), color: 'var(--color-text-inverse, #fff)' }}
+                          title={`Strike ${strike}, ${EXPIRATION_LABELS[exp]}: ${value.toFixed(4)}`}
+                        >
+                          {selectedGreek === 'gamma' ? value.toFixed(5) : value.toFixed(3)}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </Card>
   );

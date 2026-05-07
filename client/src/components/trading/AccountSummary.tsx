@@ -21,54 +21,68 @@ export const AccountSummary = React.memo(function AccountSummary({
   paperTrading,
   isMarketOpen,
 }: AccountSummaryProps) {
+  // Broker status — type rail (positive=connected, warning=paper/closed, negative=offline)
+  const railColor = !brokerConnected
+    ? 'var(--color-negative)'
+    : !isMarketOpen
+    ? 'var(--color-warning)'
+    : 'var(--color-positive)';
+  const railShadow = !brokerConnected
+    ? 'shadow-[0_18px_60px_-20px_rgba(239,68,68,0.35)]'
+    : !isMarketOpen
+    ? 'shadow-[0_18px_60px_-20px_rgba(245,158,11,0.35)]'
+    : 'shadow-[0_18px_60px_-20px_rgba(16,185,129,0.35)]';
+
   return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Wallet className="w-5 h-5 text-[var(--color-info)]" />
-          <h3 className="font-semibold text-[var(--color-text)]">Account</h3>
+    <Card className={`relative overflow-hidden p-4 ${railShadow}`}>
+      <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: railColor }} />
+      <div className="flex items-center justify-between mb-4 pl-2">
+        <div>
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted">
+            Account
+          </p>
+          <h3 className="mt-1 text-lg font-semibold text-theme flex items-center gap-2">
+            <Wallet className="w-5 h-5 text-[var(--color-info)]" aria-hidden="true" />
+            Broker Status
+          </h3>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant={brokerConnected ? 'success' : 'warning'}>
             {brokerType === 'alpaca' ? 'Alpaca' : 'Demo'}
           </Badge>
-          {paperTrading && (
-            <Badge variant="info">Paper Trading</Badge>
-          )}
-          {!isMarketOpen && (
-            <Badge variant="neutral">Market Closed</Badge>
-          )}
+          {paperTrading && <Badge variant="info">Paper Trading</Badge>}
+          {!isMarketOpen && <Badge variant="neutral">Market Closed</Badge>}
         </div>
       </div>
 
       {accountLoading ? (
-        <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
-          <RefreshCw className="w-4 h-4 animate-spin" />
+        <div className="flex items-center gap-2 mono text-xs tracking-[0.2em] uppercase text-theme-muted pl-2">
+          <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
           Loading account...
         </div>
       ) : account ? (
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <p className="text-xs text-[var(--color-text-muted)]">Buying Power</p>
-            <p className="text-lg font-semibold text-[var(--color-positive)]">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pl-2">
+          <div className="glass-slab-floating rounded-xl p-3">
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Buying Power</p>
+            <p className="mt-1 mono text-lg font-semibold tabular-nums text-[var(--color-positive)]">
               ${account.buyingPower.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
-          <div>
-            <p className="text-xs text-[var(--color-text-muted)]">Cash</p>
-            <p className="text-lg font-semibold text-[var(--color-text)]">
+          <div className="glass-slab-floating rounded-xl p-3">
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Cash</p>
+            <p className="mt-1 mono text-lg font-semibold tabular-nums text-theme">
               ${account.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
-          <div>
-            <p className="text-xs text-[var(--color-text-muted)]">Portfolio Value</p>
-            <p className="text-lg font-semibold text-[var(--color-text)]">
+          <div className="glass-slab-floating rounded-xl p-3">
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Portfolio Value</p>
+            <p className="mt-1 mono text-lg font-semibold tabular-nums text-theme">
               ${account.portfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
       ) : (
-        <p className="text-[var(--color-text-muted)]">Account info unavailable</p>
+        <p className="text-theme-muted pl-2">Account info unavailable</p>
       )}
     </Card>
   );

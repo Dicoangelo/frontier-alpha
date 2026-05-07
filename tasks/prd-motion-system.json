@@ -28,7 +28,8 @@
       ],
       "status": "done",
       "dependsOn": [],
-      "completionNotes": "Shipped in client/src/index.css: motion tokens (--motion-duration-{fast,base,slow,hero}, --motion-ease-{out,in,inout}, --motion-stagger-step) plus utility classes .animate-enter, .animate-exit, .animate-stagger (up to 12 children), .animate-press, .animate-lift. prefers-reduced-motion already clamps durations to 0.01ms globally."
+      "completionNotes": "Shipped in client/src/index.css: motion tokens (--motion-duration-{fast,base,slow,hero}, --motion-ease-{out,in,inout}, --motion-stagger-step) plus utility classes .animate-enter, .animate-exit, .animate-stagger (up to 12 children), .animate-press, .animate-lift. prefers-reduced-motion already clamps durations to 0.01ms globally.",
+      "notes": "PR #3 (Round 1) reinforced: defined the 4 missing keyframes (fade-in, slide-in-left, slide-in-right, pulse-subtle) so existing utility classes resolve at runtime instead of failing silently. Tokens were declared but the supporting @keyframes blocks were missing in index.css. Confirmed 2026-05-07."
     },
     {
       "id": "MOTION-002",
@@ -48,7 +49,8 @@
       "dependsOn": [
         "MOTION-001"
       ],
-      "completionNotes": "Shipped in client/src/index.css: motion tokens (--motion-duration-{fast,base,slow,hero}, --motion-ease-{out,in,inout}, --motion-stagger-step) plus utility classes .animate-enter, .animate-exit, .animate-stagger (up to 12 children), .animate-press, .animate-lift. prefers-reduced-motion already clamps durations to 0.01ms globally."
+      "completionNotes": "Shipped in client/src/index.css: motion tokens (--motion-duration-{fast,base,slow,hero}, --motion-ease-{out,in,inout}, --motion-stagger-step) plus utility classes .animate-enter, .animate-exit, .animate-stagger (up to 12 children), .animate-press, .animate-lift. prefers-reduced-motion already clamps durations to 0.01ms globally.",
+      "notes": "PR #3 (Round 1) reinforced: Button.tsx was holding transition-all + hover-scale anti-pattern; rewritten to drop those in favor of animate-press + animate-lift exclusively. animate-press/animate-lift are now the canonical interactive feedback across all family-aligned chrome (Toast, Sidebar, BottomSheet, CommandPalette, etc.). Confirmed 2026-05-07."
     },
     {
       "id": "MOTION-003",
@@ -106,7 +108,8 @@
       "dependsOn": [
         "MOTION-002"
       ],
-      "completionNotes": "Legacy .click-feedback class realigned to motion tokens (var(--motion-duration-fast)/var(--motion-ease-out)) so it behaves as .animate-press alias \u2014 every existing button instance upgrades automatically without code sweep. .animate-lift applied at md breakpoint+ to DashZone containers and landing FeatureCard (replaces ad-hoc hover:-translate-y-1). Disabled on touch implicit via md: prefix (hover is 2nd-class on touch)."
+      "completionNotes": "Legacy .click-feedback class realigned to motion tokens (var(--motion-duration-fast)/var(--motion-ease-out)) so it behaves as .animate-press alias \u2014 every existing button instance upgrades automatically without code sweep. .animate-lift applied at md breakpoint+ to DashZone containers and landing FeatureCard (replaces ad-hoc hover:-translate-y-1). Disabled on touch implicit via md: prefix (hover is 2nd-class on touch).",
+      "notes": "PR #3 + PR #4 (Rounds 1-5) extended the rollout: Button.tsx primary (sovereign-gradient) + secondary + ghost variants all now use animate-press + animate-lift. Toast (slab-floating), Sidebar nav items (3px sovereign-gradient before: rail), Pricing tiers, Settings ToggleRow / SectionShell, MarketStatusStrip, BottomSheet, CommandPalette, KeyboardHelpModal, HelpPanel, HelpButton, WelcomeModal, FeatureTour, plus all page-level CTAs across CVRF/Backtest/ML/Trading/Options/Earnings/Tax/Help/Social all carry the canonical interactive feedback. Confirmed 2026-05-07."
     },
     {
       "id": "MOTION-006",
@@ -126,7 +129,8 @@
       "dependsOn": [
         "MOTION-001"
       ],
-      "completionNotes": "Portfolio hero value (PortfolioOverview.tsx) gains .holo-pulse class \u2014 the cyan\u2194amethyst text-shadow pulse that signals live data. Only one element per page (the main total value) carries the pulse to avoid dashboard-wide flicker. Pulse respects prefers-reduced-motion via MOTION-007 override block."
+      "completionNotes": "Portfolio hero value (PortfolioOverview.tsx) gains .holo-pulse class \u2014 the cyan\u2194amethyst text-shadow pulse that signals live data. Only one element per page (the main total value) carries the pulse to avoid dashboard-wide flicker. Pulse respects prefers-reduced-motion via MOTION-007 override block.",
+      "notes": "PR #4 (Round 4) reinforced: holo-pulse now drives the Pricing hero (Round 3) and is wired into MarketStatusStrip + EquityCurve as part of the dashboard-widget glass-slab + tabular-nums + fixed chart heights polish. PortfolioOverview chart wrappers now have min-h to fix CLS. One pulse per surface preserved. Confirmed 2026-05-07."
     },
     {
       "id": "MOTION-007",

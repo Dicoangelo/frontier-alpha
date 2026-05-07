@@ -73,30 +73,30 @@ function ChartTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!data) return null;
 
   return (
-    <div className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg shadow-lg p-3 text-sm">
-      <div className="font-semibold text-[var(--color-text)] mb-2">{label}</div>
+    <div className="backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-text-inverse)] border border-theme-light rounded-lg shadow-lg px-3 py-2 text-xs">
+      <p className="mono text-[10px] tracking-[0.3em] uppercase opacity-70 mb-1">{label}</p>
       <div className="space-y-1">
         <div className="flex justify-between gap-4">
-          <span className="text-[var(--color-text-muted)]">Return:</span>
-          <span className={data.return >= 0 ? 'text-[var(--color-positive)] font-mono' : 'text-[var(--color-negative)] font-mono'}>
+          <span className="opacity-70">Return</span>
+          <span className={`mono tabular-nums font-semibold ${data.return >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {data.returnPct}
           </span>
         </div>
         <div className="flex justify-between gap-4">
-          <span className="text-[var(--color-text-muted)]">Cumulative:</span>
-          <span className="text-[var(--color-accent)] font-mono">{data.cumulativePct}</span>
+          <span className="opacity-70">Cumulative</span>
+          <span className="mono tabular-nums font-semibold">{data.cumulativePct}</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span className="text-[var(--color-text-muted)]">Sharpe:</span>
-          <span className="text-[var(--color-text)] font-mono">{data.sharpe.toFixed(2)}</span>
+          <span className="opacity-70">Sharpe</span>
+          <span className="mono tabular-nums">{data.sharpe.toFixed(2)}</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span className="text-[var(--color-text-muted)]">Max DD:</span>
-          <span className="text-[var(--color-negative)] font-mono">-{data.drawdownPct}</span>
+          <span className="opacity-70">Max DD</span>
+          <span className="mono tabular-nums text-[var(--color-negative)]">-{data.drawdownPct}</span>
         </div>
         <div className="flex justify-between gap-4">
-          <span className="text-[var(--color-text-muted)]">Decisions:</span>
-          <span className="text-[var(--color-text)] font-mono">{data.decisions}</span>
+          <span className="opacity-70">Decisions</span>
+          <span className="mono tabular-nums">{data.decisions}</span>
         </div>
       </div>
     </div>
@@ -112,7 +112,7 @@ export function EpisodePerformanceChart() {
 
   if (isLoading) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
+      <div className="glass-slab rounded-2xl p-6 sm:p-8">
         <div className="h-6 bg-[var(--color-border)] rounded w-1/3 mb-4 animate-shimmer" />
         <div className="h-64 bg-[var(--color-bg-secondary)] rounded animate-shimmer" />
       </div>
@@ -121,12 +121,17 @@ export function EpisodePerformanceChart() {
 
   if (chartData.length < 2) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="text-lg font-semibold text-[var(--color-text)]">Episode Performance</h3>
+      <div className="glass-slab rounded-2xl p-6 sm:p-8">
+        <div className="mb-4">
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Performance Curve
+          </p>
+          <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            Episode Performance
+          </h3>
         </div>
-        <div className="flex items-center justify-center h-48 text-[var(--color-text-muted)] text-sm">
+        <div className="flex items-center justify-center h-48 text-theme-muted text-sm">
           Complete at least 2 episodes to see performance trends
         </div>
       </div>
@@ -138,23 +143,34 @@ export function EpisodePerformanceChart() {
   const totalCumulative = chartData[chartData.length - 1]?.cumulativeReturn || 0;
 
   return (
-    <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
+    <div className="glass-slab rounded-2xl p-6 sm:p-8 animate-enter">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="text-lg font-semibold text-[var(--color-text)]">Episode Performance</h3>
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+        <div>
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Performance Curve
+          </p>
+          <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            Episode Performance
+          </h3>
         </div>
-        <div className="flex gap-1 bg-[var(--color-bg-secondary)] rounded-lg p-0.5">
+        {/* Segmented control — EquityCurve pattern */}
+        <div
+          className="flex gap-1 glass-slab-floating rounded-lg p-1"
+          role="group"
+          aria-label="Performance metric"
+        >
           {(['returns', 'sharpe', 'drawdown'] as MetricView[]).map((m) => (
             <button
               key={m}
               onClick={() => setMetric(m)}
-              className={`px-3 py-1 text-xs rounded-md transition-colors ${
+              className={`px-3 py-1.5 min-h-[32px] text-[10px] mono tracking-[0.2em] uppercase rounded-md animate-press transition-[color,background-color] duration-200 ${
                 metric === m
-                  ? 'bg-[var(--color-accent)] text-white'
-                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                  : 'text-theme-secondary hover:text-theme'
               }`}
+              aria-pressed={metric === m}
             >
               {m === 'returns' ? 'Returns' : m === 'sharpe' ? 'Sharpe' : 'Drawdown'}
             </button>
@@ -163,52 +179,56 @@ export function EpisodePerformanceChart() {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg text-center">
-          <div className="text-xs text-[var(--color-text-muted)]">Cumulative Return</div>
-          <div className={`text-xl font-bold ${totalCumulative >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+      <div className="grid grid-cols-3 gap-4 mb-4 animate-stagger">
+        <div className="glass-slab-floating rounded-xl p-3 text-center animate-enter">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Cumulative</p>
+          <p className={`text-xl font-bold tabular-nums mt-0.5 ${totalCumulative >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {totalCumulative >= 0 ? '+' : ''}
             {(totalCumulative * 100).toFixed(2)}%
-          </div>
+          </p>
         </div>
-        <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg text-center">
-          <div className="text-xs text-[var(--color-text-muted)]">Avg Episode Return</div>
-          <div className={`text-xl font-bold ${avgReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+        <div className="glass-slab-floating rounded-xl p-3 text-center animate-enter">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Avg Episode</p>
+          <p className={`text-xl font-bold tabular-nums mt-0.5 ${avgReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {avgReturn >= 0 ? '+' : ''}
             {(avgReturn * 100).toFixed(2)}%
-          </div>
+          </p>
         </div>
-        <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg text-center">
-          <div className="text-xs text-[var(--color-text-muted)]">Avg Sharpe Ratio</div>
-          <div className="text-xl font-bold text-[var(--color-accent)]">{avgSharpe.toFixed(2)}</div>
+        <div className="glass-slab-floating rounded-xl p-3 text-center animate-enter">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Avg Sharpe</p>
+          <p className="text-xl font-bold text-[var(--color-accent)] tabular-nums mt-0.5">{avgSharpe.toFixed(2)}</p>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="h-72" role="img" aria-label={`Episode performance chart showing ${metric} across ${chartData.length} episodes`}>
+      <div
+        className="min-h-[288px] h-72"
+        role="img"
+        aria-label={`Episode performance chart showing ${metric} across ${chartData.length} episodes`}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" />
             <XAxis
               dataKey="label"
-              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 12 }}
-              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
+              tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+              axisLine={{ stroke: 'var(--color-border)' }}
             />
             <YAxis
-              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 12 }}
-              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
+              tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+              axisLine={{ stroke: 'var(--color-border)' }}
               tickFormatter={(v) =>
                 metric === 'sharpe' ? v.toFixed(1) : `${(v * 100).toFixed(0)}%`
               }
             />
             <Tooltip content={<ChartTooltip />} />
-            <ReferenceLine y={0} stroke="var(--color-border, var(--color-border))" strokeDasharray="2 2" />
+            <ReferenceLine y={0} stroke="var(--color-border)" strokeDasharray="2 2" />
 
             {metric === 'returns' && (
               <>
                 <Bar
                   dataKey="return"
-                  fill="var(--chart-purple)"
+                  fill="var(--color-accent)"
                   opacity={0.3}
                   radius={[4, 4, 0, 0]}
                   name="Episode Return"
@@ -216,9 +236,9 @@ export function EpisodePerformanceChart() {
                 <Line
                   type="monotone"
                   dataKey="cumulativeReturn"
-                  stroke="var(--chart-primary)"
+                  stroke="var(--color-accent)"
                   strokeWidth={2}
-                  dot={{ r: 4, fill: 'var(--chart-primary)' }}
+                  dot={{ r: 4, fill: 'var(--color-accent)' }}
                   name="Cumulative"
                 />
               </>
@@ -228,9 +248,9 @@ export function EpisodePerformanceChart() {
               <Line
                 type="monotone"
                 dataKey="sharpe"
-                stroke="var(--chart-purple)"
+                stroke="var(--chart-secondary)"
                 strokeWidth={2}
-                dot={{ r: 4, fill: 'var(--chart-purple)' }}
+                dot={{ r: 4, fill: 'var(--chart-secondary)' }}
                 name="Sharpe Ratio"
               />
             )}
@@ -238,7 +258,7 @@ export function EpisodePerformanceChart() {
             {metric === 'drawdown' && (
               <Bar
                 dataKey="maxDrawdown"
-                fill="var(--chart-danger)"
+                fill="var(--color-negative)"
                 opacity={0.5}
                 radius={[4, 4, 0, 0]}
                 name="Max Drawdown"

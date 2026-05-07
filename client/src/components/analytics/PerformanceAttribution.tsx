@@ -104,7 +104,7 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
   if (loading) {
     return (
       <Card title="Performance Attribution">
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center" style={{ minHeight: 256 }}>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-info)]" />
         </div>
       </Card>
@@ -114,11 +114,11 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
   if (error || !data) {
     return (
       <Card title="Performance Attribution">
-        <div className="text-center py-8">
+        <div className="text-center py-8" style={{ minHeight: 256 }}>
           <p className="text-[var(--color-negative)] mb-4">{error || 'No data available'}</p>
           <button
             onClick={fetchAttribution}
-            className="px-4 py-2 bg-[var(--color-info)] text-white rounded-lg hover:bg-[var(--color-info)]"
+            className="px-4 py-2 min-h-[40px] bg-[image:var(--gradient-sovereign)] text-white rounded-lg animate-press transition-[box-shadow,transform] duration-200 hover:shadow-lg"
           >
             Retry
           </button>
@@ -133,7 +133,7 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
       action={
         <button
           onClick={fetchAttribution}
-          className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-lg"
+          className="p-2 min-h-[40px] min-w-[40px] text-theme-muted hover:text-theme-secondary glass-slab-floating rounded-lg animate-press transition-[color,box-shadow] duration-200"
           aria-label="Refresh performance attribution"
         >
           <RefreshCw className="w-4 h-4" aria-hidden="true" />
@@ -141,74 +141,88 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
       }
     >
       <div className="space-y-6">
-        {/* Period Selector */}
+        {/* Period Selector + View Toggle */}
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex gap-1 bg-[var(--color-bg-secondary)] rounded-lg p-1" role="group" aria-label="Attribution period">
-            {PERIODS.map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                  period === p
-                    ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]'
-                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-                }`}
-                aria-pressed={period === p}
-              >
-                {p}
-              </button>
-            ))}
+          <div
+            className="flex gap-1 glass-slab-floating rounded-lg p-1"
+            role="group"
+            aria-label="Attribution period"
+          >
+            {PERIODS.map((p) => {
+              const active = period === p;
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className="px-3 py-1.5 min-h-[32px] mono text-[10px] tracking-[0.2em] uppercase rounded-md animate-press transition-[color,background-color] duration-200"
+                  style={
+                    active
+                      ? { backgroundColor: 'var(--color-accent-light)', color: 'var(--color-accent)' }
+                      : { color: 'var(--color-text-secondary)' }
+                  }
+                  aria-pressed={active}
+                >
+                  {p}
+                </button>
+              );
+            })}
           </div>
 
-          <div className="flex gap-1 bg-[var(--color-bg-secondary)] rounded-lg p-1">
-            <button
-              onClick={() => setView('brinson')}
-              className={`px-3 py-1 text-sm rounded-md transition-colors flex items-center gap-1 ${
-                view === 'brinson'
-                  ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]'
-                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-              }`}
-            >
-              <PieChart className="w-3 h-3" />
-              Brinson
-            </button>
-            <button
-              onClick={() => setView('factor')}
-              className={`px-3 py-1 text-sm rounded-md transition-colors flex items-center gap-1 ${
-                view === 'factor'
-                  ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]'
-                  : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
-              }`}
-            >
-              <Layers className="w-3 h-3" />
-              Factor
-            </button>
+          <div className="flex gap-1 glass-slab-floating rounded-lg p-1">
+            {([
+              { key: 'brinson', label: 'Brinson', Icon: PieChart },
+              { key: 'factor', label: 'Factor', Icon: Layers },
+            ] as const).map(({ key, label, Icon }) => {
+              const active = view === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setView(key)}
+                  className="px-3 py-1.5 min-h-[32px] mono text-[10px] tracking-[0.2em] uppercase rounded-md flex items-center gap-1.5 animate-press transition-[color,background-color] duration-200"
+                  style={
+                    active
+                      ? { backgroundColor: 'var(--color-accent-light)', color: 'var(--color-accent)' }
+                      : { color: 'var(--color-text-secondary)' }
+                  }
+                  aria-pressed={active}
+                >
+                  <Icon className="w-3 h-3" aria-hidden="true" />
+                  {label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4">
-            <p className="text-xs text-[var(--color-text-muted)] mb-1">Portfolio Return</p>
-            <p className={`text-xl font-bold ${data.brinson.totalReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="glass-slab-floating rounded-xl p-4">
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Portfolio Return</p>
+            <p className={`mt-1 mono text-xl font-bold tabular-nums ${data.brinson.totalReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
               {formatPercent(data.brinson.totalReturn)}
             </p>
           </div>
-          <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4">
-            <p className="text-xs text-[var(--color-text-muted)] mb-1">Benchmark Return</p>
-            <p className={`text-xl font-bold ${data.brinson.benchmarkReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+          <div className="glass-slab-floating rounded-xl p-4">
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Benchmark Return</p>
+            <p className={`mt-1 mono text-xl font-bold tabular-nums ${data.brinson.benchmarkReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
               {formatPercent(data.brinson.benchmarkReturn)}
             </p>
           </div>
-          <div className="bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] rounded-lg p-4">
-            <p className="text-xs text-[var(--color-info)] mb-1">Active Return</p>
-            <p className={`text-xl font-bold ${data.brinson.activeReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+          <div
+            className="glass-slab-floating rounded-xl p-4"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 8%, transparent)' }}
+          >
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-info)]">Active Return</p>
+            <p className={`mt-1 mono text-xl font-bold tabular-nums ${data.brinson.activeReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
               {formatPercent(data.brinson.activeReturn)}
             </p>
           </div>
-          <div className="bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-lg p-4">
-            <p className="text-xs text-[var(--color-accent)] mb-1">Specific Return</p>
-            <p className={`text-xl font-bold ${data.factor.specificReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+          <div
+            className="glass-slab-floating rounded-xl p-4"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)' }}
+          >
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)]">Specific Return</p>
+            <p className={`mt-1 mono text-xl font-bold tabular-nums ${data.factor.specificReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
               {formatPercent(data.factor.specificReturn)}
             </p>
           </div>
@@ -218,64 +232,66 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
         {view === 'brinson' && (
           <div className="space-y-4">
             {/* Effects Summary */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm text-[var(--color-text-muted)] mb-1">Allocation Effect</p>
-                <p className={`text-lg font-bold ${data.brinson.allocationEffect >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="glass-slab-floating rounded-xl p-4">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Allocation Effect</p>
+                <p className={`mt-1 mono text-lg font-bold tabular-nums ${data.brinson.allocationEffect >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
                   {formatBps(data.brinson.allocationEffect)}
                 </p>
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">Sector weight decisions</p>
+                <p className="text-xs leading-relaxed text-theme-muted mt-1">Sector weight decisions</p>
               </div>
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm text-[var(--color-text-muted)] mb-1">Selection Effect</p>
-                <p className={`text-lg font-bold ${data.brinson.selectionEffect >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+              <div className="glass-slab-floating rounded-xl p-4">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Selection Effect</p>
+                <p className={`mt-1 mono text-lg font-bold tabular-nums ${data.brinson.selectionEffect >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
                   {formatBps(data.brinson.selectionEffect)}
                 </p>
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">Stock picking within sectors</p>
+                <p className="text-xs leading-relaxed text-theme-muted mt-1">Stock picking within sectors</p>
               </div>
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm text-[var(--color-text-muted)] mb-1">Interaction Effect</p>
-                <p className={`text-lg font-bold ${data.brinson.interactionEffect >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+              <div className="glass-slab-floating rounded-xl p-4">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Interaction Effect</p>
+                <p className={`mt-1 mono text-lg font-bold tabular-nums ${data.brinson.interactionEffect >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
                   {formatBps(data.brinson.interactionEffect)}
                 </p>
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">Combined decisions</p>
+                <p className="text-xs leading-relaxed text-theme-muted mt-1">Combined decisions</p>
               </div>
             </div>
 
             {/* Sector Breakdown */}
             <div>
-              <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">Sector Breakdown</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-[var(--color-text-muted)] border-b">
-                      <th className="pb-2 font-medium">Sector</th>
-                      <th className="pb-2 font-medium text-right">Allocation</th>
-                      <th className="pb-2 font-medium text-right">Selection</th>
-                      <th className="pb-2 font-medium text-right">Interaction</th>
-                      <th className="pb-2 font-medium text-right">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.brinson.sectorBreakdown.slice(0, 6).map((sector) => (
-                      <tr key={sector.sector} className="border-b border-[var(--color-border-light)]">
-                        <td className="py-2 font-medium text-[var(--color-text)]">{sector.sector}</td>
-                        <td className={`py-2 text-right ${sector.allocation >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
-                          {formatBps(sector.allocation)}
-                        </td>
-                        <td className={`py-2 text-right ${sector.selection >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
-                          {formatBps(sector.selection)}
-                        </td>
-                        <td className={`py-2 text-right ${sector.interaction >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
-                          {formatBps(sector.interaction)}
-                        </td>
-                        <td className={`py-2 text-right font-medium ${sector.total >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
-                          {formatBps(sector.total)}
-                        </td>
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-3">Sector Breakdown</p>
+              <div className="glass-slab-floating rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left border-b border-theme-light">
+                        <th className="mono text-[10px] tracking-[0.2em] uppercase px-3 py-2 text-theme-muted font-medium">Sector</th>
+                        <th className="mono text-[10px] tracking-[0.2em] uppercase px-3 py-2 text-right text-theme-muted font-medium">Allocation</th>
+                        <th className="mono text-[10px] tracking-[0.2em] uppercase px-3 py-2 text-right text-theme-muted font-medium">Selection</th>
+                        <th className="mono text-[10px] tracking-[0.2em] uppercase px-3 py-2 text-right text-theme-muted font-medium">Interaction</th>
+                        <th className="mono text-[10px] tracking-[0.2em] uppercase px-3 py-2 text-right text-theme-muted font-medium">Total</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {data.brinson.sectorBreakdown.slice(0, 6).map((sector) => (
+                        <tr key={sector.sector} className="border-b border-theme-light last:border-b-0">
+                          <td className="px-3 py-2 font-medium text-theme">{sector.sector}</td>
+                          <td className={`px-3 py-2 text-right mono tabular-nums ${sector.allocation >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+                            {formatBps(sector.allocation)}
+                          </td>
+                          <td className={`px-3 py-2 text-right mono tabular-nums ${sector.selection >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+                            {formatBps(sector.selection)}
+                          </td>
+                          <td className={`px-3 py-2 text-right mono tabular-nums ${sector.interaction >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+                            {formatBps(sector.interaction)}
+                          </td>
+                          <td className={`px-3 py-2 text-right mono tabular-nums font-medium ${sector.total >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+                            {formatBps(sector.total)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -285,27 +301,27 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
         {view === 'factor' && (
           <div className="space-y-4">
             {/* Factor Return Breakdown */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm text-[var(--color-text-muted)] mb-1">Factor Return</p>
-                <p className={`text-lg font-bold ${data.factor.factorReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="glass-slab-floating rounded-xl p-4">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Factor Return</p>
+                <p className={`mt-1 mono text-lg font-bold tabular-nums ${data.factor.factorReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
                   {formatPercent(data.factor.factorReturn)}
                 </p>
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">From systematic exposures</p>
+                <p className="text-xs leading-relaxed text-theme-muted mt-1">From systematic exposures</p>
               </div>
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm text-[var(--color-text-muted)] mb-1">Specific Return</p>
-                <p className={`text-lg font-bold ${data.factor.specificReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+              <div className="glass-slab-floating rounded-xl p-4">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Specific Return</p>
+                <p className={`mt-1 mono text-lg font-bold tabular-nums ${data.factor.specificReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
                   {formatPercent(data.factor.specificReturn)}
                 </p>
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">Idiosyncratic / stock-specific</p>
+                <p className="text-xs leading-relaxed text-theme-muted mt-1">Idiosyncratic / stock-specific</p>
               </div>
             </div>
 
             {/* Factor Contributions */}
             <div>
-              <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">Factor Contributions</h4>
-              <div className="space-y-3">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-3">Factor Contributions</p>
+              <div className="space-y-3" style={{ minHeight: 200 }}>
                 {data.factor.factors.map((factor) => {
                   const maxContribution = Math.max(...data.factor.factors.map((f) => Math.abs(f.contribution)));
                   const barWidth = Math.abs(factor.contribution) / maxContribution * 100;
@@ -314,18 +330,18 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
                   return (
                     <div key={factor.factor} className="space-y-1">
                       <div className="flex justify-between text-sm">
-                        <span className="text-[var(--color-text-secondary)] capitalize">{factor.factor.replace('_', ' ')}</span>
-                        <span className={isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}>
+                        <span className="text-theme-secondary capitalize">{factor.factor.replace('_', ' ')}</span>
+                        <span className={`mono tabular-nums ${isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
                           {formatBps(factor.contribution)}
                         </span>
                       </div>
                       <div className="h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${isPositive ? 'bg-[var(--color-positive)]' : 'bg-[var(--color-negative)]'}`}
+                          className={`h-full rounded-full transition-[width] duration-500 ease-out ${isPositive ? 'bg-[var(--color-positive)]' : 'bg-[var(--color-negative)]'}`}
                           style={{ width: `${barWidth}%` }}
                         />
                       </div>
-                      <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
+                      <div className="flex justify-between mono text-[10px] tracking-[0.2em] uppercase tabular-nums text-theme-muted">
                         <span>Exposure: {factor.exposure.toFixed(2)}</span>
                         <span>Factor Return: {formatPercent(factor.factorReturn)}</span>
                       </div>
@@ -338,39 +354,47 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
         )}
 
         {/* Top Contributors & Detractors */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-theme-light">
           <div>
-            <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-[var(--color-positive)]" />
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-3 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-[var(--color-positive)]" aria-hidden="true" />
               Top Contributors
-            </h4>
+            </p>
             <div className="space-y-2">
               {data.topContributors.map((c) => (
-                <div key={c.symbol} className="flex justify-between items-center p-2 bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] rounded">
-                  <span className="font-medium text-[var(--color-text)]">{c.symbol}</span>
-                  <span className="text-[var(--color-positive)]">{formatBps(c.contribution)}</span>
+                <div
+                  key={c.symbol}
+                  className="glass-slab-floating flex justify-between items-center p-2.5 rounded-lg"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--color-positive) 8%, transparent)' }}
+                >
+                  <span className="font-medium text-theme">{c.symbol}</span>
+                  <span className="mono tabular-nums text-[var(--color-positive)]">{formatBps(c.contribution)}</span>
                 </div>
               ))}
               {data.topContributors.length === 0 && (
-                <p className="text-sm text-[var(--color-text-muted)]">No positive contributors</p>
+                <p className="text-sm text-theme-muted">No positive contributors</p>
               )}
             </div>
           </div>
 
           <div>
-            <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3 flex items-center gap-2">
-              <TrendingDown className="w-4 h-4 text-[var(--color-negative)]" />
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-3 flex items-center gap-2">
+              <TrendingDown className="w-4 h-4 text-[var(--color-negative)]" aria-hidden="true" />
               Top Detractors
-            </h4>
+            </p>
             <div className="space-y-2">
               {data.topDetractors.map((c) => (
-                <div key={c.symbol} className="flex justify-between items-center p-2 bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] rounded">
-                  <span className="font-medium text-[var(--color-text)]">{c.symbol}</span>
-                  <span className="text-[var(--color-negative)]">{formatBps(c.contribution)}</span>
+                <div
+                  key={c.symbol}
+                  className="glass-slab-floating flex justify-between items-center p-2.5 rounded-lg"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 8%, transparent)' }}
+                >
+                  <span className="font-medium text-theme">{c.symbol}</span>
+                  <span className="mono tabular-nums text-[var(--color-negative)]">{formatBps(c.contribution)}</span>
                 </div>
               ))}
               {data.topDetractors.length === 0 && (
-                <p className="text-sm text-[var(--color-text-muted)]">No negative detractors</p>
+                <p className="text-sm text-theme-muted">No negative detractors</p>
               )}
             </div>
           </div>

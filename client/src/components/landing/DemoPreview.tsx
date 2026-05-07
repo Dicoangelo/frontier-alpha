@@ -102,7 +102,7 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
               className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--color-text)]"
             >
               Cognitive read on{' '}
-              <span className="text-gradient-brand">{readings[0].symbol}</span>
+              <span className="text-gradient-halo">{readings[0].symbol}</span>
               {readings.length > 1 && (
                 <span className="text-[var(--color-text-muted)]"> + {readings.length - 1} more</span>
               )}
@@ -181,7 +181,7 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
                 <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-1">
                   Live Factor Read
                 </p>
-                <h3 className="text-2xl sm:text-3xl font-black tabular-nums text-gradient-brand holo-pulse">
+                <h3 className="text-2xl sm:text-3xl font-black tabular-nums text-gradient-halo holo-pulse">
                   {current.symbol}
                 </h3>
               </div>

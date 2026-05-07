@@ -102,7 +102,7 @@ export function PositionCard({ position, onClick, className = '' }: PositionCard
       <button
         type="button"
         onClick={onClick}
-        className={`w-full text-left block p-4 min-h-[44px] border-b border-[var(--color-border-light)] last:border-b-0 bg-transparent hover:bg-[var(--color-bg-tertiary)] active:scale-[0.99] transition-all touch-manipulation ${className}`}
+        className={`w-full text-left block p-4 min-h-[44px] border-b border-[var(--color-border-light)] last:border-b-0 bg-transparent hover:bg-[var(--color-bg-tertiary)] active:scale-[0.99] transition-[transform,background-color] duration-200 touch-manipulation ${className}`}
       >
         {content}
       </button>

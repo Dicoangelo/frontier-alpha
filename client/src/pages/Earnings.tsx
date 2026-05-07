@@ -8,7 +8,7 @@ import { EarningsHeatmap } from '@/components/earnings/EarningsHeatmap';
 import { BeliefImpactPanel } from '@/components/earnings/BeliefImpactPanel';
 import { SkeletonEarningsPage } from '@/components/shared/Skeleton';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
-import { DataLoadError } from '@/components/shared/EmptyState';
+import { DataLoadError, EmptyState } from '@/components/shared/EmptyState';
 import { useUpcomingEarnings, useEarningsForecast, useRefreshForecast } from '@/hooks/useEarnings';
 
 const DEMO_SYMBOLS = ['NVDA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'JPM', 'V', 'JNJ'];
@@ -203,13 +203,12 @@ export function Earnings() {
 
       {/* Empty State */}
       {!isLoading && symbols.length === 0 && (
-        <div className="glass-slab rounded-2xl p-12 text-center">
-          <Calendar className="w-12 h-12 mx-auto mb-4 text-theme-muted" />
-          <h3 className="text-lg font-bold text-theme mb-2">No positions to track</h3>
-          <p className="text-sm text-theme-secondary">
-            Add positions to your portfolio to see their upcoming earnings
-          </p>
-        </div>
+        <EmptyState
+          icon={<Calendar className="w-8 h-8" />}
+          kicker="EARNINGS · Awaiting Positions"
+          title="No positions to track"
+          description="Add positions to your portfolio to see their upcoming earnings, expected moves, and factor-adjusted forecasts."
+        />
       )}
 
       {/* Heatmap */}

@@ -116,7 +116,7 @@ export function ResetPassword() {
                   required
                   autoFocus
                   autoComplete="email"
-                  className={`block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all mono text-sm ${
+                  className={`block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm ${
                     emailError ? 'border-[var(--color-negative)]' : 'border-[var(--color-border)]'
                   }`}
                   placeholder="you@example.com"
@@ -178,7 +178,7 @@ export function ResetPassword() {
                   minLength={6}
                   autoFocus
                   autoComplete="new-password"
-                  className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all mono text-sm"
+                  className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm"
                   placeholder="••••••••"
                 />
               </div>
@@ -195,7 +195,7 @@ export function ResetPassword() {
                   required
                   minLength={6}
                   autoComplete="new-password"
-                  className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all mono text-sm"
+                  className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm"
                   placeholder="••••••••"
                 />
               </div>

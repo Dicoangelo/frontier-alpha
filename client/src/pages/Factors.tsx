@@ -7,7 +7,7 @@ import { Button } from '@/components/shared/Button';
 import { SkeletonFactorsPage } from '@/components/shared/LoadingSkeleton';
 import { portfolioApi } from '@/api/portfolio';
 import { useFactorsByCategory, useRefreshFactors, FACTOR_CATEGORY_LABELS, FACTOR_CATEGORY_DESCRIPTIONS } from '@/hooks/useFactors';
-import { DataLoadError, NoFactorData } from '@/components/shared/EmptyState';
+import { DataLoadError, NoFactorData, EmptyState } from '@/components/shared/EmptyState';
 import type { FactorExposureWithCategory } from '@/api/factors';
 
 const CATEGORY_ICONS: Record<string, typeof TrendingUp> = {
@@ -204,13 +204,12 @@ export function Factors() {
 
       {/* Empty State */}
       {!isLoading && !factorsError && symbols.length === 0 && (
-        <Card>
-          <div className="flex flex-col items-center justify-center h-64 text-[var(--color-text-muted)]">
-            <Layers className="w-12 h-12 mb-4 opacity-50" />
-            <p>No positions in your portfolio</p>
-            <p className="text-sm mt-1">Add positions to analyze their factor exposures</p>
-          </div>
-        </Card>
+        <EmptyState
+          icon={<Layers className="w-8 h-8" />}
+          kicker="FACTORS · Awaiting Positions"
+          title="No positions in your portfolio"
+          description="Add positions to analyze their factor exposures across momentum, quality, value, and 80+ institutional cores."
+        />
       )}
 
       {/* No factor data */}

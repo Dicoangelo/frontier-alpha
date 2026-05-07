@@ -324,10 +324,23 @@ export default function Trading() {
                   <p className="text-sm">Loading positions...</p>
                 </div>
               ) : positions.length === 0 ? (
-                <div className="py-6 text-center text-theme-muted">
-                  <Activity className="w-8 h-8 mx-auto mb-2 text-theme-muted" />
-                  <p className="text-sm font-semibold">No positions</p>
-                  <p className="text-xs mt-1">Place trades to build your portfolio</p>
+                <div className="py-8 text-center animate-fade-in-up">
+                  <div
+                    className="w-12 h-12 mx-auto mb-3 rounded-2xl flex items-center justify-center"
+                    style={{
+                      backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
+                      boxShadow: '0 0 30px rgba(123,44,255,0.2)',
+                    }}
+                  >
+                    <Activity className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+                  </div>
+                  <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">
+                    HOLDINGS · Empty
+                  </p>
+                  <p className="text-sm font-semibold text-theme">No positions</p>
+                  <p className="text-xs mt-1 text-theme-secondary leading-relaxed max-w-xs mx-auto">
+                    Place trades to build your portfolio. Live P&amp;L appears here.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2 animate-stagger">

@@ -95,32 +95,18 @@ function StrategySelectorInner() {
         <div className="text-sm text-theme leading-relaxed">{strategy.description}</div>
         <div className="mt-3 flex flex-wrap gap-2">
           <span
-            className="px-2.5 py-1 mono text-[10px] tracking-[0.2em] uppercase rounded-full"
-            style={{
-              backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-              color: 'var(--color-accent)',
-              border: '1px solid color-mix(in srgb, var(--color-accent) 22%, transparent)',
-            }}
+            className="px-2.5 py-1 mono text-[10px] tracking-[0.2em] uppercase rounded-full border bg-[var(--color-accent)]/12 text-[var(--color-accent)] border-[var(--color-accent)]/22"
           >
             {strategy.outlook}
           </span>
           {strategy.legs.map((leg, i) => (
             <span
               key={i}
-              className="px-2.5 py-1 mono text-[10px] tracking-[0.2em] uppercase rounded-full border tabular-nums"
-              style={
+              className={`px-2.5 py-1 mono text-[10px] tracking-[0.2em] uppercase rounded-full border tabular-nums ${
                 leg.quantity > 0
-                  ? {
-                      backgroundColor: 'color-mix(in srgb, var(--color-positive) 12%, transparent)',
-                      color: 'var(--color-positive)',
-                      borderColor: 'color-mix(in srgb, var(--color-positive) 22%, transparent)',
-                    }
-                  : {
-                      backgroundColor: 'color-mix(in srgb, var(--color-negative) 12%, transparent)',
-                      color: 'var(--color-negative)',
-                      borderColor: 'color-mix(in srgb, var(--color-negative) 22%, transparent)',
-                    }
-              }
+                  ? 'bg-[var(--color-positive)]/12 text-[var(--color-positive)] border-[var(--color-positive)]/22'
+                  : 'bg-[var(--color-negative)]/12 text-[var(--color-negative)] border-[var(--color-negative)]/22'
+              }`}
             >
               {leg.quantity > 0 ? 'Long' : 'Short'}{' '}
               {leg.type === 'stock' ? '100 shares' : `${leg.strike} ${leg.type.toUpperCase()}`}

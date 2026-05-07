@@ -164,7 +164,7 @@ export function HelpTooltip({
             <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{content}</p>
 
             {formula && (
-              <div className="mt-3 p-2 bg-[var(--color-bg-tertiary)] rounded text-xs font-mono text-[var(--color-text-secondary)]">
+              <div className="mt-3 p-2 bg-[var(--color-bg-tertiary)] rounded text-xs mono text-[var(--color-text-secondary)]">
                 {formula}
               </div>
             )}

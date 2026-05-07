@@ -359,7 +359,7 @@ export function HeroEnhanced({ onAnalyze, onLoadDemo, isAnalyzing }: HeroEnhance
               className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight text-[var(--color-text)]"
             >
               Frontier
-              <span className="text-gradient-brand holo-pulse">Alpha</span>
+              <span className="text-gradient-halo holo-pulse">Alpha</span>
             </h1>
 
             <p className="mt-5 text-xl sm:text-2xl text-[var(--color-text-secondary)] max-w-xl leading-snug">
@@ -491,7 +491,7 @@ function MetricChip({ metric, start }: { metric: MetricTile; start: boolean }) {
       <span className="text-2xl sm:text-3xl font-black text-[var(--color-text)] tabular-nums leading-none">
         {metric.prefix}
         {display}
-        <span className="text-gradient-brand">{metric.suffix}</span>
+        <span className="text-gradient-halo">{metric.suffix}</span>
       </span>
     </div>
   );

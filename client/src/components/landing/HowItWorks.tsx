@@ -171,7 +171,7 @@ export function HowItWorks({ onCTAClick }: HowItWorksProps): React.JSX.Element {
         {/* ── Header ─────────────────────────────────────────────────── */}
         <header className={sectionInView ? 'animate-fade-in-up' : 'opacity-0'}>
           <div className="text-[10px] sm:text-xs mono tracking-[0.4em] uppercase text-theme-muted">
-            <span className="text-gradient-brand">How it works</span>
+            <span className="text-gradient-halo">How it works</span>
             <span className="mx-2 text-theme-muted">·</span>
             <span>Three steps to model-driven investing</span>
           </div>
@@ -180,7 +180,7 @@ export function HowItWorks({ onCTAClick }: HowItWorksProps): React.JSX.Element {
             className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.05] tracking-tight text-[var(--color-text)]"
           >
             From your tickers to{' '}
-            <span className="text-gradient-brand">your edge</span>
+            <span className="text-gradient-halo">your edge</span>
           </h2>
           <p className="mt-4 max-w-2xl text-base sm:text-lg text-[var(--color-text-secondary)]">
             Paste a portfolio. Watch the cognitive factor model decompose every

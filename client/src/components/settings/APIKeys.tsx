@@ -167,7 +167,7 @@ export function APIKeys() {
                 Save your API key now -- it will not be shown again
               </p>
               <div className="flex items-center gap-2 mt-2">
-                <code className="flex-1 px-3 py-2 rounded bg-[var(--color-bg-tertiary)] text-sm font-mono text-[var(--color-text)] break-all select-all">
+                <code className="flex-1 px-3 py-2 rounded bg-[var(--color-bg-tertiary)] text-sm mono text-[var(--color-text)] break-all select-all">
                   {createdKey}
                 </code>
                 <Button
@@ -312,7 +312,7 @@ export function APIKeys() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
-                  <code className="text-xs font-mono text-[var(--color-text-muted)]">
+                  <code className="text-xs mono text-[var(--color-text-muted)]">
                     {maskKeyId(key.id)}
                   </code>
                   <button

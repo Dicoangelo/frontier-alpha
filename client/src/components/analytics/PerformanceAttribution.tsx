@@ -209,8 +209,7 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
             </p>
           </div>
           <div
-            className="glass-slab-floating rounded-xl p-4"
-            style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 8%, transparent)' }}
+            className="glass-slab-floating rounded-xl p-4 bg-[var(--color-info)]/8"
           >
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-info)]">Active Return</p>
             <p className={`mt-1 mono text-xl font-bold tabular-nums ${data.brinson.activeReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
@@ -218,8 +217,7 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
             </p>
           </div>
           <div
-            className="glass-slab-floating rounded-xl p-4"
-            style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)' }}
+            className="glass-slab-floating rounded-xl p-4 bg-[var(--color-accent)]/8"
           >
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)]">Specific Return</p>
             <p className={`mt-1 mono text-xl font-bold tabular-nums ${data.factor.specificReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>

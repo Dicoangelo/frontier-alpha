@@ -1,7 +1,22 @@
 import { createClient, type SupabaseClient, type Session, type User } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://rqidgeittsjkpkykmdrz.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxaWRnZWl0dHNqa3BreWttZHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2ODYzMzAsImV4cCI6MjA4MzI2MjMzMH0.dIXoXR_sjm6bn3hDpZoZJaqRh6PRFU7RAfTPg--WWDo';
+// Production fallback values match the Vercel project. Once VITE_SUPABASE_URL +
+// VITE_SUPABASE_ANON_KEY are set on Vercel (see scripts/wire-production-env.sh),
+// these fallbacks become unreachable and can be deleted.
+const FALLBACK_URL = 'https://rqidgeittsjkpkykmdrz.supabase.co';
+const FALLBACK_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxaWRnZWl0dHNqa3BreWttZHJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2ODYzMzAsImV4cCI6MjA4MzI2MjMzMH0.dIXoXR_sjm6bn3hDpZoZJaqRh6PRFU7RAfTPg--WWDo';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || FALLBACK_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || FALLBACK_ANON_KEY;
+
+if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    '[supabase] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY not set in env — ' +
+      'using hardcoded fallback. Run scripts/wire-production-env.sh on Vercel and redeploy ' +
+      'so this code path is no longer reached.',
+  );
+}
 
 export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

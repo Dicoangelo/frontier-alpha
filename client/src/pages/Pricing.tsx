@@ -100,92 +100,143 @@ export function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
+    <div className="min-h-screen bg-theme grid-bg">
       {/* Sovereign bar */}
       <div className="sovereign-bar fixed top-0 left-0 right-0 z-50" />
 
-      <div className="max-w-6xl mx-auto px-4 py-16">
-        {/* Back navigation */}
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </button>
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="relative isolate overflow-hidden">
+        <div className="absolute inset-0 gradient-brand-subtle pointer-events-none" aria-hidden="true" />
 
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-black text-[var(--color-text)] mb-4">
-            Choose Your <span className="text-gradient-brand">Plan</span>
-          </h1>
-          <p className="text-lg text-[var(--color-text-muted)] max-w-xl mx-auto">
-            Institutional intelligence at every level. Start free, scale when you're ready.
-          </p>
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-10 sm:pt-24 sm:pb-12">
+          {/* Back navigation */}
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 mb-10 px-3 py-2 rounded-sm mono text-[10px] tracking-[0.3em] uppercase text-theme-muted hover:text-theme border border-transparent hover:border-[color:var(--color-border)] animate-press transition-[color,border-color] duration-200"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" />
+            Back
+          </button>
+
+          <div className="text-center max-w-3xl mx-auto animate-fade-in-up">
+            <p className="text-[10px] sm:text-xs mono tracking-[0.5em] uppercase text-theme-muted mb-5">
+              Pricing · <span className="text-[color:var(--color-accent-secondary)]">Sovereign Tiers</span>
+            </p>
+
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight text-theme">
+              Choose Your{' '}
+              <span className="text-gradient-brand holo-pulse">Plan</span>
+            </h1>
+
+            <p className="mt-6 text-lg sm:text-xl text-theme-secondary leading-relaxed max-w-2xl mx-auto">
+              Institutional intelligence at every level. Start free, scale when you're ready.
+            </p>
+
+            <p className="mt-4 text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">
+              80+ Factors · Explainable AI · Real-Time Risk
+            </p>
+          </div>
         </div>
+      </section>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+      {/* ── Pricing Cards ────────────────────────────────────────────────── */}
+      <section className="px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20 lg:pb-24">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto animate-stagger">
           {PLANS.map((plan) => {
             const isCurrent = plan.name.toLowerCase() === currentPlan;
             const isLoading = loadingPlan === plan.name;
+            const isFree = plan.priceId === null;
+
+            const cardSurface = plan.highlighted
+              ? 'border-sovereign glass-slab md:scale-[1.02] shadow-[0_8px_50px_rgba(123,44,255,0.18)]'
+              : 'glass-slab';
 
             return (
               <div
                 key={plan.name}
-                className={`glass-slab rounded-sm p-6 sm:p-8 flex flex-col relative ${
-                  plan.highlighted ? 'border border-[var(--color-accent)]/40 shadow-[0_0_40px_color-mix(in srgb, var(--color-accent) 15%, transparent)]' : ''
-                }`}
+                className={`${cardSurface} rounded-2xl p-6 sm:p-8 flex flex-col relative animate-enter`}
               >
                 {plan.highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-[var(--color-accent)] text-white text-[10px] mono tracking-[0.3em] uppercase rounded-full">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-[image:var(--gradient-sovereign)] text-white text-[10px] mono tracking-[0.3em] uppercase rounded-full shadow-[0_4px_20px_rgba(123,44,255,0.45)]">
                     Most Popular
                   </div>
                 )}
 
+                {/* Tier head */}
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-[var(--color-text)] mb-1">{plan.name}</h3>
-                  <div className="flex items-baseline gap-1 mb-2">
-                    <span className="text-4xl font-black text-[var(--color-text)]">{plan.price}</span>
-                    <span className="text-sm text-[var(--color-text-muted)]">{plan.priceNote}</span>
+                  <h3
+                    className={`text-xl font-bold tracking-tight mb-3 ${
+                      plan.highlighted ? 'text-gradient-brand' : 'text-theme'
+                    }`}
+                  >
+                    {plan.name}
+                  </h3>
+
+                  <div className="flex items-baseline gap-1.5 mb-3">
+                    <span className="text-5xl sm:text-6xl font-black text-theme leading-none">
+                      {plan.price}
+                    </span>
+                    <span className="text-sm text-theme-muted mono tracking-[0.15em] uppercase">
+                      {plan.priceNote}
+                    </span>
                   </div>
-                  <p className="text-sm text-[var(--color-text-muted)]">{plan.description}</p>
+
+                  <p className="text-sm text-theme-secondary leading-relaxed">{plan.description}</p>
                 </div>
 
+                {/* Divider */}
+                <div className="h-px w-full bg-[color:var(--color-border-light)] mb-6" aria-hidden="true" />
+
+                {/* Feature list */}
                 <ul className="space-y-3 mb-8 flex-1">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
-                      <Check className="w-4 h-4 text-[var(--color-positive)] flex-shrink-0 mt-0.5" />
-                      {feature}
+                    <li
+                      key={feature}
+                      className="flex items-start gap-3 text-sm text-theme-secondary leading-relaxed"
+                    >
+                      <Check
+                        className="w-5 h-5 flex-shrink-0 mt-0.5 text-[color:var(--color-positive)]"
+                        aria-hidden="true"
+                      />
+                      <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
 
+                {/* CTA */}
                 {isCurrent ? (
                   <button
                     disabled
-                    className="w-full py-3 px-4 rounded-sm text-sm font-medium bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-default mono tracking-[0.1em] uppercase"
+                    aria-label={`${plan.name} is your current plan`}
+                    className="w-full py-3 px-4 rounded-sm text-sm font-medium bg-[var(--color-bg-tertiary)] text-theme-muted cursor-default mono text-[10px] tracking-[0.3em] uppercase border border-[color:var(--color-border)]"
                   >
                     Current Plan
                   </button>
-                ) : plan.priceId === null ? (
+                ) : isFree ? (
                   <button
                     disabled
-                    className="w-full py-3 px-4 rounded-sm text-sm font-medium bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-default mono tracking-[0.1em] uppercase"
+                    aria-label="Free plan is included"
+                    className="w-full py-3 px-4 rounded-sm bg-transparent border border-[color:var(--color-border)] text-theme-secondary cursor-default mono text-[10px] tracking-[0.3em] uppercase"
                   >
                     Free Forever
+                  </button>
+                ) : plan.highlighted ? (
+                  <button
+                    onClick={() => handleCheckout(plan)}
+                    disabled={isLoading}
+                    aria-label={`Upgrade to ${plan.name}`}
+                    className="w-full py-3 px-4 rounded-sm bg-[image:var(--gradient-sovereign)] text-white mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:brightness-110 hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)] disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-[0_4px_30px_rgba(123,44,255,0.35)]"
+                  >
+                    {isLoading ? 'Redirecting…' : 'Get Started'}
                   </button>
                 ) : (
                   <button
                     onClick={() => handleCheckout(plan)}
                     disabled={isLoading}
-                    className={`w-full py-3 px-4 rounded-sm text-sm font-medium mono tracking-[0.1em] uppercase transition-all click-feedback ${
-                      plan.highlighted
-                        ? 'bg-[var(--color-accent)] text-white hover:opacity-90 shadow-[0_0_20px_color-mix(in srgb, var(--color-accent) 30%, transparent)]'
-                        : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text)] hover:bg-[var(--color-border)]'
-                    } disabled:opacity-50`}
+                    aria-label={`Upgrade to ${plan.name}`}
+                    className="w-full py-3 px-4 rounded-sm glass-slab text-theme mono text-[10px] font-bold tracking-[0.3em] uppercase animate-press animate-lift hover:border-[color:var(--color-border-hover)] disabled:opacity-50"
                   >
-                    {isLoading ? 'Redirecting...' : 'Get Started'}
+                    {isLoading ? 'Redirecting…' : 'Get Started'}
                   </button>
                 )}
               </div>
@@ -193,11 +244,34 @@ export function Pricing() {
           })}
         </div>
 
-        {/* Footer note */}
-        <p className="text-center text-xs text-[var(--color-text-muted)] mt-8 mono">
-          All plans include SSL encryption, SOC 2 compliance, and 99.9% uptime SLA.
-        </p>
-      </div>
+        {/* ── Trust strip / contact-sales row ───────────────────────────── */}
+        <div className="max-w-6xl mx-auto mt-12 sm:mt-16">
+          <div className="glass-slab-floating rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+            <div className="max-w-xl">
+              <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted mb-2">
+                Need <span className="text-[color:var(--color-accent-secondary)]">More</span>
+              </p>
+              <h2 className="text-xl sm:text-2xl font-bold text-theme tracking-tight">
+                <span className="text-gradient-brand">Custom factor models</span> and dedicated infrastructure.
+              </h2>
+              <p className="mt-2 text-sm text-theme-secondary leading-relaxed">
+                Talk to our team about volume seats, on-prem deployment, and bespoke factor research.
+              </p>
+            </div>
+
+            <a
+              href="mailto:dico.angelo97@gmail.com?subject=FrontierAlpha%20Enterprise%20Inquiry"
+              className="px-6 py-3 rounded-sm bg-transparent border border-[color:var(--color-border)] text-theme-secondary hover:text-theme hover:border-[color:var(--color-border-hover)] mono text-[10px] font-bold tracking-[0.3em] uppercase animate-press animate-lift transition-[color,border-color] duration-200 whitespace-nowrap"
+            >
+              Contact Sales
+            </a>
+          </div>
+
+          <p className="text-center text-[10px] mono tracking-[0.3em] uppercase text-theme-muted mt-8">
+            SSL Encryption · SOC 2 Compliance · 99.9% Uptime SLA
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

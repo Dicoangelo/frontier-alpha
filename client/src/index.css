@@ -526,6 +526,40 @@
     0% { opacity: 0; transform: translateY(6px); }
     100% { opacity: 1; transform: translateY(0); }
   }
+
+  /* ── Family-grade enter animations (formerly referenced but undefined,
+     causing hard cuts on toasts, sidebars, and overlays). ── */
+  .animate-fade-in {
+    animation: fa-fade-in var(--motion-duration-base) var(--motion-ease-out) both;
+  }
+  @keyframes fa-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .animate-slide-in-left {
+    animation: fa-slide-in-left var(--motion-duration-slow) var(--motion-ease-out) both;
+  }
+  @keyframes fa-slide-in-left {
+    from { transform: translateX(-100%); opacity: 0; }
+    to   { transform: translateX(0);     opacity: 1; }
+  }
+
+  .animate-slide-in-right {
+    animation: fa-slide-in-right var(--motion-duration-base) var(--motion-ease-out) both;
+  }
+  @keyframes fa-slide-in-right {
+    from { transform: translateX(16px); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+  }
+
+  .animate-pulse-subtle {
+    animation: fa-pulse-subtle 2.4s ease-in-out infinite;
+  }
+  @keyframes fa-pulse-subtle {
+    0%, 100% { opacity: 0.6; }
+    50%      { opacity: 1; }
+  }
 }
 
 /* ── Motion utility classes (MOTION-002) ────────────────────────────── */

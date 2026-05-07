@@ -159,7 +159,7 @@ export function APIKeys() {
     <div className="space-y-4">
       {/* Created key banner -- shown once after creation */}
       {createdKey && (
-        <div className="p-4 rounded-lg border-2 border-[color-mix(in_srgb,var(--color-warning)_40%,transparent)] bg-[color-mix(in_srgb,var(--color-warning)_5%,transparent)]">
+        <div className="glass-slab-floating relative overflow-hidden rounded-lg p-4 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-warning)] shadow-[0_8px_30px_-10px_rgba(234,179,8,0.35)]">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-[var(--color-warning)] mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
@@ -228,7 +228,7 @@ export function APIKeys() {
                 value={newKeyName}
                 onChange={(e) => setNewKeyName(e.target.value)}
                 placeholder="e.g., Trading Bot, Portfolio Sync"
-                className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-info)] bg-transparent"
+                className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleCreate();
@@ -243,21 +243,25 @@ export function APIKeys() {
               </label>
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={() => setNewKeyPermissions('read')}
-                  className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm transition ${
+                  aria-pressed={newKeyPermissions === 'read'}
+                  className={`flex-1 py-2.5 px-3 rounded-lg border-2 text-sm mono tracking-[0.1em] capitalize animate-press transition-[border-color,background-color,color] duration-200 ${
                     newKeyPermissions === 'read'
-                      ? 'border-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)]'
-                      : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
+                      ? 'border-[var(--color-accent)] bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                      : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] hover:text-[var(--color-text)]'
                   }`}
                 >
                   Read Only
                 </button>
                 <button
+                  type="button"
                   onClick={() => setNewKeyPermissions('readwrite')}
-                  className={`flex-1 py-2 px-3 rounded-lg border-2 text-sm transition ${
+                  aria-pressed={newKeyPermissions === 'readwrite'}
+                  className={`flex-1 py-2.5 px-3 rounded-lg border-2 text-sm mono tracking-[0.1em] capitalize animate-press transition-[border-color,background-color,color] duration-200 ${
                     newKeyPermissions === 'readwrite'
-                      ? 'border-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)]'
-                      : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
+                      ? 'border-[var(--color-accent)] bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                      : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] hover:text-[var(--color-text)]'
                   }`}
                 >
                   Read &amp; Write
@@ -312,8 +316,9 @@ export function APIKeys() {
                     {maskKeyId(key.id)}
                   </code>
                   <button
+                    type="button"
                     onClick={() => toggleKeyVisibility(key.id)}
-                    className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition"
+                    className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors duration-200 animate-press"
                     title={visibleKeyIds.has(key.id) ? 'Hide details' : 'Show details'}
                   >
                     {visibleKeyIds.has(key.id) ? (

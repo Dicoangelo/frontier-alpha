@@ -99,13 +99,13 @@ export function Landing() {
                 <button
                   onClick={handleAnalyze}
                   disabled={isAnalyzing}
-                  className="px-8 py-3 bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase transition-all click-feedback disabled:opacity-50 shadow-[0_0_30px_color-mix(in_srgb,var(--color-accent)_30%,transparent)] hover:shadow-[0_0_40px_color-mix(in_srgb,var(--color-accent)_50%,transparent)] hover:scale-[1.02] min-w-[200px]"
+                  className="px-8 py-3 bg-[image:var(--gradient-sovereign)] text-white rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)] hover:brightness-110 min-w-[200px]"
                 >
                   {isAnalyzing ? 'Analyzing…' : 'Analyze Your Portfolio'}
                 </button>
                 <button
                   onClick={handleViewDemo}
-                  className="px-8 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] hover:border-[var(--color-accent-secondary)] hover:text-[var(--color-accent-secondary)] rounded-sm mono text-[10px] font-bold tracking-[0.3em] uppercase transition-all click-feedback min-w-[140px]"
+                  className="px-8 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] hover:border-[var(--color-accent-secondary)] hover:text-[var(--color-accent-secondary)] rounded-sm mono text-[10px] font-bold tracking-[0.3em] uppercase animate-press animate-lift transition-[background-color,border-color,color] duration-200 min-w-[140px]"
                 >
                   Load Mag 7 Demo
                 </button>
@@ -160,13 +160,13 @@ export function Landing() {
                 onChange={(e) => setTickers(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="NVDA, AAPL, MSFT, GOOGL..."
-                className="flex-1 px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] transition-all mono text-sm"
+                className="flex-1 px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm"
                 disabled={isAnalyzing}
               />
               <button
                 onClick={handleAnalyze}
                 disabled={isAnalyzing}
-                className="px-8 py-3 bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase transition-all click-feedback disabled:opacity-50 shadow-[0_0_30px_color-mix(in_srgb,var(--color-accent)_30%,transparent)] hover:shadow-[0_0_40px_color-mix(in_srgb,var(--color-accent)_50%,transparent)] hover:scale-[1.02] min-w-[140px]"
+                className="px-8 py-3 bg-[image:var(--gradient-sovereign)] text-white rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)] hover:brightness-110 min-w-[140px]"
               >
                 {isAnalyzing ? 'Analyzing' : 'Analyze'}
               </button>

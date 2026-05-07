@@ -30,17 +30,17 @@ function MetricComparison({ label, valueA, valueB, format, invertColor }: Metric
 
   return (
     <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-center py-2 border-b border-[var(--color-border-light)] last:border-0">
-      <div className="text-right font-mono text-sm text-[var(--color-text)]">{fmt(valueA)}</div>
+      <div className="text-right mono text-sm text-theme tabular-nums">{fmt(valueA)}</div>
       <div className="text-center">
-        <div className="text-xs text-[var(--color-text-muted)] mb-0.5">{label}</div>
+        <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted mb-0.5">{label}</p>
         {delta !== undefined && (
-          <div className={`text-xs font-bold ${improved ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+          <div className={`text-xs font-bold mono tabular-nums ${improved ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {delta > 0 ? '+' : ''}
             {format === 'percent' ? `${(delta * 100).toFixed(2)}%` : delta.toFixed(2)}
           </div>
         )}
       </div>
-      <div className="text-left font-mono text-sm text-[var(--color-text)]">{fmt(valueB)}</div>
+      <div className="text-left mono text-sm text-theme tabular-nums">{fmt(valueB)}</div>
     </div>
   );
 }
@@ -56,20 +56,21 @@ interface EpisodeSelectorProps {
 function EpisodeSelector({ label, selected, episodes, onSelect, onClear }: EpisodeSelectorProps) {
   return (
     <div>
-      <div className="text-xs text-[var(--color-text-muted)] mb-1.5">{label}</div>
+      <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1.5">{label}</p>
       {selected ? (
-        <div className="flex items-center gap-2 p-2 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] rounded-lg">
-          <span className="text-sm font-medium text-[var(--color-accent)]">Episode {selected.episodeNumber}</span>
-          <span className="text-xs text-[var(--color-text-muted)]">
+        <div className="flex items-center gap-2 p-2 rounded-lg bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]">
+          <span className="text-sm font-medium text-[var(--color-accent)] tabular-nums">Episode {selected.episodeNumber}</span>
+          <span className="mono text-[10px] tracking-[0.1em] text-theme-muted tabular-nums">
             {selected.portfolioReturn !== undefined
               ? `${(selected.portfolioReturn * 100).toFixed(2)}%`
               : '—'}
           </span>
           <button
             onClick={onClear}
-            className="ml-auto p-0.5 hover:bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] rounded"
+            className="ml-auto p-0.5 hover:bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] rounded animate-press transition-[background-color] duration-150"
+            aria-label="Clear selection"
           >
-            <X className="w-3 h-3 text-[var(--color-accent)]" />
+            <X className="w-3 h-3 text-[var(--color-accent)]" aria-hidden="true" />
           </button>
         </div>
       ) : (
@@ -79,7 +80,8 @@ function EpisodeSelector({ label, selected, episodes, onSelect, onClear }: Episo
             if (ep) onSelect(ep);
           }}
           value=""
-          className="w-full p-2 text-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text)]"
+          className="w-full p-2 text-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-theme focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-[box-shadow,border-color] duration-150"
+          aria-label={label}
         >
           <option value="" disabled>
             Select episode...
@@ -112,11 +114,16 @@ export function EpisodeComparisonView() {
   const hasComparison = episodeA && episodeB;
 
   return (
-    <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
+    <div className="glass-slab rounded-2xl p-6 sm:p-8 animate-enter">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-4">
-        <GitCompare className="w-5 h-5 text-[var(--color-accent)]" />
-        <h3 className="text-lg font-semibold text-[var(--color-text)]">Episode Comparison</h3>
+      <div className="mb-4">
+        <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+          Side-by-Side
+        </p>
+        <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
+          <GitCompare className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+          Episode Comparison
+        </h3>
       </div>
 
       {/* Episode Selectors */}
@@ -129,7 +136,7 @@ export function EpisodeComparisonView() {
           onClear={() => setEpisodeA(null)}
         />
         <div className="pb-2">
-          <ArrowRight className="w-5 h-5 text-[var(--color-text-muted)]" />
+          <ArrowRight className="w-5 h-5 text-theme-muted" aria-hidden="true" />
         </div>
         <EpisodeSelector
           label="Episode B (Later)"
@@ -144,48 +151,48 @@ export function EpisodeComparisonView() {
       {hasComparison ? (
         <div>
           {/* Performance Summary */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="text-center p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
-              <div className="text-xs text-[var(--color-text-muted)]">Return Delta</div>
+          <div className="grid grid-cols-3 gap-3 mb-4 animate-stagger">
+            <div className="glass-slab-floating rounded-xl p-3 text-center animate-enter">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Return Δ</p>
               {(() => {
                 const delta = (episodeB.portfolioReturn || 0) - (episodeA.portfolioReturn || 0);
                 return (
-                  <div className={`text-lg font-bold ${delta >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+                  <p className={`text-lg font-bold tabular-nums mt-0.5 ${delta >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
                     {delta >= 0 ? '+' : ''}
                     {(delta * 100).toFixed(2)}%
-                  </div>
+                  </p>
                 );
               })()}
             </div>
-            <div className="text-center p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
-              <div className="text-xs text-[var(--color-text-muted)]">Sharpe Delta</div>
+            <div className="glass-slab-floating rounded-xl p-3 text-center animate-enter">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Sharpe Δ</p>
               {(() => {
                 const delta = (episodeB.sharpeRatio || 0) - (episodeA.sharpeRatio || 0);
                 return (
-                  <div className={`text-lg font-bold ${delta >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+                  <p className={`text-lg font-bold tabular-nums mt-0.5 ${delta >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
                     {delta >= 0 ? '+' : ''}
                     {delta.toFixed(2)}
-                  </div>
+                  </p>
                 );
               })()}
             </div>
-            <div className="text-center p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
-              <div className="text-xs text-[var(--color-text-muted)]">Decision Delta</div>
-              <div className="text-lg font-bold text-[var(--color-text)]">
+            <div className="glass-slab-floating rounded-xl p-3 text-center animate-enter">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Decisions Δ</p>
+              <p className="text-lg font-bold text-theme tabular-nums mt-0.5">
                 {episodeB.decisionsCount - episodeA.decisionsCount >= 0 ? '+' : ''}
                 {episodeB.decisionsCount - episodeA.decisionsCount}
-              </div>
+              </p>
             </div>
           </div>
 
           {/* Detailed Metrics */}
-          <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4">
+          <div className="glass-slab-floating rounded-xl p-4">
             <div className="grid grid-cols-3 gap-3 mb-3 text-center">
-              <div className="text-sm font-medium text-[var(--color-accent)]">
+              <div className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] tabular-nums">
                 Episode {episodeA.episodeNumber}
               </div>
-              <div className="text-xs text-[var(--color-text-muted)]">Metric</div>
-              <div className="text-sm font-medium text-[var(--color-accent)]">
+              <div className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Metric</div>
+              <div className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] tabular-nums">
                 Episode {episodeB.episodeNumber}
               </div>
             </div>
@@ -218,7 +225,7 @@ export function EpisodeComparisonView() {
           </div>
 
           {/* Improvement Indicator */}
-          <div className="mt-4 p-3 rounded-lg border border-[var(--color-border-light)]">
+          <div className="mt-4 glass-slab-floating rounded-xl p-3">
             {(() => {
               const retDelta = (episodeB.portfolioReturn || 0) - (episodeA.portfolioReturn || 0);
               const sharpeDelta = (episodeB.sharpeRatio || 0) - (episodeA.sharpeRatio || 0);
@@ -228,15 +235,15 @@ export function EpisodeComparisonView() {
               return (
                 <div className="flex items-center gap-2">
                   {improved ? (
-                    <TrendingUp className="w-5 h-5 text-[var(--color-positive)]" />
+                    <TrendingUp className="w-5 h-5 text-[var(--color-positive)]" aria-hidden="true" />
                   ) : (
-                    <TrendingDown className="w-5 h-5 text-[var(--color-negative)]" />
+                    <TrendingDown className="w-5 h-5 text-[var(--color-negative)]" aria-hidden="true" />
                   )}
-                  <span className="text-sm text-[var(--color-text)]">
+                  <span className="text-sm text-theme">
                     {improved
                       ? 'CVRF beliefs improved both return and risk-adjusted performance.'
                       : mixed
-                      ? 'Mixed results — CVRF is still learning optimal factor exposure.'
+                      ? 'Mixed results. CVRF is still learning optimal factor exposure.'
                       : 'Performance decreased. CVRF will adjust beliefs in the next cycle.'}
                   </span>
                 </div>
@@ -245,7 +252,7 @@ export function EpisodeComparisonView() {
           </div>
         </div>
       ) : (
-        <div className="text-center py-6 text-sm text-[var(--color-text-muted)]">
+        <div className="text-center py-6 text-sm text-theme-muted">
           Select two episodes above to compare their performance
         </div>
       )}

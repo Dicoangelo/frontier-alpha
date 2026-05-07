@@ -1,6 +1,8 @@
 # Frontier Alpha — Design System Map
 
-> Generated: 2026-03-25 | Source: `client/src/index.css` + `client/tailwind.config.js` + component scan
+> Generated: 2026-03-25 | Updated: 2026-05-07 (v1.1.0 Family Aesthetic) | Source: `client/src/index.css` + `client/tailwind.config.js` + component scan
+
+> **v1.1.0 (2026-05-07):** Family Aesthetic Patterns section added (§12). 35 files polished across PRs #3 + #4 to align with `metaventionsai.com`, `careers.metaventionsai.com`, `friendlyface.metaventionsai.com`. See §12 below for the canonical pattern register.
 
 ---
 
@@ -373,7 +375,154 @@ Z-index values are scattered as bare Tailwind (`z-40`, `z-50`) or inline. A `z-i
 
 ---
 
-## 12. Stitch Integration Opportunities
+## 12. Family Aesthetic Patterns (v1.1.0 — 2026-05-07)
+
+> Patterns now applied systemically across 35 files in PRs #3 + #4. These are the canonical building blocks for any new component or page in Frontier Alpha — and they match the rest of the Metaventions AI family (`metaventionsai.com`, `careers.metaventionsai.com`, `friendlyface.metaventionsai.com`).
+
+### 12.1 Glass Surfaces — when to use which
+
+| Class | When to use | Examples |
+|---|---|---|
+| `.glass-slab` | Standard cards, panels, in-page surfaces. Matte glass at rest. | PortfolioOverview, FactorExposures, RiskMetrics, position rows |
+| `.glass-slab-floating` | Anything that visually floats above the page — error boundaries, sidebar, dropdowns, full-page error UI, toast surfaces. Higher blur (24px) and a stronger shadow. | Sidebar, ErrorBoundary (full page), Toast, ConnectionStatus banner |
+| `.glass-modal` | Modals and bottom sheets. Highest blur (30px) — enough to dim the page beneath. Always pair with a `sovereign-bar` 3px gradient top rail. | Pricing modal, BottomSheet, CommandPalette, KeyboardHelpModal, WelcomeModal, FeatureTour |
+
+**Rule:** Never use `bg-[var(--color-bg-secondary)]` directly when one of the three glass classes applies. Glass is the default surface in this family — flat tints look out of place.
+
+### 12.2 Type-Rail Banner Pattern
+
+Used by **Toast, SectionErrorBoundary, ConnectionStatus, MockDataBanner, ModelStatusBanner**, and the inline banners in Earnings/Trading. The pattern:
+
+```
+relative overflow-hidden rounded-sm
+glass-slab-floating
+before:absolute before:left-0 before:top-0 before:h-full before:w-[3px]
+before:bg-[var(--color-{state}-strong)]
+shadow-[0_0_24px_-8px_var(--color-{state}-glow)]
+```
+
+- `{state}` ∈ `info | success | warning | danger`
+- 3px left rail in the type color
+- Soft colored shadow glow extending the type signal beyond the rail
+- Always paired with a `mono uppercase` kicker (e.g. `MARKET STATUS`, `MOCK DATA`, `MODEL STATUS`)
+
+### 12.3 Mono Kicker Register
+
+Exact class string:
+
+```
+mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted
+```
+
+**When to use:**
+- Section labels above hero metrics (`MARKET STATUS`, `EQUITY CURVE`, `RISK METRICS`)
+- Page-title kickers in Header.tsx
+- Card kickers above the gradient hero number in PortfolioOverview, MarketStatusStrip
+- Banner labels (`MOCK DATA`, `OFFLINE`, `MODEL STATUS`)
+- Table column headers in execution pages (Trading, Options, Earnings, Tax)
+
+**When NOT to use:** body copy, button labels, tooltip content, anywhere the user reads more than a 1-3 word phrase.
+
+### 12.4 Sovereign CTA Pattern (Primary Button)
+
+Primary button class string for any conversion-critical action (Sign Up, Upgrade, Try Again, Confirm Order):
+
+```
+inline-flex items-center justify-center
+bg-[image:var(--gradient-sovereign)]
+text-white font-medium tracking-wide
+px-4 py-2 rounded-sm
+animate-press hover:animate-lift
+shadow-[0_0_24px_-8px_var(--color-accent)]
+focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]
+disabled:opacity-50 disabled:cursor-not-allowed
+```
+
+- `bg-[image:var(--gradient-sovereign)]` is the magenta→amethyst→cyan signature
+- `animate-press` + `animate-lift` replace the old `transition-all` + hover-scale jank
+- Sovereign glow is a soft outset shadow in the accent color
+- The pattern is applied in `Button` variant `primary`; do not recreate it ad hoc
+
+### 12.5 Segmented Control Pattern
+
+Used by EquityCurve timeframe pills, theme switcher in Settings, view-mode toggles in Trading/Options/CVRF/Backtest/ML.
+
+```
+glass-slab inline-flex p-1 rounded-sm gap-1
+[button]:
+  px-3 py-1.5 text-xs mono uppercase tracking-[0.2em] rounded-sm
+[active]:
+  bg-[var(--color-accent-light)] text-[var(--color-accent)]
+[inactive]:
+  text-theme-muted hover:text-theme
+```
+
+**Rule:** Active state is `--color-accent-light` (low-alpha amethyst tint), not a full sovereign-gradient fill — that would be too loud for a control surface.
+
+### 12.6 Active Route Rail (Sidebar / MobileNav)
+
+Replaces the old "color swap" active state. The active link gets a 3px sovereign-gradient rail via `before:`:
+
+```
+relative
+[active]:before:absolute before:left-0 before:top-0 before:h-full before:w-[3px]
+before:bg-[image:var(--gradient-sovereign)]
+[active]:bg-[var(--color-accent-light)]
+[active]:text-[var(--color-accent)]
+```
+
+- Sidebar.tsx and MobileNav.tsx both use this — visual continuity between desktop and mobile
+- Sovereign-gradient rail signals "you are here" without dominating the chrome
+- Pairs with grouped section dividers in Sidebar (Insight / Execution / Account)
+
+### 12.7 Anti-CLS Rules
+
+**Mandatory** anywhere data streams or charts render:
+
+1. **`tabular-nums`** on every numeric metric. Streaming quotes, position values, equity curve labels, time displays, percentages. Without it, every digit-width change shifts the layout.
+2. **Explicit `min-h`** on every chart wrapper. EquityCurve uses `h-64`; intelligence-page charts use `min-h-[280px]`. Never let a chart container be content-driven.
+3. **Stable status-pill width** (Dashboard market status). Use `min-w` on pills whose label may swap (`OPEN` ↔ `CLOSED` ↔ `PRE-MARKET`).
+4. **Size-matched skeletons.** Skeleton screens must render at the exact final shape. Three skeletons rebuilt in v1.1.0 to match the polished final shapes (Dashboard, Portfolio, position rows).
+
+> **Why this matters:** Frontier Alpha is a streaming product. Every websocket tick is a layout-shift candidate. The CLS budget is zero — design accordingly.
+
+### 12.8 Motion Tokens
+
+Defined in `client/src/index.css`:
+
+| Token | Value | Used by |
+|---|---|---|
+| `--motion-duration-base` | `200ms` | hover, press, focus transitions |
+| `--motion-duration-slow` | `400ms` | page enter, route change, modal open |
+| `--motion-ease-out` | `cubic-bezier(0.16, 1, 0.3, 1)` | all easing |
+
+The four document-level keyframes (added in v1.1.0) bind to these tokens:
+
+| Keyframe | Duration token | Used by |
+|---|---|---|
+| `animate-fade-in` | `--motion-duration-base` | overlay enter, modal scrim |
+| `animate-slide-in-left` | `--motion-duration-slow` | sidebar enter, drawer enter |
+| `animate-slide-in-right` | `--motion-duration-slow` | toast enter, dropdown enter |
+| `animate-pulse-subtle` | `2s infinite` | live data indicators, holo-pulse hero |
+
+### 12.9 Quick Reference — Family Pattern Decision Tree
+
+```
+Is this a primary action button?           → Sovereign CTA pattern (§12.4)
+Is this a status / state surface?          → Type-Rail Banner pattern (§12.2)
+Is this a modal / sheet / overlay?         → glass-modal + sovereign-bar
+Is this a card or panel at rest?           → glass-slab
+Is this a floating overlay (not modal)?    → glass-slab-floating + type rail
+Is this a small label above a metric?      → Mono kicker register (§12.3)
+Is this a numeric metric?                  → tabular-nums + min-h on container
+Is this a chart container?                 → Explicit min-h, never content-driven
+Is this a tab / view toggle?               → Segmented control (§12.5)
+Is this an active nav link?                → Sovereign-gradient before: rail (§12.6)
+```
+
+---
+
+## 13. Stitch Integration Opportunities
 
 ### Tokens that map directly to Stitch
 
@@ -425,7 +574,7 @@ Z-index values are scattered as bare Tailwind (`z-40`, `z-50`) or inline. A `z-i
 
 ---
 
-## 13. Quick Reference Card
+## 14. Quick Reference Card
 
 ```
 DESIGN SYSTEM ENTRYPOINTS:

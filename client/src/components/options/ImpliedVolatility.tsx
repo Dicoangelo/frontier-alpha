@@ -98,7 +98,7 @@ function IVRankBar({ rank }: { rank: number }) {
   return (
     <div className="w-full h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
       <div
-        className={`h-full ${getColor(rank)} transition-all`}
+        className={`h-full ${getColor(rank)} transition-[width] duration-500 ease-out`}
         style={{ width: `${rank}%` }}
       />
     </div>
@@ -145,8 +145,8 @@ function IVGauge({ value, label, max = 100 }: { value: number; label: string; ma
       />
       {/* Value display */}
       <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-center">
-        <p className="text-lg font-bold text-[var(--color-text)]">{Math.round(value)}</p>
-        <p className="text-xs text-[var(--color-text-muted)]">{label}</p>
+        <p className="mono text-lg font-bold tabular-nums text-theme">{Math.round(value)}</p>
+        <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">{label}</p>
       </div>
     </div>
   );
@@ -162,9 +162,9 @@ function IVvsHVBar({ iv, hv }: { iv: number; hv: number }) {
 
   return (
     <div className="space-y-1">
-      <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
-        <span>HV30: {hv}%</span>
-        <span>IV: {iv}%</span>
+      <div className="flex justify-between mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">
+        <span className="tabular-nums">HV30: {hv}%</span>
+        <span className="tabular-nums">IV: {iv}%</span>
       </div>
       <div className="relative h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
         <div
@@ -172,11 +172,11 @@ function IVvsHVBar({ iv, hv }: { iv: number; hv: number }) {
           style={{ width: `${Math.min(hv / 100 * 100, 100)}%` }}
         />
         <div
-          className={`absolute h-full ${ratio >= 1.2 ? 'bg-[var(--color-warning)]' : ratio <= 0.9 ? 'bg-[var(--color-positive)]' : 'bg-[var(--color-info)]'}`}
+          className={`absolute h-full transition-[width] duration-500 ease-out ${ratio >= 1.2 ? 'bg-[var(--color-warning)]' : ratio <= 0.9 ? 'bg-[var(--color-positive)]' : 'bg-[var(--color-info)]'}`}
           style={{ width: `${Math.min(iv / 100 * 100, 100)}%` }}
         />
       </div>
-      <p className="text-xs text-center text-[var(--color-text-secondary)]">
+      <p className="mono text-[10px] tracking-[0.2em] uppercase text-center tabular-nums text-theme-secondary">
         IV/HV: {ratio.toFixed(2)}x ({premium}{premiumPercent}%)
       </p>
     </div>
@@ -212,9 +212,14 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
   return (
     <Card className={`p-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Activity className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="text-lg font-semibold text-[var(--color-text)]">Implied Volatility</h3>
+        <div>
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted">
+            Implied Volatility
+          </p>
+          <h3 className="mt-1 text-lg font-semibold text-theme flex items-center gap-2">
+            <Activity className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            Volatility surface
+          </h3>
         </div>
         <Button
           variant="ghost"
@@ -234,22 +239,22 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
       {portfolioIV && (
         <div className="space-y-4 mb-6">
           {/* IV Gauge and Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 glass-slab-floating rounded-xl p-4">
             <div className="flex flex-col items-center justify-center py-2">
               <IVGauge value={portfolioIV.averageIVRank} label="IV Rank" />
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <div className="text-center p-2 bg-[var(--color-bg)] rounded">
-                <p className="text-xs text-[var(--color-text-muted)]">Avg IV</p>
-                <p className="text-lg font-bold text-[var(--color-text)]">{portfolioIV.averageIV}%</p>
+              <div className="text-center glass-slab-floating rounded-lg p-2">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Avg IV</p>
+                <p className="mt-0.5 mono text-lg font-bold tabular-nums text-theme">{portfolioIV.averageIV}%</p>
               </div>
-              <div className="text-center p-2 bg-[var(--color-bg)] rounded">
-                <p className="text-xs text-[var(--color-text-muted)]">Avg HV</p>
-                <p className="text-lg font-bold text-[var(--color-text)]">{portfolioIV.averageHV}%</p>
+              <div className="text-center glass-slab-floating rounded-lg p-2">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Avg HV</p>
+                <p className="mt-0.5 mono text-lg font-bold tabular-nums text-theme">{portfolioIV.averageHV}%</p>
               </div>
-              <div className="text-center p-2 bg-[var(--color-bg)] rounded col-span-2">
-                <p className="text-xs text-[var(--color-text-muted)]">IV/HV Ratio</p>
-                <p className={`text-lg font-bold ${
+              <div className="text-center glass-slab-floating rounded-lg p-2 col-span-2">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">IV/HV Ratio</p>
+                <p className={`mt-0.5 mono text-lg font-bold tabular-nums ${
                   portfolioIV.averageIVvsHV >= 1.2 ? 'text-[var(--color-warning)]' :
                   portfolioIV.averageIVvsHV <= 0.9 ? 'text-[var(--color-positive)]' : 'text-[var(--color-info)]'
                 }`}>
@@ -291,36 +296,47 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
           </div>
 
           {/* Portfolio Insight */}
-          {portfolioIV.insights && (
-            <div className={`p-3 rounded-lg border ${
+          {portfolioIV.insights && (() => {
+            const railColor =
               portfolioIV.insights.overallSignal === 'high_iv'
-                ? 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]'
+                ? 'var(--color-warning)'
                 : portfolioIV.insights.overallSignal === 'low_iv'
-                ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)]'
-                : 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]'
-            }`}>
-              <div className="flex items-start gap-2">
-                <Info className="w-4 h-4 mt-0.5 text-[var(--color-text-secondary)]" />
-                <p className="text-sm text-[var(--color-text-secondary)]">{portfolioIV.insights.recommendation}</p>
+                ? 'var(--color-positive)'
+                : 'var(--color-info)';
+            return (
+              <div
+                className="glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]"
+                style={{
+                  backgroundColor: `color-mix(in srgb, ${railColor} 8%, transparent)`,
+                  ['--rail-color' as string]: railColor,
+                }}
+              >
+                <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: railColor }} />
+                <div className="flex items-start gap-2">
+                  <Info className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: railColor }} />
+                  <p className="text-sm leading-relaxed text-theme-secondary">
+                    {portfolioIV.insights.recommendation}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
 
       {/* Loading state */}
       {isLoading && (
-        <div className="py-8 text-center text-[var(--color-text-muted)]">
-          <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin" />
-          <p>Loading IV data...</p>
+        <div className="py-8 text-center text-theme-muted">
+          <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin" aria-hidden="true" />
+          <p className="mono text-[11px] tracking-[0.2em] uppercase">Loading IV data...</p>
         </div>
       )}
 
       {/* Error state */}
       {error && (
         <div className="py-6 text-center">
-          <AlertCircle className="w-8 h-8 mx-auto mb-2 text-[var(--color-warning)]" />
-          <p className="text-[var(--color-text-secondary)]">Failed to load IV data</p>
+          <AlertCircle className="w-8 h-8 mx-auto mb-2 text-[var(--color-warning)]" aria-hidden="true" />
+          <p className="text-theme-secondary">Failed to load IV data</p>
           <Button
             variant="secondary"
             size="sm"
@@ -334,9 +350,9 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
 
       {/* Empty state */}
       {!isLoading && !error && ivList.length === 0 && (
-        <div className="py-8 text-center text-[var(--color-text-muted)]">
-          <Activity className="w-8 h-8 mx-auto mb-2 text-[var(--color-text-muted)]" />
-          <p>No IV data available</p>
+        <div className="py-8 text-center text-theme-muted">
+          <Activity className="w-8 h-8 mx-auto mb-2" aria-hidden="true" />
+          <p className="mono text-[11px] tracking-[0.2em] uppercase">No IV data available</p>
           <p className="text-sm mt-1">Add symbols to see implied volatility</p>
         </div>
       )}
@@ -349,7 +365,7 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
             return (
               <div
                 key={iv.symbol}
-                className="p-4 border border-[var(--color-border-light)] rounded-lg hover:border-[var(--color-border)] transition-colors"
+                className="glass-slab-floating rounded-xl p-4 transition-[border-color,box-shadow] duration-200 hover:shadow-lg"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
@@ -376,16 +392,16 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-2xl font-bold text-[var(--color-accent)]">{iv.atmIV}%</span>
-                    <p className="text-xs text-[var(--color-text-muted)]">ATM IV</p>
+                    <span className="mono text-2xl font-bold tabular-nums text-[var(--color-accent)]">{iv.atmIV}%</span>
+                    <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">ATM IV</p>
                   </div>
                 </div>
 
                 {/* IV Rank Bar */}
                 <div className="mb-3">
-                  <div className="flex justify-between text-xs text-[var(--color-text-muted)] mb-1">
+                  <div className="flex justify-between mono text-[10px] tracking-[0.2em] uppercase text-theme-muted mb-1">
                     <span>IV Rank</span>
-                    <span>{iv.ivRank}/100</span>
+                    <span className="tabular-nums">{iv.ivRank}/100</span>
                   </div>
                   <IVRankBar rank={iv.ivRank} />
                 </div>
@@ -397,29 +413,29 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
 
                 {/* Expected Moves */}
                 <div className="grid grid-cols-3 gap-2 mb-3">
-                  <div className="text-center p-2 bg-[var(--color-bg-tertiary)] rounded">
-                    <p className="text-xs text-[var(--color-text-muted)]">Weekly</p>
-                    <p className="font-semibold">±{iv.expectedMove.weekly}%</p>
+                  <div className="text-center glass-slab-floating rounded-lg p-2">
+                    <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Weekly</p>
+                    <p className="mt-0.5 mono text-sm font-semibold tabular-nums text-theme">±{iv.expectedMove.weekly}%</p>
                     {showDollars && iv.expectedMoveInDollars && (
-                      <p className="text-xs text-[var(--color-text-muted)]">
+                      <p className="mono text-[10px] tabular-nums text-theme-muted">
                         ±${iv.expectedMoveInDollars.weekly}
                       </p>
                     )}
                   </div>
-                  <div className="text-center p-2 bg-[var(--color-bg-tertiary)] rounded">
-                    <p className="text-xs text-[var(--color-text-muted)]">Monthly</p>
-                    <p className="font-semibold">±{iv.expectedMove.monthly}%</p>
+                  <div className="text-center glass-slab-floating rounded-lg p-2">
+                    <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Monthly</p>
+                    <p className="mt-0.5 mono text-sm font-semibold tabular-nums text-theme">±{iv.expectedMove.monthly}%</p>
                     {showDollars && iv.expectedMoveInDollars && (
-                      <p className="text-xs text-[var(--color-text-muted)]">
+                      <p className="mono text-[10px] tabular-nums text-theme-muted">
                         ±${iv.expectedMoveInDollars.monthly}
                       </p>
                     )}
                   </div>
-                  <div className="text-center p-2 bg-[var(--color-bg-tertiary)] rounded">
-                    <p className="text-xs text-[var(--color-text-muted)]">Quarterly</p>
-                    <p className="font-semibold">±{iv.expectedMove.quarterly}%</p>
+                  <div className="text-center glass-slab-floating rounded-lg p-2">
+                    <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Quarterly</p>
+                    <p className="mt-0.5 mono text-sm font-semibold tabular-nums text-theme">±{iv.expectedMove.quarterly}%</p>
                     {showDollars && iv.expectedMoveInDollars && (
-                      <p className="text-xs text-[var(--color-text-muted)]">
+                      <p className="mono text-[10px] tabular-nums text-theme-muted">
                         ±${iv.expectedMoveInDollars.quarterly}
                       </p>
                     )}
@@ -428,20 +444,26 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
 
                 {/* Earnings Expected Move (if available) */}
                 {iv.expectedMove.earnings !== undefined && (
-                  <div className="mb-3 p-2 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-lg border border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]">
+                  <div
+                    className="glass-slab-floating relative overflow-hidden rounded-xl mb-3 pl-5 pr-3 py-2 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]"
+                    style={{
+                      backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)',
+                    }}
+                  >
+                    <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px] bg-[image:var(--gradient-sovereign)]" />
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <BarChart3 className="w-4 h-4 text-[var(--color-accent)]" />
-                        <span className="text-sm font-medium text-[var(--color-accent)]">
+                        <BarChart3 className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
+                        <span className="mono text-[10px] tracking-[0.2em] uppercase font-medium text-[var(--color-accent)]">
                           Options-Implied Earnings Move
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-lg font-bold text-[var(--color-accent)]">
+                        <span className="mono text-lg font-bold tabular-nums text-[var(--color-accent)]">
                           ±{iv.expectedMove.earnings}%
                         </span>
                         {iv.straddlePrice && (
-                          <p className="text-xs text-[var(--color-accent)]">
+                          <p className="mono text-[10px] tabular-nums text-[var(--color-accent)]">
                             Straddle: ${iv.straddlePrice}
                           </p>
                         )}
@@ -451,27 +473,27 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
                 )}
 
                 {/* Term Structure */}
-                <div className="grid grid-cols-3 gap-2 mb-3 text-xs">
-                  <div className="text-center p-1.5 bg-[var(--color-bg-tertiary)] rounded">
-                    <p className="text-[var(--color-text-muted)]">IV30</p>
-                    <p className="font-medium">{iv.iv30}%</p>
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="text-center glass-slab-floating rounded-lg p-1.5">
+                    <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">IV30</p>
+                    <p className="mono text-xs font-medium tabular-nums text-theme">{iv.iv30}%</p>
                   </div>
-                  <div className="text-center p-1.5 bg-[var(--color-bg-tertiary)] rounded">
-                    <p className="text-[var(--color-text-muted)]">IV60</p>
-                    <p className="font-medium">{iv.iv60}%</p>
+                  <div className="text-center glass-slab-floating rounded-lg p-1.5">
+                    <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">IV60</p>
+                    <p className="mono text-xs font-medium tabular-nums text-theme">{iv.iv60}%</p>
                   </div>
-                  <div className="text-center p-1.5 bg-[var(--color-bg-tertiary)] rounded">
-                    <p className="text-[var(--color-text-muted)]">IV90</p>
-                    <p className="font-medium">{iv.iv90}%</p>
+                  <div className="text-center glass-slab-floating rounded-lg p-1.5">
+                    <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">IV90</p>
+                    <p className="mono text-xs font-medium tabular-nums text-theme">{iv.iv90}%</p>
                   </div>
                 </div>
 
                 {/* Additional metrics */}
-                <div className="flex items-center justify-between text-sm text-[var(--color-text-secondary)]">
-                  <span>P/C Ratio: {iv.putCallRatio}</span>
-                  <span>Skew: {iv.skew > 0 ? '+' : ''}{iv.skew}%</span>
-                  <span className={`text-xs px-1.5 py-0.5 rounded ${
-                    iv.dataSource === 'options' ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
+                <div className="flex flex-wrap items-center justify-between gap-2 mono text-[10px] tracking-[0.2em] uppercase text-theme-secondary">
+                  <span className="tabular-nums">P/C Ratio: {iv.putCallRatio}</span>
+                  <span className="tabular-nums">Skew: {iv.skew > 0 ? '+' : ''}{iv.skew}%</span>
+                  <span className={`mono text-[10px] tracking-[0.2em] uppercase px-2 py-0.5 rounded-full ${
+                    iv.dataSource === 'options' ? 'bg-[color-mix(in_srgb,var(--color-positive)_12%,transparent)] text-[var(--color-positive)]' : 'glass-slab-floating text-theme-secondary'
                   }`}>
                     {iv.dataSource === 'options' ? 'Live Options' : 'Historical'}
                   </span>
@@ -479,7 +501,7 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
 
                 {/* Recommendation */}
                 {iv.recommendation && (
-                  <p className="text-xs text-[var(--color-text-muted)] mt-2 italic">{iv.recommendation}</p>
+                  <p className="text-xs leading-relaxed text-theme-muted mt-2 italic">{iv.recommendation}</p>
                 )}
               </div>
             );
@@ -489,8 +511,8 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
 
       {/* Footer */}
       {symbols.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-[var(--color-border-light)] text-xs text-[var(--color-text-muted)]">
-          <p>
+        <div className="mt-4 pt-3 border-t border-theme-light">
+          <p className="text-xs leading-relaxed text-theme-muted">
             IV Rank shows where current IV stands vs 52-week range. High IV (&gt;70) suggests
             expensive options, low IV (&lt;30) suggests cheap options.
           </p>
@@ -516,7 +538,7 @@ export function ImpliedVolatilityCompact({
 
   if (isLoading) {
     return (
-      <div className={`p-4 bg-[var(--color-bg-tertiary)] rounded-lg ${className}`}>
+      <div className={`glass-slab-floating rounded-xl p-4 ${className}`}>
         <div className="animate-shimmer flex items-center gap-3">
           <div className="w-8 h-8 bg-[var(--color-border)] rounded" />
           <div className="flex-1">
@@ -530,27 +552,31 @@ export function ImpliedVolatilityCompact({
 
   if (!portfolioIV) return null;
 
-  const signalColor = portfolioIV.insights?.overallSignal === 'high_iv'
-    ? 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]'
-    : portfolioIV.insights?.overallSignal === 'low_iv'
-    ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)]'
-    : 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]';
+  const signal = portfolioIV.insights?.overallSignal;
+  const railColor =
+    signal === 'high_iv' ? 'var(--color-warning)' :
+    signal === 'low_iv' ? 'var(--color-positive)' :
+    'var(--color-accent)';
 
   return (
-    <div className={`p-4 rounded-lg border ${signalColor} ${className}`}>
+    <div
+      className={`glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-4 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] ${className}`}
+      style={{ backgroundColor: `color-mix(in srgb, ${railColor} 8%, transparent)` }}
+    >
+      <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: railColor }} />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Activity className="w-5 h-5 text-[var(--color-accent)]" />
+          <Activity className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
           <div>
-            <p className="text-sm font-medium text-[var(--color-text-secondary)]">Portfolio IV</p>
-            <p className="text-xs text-[var(--color-text-muted)]">
-              Rank: {portfolioIV.averageIVRank} | IV/HV: {portfolioIV.averageIVvsHV}x
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Portfolio IV</p>
+            <p className="mt-0.5 mono text-xs tabular-nums text-theme-secondary">
+              Rank: {portfolioIV.averageIVRank} · IV/HV: {portfolioIV.averageIVvsHV}x
             </p>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-bold text-[var(--color-accent)]">{portfolioIV.averageIV}%</p>
-          <p className="text-xs text-[var(--color-text-muted)]">HV: {portfolioIV.averageHV}%</p>
+          <p className="mono text-2xl font-bold tabular-nums text-[var(--color-accent)]">{portfolioIV.averageIV}%</p>
+          <p className="mono text-[10px] tabular-nums text-theme-muted">HV: {portfolioIV.averageHV}%</p>
         </div>
       </div>
     </div>
@@ -582,7 +608,7 @@ export function EarningsIV({
 
   if (isLoading) {
     return (
-      <div className={`p-4 bg-[var(--color-bg-tertiary)] rounded-lg animate-shimmer ${className}`}>
+      <div className={`glass-slab-floating rounded-xl p-4 animate-shimmer ${className}`}>
         <div className="h-6 bg-[var(--color-border)] rounded w-3/4 mb-2" />
         <div className="h-4 bg-[var(--color-border)] rounded w-1/2" />
       </div>
@@ -591,8 +617,8 @@ export function EarningsIV({
 
   if (!ivData) {
     return (
-      <div className={`p-4 bg-[var(--color-bg-tertiary)] rounded-lg ${className}`}>
-        <p className="text-sm text-[var(--color-text-muted)]">IV data not available for {symbol}</p>
+      <div className={`glass-slab-floating rounded-xl p-4 ${className}`}>
+        <p className="text-sm text-theme-muted">IV data not available for {symbol}</p>
       </div>
     );
   }
@@ -605,42 +631,43 @@ export function EarningsIV({
   const ivPremium = optionsMove - historicalMovePercent;
   const isPremiumExpensive = ivPremium > historicalMovePercent * 0.3;
   const isPremiumCheap = ivPremium < -historicalMovePercent * 0.2;
+  const railColor = isPremiumExpensive
+    ? 'var(--color-warning)'
+    : isPremiumCheap
+    ? 'var(--color-positive)'
+    : 'var(--color-info)';
 
   return (
-    <div className={`p-4 rounded-lg border ${
-      isPremiumExpensive ? 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]' :
-      isPremiumCheap ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)]' :
-      'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]'
-    } ${className}`}>
+    <div
+      className={`glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-4 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] ${className}`}
+      style={{ backgroundColor: `color-mix(in srgb, ${railColor} 8%, transparent)` }}
+    >
+      <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: railColor }} />
       <div className="flex items-center gap-2 mb-3">
-        <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
-        <h4 className="font-medium text-[var(--color-text)]">Options-Implied Move</h4>
+        <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+        <h4 className="mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme">Options-Implied Move</h4>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-3">
         <div>
-          <p className="text-xs text-[var(--color-text-muted)]">Options Pricing</p>
-          <p className="text-xl font-bold text-[var(--color-accent)]">±{optionsMove.toFixed(1)}%</p>
+          <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Options Pricing</p>
+          <p className="mt-0.5 mono text-xl font-bold tabular-nums text-[var(--color-accent)]">±{optionsMove.toFixed(1)}%</p>
           {ivData.straddlePrice && ivData.currentPrice > 0 && (
-            <p className="text-xs text-[var(--color-text-muted)]">
+            <p className="mono text-[10px] tabular-nums text-theme-muted">
               ${ivData.straddlePrice} straddle
             </p>
           )}
         </div>
         <div>
-          <p className="text-xs text-[var(--color-text-muted)]">Historical Avg</p>
-          <p className="text-xl font-bold text-[var(--color-text-secondary)]">±{historicalMovePercent.toFixed(1)}%</p>
-          <p className="text-xs text-[var(--color-text-muted)]">past 8 quarters</p>
+          <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Historical Avg</p>
+          <p className="mt-0.5 mono text-xl font-bold tabular-nums text-theme-secondary">±{historicalMovePercent.toFixed(1)}%</p>
+          <p className="mono text-[10px] tabular-nums text-theme-muted">past 8 quarters</p>
         </div>
       </div>
 
       <div className="flex items-center gap-2 mb-2">
-        <ArrowRight className="w-4 h-4 text-[var(--color-text-muted)]" />
-        <span className={`text-sm font-medium ${
-          isPremiumExpensive ? 'text-[var(--color-warning)]' :
-          isPremiumCheap ? 'text-[var(--color-positive)]' :
-          'text-[var(--color-info)]'
-        }`}>
+        <ArrowRight className="w-4 h-4 text-theme-muted" aria-hidden="true" />
+        <span className="text-sm font-medium leading-relaxed" style={{ color: railColor }}>
           {isPremiumExpensive
             ? `Options are pricing ${Math.abs(ivPremium).toFixed(1)}% MORE volatility than historical`
             : isPremiumCheap
@@ -649,26 +676,25 @@ export function EarningsIV({
         </span>
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
-        <span>IV Rank: {ivData.ivRank}</span>
-        <span>|</span>
-        <span>P/C: {ivData.putCallRatio}</span>
-        <span>|</span>
-        <span>{daysToEarnings} days to earnings</span>
+      <div className="flex flex-wrap items-center gap-2 mono text-[10px] tracking-[0.2em] uppercase text-theme-secondary">
+        <span className="tabular-nums">IV Rank: {ivData.ivRank}</span>
+        <span aria-hidden="true">·</span>
+        <span className="tabular-nums">P/C: {ivData.putCallRatio}</span>
+        <span aria-hidden="true">·</span>
+        <span className="tabular-nums">{daysToEarnings} days to earnings</span>
       </div>
 
       {/* Recommendation */}
-      <div className={`mt-3 p-2 rounded ${
-        isPremiumExpensive ? 'bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]' :
-        isPremiumCheap ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)]' :
-        'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]'
-      }`}>
-        <p className="text-xs font-medium">
+      <div
+        className="mt-3 glass-slab-floating rounded-lg p-2"
+        style={{ backgroundColor: `color-mix(in srgb, ${railColor} 6%, transparent)` }}
+      >
+        <p className="text-xs leading-relaxed font-medium text-theme">
           {isPremiumExpensive
-            ? 'Consider selling premium (iron condors, strangles) - options appear expensive'
+            ? 'Consider selling premium (iron condors, strangles) — options appear expensive'
             : isPremiumCheap
-            ? 'Consider buying protection (straddles, puts) - options appear cheap'
-            : 'Options fairly priced - no strong directional signal from volatility'}
+            ? 'Consider buying protection (straddles, puts) — options appear cheap'
+            : 'Options fairly priced — no strong directional signal from volatility'}
         </p>
       </div>
     </div>

@@ -35,53 +35,59 @@ export function CVRFDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-tertiary)]">
-      {/* Header */}
-      <div className="bg-[var(--color-bg)] border-b border-[var(--color-border)] px-4 sm:px-6 py-4">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[var(--color-accent)] rounded-xl flex items-center justify-center shrink-0">
-              <Brain className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-[var(--color-text)]">CVRF Dashboard</h1>
-              <p className="text-sm text-[var(--color-text-muted)]">
-                Conceptual Verbal Reinforcement Framework
-              </p>
-            </div>
+    <div>
+      {/* Inline header — minimal because page-level Hero already owns the kicker */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 animate-enter">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[image:var(--gradient-sovereign)] rounded-xl flex items-center justify-center shrink-0 shadow-[0_10px_30px_-12px_rgba(123,44,255,0.6)]">
+            <Brain className="w-5 h-5 text-white" aria-hidden="true" />
           </div>
-          <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="px-4 py-2 min-h-[44px] text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-secondary)] rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+          <div>
+            <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted">
+              Belief Substrate
+            </p>
+            <h2 className="text-xl font-semibold text-theme">CVRF Dashboard</h2>
+          </div>
         </div>
+        <button
+          onClick={() => refetch()}
+          disabled={isLoading}
+          className="px-4 py-2 min-h-[44px] glass-slab-floating rounded-lg text-sm text-theme-secondary hover:text-theme flex items-center gap-2 animate-press transition-[color,background-color] duration-150 disabled:opacity-50"
+          aria-label="Refresh CVRF data"
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+          <span className="mono text-[10px] tracking-[0.3em] uppercase">Refresh</span>
+        </button>
       </div>
 
       {/* Error State — show full error when all data failed */}
       {isError && hasNoData && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <div className="py-12">
           <DataLoadError onRetry={() => refetch()} error="Failed to load CVRF data. Check your connection and try again." />
         </div>
       )}
 
-      {/* Error Banner — partial errors when some data loaded */}
+      {/* Error Banner — partial errors when some data loaded (Toast-pattern rail) */}
       {isError && !hasNoData && (
-        <div className="bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] border-b border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)] px-4 sm:px-6 py-3">
-          <div className="max-w-7xl mx-auto flex items-center gap-2 text-[var(--color-negative)]">
-            <AlertTriangle className="w-4 h-4" />
-            <span className="text-sm">
-              Some data failed to load. Check your connection and try refreshing.
-            </span>
+        <div
+          className="mb-6 glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-4 shadow-[0_18px_60px_-20px_rgba(239,68,68,0.45)] before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-negative)]"
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-negative)]" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-theme">Partial data</p>
+              <p className="text-sm mt-1 text-theme-secondary leading-relaxed">
+                Some data failed to load. Check your connection and try refreshing.
+              </p>
+            </div>
           </div>
         </div>
       )}
 
       {/* Main Content */}
-      {!hasNoData && <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      {!hasNoData && <div className="space-y-6 animate-stagger">
         {/* Row 1: Performance Chart (Full Width) */}
         <EpisodePerformanceChart />
 
@@ -90,65 +96,61 @@ export function CVRFDashboard() {
 
         {/* Row 3: Factor Heatmap + Regime Timeline */}
         <div className="grid grid-cols-12 gap-6">
-          <div className="col-span-12 lg:col-span-8">
+          <div className="col-span-12 lg:col-span-8 animate-enter">
             <FactorWeightHeatmap />
           </div>
-          <div className="col-span-12 lg:col-span-4">
+          <div className="col-span-12 lg:col-span-4 animate-enter">
             <RegimeTimeline />
           </div>
         </div>
 
-        {/* Row 3: Controls, Stats/Beliefs, Cycle History */}
+        {/* Row 4: Controls, Stats/Beliefs, Cycle History */}
         <div className="grid grid-cols-12 gap-6">
           {/* Left Column - Controls & Timeline */}
-          <div className="col-span-12 lg:col-span-4 space-y-6">
+          <div className="col-span-12 lg:col-span-4 space-y-6 animate-enter">
             <CVRFEpisodeControls />
             <CVRFEpisodeTimeline />
           </div>
 
           {/* Middle Column - Stats & Beliefs */}
-          <div className="col-span-12 lg:col-span-4 space-y-6">
+          <div className="col-span-12 lg:col-span-4 space-y-6 animate-enter">
             <CVRFStatsCard />
             <CVRFBeliefDisplay />
           </div>
 
           {/* Right Column - Cycle History */}
-          <div className="col-span-12 lg:col-span-4">
+          <div className="col-span-12 lg:col-span-4 animate-enter">
             <CVRFCycleHistory />
           </div>
         </div>
 
-        {/* Row 4: Conviction Timeline (Full Width) */}
+        {/* Row 5: Conviction Timeline (Full Width) */}
         <ConvictionTimeline />
 
-        {/* Row 5: Meta-Prompt (Full Width) */}
+        {/* Row 6: Meta-Prompt (Full Width) */}
         <MetaPromptCard />
 
-        {/* Row 6: Episode Comparison (Full Width) */}
+        {/* Row 7: Episode Comparison (Full Width) */}
         <EpisodeComparisonView />
       </div>}
 
-      {/* Footer */}
-      <div className="border-t border-[var(--color-border)] bg-[var(--color-bg)] px-4 sm:px-6 py-4 mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[var(--color-text-muted)]">
-          <div>
+      {/* Footer — research credits */}
+      {!hasNoData && (
+        <div className="mt-8 pt-4 border-t border-[var(--color-border-light)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
             Based on{' '}
-            <a href="#" className="text-[var(--color-accent)] hover:underline">
-              FinCon
-            </a>
-            ,{' '}
-            <a href="#" className="text-[var(--color-accent)] hover:underline">
-              TextGrad
-            </a>
-            , and{' '}
-            <a href="#" className="text-[var(--color-accent)] hover:underline">
-              FLAG-Trader
-            </a>{' '}
-            research
-          </div>
-          <div>Frontier Alpha CVRF</div>
+            <a href="#" className="text-[var(--color-accent)] hover:underline">FinCon</a>
+            {' · '}
+            <a href="#" className="text-[var(--color-accent)] hover:underline">TextGrad</a>
+            {' · '}
+            <a href="#" className="text-[var(--color-accent)] hover:underline">FLAG-Trader</a>
+            {' research'}
+          </p>
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
+            Frontier Alpha CVRF
+          </p>
         </div>
-      </div>
+      )}
     </div>
   );
 }

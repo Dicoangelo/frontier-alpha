@@ -27,10 +27,10 @@ export function EarningsForecast({
   if (!symbol) {
     return (
       <Card title="Earnings Forecast">
-        <div className="flex flex-col items-center justify-center h-64 text-[var(--color-text-muted)]">
-          <BarChart3 className="w-12 h-12 mb-4 opacity-50" />
-          <p>Select an earnings event</p>
-          <p className="text-sm mt-1">Click on an upcoming event to see the forecast</p>
+        <div className="glass-slab gradient-brand-subtle rounded-2xl flex flex-col items-center justify-center min-h-[256px] p-8 text-theme-muted">
+          <BarChart3 className="w-12 h-12 mb-4 opacity-60" aria-hidden="true" />
+          <p className="mono text-[10px] tracking-[0.3em] uppercase">No selection</p>
+          <p className="text-sm text-theme-secondary mt-1">Select an earnings event to see the forecast</p>
         </div>
       </Card>
     );
@@ -39,7 +39,7 @@ export function EarningsForecast({
   if (isLoading) {
     return (
       <Card title={`${symbol} Forecast`}>
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center min-h-[256px]">
           <Spinner className="w-8 h-8" />
         </div>
       </Card>
@@ -49,8 +49,8 @@ export function EarningsForecast({
   if (!forecast) {
     return (
       <Card title={`${symbol} Forecast`}>
-        <div className="flex flex-col items-center justify-center h-64 text-[var(--color-text-muted)]">
-          <p>No forecast available</p>
+        <div className="glass-slab gradient-brand-subtle rounded-2xl flex flex-col items-center justify-center min-h-[256px] p-8 text-theme-muted">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase">No forecast yet</p>
           {onRefresh && (
             <Button onClick={onRefresh} className="mt-4" disabled={isRefreshing}>
               {isRefreshing ? <Spinner className="w-4 h-4 mr-2" /> : null}
@@ -72,6 +72,12 @@ export function EarningsForecast({
     ? TrendingDown
     : Minus;
 
+  const directionRail = forecast.expectedDirection === 'up'
+    ? 'before:bg-[var(--color-positive)]'
+    : forecast.expectedDirection === 'down'
+    ? 'before:bg-[var(--color-negative)]'
+    : 'before:bg-[var(--color-info)]';
+
   const recommendationBadge = getRecommendationBadge(forecast.recommendation);
 
   return (
@@ -91,21 +97,21 @@ export function EarningsForecast({
         )
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-6 animate-stagger">
         {/* Expected Move - Historical */}
-        <div className="flex items-center justify-between p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
+        <div className="glass-slab rounded-xl p-4 flex items-center justify-between animate-enter">
           <div>
             <div className="flex items-center gap-1">
-              <p className="text-sm text-[var(--color-text-muted)]">Historical Expected Move</p>
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Historical Expected Move</p>
               <HelpTooltip metricKey="expectedMove" size="sm" />
             </div>
-            <p className="text-2xl font-bold text-[var(--color-text)]">
+            <p className="mono tabular-nums text-2xl font-bold text-theme mt-1">
               ±{(forecast.expectedMove * 100).toFixed(1)}%
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-[var(--color-text-muted)]">Past 8 Quarters Avg</p>
-            <p className="text-lg font-medium text-[var(--color-text-secondary)]">
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Past 8 Quarters Avg</p>
+            <p className="mono tabular-nums text-lg font-medium text-theme-secondary mt-1">
               {forecast.historicalAvgMove
                 ? `±${(forecast.historicalAvgMove * 100).toFixed(1)}%`
                 : 'N/A'}
@@ -114,31 +120,35 @@ export function EarningsForecast({
         </div>
 
         {/* Options-Implied Move */}
-        <EarningsIV
-          symbol={symbol}
-          daysToEarnings={daysToEarnings}
-          historicalAvgMove={forecast.expectedMove * 100}
-        />
+        <div className="animate-enter">
+          <EarningsIV
+            symbol={symbol}
+            daysToEarnings={daysToEarnings}
+            historicalAvgMove={forecast.expectedMove * 100}
+          />
+        </div>
 
         {/* Direction & Confidence */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 border rounded-lg">
-            <p className="text-sm text-[var(--color-text-muted)] mb-2">Expected Direction</p>
+        <div className="grid grid-cols-2 gap-4 animate-enter">
+          <div
+            className={`glass-slab-floating relative overflow-hidden rounded-xl p-4 pl-5 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] ${directionRail}`}
+          >
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">Expected Direction</p>
             <div className={`flex items-center gap-2 ${getDirectionColor(forecast.expectedDirection)}`}>
-              <DirectionIcon className="w-5 h-5" />
-              <span className="font-semibold capitalize">{forecast.expectedDirection}</span>
+              <DirectionIcon className="w-5 h-5" aria-hidden="true" />
+              <span className="mono uppercase tracking-wider font-bold">{forecast.expectedDirection}</span>
             </div>
           </div>
-          <div className="p-4 border rounded-lg">
-            <p className="text-sm text-[var(--color-text-muted)] mb-2">Confidence</p>
+          <div className="glass-slab rounded-xl p-4">
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">Confidence</p>
             <div className="flex items-center gap-2">
-              <div className="flex-1 h-2 bg-[var(--color-border)] rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[var(--color-info)] rounded-full"
+                  className="h-full bg-[image:var(--gradient-sovereign)] rounded-full transition-[width] duration-500"
                   style={{ width: `${forecast.confidence * 100}%` }}
                 />
               </div>
-              <span className="font-semibold text-[var(--color-text)]">
+              <span className="mono tabular-nums font-semibold text-theme">
                 {(forecast.confidence * 100).toFixed(0)}%
               </span>
             </div>
@@ -146,8 +156,8 @@ export function EarningsForecast({
         </div>
 
         {/* Recommendation */}
-        <div className="p-4 border rounded-lg">
-          <p className="text-sm text-[var(--color-text-muted)] mb-2">Recommendation</p>
+        <div className="glass-slab rounded-xl p-4 animate-enter">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">Recommendation</p>
           <Badge className={recommendationBadge.color}>
             {recommendationBadge.label}
           </Badge>
@@ -155,22 +165,22 @@ export function EarningsForecast({
 
         {/* Beat Rate (if available) */}
         {forecast.beatRate !== undefined && (
-          <div className="p-4 border rounded-lg">
+          <div className="glass-slab rounded-xl p-4 animate-enter">
             <div className="flex items-center gap-1 mb-2">
-              <p className="text-sm text-[var(--color-text-muted)]">Historical Beat Rate</p>
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Historical Beat Rate</p>
               <HelpTooltip metricKey="beatRate" size="sm" />
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-3 bg-[var(--color-border)] rounded-full overflow-hidden">
+              <div className="flex-1 h-3 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full ${
+                  className={`h-full rounded-full transition-[width] duration-500 ${
                     forecast.beatRate > 60 ? 'bg-[var(--color-positive)]' :
                     forecast.beatRate < 40 ? 'bg-[var(--color-negative)]' : 'bg-[var(--color-warning)]'
                   }`}
                   style={{ width: `${forecast.beatRate}%` }}
                 />
               </div>
-              <span className={`font-bold ${
+              <span className={`mono tabular-nums font-bold ${
                 forecast.beatRate > 60 ? 'text-[var(--color-positive)]' :
                 forecast.beatRate < 40 ? 'text-[var(--color-negative)]' : 'text-[var(--color-warning)]'
               }`}>
@@ -181,27 +191,27 @@ export function EarningsForecast({
         )}
 
         {/* AI Explanation */}
-        <div className="p-4 rounded-lg border border-[color-mix(in_srgb,var(--color-accent)_15%,transparent)]" style={{ background: 'linear-gradient(to right, color-mix(in srgb, var(--color-accent) 6%, transparent), color-mix(in srgb, var(--color-info) 6%, transparent))' }}>
-          <p className="text-sm font-medium text-[var(--color-info)] mb-2">AI Analysis</p>
-          <p className="text-sm text-[var(--color-info)]">{forecast.explanation}</p>
+        <div className="glass-slab gradient-brand-subtle relative overflow-hidden rounded-xl p-4 pl-5 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] animate-enter">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] mb-2">AI Analysis</p>
+          <p className="text-sm text-theme-secondary leading-relaxed">{forecast.explanation}</p>
         </div>
 
         {/* Factor Analysis (if available) */}
         {forecast.factors && (
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-[var(--color-text-secondary)]">Factor Analysis</p>
+          <div className="space-y-2 animate-enter">
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Factor Analysis</p>
             <div className="grid gap-2 text-sm">
-              <div className="flex justify-between p-2 bg-[var(--color-bg-tertiary)] rounded">
-                <span className="text-[var(--color-text-muted)]">Historical Pattern</span>
-                <span className="text-[var(--color-text-secondary)]">{forecast.factors.historicalPattern}</span>
+              <div className="flex justify-between p-3 glass-slab rounded-lg">
+                <span className="mono text-[10px] tracking-wider uppercase text-theme-muted">Historical Pattern</span>
+                <span className="text-theme-secondary">{forecast.factors.historicalPattern}</span>
               </div>
-              <div className="flex justify-between p-2 bg-[var(--color-bg-tertiary)] rounded">
-                <span className="text-[var(--color-text-muted)]">Recent Trend</span>
-                <span className="text-[var(--color-text-secondary)]">{forecast.factors.recentTrend}</span>
+              <div className="flex justify-between p-3 glass-slab rounded-lg">
+                <span className="mono text-[10px] tracking-wider uppercase text-theme-muted">Recent Trend</span>
+                <span className="text-theme-secondary">{forecast.factors.recentTrend}</span>
               </div>
-              <div className="flex justify-between p-2 bg-[var(--color-bg-tertiary)] rounded">
-                <span className="text-[var(--color-text-muted)]">Risk Assessment</span>
-                <span className={`font-medium ${
+              <div className="flex justify-between p-3 glass-slab rounded-lg">
+                <span className="mono text-[10px] tracking-wider uppercase text-theme-muted">Risk Assessment</span>
+                <span className={`mono uppercase tracking-wider font-medium ${
                   forecast.factors.riskAssessment.includes('HIGH') ? 'text-[var(--color-negative)]' :
                   forecast.factors.riskAssessment.includes('LOW') ? 'text-[var(--color-positive)]' : 'text-[var(--color-warning)]'
                 }`}>
@@ -213,8 +223,8 @@ export function EarningsForecast({
         )}
 
         {/* Report Date */}
-        <div className="text-center text-sm text-[var(--color-text-muted)]">
-          Report Date: {new Date(forecast.reportDate).toLocaleDateString('en-US', {
+        <div className="text-center mono tabular-nums text-xs text-theme-muted animate-enter">
+          Report Date · {new Date(forecast.reportDate).toLocaleDateString('en-US', {
             weekday: 'long',
             month: 'long',
             day: 'numeric',
@@ -223,12 +233,12 @@ export function EarningsForecast({
         </div>
 
         {/* Learn More Link */}
-        <div className="text-center">
+        <div className="text-center animate-enter">
           <Link
             to="/help#earnings-forecasts"
-            className="inline-flex items-center gap-1 text-sm text-[var(--color-info)] hover:text-[var(--color-info)]"
+            className="inline-flex items-center gap-1 mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-info)] hover:opacity-80 transition-opacity duration-200 animate-press"
           >
-            <HelpCircle className="w-4 h-4" />
+            <HelpCircle className="w-4 h-4" aria-hidden="true" />
             How forecasts work
           </Link>
         </div>

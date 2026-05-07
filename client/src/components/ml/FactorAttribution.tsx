@@ -57,33 +57,47 @@ function FactorAttributionInner({ waterfall, topDrivers }: FactorAttributionProp
     positive: 'var(--color-positive)',
     negative: 'var(--color-negative)',
     total: 'var(--color-accent)',
-    residual: 'var(--chart-purple)',
+    residual: 'var(--chart-secondary)',
   };
 
   return (
     <Card>
-      <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2 mb-4">
-        <Target className="w-5 h-5 text-[var(--color-accent)]" />
-        Factor Attribution
-      </h2>
+      <div className="mb-4">
+        <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+          Return Attribution
+        </p>
+        <h2 className="text-lg font-semibold text-theme flex items-center gap-2">
+          <Target className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+          Factor Attribution
+        </h2>
+      </div>
 
       {/* Waterfall Chart */}
-      <div className="h-64 mb-6" role="img" aria-label="Factor attribution waterfall chart showing contribution of each factor to total return">
+      <div
+        className="min-h-[256px] h-64 mb-6"
+        role="img"
+        aria-label="Factor attribution waterfall chart showing contribution of each factor to total return"
+      >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 10, right: 10, bottom: 5, left: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
-              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
+              tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+              axisLine={{ stroke: 'var(--color-border)' }}
             />
             <YAxis
-              tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
+              tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
               tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
-              axisLine={{ stroke: 'var(--color-border, var(--color-border))' }}
+              axisLine={{ stroke: 'var(--color-border)' }}
             />
             <Tooltip
-              contentStyle={rechartsTooltipStyle}
+              contentStyle={{
+                ...rechartsTooltipStyle,
+                backgroundColor: 'var(--color-bg-tooltip)',
+                color: 'var(--color-text-inverse)',
+                backdropFilter: 'blur(12px)',
+              }}
               formatter={(_value: unknown, name: unknown, props: unknown) => {
                 if (name === 'base') return [null, null];
                 const p = props as { payload: { rawValue: number; type: string } };
@@ -91,7 +105,7 @@ function FactorAttributionInner({ waterfall, topDrivers }: FactorAttributionProp
                 return [`${raw >= 0 ? '+' : ''}${(raw * 100).toFixed(2)}%`, p.payload.type === 'total' ? 'Total Return' : 'Contribution'];
               }}
             />
-            <ReferenceLine y={0} stroke="var(--color-text-muted, var(--color-text-muted))" strokeDasharray="2 2" />
+            <ReferenceLine y={0} stroke="var(--color-text-muted)" strokeDasharray="2 2" />
             {/* Invisible base bar */}
             <Bar dataKey="base" stackId="waterfall" fill="transparent" />
             {/* Visible value bar */}
@@ -106,24 +120,25 @@ function FactorAttributionInner({ waterfall, topDrivers }: FactorAttributionProp
 
       {/* Top 5 Drivers */}
       <div>
-        <h3 className="text-sm font-semibold text-[var(--color-text)] mb-3">Top 5 Drivers</h3>
-        <div className="space-y-2">
+        <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-3">Top 5 Drivers</p>
+        <div className="space-y-2 animate-stagger">
           {topDrivers.map((driver) => {
             const isPositive = driver.direction === 'positive';
             return (
               <div
                 key={driver.factor}
-                className="flex items-center justify-between hover:bg-[var(--color-bg-secondary)] rounded-lg px-2 -mx-2 transition-colors duration-150"
+                className="flex items-center justify-between rounded-lg px-2 -mx-2 py-1 animate-enter transition-[background-color] duration-150 hover:bg-[var(--color-bg-tertiary)]"
               >
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-2 h-6 rounded-full"
+                    className="w-2 h-6 rounded-full flex-shrink-0"
                     style={{ backgroundColor: isPositive ? 'var(--color-positive)' : 'var(--color-negative)' }}
+                    aria-hidden="true"
                   />
-                  <span className="text-sm text-[var(--color-text)]">{driver.factor}</span>
+                  <span className="text-sm text-theme">{driver.factor}</span>
                 </div>
                 <span
-                  className="text-sm font-mono font-bold"
+                  className="text-sm mono font-bold tabular-nums"
                   style={{ color: isPositive ? 'var(--color-positive)' : 'var(--color-negative)' }}
                 >
                   {driver.contribution >= 0 ? '+' : ''}

@@ -46,7 +46,7 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           required
           autoFocus
           autoComplete="email"
-          className={`block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all mono text-sm ${
+          className={`block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm ${
             emailError ? 'border-[var(--color-negative)]' : 'border-[var(--color-border)]'
           }`}
           placeholder="you@example.com"
@@ -76,14 +76,14 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           required
           minLength={6}
           autoComplete="current-password"
-          className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all mono text-sm"
+          className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm"
           placeholder="••••••••"
         />
       </div>
 
       {error && (
-        <div className="p-3 rounded-sm" style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)', borderWidth: '1px', borderColor: 'color-mix(in srgb, var(--color-negative) 20%, transparent)' }}>
-          <p className="text-sm text-[var(--color-negative)] mono">{error}</p>
+        <div className="glass-slab-floating relative overflow-hidden rounded-lg pl-4 pr-3 py-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-negative)] shadow-[0_8px_30px_-10px_rgba(239,68,68,0.35)]">
+          <p className="text-sm text-[var(--color-negative)] font-medium">{error}</p>
         </div>
       )}
 
@@ -96,7 +96,7 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         <button
           type="button"
           onClick={onSwitchToSignup}
-          className="text-[var(--color-accent-secondary)] hover:text-[var(--color-accent)] font-medium transition-colors"
+          className="text-[var(--color-accent-secondary)] hover:text-[var(--color-accent)] font-medium transition-colors animate-press"
         >
           Sign up
         </button>

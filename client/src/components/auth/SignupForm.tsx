@@ -93,7 +93,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
           onBlur={(e) => validateEmail(e.target.value)}
           required
           autoComplete="email"
-          className={`block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all mono text-sm ${
+          className={`block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm ${
             emailError ? 'border-[var(--color-negative)]' : 'border-[var(--color-border)]'
           }`}
           placeholder="you@example.com"
@@ -115,7 +115,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
           required
           minLength={6}
           autoComplete="new-password"
-          className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all mono text-sm"
+          className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm"
           placeholder="••••••••"
         />
         <PasswordStrengthBar password={password} />
@@ -134,7 +134,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             autoComplete="new-password"
-            className={`block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all mono text-sm ${
+            className={`block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm ${
               confirmPassword.length > 0 && !passwordsMatch
                 ? 'border-[var(--color-negative)]'
                 : 'border-[var(--color-border)]'
@@ -151,16 +151,14 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
       </div>
 
       {displayError && (
-        <div className="p-3 rounded-sm" style={{
-          backgroundColor: displayError.includes('check your email')
-            ? 'color-mix(in srgb, var(--color-positive) 10%, transparent)'
-            : 'color-mix(in srgb, var(--color-negative) 10%, transparent)',
-          borderWidth: '1px',
-          borderColor: displayError.includes('check your email')
-            ? 'color-mix(in srgb, var(--color-positive) 20%, transparent)'
-            : 'color-mix(in srgb, var(--color-negative) 20%, transparent)',
-        }}>
-          <p className={`text-sm mono ${
+        <div
+          className={`glass-slab-floating relative overflow-hidden rounded-lg pl-4 pr-3 py-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] ${
+            displayError.includes('check your email')
+              ? "before:bg-[var(--color-positive)] shadow-[0_8px_30px_-10px_rgba(16,185,129,0.35)]"
+              : "before:bg-[var(--color-negative)] shadow-[0_8px_30px_-10px_rgba(239,68,68,0.35)]"
+          }`}
+        >
+          <p className={`text-sm font-medium ${
             displayError.includes('check your email')
               ? 'text-[var(--color-positive)]'
               : 'text-[var(--color-negative)]'
@@ -179,7 +177,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         <button
           type="button"
           onClick={onSwitchToLogin}
-          className="text-[var(--color-accent-secondary)] hover:text-[var(--color-accent)] font-medium transition-colors"
+          className="text-[var(--color-accent-secondary)] hover:text-[var(--color-accent)] font-medium transition-colors animate-press"
         >
           Sign in
         </button>

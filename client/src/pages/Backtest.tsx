@@ -36,6 +36,7 @@ import { useMutation } from '@tanstack/react-query';
 import { api } from '@/api/client';
 import { useToast } from '@/hooks/useToast';
 import { rechartsTooltipStyle } from '@/lib/theme';
+import { EmptyState } from '@/components/shared/EmptyState';
 
 interface BacktestRunConfig {
   symbols: string[];
@@ -608,23 +609,12 @@ export function Backtest() {
 
       {/* ── Empty State ─────────────────────────────────────────────────── */}
       {!result && !isPending && !error && (
-        <div
-          className="glass-slab rounded-2xl p-10 sm:p-16 text-center animate-fade-in-up"
-          style={{ animationDelay: '100ms', animationFillMode: 'both' }}
-        >
-          <div
-            className="w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center"
-            style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
-          >
-            <BarChart3 className="w-8 h-8" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
-          </div>
-          <p className={`${kickerClass} mb-2`}>Ready</p>
-          <h3 className="text-xl font-bold text-theme mb-3">Configure and run a backtest</h3>
-          <p className="text-sm text-theme-secondary max-w-md mx-auto leading-relaxed">
-            Walk-forward backtesting validates your CVRF strategy against historical data.
-            Select symbols, date range, and strategy to get started.
-          </p>
-        </div>
+        <EmptyState
+          icon={<BarChart3 className="w-8 h-8" />}
+          kicker="BACKTEST · Ready"
+          title="Configure and run a backtest"
+          description="Walk-forward backtesting validates your CVRF strategy against historical data. Select symbols, date range, and strategy to get started."
+        />
       )}
     </div>
   );

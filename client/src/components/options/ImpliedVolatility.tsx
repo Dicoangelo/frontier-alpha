@@ -445,10 +445,7 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
                 {/* Earnings Expected Move (if available) */}
                 {iv.expectedMove.earnings !== undefined && (
                   <div
-                    className="glass-slab-floating relative overflow-hidden rounded-xl mb-3 pl-5 pr-3 py-2 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]"
-                    style={{
-                      backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)',
-                    }}
+                    className="glass-slab-floating relative overflow-hidden rounded-xl mb-3 pl-5 pr-3 py-2 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] bg-[var(--color-accent)]/8"
                   >
                     <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px] bg-[image:var(--gradient-sovereign)]" />
                     <div className="flex items-center justify-between">

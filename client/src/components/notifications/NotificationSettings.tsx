@@ -109,8 +109,7 @@ export function NotificationSettings({ className = '' }: NotificationSettingsPro
 
       {error && (
         <div
-          className="mt-3 glass-slab-floating relative overflow-hidden rounded-xl p-3 pl-5 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]"
-          style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 8%, transparent)' }}
+          className="mt-3 glass-slab-floating relative overflow-hidden rounded-xl p-3 pl-5 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] bg-[var(--color-negative)]/8"
         >
           <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--color-negative)]" />
           <p className="text-sm leading-relaxed text-[var(--color-negative)]">{error}</p>

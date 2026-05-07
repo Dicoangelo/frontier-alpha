@@ -29,6 +29,7 @@ import {
   type HelpTopic,
   type FAQ,
 } from '@/data/helpContent';
+import { EmptyState } from '@/components/shared/EmptyState';
 
 const sectionIcons: Record<string, typeof Rocket> = {
   'getting-started': Rocket,
@@ -230,13 +231,17 @@ export function Help() {
               )}
             </div>
           ) : (
-            <div className="glass-slab rounded-2xl p-8 text-center">
-              <HelpCircle className="w-12 h-12 text-theme-muted mx-auto mb-4" aria-hidden="true" />
-              <h3 className="text-lg font-semibold text-theme mb-2">No results found</h3>
-              <p className="text-theme-secondary leading-relaxed">
-                We could not find anything matching "{searchQuery}". Try different keywords or browse the topics below.
-              </p>
-            </div>
+            <EmptyState
+              icon={<HelpCircle className="w-8 h-8" />}
+              kicker="SEARCH · No Match"
+              title="No results found"
+              description={`We could not find anything matching "${searchQuery}". Try different keywords or browse the topics below.`}
+              action={{
+                label: 'Clear Search',
+                onClick: () => setSearchQuery(''),
+                variant: 'outline',
+              }}
+            />
           )}
         </div>
       )}

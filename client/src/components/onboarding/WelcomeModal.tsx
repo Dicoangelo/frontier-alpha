@@ -1,10 +1,12 @@
-import { X, ArrowRight, TrendingUp, BarChart2, Bell, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, ArrowRight, TrendingUp, BarChart2, Bell, Zap, Sparkles } from 'lucide-react';
 
 interface WelcomeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onStartTour: () => void;
   onTryDemo: () => void;
+  onImportDemoSymbols?: (symbols: string[]) => void;
 }
 
 const features = [
@@ -30,7 +32,38 @@ const features = [
   },
 ];
 
-export function WelcomeModal({ isOpen, onClose, onStartTour, onTryDemo }: WelcomeModalProps) {
+const ANALYZE_SYMBOLS_KEY = 'analyze_symbols';
+
+function readDemoSymbols(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(ANALYZE_SYMBOLS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((s): s is string => typeof s === 'string' && s.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+export function WelcomeModal({
+  isOpen,
+  onClose,
+  onStartTour,
+  onTryDemo,
+  onImportDemoSymbols,
+}: WelcomeModalProps) {
+  const [demoSymbols, setDemoSymbols] = useState<string[]>([]);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setDemoSymbols(readDemoSymbols());
+      setBannerDismissed(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleStartTour = () => {
@@ -42,6 +75,22 @@ export function WelcomeModal({ isOpen, onClose, onStartTour, onTryDemo }: Welcom
     onClose();
     onTryDemo();
   };
+
+  const handleImport = () => {
+    if (onImportDemoSymbols && demoSymbols.length > 0) {
+      onImportDemoSymbols(demoSymbols);
+    }
+    setDemoSymbols([]);
+    setBannerDismissed(true);
+  };
+
+  const handleSkipBanner = () => {
+    setBannerDismissed(true);
+  };
+
+  const showDemoBanner = demoSymbols.length > 0 && !bannerDismissed;
+  const previewSymbols = demoSymbols.slice(0, 4);
+  const remainingCount = Math.max(0, demoSymbols.length - previewSymbols.length);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -103,8 +152,73 @@ export function WelcomeModal({ isOpen, onClose, onStartTour, onTryDemo }: Welcom
           </div>
         </div>
 
-        {/* Features */}
+        {/* Body */}
         <div className="p-6">
+          {/* Demo handoff banner — only when analyze_symbols exists */}
+          {showDemoBanner && (
+            <div
+              className="glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-4 mb-5 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)] animate-fade-in-up"
+              role="region"
+              aria-label="Import demo symbols"
+            >
+              <div className="flex items-start gap-3">
+                <Sparkles
+                  className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent)]"
+                  aria-hidden="true"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] font-semibold">
+                    FROM YOUR PREVIEW
+                  </p>
+                  <p className="text-sm font-semibold text-theme mt-1">
+                    We saved {demoSymbols.length}{' '}
+                    {demoSymbols.length === 1 ? 'symbol' : 'symbols'} from your demo.
+                  </p>
+                  <p className="text-sm text-theme-secondary leading-relaxed mt-1">
+                    Import {demoSymbols.length === 1 ? 'it' : 'them'} as your starting
+                    portfolio?
+                  </p>
+
+                  {/* Symbol chips */}
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {previewSymbols.map((sym) => (
+                      <span
+                        key={sym}
+                        className="mono tabular-nums text-[10px] tracking-[0.2em] uppercase font-bold px-2 py-1 rounded-md bg-[var(--color-bg-tertiary)] border border-theme text-theme"
+                      >
+                        {sym}
+                      </span>
+                    ))}
+                    {remainingCount > 0 && (
+                      <span className="mono text-[10px] tracking-[0.2em] uppercase px-2 py-1 text-theme-muted">
+                        +{remainingCount} more
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                    <button
+                      type="button"
+                      onClick={handleImport}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[image:var(--gradient-sovereign)] text-white text-sm font-semibold animate-press animate-lift shadow-[0_4px_24px_rgba(123,44,255,0.35)] hover:brightness-110"
+                    >
+                      Import {demoSymbols.length}{' '}
+                      {demoSymbols.length === 1 ? 'symbol' : 'symbols'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSkipBanner}
+                      className="glass-slab px-4 py-2.5 rounded-lg text-theme text-sm font-medium animate-press animate-lift hover:border-[color:var(--color-border-hover)]"
+                    >
+                      Skip
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted mb-4">
             What you will get
           </p>

@@ -122,7 +122,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
             {this.state.eventId && (
               <div className="inline-block mb-6 px-3 py-1.5 rounded-md border border-theme bg-[color-mix(in_srgb,var(--color-bg-secondary)_60%,transparent)]">
-                <span className="text-xs text-theme-muted font-mono">
+                <span className="text-xs text-theme-muted mono">
                   Error ID: {this.state.eventId}
                 </span>
               </div>
@@ -151,7 +151,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 <summary className="text-sm text-theme-muted cursor-pointer hover:text-theme-secondary transition-colors">
                   Technical Details
                 </summary>
-                <div className="glass-slab mt-2 p-3 rounded-lg text-xs font-mono overflow-auto max-h-48">
+                <div className="glass-slab mt-2 p-3 rounded-lg text-xs mono overflow-auto max-h-48">
                   <p className="text-[var(--color-negative)] font-semibold">
                     {this.state.error.name}: {this.state.error.message}
                   </p>

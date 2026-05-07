@@ -116,8 +116,7 @@ export const OrderPreviewModal = React.memo(function OrderPreviewModal({
             <>
               {validation.errors.length > 0 && (
                 <div
-                  className="glass-slab-floating relative overflow-hidden p-3 pl-5 rounded-xl before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] space-y-1"
-                  style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 8%, transparent)' }}
+                  className="glass-slab-floating relative overflow-hidden p-3 pl-5 rounded-xl before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] space-y-1 bg-[var(--color-negative)]/8"
                 >
                   <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--color-negative)]" />
                   {validation.errors.map((error, i) => (
@@ -131,8 +130,7 @@ export const OrderPreviewModal = React.memo(function OrderPreviewModal({
 
               {validation.warnings.length > 0 && (
                 <div
-                  className="glass-slab-floating relative overflow-hidden p-3 pl-5 rounded-xl before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] space-y-1"
-                  style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 8%, transparent)' }}
+                  className="glass-slab-floating relative overflow-hidden p-3 pl-5 rounded-xl before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] space-y-1 bg-[var(--color-warning)]/8"
                 >
                   <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--color-warning)]" />
                   {validation.warnings.map((warning, i) => (

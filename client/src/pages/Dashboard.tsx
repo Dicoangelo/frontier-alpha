@@ -282,7 +282,7 @@ function QuickAction({ to, icon, label }: { to: string; icon: React.ReactNode; l
         bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]
         border border-[var(--color-border-light)]
         hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]
-        transition-all duration-200 click-feedback"
+        transition-[border-color,color,background-color] duration-200 animate-press"
     >
       {icon}
       {label}
@@ -314,9 +314,12 @@ export function Dashboard() {
       // Fetch portfolio
       let portfolioData = await fetchPortfolio();
 
-      // If empty portfolio, seed from analyze_symbols (landing flow) or demo
+      // If empty portfolio, seed from imported_symbols (welcome handoff),
+      // then analyze_symbols (raw landing flow), then demo.
       if (!portfolioData || !portfolioData.positions || portfolioData.positions.length === 0) {
-        const stored = localStorage.getItem('analyze_symbols');
+        const stored =
+          localStorage.getItem('imported_symbols') ||
+          localStorage.getItem('analyze_symbols');
         if (stored) {
           try {
             const symbols: string[] = JSON.parse(stored);

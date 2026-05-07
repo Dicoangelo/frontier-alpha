@@ -42,21 +42,21 @@ interface FactorExposuresProps {
 function NetExposureIndicator({ value }: { value: number }) {
   if (Math.abs(value) < 0.1) {
     return (
-      <span className="flex items-center gap-1 text-[var(--color-text-muted)]">
-        <Minus className="w-3 h-3" /> Neutral
+      <span className="flex items-center gap-1 mono tabular-nums text-xs text-theme-muted">
+        <Minus className="w-3 h-3" aria-hidden="true" /> Neutral
       </span>
     );
   }
   if (value > 0) {
     return (
-      <span className="flex items-center gap-1 text-[var(--color-positive)]">
-        <TrendingUp className="w-3 h-3" /> +{value.toFixed(2)}
+      <span className="flex items-center gap-1 mono tabular-nums text-xs text-[var(--color-positive)]">
+        <TrendingUp className="w-3 h-3" aria-hidden="true" /> +{value.toFixed(2)}
       </span>
     );
   }
   return (
-    <span className="flex items-center gap-1 text-[var(--color-negative)]">
-      <TrendingDown className="w-3 h-3" /> {value.toFixed(2)}
+    <span className="flex items-center gap-1 mono tabular-nums text-xs text-[var(--color-negative)]">
+      <TrendingDown className="w-3 h-3" aria-hidden="true" /> {value.toFixed(2)}
     </span>
   );
 }
@@ -131,19 +131,25 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
     <Card
       title="Factor Exposures"
       action={
-        <div className="flex gap-1 bg-[var(--color-bg-tertiary)] rounded-lg p-0.5">
+        <div className="flex gap-1 bg-theme-tertiary rounded-lg p-0.5 border border-theme-light">
           <button
             onClick={() => setViewMode('grouped')}
-            className={`px-3 py-1 text-xs rounded-md transition-colors ${
-              viewMode === 'grouped' ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+            aria-pressed={viewMode === 'grouped'}
+            className={`px-3 py-1 mono text-[10px] tracking-wider uppercase rounded-md transition-[background-color,color] duration-200 animate-press ${
+              viewMode === 'grouped'
+                ? 'bg-theme shadow text-theme'
+                : 'text-theme-secondary hover:text-theme'
             }`}
           >
             Grouped
           </button>
           <button
             onClick={() => setViewMode('flat')}
-            className={`px-3 py-1 text-xs rounded-md transition-colors ${
-              viewMode === 'flat' ? 'bg-[var(--color-bg)] shadow text-[var(--color-text)]' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text)]'
+            aria-pressed={viewMode === 'flat'}
+            className={`px-3 py-1 mono text-[10px] tracking-wider uppercase rounded-md transition-[background-color,color] duration-200 animate-press ${
+              viewMode === 'flat'
+                ? 'bg-theme shadow text-theme'
+                : 'text-theme-secondary hover:text-theme'
             }`}
           >
             By Impact
@@ -152,20 +158,21 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
       }
     >
       {factors.length === 0 ? (
-        <div className="text-center py-8 text-[var(--color-text-muted)]">
-          <p>No factor exposures calculated yet.</p>
-          <p className="text-sm mt-2">Add positions to see factor analysis.</p>
+        <div className="glass-slab gradient-brand-subtle rounded-2xl py-10 px-6 text-center">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">No exposures</p>
+          <p className="text-sm text-theme-secondary mt-2">No factor exposures calculated yet.</p>
+          <p className="text-xs text-theme-muted mt-1">Add positions to see factor analysis.</p>
           <Link
             to="/help#what-are-factors"
-            className="inline-flex items-center gap-1 mt-4 text-sm text-[var(--color-info)] hover:text-[var(--color-info)]"
+            className="inline-flex items-center gap-1 mt-4 mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-info)] hover:opacity-80 transition-opacity duration-200 animate-press"
           >
-            <HelpCircle className="w-4 h-4" />
+            <HelpCircle className="w-4 h-4" aria-hidden="true" />
             Learn about factors
           </Link>
         </div>
       ) : viewMode === 'grouped' ? (
-        <div className="space-y-4">
-          {CATEGORY_ORDER.map((category, idx) => {
+        <div className="space-y-4 animate-stagger">
+          {CATEGORY_ORDER.map((category) => {
             const categoryFactors = groupedFactors[category];
             if (!categoryFactors || categoryFactors.length === 0) return null;
 
@@ -175,29 +182,34 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
             return (
               <div
                 key={category}
-                className="border border-[var(--color-border)] rounded-lg overflow-hidden transition-shadow duration-200 hover:shadow-lg animate-fade-in-up"
-                style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}
+                className="glass-slab rounded-xl overflow-hidden transition-[box-shadow] duration-200 hover:shadow-[0_18px_60px_-24px_rgba(0,0,0,0.18)] animate-enter"
               >
                 <button
                   onClick={() => toggleCategory(category)}
-                  className="w-full flex items-center justify-between p-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                  aria-expanded={isExpanded}
+                  className="w-full flex items-center justify-between p-3 hover:bg-theme-secondary transition-colors duration-200 animate-press"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="font-medium text-[var(--color-text)]">{category}</span>
-                    <span className="text-xs text-[var(--color-text-muted)]">({categoryFactors.length})</span>
+                    <span className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase font-semibold text-theme">
+                      {category}
+                    </span>
+                    <span className="mono tabular-nums text-[10px] tracking-wider text-theme-muted">
+                      ({categoryFactors.length})
+                    </span>
                   </div>
                   <div className="flex items-center gap-4">
                     <NetExposureIndicator value={netExposure} />
                     {isExpanded ? (
-                      <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
+                      <ChevronUp className="w-4 h-4 text-theme-muted" aria-hidden="true" />
                     ) : (
-                      <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
+                      <ChevronDown className="w-4 h-4 text-theme-muted" aria-hidden="true" />
                     )}
                   </div>
                 </button>
+                <div className="h-[1px] bg-[image:var(--gradient-sovereign)] opacity-30" aria-hidden="true" />
 
                 <AccordionContent isExpanded={isExpanded}>
-                  <div className="p-3 space-y-4 bg-[var(--color-bg)]">
+                  <div className="p-4 space-y-4">
                     {categoryFactors.map((factor) => (
                       <FactorBar key={factor.factor} factor={factor} showCategory={false} />
                     ))}
@@ -208,33 +220,32 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
           })}
         </div>
       ) : (
-        <div className="space-y-4">
-          {sortedFactors.slice(0, 10).map((factor, idx) => (
-            <div
-              key={factor.factor}
-              className="animate-fade-in-up"
-              style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}
-            >
+        <div className="space-y-4 animate-stagger">
+          {sortedFactors.slice(0, 10).map((factor) => (
+            <div key={factor.factor} className="animate-enter">
               <FactorBar factor={factor} />
             </div>
           ))}
           {sortedFactors.length > 10 && (
-            <p className="text-xs text-[var(--color-text-muted)] text-center">
-              Showing top 10 of {sortedFactors.length} factors by impact
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted text-center">
+              Showing top <span className="tabular-nums">10</span> of <span className="tabular-nums">{sortedFactors.length}</span> factors by impact
             </p>
           )}
         </div>
       )}
 
       {insight && (
-        <div className="mt-6 p-4 rounded-lg border border-[color-mix(in_srgb,var(--color-accent)_15%,transparent)]" style={{ background: 'linear-gradient(to right, color-mix(in srgb, var(--color-accent) 6%, transparent), color-mix(in srgb, var(--color-info) 6%, transparent))' }}>
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)' }}>
-              <span className="text-lg">🧠</span>
+        <div className="glass-slab gradient-brand-subtle relative overflow-hidden mt-6 p-4 rounded-2xl before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)]">
+          <div className="flex items-start gap-3 pl-2">
+            <div
+              className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)' }}
+            >
+              <span className="text-lg" aria-hidden="true">🧠</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-[var(--color-text)] mb-1">AI Insight</p>
-              <p className="text-sm text-[var(--color-text-secondary)]">{insight}</p>
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)]">AI Insight</p>
+              <p className="text-sm text-theme-secondary mt-1 leading-relaxed">{insight}</p>
             </div>
           </div>
         </div>

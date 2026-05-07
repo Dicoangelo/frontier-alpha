@@ -122,8 +122,9 @@ npm run ml:start         # uvicorn on port 8000
 
 ## Current State
 
-- **Version:** 1.0.4 (server `package.json`)
+- **Version:** 1.1.0 (server `package.json`) — bumped 2026-05-07 for UI family-aesthetic polish
 - **Phase 1:** Complete — all 4 weeks shipped (Feb–Mar 2026)
+- **UI polish wave:** Complete — 35 files across 5 rounds, PRs #3 + #4, v1.1.0 (2026-05-07). Frontier Alpha's visual language now aligns with `metaventionsai.com`, `careers.metaventionsai.com`, `friendlyface.metaventionsai.com`. See `DESIGN-SYSTEM.md` §12 for the canonical pattern register.
 - **Production URL:** https://frontier-alpha.metaventionsai.com
 - **Deployment:** Vercel (auto-deploy disabled to save build credits — deploy manually)
 - **Tests:** 54 test files (server + client), 265 tests passing (84 server + 181 client)
@@ -170,12 +171,35 @@ Historical docs are safe to ignore — they document the build process, not the 
 
 Fully migrated to CSS variables — zero hardcoded colors. See `DESIGN-SYSTEM.md` for token definitions, component patterns, and animation standards.
 
+**Family-aligned (v1.1.0, 2026-05-07):** Frontier Alpha's visual language now matches the rest of the Metaventions AI family — `metaventionsai.com`, `careers.metaventionsai.com`, `friendlyface.metaventionsai.com`. The canonical pattern register is documented in `DESIGN-SYSTEM.md` §12 (Family Aesthetic Patterns):
+
+- **Glass surfaces** — `glass-slab` / `glass-slab-floating` / `glass-modal` cover every surface tier
+- **Type-rail banners** — Toast pattern (3px before-pseudo + colored shadow glow) used by Toast, SectionErrorBoundary, ConnectionStatus, MockDataBanner, ModelStatusBanner
+- **Sovereign CTA** — `bg-[image:var(--gradient-sovereign)]` magenta→amethyst→cyan signature for primary actions
+- **Mono kicker register** — `mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted`
+- **Active route rail** — sovereign-gradient `before:` pseudo on Sidebar + MobileNav active state
+- **Anti-CLS posture** — `tabular-nums` + explicit `min-h` on every chart wrapper + size-matched skeletons
+- **Motion grammar** — 4-keyframe set (`fade-in`, `slide-in-left`, `slide-in-right`, `pulse-subtle`) bound to motion tokens
+
 Dark mode: CSS variable–based (no `dark:` Tailwind prefixes needed). Light/Dark/System toggle available in Settings.
 
 ## Known Issues / Tech Debt
 
 ### Critical
 - _None currently tracked._
+
+### Resolved (UI Polish Wave 2026-05-07 — v1.1.0, PRs #3 + #4)
+- ~~**Hard-cut overlay transitions**~~ — Fixed: 4 missing keyframes (`fade-in`, `slide-in-left`, `slide-in-right`, `pulse-subtle`) defined at document level. Were referenced site-wide but only declared in the reduced-motion override.
+- ~~**Hover-scale jank on buttons**~~ — Fixed: replaced `transition-all` + hover-scale with `animate-press` + `animate-lift` + brightness-filter token vocabulary.
+- ~~**Rogue blue Try Again button**~~ — Fixed: ErrorBoundary CTA migrated from `--color-info` blue to sovereign gradient.
+- ~~**Flat-tinted toasts/banners**~~ — Fixed: Toast/SectionErrorBoundary/ConnectionStatus/MockDataBanner/ModelStatusBanner all adopt the type-rail pattern (3px before-pseudo + colored shadow glow on glass-slab-floating).
+- ~~**Sidebar active state was a color swap**~~ — Fixed: sovereign-gradient `before:` rail + section grouping + gradient upsell CTA.
+- ~~**Bare-card modals**~~ — Fixed: Pricing, Settings, Help, KeyboardHelpModal, WelcomeModal, FeatureTour, BottomSheet, CommandPalette all adopt `glass-modal` + `sovereign-bar` 3px gradient top rail.
+- ~~**Inconsistent form input chrome**~~ — Fixed: LoginForm, SignupForm, Settings, APIKeys all use canonical input pattern with sovereign-gradient focus rings + glass-slab error blocks.
+- ~~**Dashboard CLS on quote stream**~~ — Fixed: `min-h` on every chart wrapper, stable status-pill width, `tabular-nums` on streaming time + numeric metrics.
+- ~~**Skeleton-to-content pop**~~ — Fixed: 3 skeleton files rebuilt to match polished final shapes.
+- ~~**Page chrome family drift**~~ — Fixed: Header logo lockup tightened, mono page-title kicker, MobileNav sovereign top rail, BottomSheet glass-modal, PullToRefresh sovereign-violet glow.
+- ~~**Intelligence/execution page chrome was inconsistent**~~ — Fixed: CVRF, Backtest, ML adopt ModelStatusBanner; Trading, Options, Earnings, Tax adopt segmented controls + mono uppercase tables.
 
 ### Resolved (Sprint 2026-04-04)
 - ~~**Dual API surface**~~ — Fixed: extracted `src/app.ts::buildApp()` as single source of truth; added `api/fastify.ts` catch-all; ported all 27 Vercel-only subsystems (auth, billing, trading, notifications, backtest, broker, cache, sec, sentiment, 7 CVRF viz endpoints, 3 alert subsystems, 2 earnings endpoints, options/iv, 3 portfolio endpoints, settings/notifications, errors/report) into `src/routes/*.ts` Fastify plugins. Zero hand-written Vercel handlers remain.

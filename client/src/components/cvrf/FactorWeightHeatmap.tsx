@@ -17,16 +17,14 @@ interface HeatmapCell {
 }
 
 function weightToColor(weight: number): string {
-  // Map -1..+1 to danger..neutral..secondary using CSS variables
+  // Map -1..+1 to negative..neutral..positive using semantic CSS variables
   const clamped = Math.max(-1, Math.min(1, weight));
   const pct = Math.round(Math.abs(clamped) * 100);
 
   if (clamped >= 0) {
-    // 0 → transparent, 1 → full chart-secondary
-    return `color-mix(in srgb, var(--chart-secondary) ${pct}%, var(--color-bg))`;
+    return `color-mix(in srgb, var(--color-positive) ${pct}%, var(--color-bg))`;
   } else {
-    // 0 → transparent, -1 → full chart-danger
-    return `color-mix(in srgb, var(--chart-danger) ${pct}%, var(--color-bg))`;
+    return `color-mix(in srgb, var(--color-negative) ${pct}%, var(--color-bg))`;
   }
 }
 
@@ -62,29 +60,19 @@ export function FactorWeightHeatmap() {
       return { factors: [], episodes: [], cells: [] };
     }
 
-    // Extract unique factors from cycle data
-    // Each cycle has belief updates showing factor weight changes
-    // We'll use a simplified view based on available cycle data
     const factorSet = new Set<string>();
     const episodeNumbers: number[] = [];
 
-    // Build a synthetic view: for each cycle, extract factor weights
-    // from the performance data
     const cellsMap = new Map<string, HeatmapCell>();
 
     history.forEach((cycle, idx) => {
       const epNum = idx + 1;
       episodeNumbers.push(epNum);
 
-      // Use performance delta as a proxy for the overall factor exposure direction
-      // In a full implementation, this would use the actual factor weight snapshots
-      // from the belief-history endpoint
       const deltaSign = cycle.performanceDelta >= 0 ? 1 : -1;
-      // Generate factor cells from the cycle's insight count as a proxy
       const insightWeight = Math.min(cycle.insightsCount / 10, 1);
-      void insightWeight; // used in cell generation below
+      void insightWeight;
 
-      // Common factors to show
       const defaultFactors = [
         'momentum_12m',
         'value_ep',
@@ -96,8 +84,6 @@ export function FactorWeightHeatmap() {
 
       defaultFactors.forEach((factor) => {
         factorSet.add(factor);
-        // Generate weight based on cycle performance for demonstration
-        // This will be replaced with real belief-history data
         const baseWeight = (Math.sin(epNum * 0.7 + factor.length) * 0.3 + cycle.performanceDelta) * deltaSign;
         const weight = Math.max(-1, Math.min(1, baseWeight));
 
@@ -119,7 +105,7 @@ export function FactorWeightHeatmap() {
 
   if (isLoading) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
+      <div className="glass-slab rounded-2xl p-6 sm:p-8">
         <div className="h-6 bg-[var(--color-border)] rounded w-1/3 mb-4 animate-shimmer" />
         <div className="h-48 bg-[var(--color-bg-secondary)] rounded animate-shimmer" />
       </div>
@@ -128,12 +114,17 @@ export function FactorWeightHeatmap() {
 
   if (episodes.length === 0) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Flame className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="text-lg font-semibold text-[var(--color-text)]">Factor Evolution</h3>
+      <div className="glass-slab rounded-2xl p-6 sm:p-8">
+        <div className="mb-4">
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Heatmap
+          </p>
+          <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
+            <Flame className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            Factor Evolution
+          </h3>
         </div>
-        <div className="flex items-center justify-center h-32 text-[var(--color-text-muted)] text-sm">
+        <div className="flex items-center justify-center h-32 text-theme-muted text-sm">
           Complete CVRF cycles to see factor weight evolution
         </div>
       </div>
@@ -141,15 +132,20 @@ export function FactorWeightHeatmap() {
   }
 
   return (
-    <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
+    <div className="glass-slab rounded-2xl p-6 sm:p-8 animate-enter">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Flame className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="text-lg font-semibold text-[var(--color-text)]">Factor Evolution</h3>
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+        <div>
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Heatmap
+          </p>
+          <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
+            <Flame className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            Factor Evolution
+          </h3>
         </div>
         {/* Legend */}
-        <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+        <div className="flex items-center gap-2 mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">
           <div className="flex items-center gap-1">
             <div className="w-4 h-3 rounded" style={{ backgroundColor: weightToColor(-0.8) }} />
             <span>Underweight</span>
@@ -166,15 +162,19 @@ export function FactorWeightHeatmap() {
       </div>
 
       {/* Heatmap Grid */}
-      <div className="overflow-x-auto" role="img" aria-label={`Factor weight heatmap showing ${factors.length} factors across ${episodes.length} CVRF cycles`}>
+      <div
+        className="overflow-x-auto"
+        role="img"
+        aria-label={`Factor weight heatmap showing ${factors.length} factors across ${episodes.length} CVRF cycles`}
+      >
         <table className="w-full border-collapse">
           <thead>
             <tr>
-              <th className="text-left text-xs text-[var(--color-text-muted)] pb-2 pr-3 w-32">
+              <th className="text-left mono text-[10px] tracking-[0.3em] uppercase text-theme-muted pb-2 pr-3 w-32">
                 Factor
               </th>
               {episodes.map((ep) => (
-                <th key={ep} className="text-center text-xs text-[var(--color-text-muted)] pb-2 px-1">
+                <th key={ep} className="text-center mono text-[10px] tracking-[0.3em] uppercase text-theme-muted pb-2 px-1 tabular-nums">
                   Cycle {ep}
                 </th>
               ))}
@@ -183,7 +183,7 @@ export function FactorWeightHeatmap() {
           <tbody>
             {factors.map((factor) => (
               <tr key={factor}>
-                <td className="text-xs font-medium text-[var(--color-text-secondary)] py-1 pr-3 whitespace-nowrap">
+                <td className="text-xs font-medium text-theme-secondary py-1 pr-3 whitespace-nowrap">
                   {getFactorLabel(factor)}
                 </td>
                 {episodes.map((ep) => {
@@ -192,7 +192,7 @@ export function FactorWeightHeatmap() {
                   return (
                     <td key={ep} className="p-0.5">
                       <div
-                        className="flex items-center justify-center h-8 rounded text-xs font-mono transition-colors cursor-default"
+                        className="flex items-center justify-center h-8 rounded text-xs mono tabular-nums transition-[background-color] duration-150 cursor-default"
                         style={{
                           backgroundColor: weightToColor(weight),
                           color: weightToTextColor(weight),

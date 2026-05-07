@@ -103,11 +103,11 @@ export const PriceChart = React.memo(function PriceChart({ symbol, currentPrice,
       title="Price"
       action={
         <div className="flex items-center gap-2">
-          <Badge variant="neutral" className="font-mono text-xs">
+          <Badge variant="neutral" className="mono text-xs">
             {symbol}
           </Badge>
           <span
-            className="text-xs font-medium"
+            className="mono text-xs tabular-nums font-medium"
             style={{ color: isUp ? 'var(--color-positive)' : 'var(--color-negative)' }}
           >
             {priceChangeFormatted}
@@ -119,11 +119,11 @@ export const PriceChart = React.memo(function PriceChart({ symbol, currentPrice,
         <div className="space-y-2">
           {/* Current price display */}
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-semibold text-[var(--color-text)]">
+            <span className="mono text-2xl font-semibold tabular-nums text-theme">
               ${currentPrice.toFixed(2)}
             </span>
             <span
-              className="text-sm font-medium"
+              className="mono text-sm tabular-nums font-medium"
               style={{ color: isUp ? 'var(--color-positive)' : 'var(--color-negative)' }}
             >
               {priceChangeFormatted}
@@ -131,7 +131,7 @@ export const PriceChart = React.memo(function PriceChart({ symbol, currentPrice,
           </div>
 
           {/* SVG chart */}
-          <div className="relative">
+          <div className="relative glass-slab-floating rounded-xl p-2" style={{ minHeight: 140 }}>
             <svg
               viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
               width="100%"
@@ -248,14 +248,14 @@ export const PriceChart = React.memo(function PriceChart({ symbol, currentPrice,
           </div>
 
           {/* X-axis labels: start/end */}
-          <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
+          <div className="flex justify-between mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">
             <span>Open</span>
             <span>Now</span>
           </div>
         </div>
       ) : (
-        <div className="py-8 text-center text-[var(--color-text-muted)]">
-          <p className="text-sm">Enter a symbol to view price chart</p>
+        <div className="py-8 text-center text-theme-muted" style={{ minHeight: 140 }}>
+          <p className="text-sm leading-relaxed">Enter a symbol to view price chart</p>
         </div>
       )}
     </Card>

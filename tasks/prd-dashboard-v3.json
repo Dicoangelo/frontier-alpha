@@ -29,7 +29,8 @@
       ],
       "status": "done",
       "dependsOn": [],
-      "completionNotes": "Shipped MarketStatusStrip.tsx: sticky ~36px strip with market phase pill (pre/open/post/closed, color-tinted), countdown to next phase, data freshness (color-shifts to warning>15s / danger>60s), WebSocket pulse dot, unread alert badge, and ? keyboard shortcut with help popover. All tokens via var(--color-*), zero hardcoded hex."
+      "completionNotes": "Shipped MarketStatusStrip.tsx: sticky ~36px strip with market phase pill (pre/open/post/closed, color-tinted), countdown to next phase, data freshness (color-shifts to warning>15s / danger>60s), WebSocket pulse dot, unread alert badge, and ? keyboard shortcut with help popover. All tokens via var(--color-*), zero hardcoded hex.",
+      "notes": "PR #4 (Round 4) reinforced: MarketStatusStrip + ConnectionStatus restyled to match the family Toast pattern (glass-slab-floating + 3px type-colored rail). MockDataBanner adopts the same Toast-pattern chrome. Stable status pill prevents CLS jank. Confirmed 2026-05-07."
     },
     {
       "id": "DASH3-002",
@@ -51,7 +52,8 @@
       "dependsOn": [
         "DASH3-001"
       ],
-      "completionNotes": "AlertDropdown already shipped at client/src/components/alerts/AlertDropdown.tsx (172 lines, wired into Header, React Query with 30s refetch, severity tokens, acknowledge mutation). This sprint wired the strip badge \u2014 clicking navigates to /alerts, and the badge flashes (animate-pulse-green + warning\u2192negative color swap for 600ms) when new alerts arrive."
+      "completionNotes": "AlertDropdown already shipped at client/src/components/alerts/AlertDropdown.tsx (172 lines, wired into Header, React Query with 30s refetch, severity tokens, acknowledge mutation). This sprint wired the strip badge \u2014 clicking navigates to /alerts, and the badge flashes (animate-pulse-green + warning\u2192negative color swap for 600ms) when new alerts arrive.",
+      "notes": "PR #3 (Round 1) reinforced: Toast.tsx restyled to glass-slab-floating with 3px type-colored rail, which is now the canonical chrome the alert dropdown rows inherit. MockDataBanner + ConnectionStatus also match. Status banners and the alert badge flash share the family-aligned visual vocabulary. Confirmed 2026-05-07."
     },
     {
       "id": "DASH3-003",
@@ -92,7 +94,8 @@
       ],
       "status": "done",
       "dependsOn": [],
-      "completionNotes": "Shipped DashZone.tsx + Dashboard refactor: 3 zones with distinct visual weight. Primary (col-span-2) wraps Portfolio Overview + EquityCurve. Secondary (col-span-1) wraps Weight Allocation + Position List. Tertiary (col-span-full, collapsible with localStorage persist) wraps FactorExposures + RiskMetrics + CognitiveInsight as 3-col grid. Each zone has accent-bar title strip (mono/uppercase)."
+      "completionNotes": "Shipped DashZone.tsx + Dashboard refactor: 3 zones with distinct visual weight. Primary (col-span-2) wraps Portfolio Overview + EquityCurve. Secondary (col-span-1) wraps Weight Allocation + Position List. Tertiary (col-span-full, collapsible with localStorage persist) wraps FactorExposures + RiskMetrics + CognitiveInsight as 3-col grid. Each zone has accent-bar title strip (mono/uppercase).",
+      "notes": "PR #4 (Round 2 + Round 4) reinforced: Dashboard CLS resolved via min-h on chart wrappers + tabular-nums + stable status pill. PortfolioOverview + EquityCurve dashboard widgets now use glass-slab + tabular-nums + fixed chart heights. 3 skeletons rebuilt to match final shapes (no layout shift on first paint). Confirmed 2026-05-07."
     },
     {
       "id": "DASH3-005",
@@ -174,7 +177,8 @@
       "dependsOn": [
         "DASH3-007"
       ],
-      "completionNotes": "Shipped client/src/components/shared/CommandPalette.tsx \u2014 Cmd/Ctrl+K opens a centered modal with fuzzy search across 14 routes, theme toggle, sign-out action. Arrow keys navigate, Enter executes, Esc closes. Items grouped by Navigate/Preferences/Actions with mono section labels. Highlighted row gets --brand-amethyst tint. Backdrop blurs page behind; click-outside closes. Wired into Layout.tsx so it is available globally on any authed page."
+      "completionNotes": "Shipped client/src/components/shared/CommandPalette.tsx \u2014 Cmd/Ctrl+K opens a centered modal with fuzzy search across 14 routes, theme toggle, sign-out action. Arrow keys navigate, Enter executes, Esc closes. Items grouped by Navigate/Preferences/Actions with mono section labels. Highlighted row gets --brand-amethyst tint. Backdrop blurs page behind; click-outside closes. Wired into Layout.tsx so it is available globally on any authed page.",
+      "notes": "PR #4 (Round 4) reinforced: CommandPalette restyled with sovereign-bar at top to match family chrome. PR #4 (Round 5) also aligned KeyboardHelpModal, HelpPanel, HelpButton, WelcomeModal, FeatureTour as glass-modal overlays with the same sovereign-bar treatment \u2014 palette is now visually consistent with every overlay across the app. Confirmed 2026-05-07."
     }
   ]
 }

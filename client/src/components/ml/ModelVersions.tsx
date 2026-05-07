@@ -31,32 +31,32 @@ function StatusBadge({ status }: { status: ModelStatus }) {
     deployed: {
       label: 'Deployed',
       color: 'var(--color-positive)',
-      bgColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)',
-      borderColor: 'color-mix(in srgb, var(--color-positive) 20%, transparent)',
+      bgColor: 'color-mix(in srgb, var(--color-positive) 12%, transparent)',
+      borderColor: 'color-mix(in srgb, var(--color-positive) 24%, transparent)',
     },
     validated: {
       label: 'Validated',
       color: 'var(--color-info)',
-      bgColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)',
-      borderColor: 'color-mix(in srgb, var(--color-info) 20%, transparent)',
+      bgColor: 'color-mix(in srgb, var(--color-info) 12%, transparent)',
+      borderColor: 'color-mix(in srgb, var(--color-info) 24%, transparent)',
     },
     training: {
       label: 'Training',
       color: 'var(--color-warning)',
-      bgColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
-      borderColor: 'color-mix(in srgb, var(--color-warning) 20%, transparent)',
+      bgColor: 'color-mix(in srgb, var(--color-warning) 12%, transparent)',
+      borderColor: 'color-mix(in srgb, var(--color-warning) 24%, transparent)',
     },
     archived: {
       label: 'Archived',
       color: 'var(--color-text-muted)',
-      bgColor: 'color-mix(in srgb, var(--color-text-muted) 10%, transparent)',
-      borderColor: 'color-mix(in srgb, var(--color-text-muted) 20%, transparent)',
+      bgColor: 'color-mix(in srgb, var(--color-text-muted) 12%, transparent)',
+      borderColor: 'color-mix(in srgb, var(--color-text-muted) 24%, transparent)',
     },
   };
   const c = config[status];
   return (
     <span
-      className="px-2 py-0.5 text-xs font-medium rounded-full border"
+      className="px-2 py-0.5 mono text-[10px] tracking-[0.3em] uppercase font-medium rounded-full border"
       style={{ color: c.color, backgroundColor: c.bgColor, borderColor: c.borderColor }}
     >
       {c.label}
@@ -78,34 +78,40 @@ function ModelVersionsInner({ models }: ModelVersionsProps) {
 
   return (
     <Card>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <Cpu className="w-5 h-5 text-[var(--color-accent)]" />
-          Model Performance
-        </h2>
-        <span className="text-sm text-[var(--color-text-muted)]">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Model Registry
+          </p>
+          <h2 className="text-lg font-semibold text-theme flex items-center gap-2">
+            <Cpu className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            Model Performance
+          </h2>
+        </div>
+        <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted tabular-nums">
           {deployedModels.length} deployed
         </span>
       </div>
 
       {/* Model Cards */}
-      <div className="space-y-3">
+      <div className="space-y-3 animate-stagger">
         {displayModels.map((model) => (
           <div
             key={model.id}
-            className="p-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:shadow-md transition-all duration-200 hover:border-[var(--color-accent)]"
-            style={{ '--tw-border-opacity': '0.3' } as React.CSSProperties}
+            className="glass-slab-floating rounded-xl p-4 animate-enter transition-[border-color,box-shadow] duration-200 hover:shadow-md"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-[var(--color-text)]">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-semibold text-theme">
                   {model.modelType === 'regime_detector' ? 'Regime Detector' : 'Neural Factor'}
                 </span>
-                <span className="text-xs text-[var(--color-text-muted)] font-mono">v{model.version}</span>
+                <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted tabular-nums">
+                  v{model.version}
+                </span>
                 <StatusBadge status={model.status} />
               </div>
-              <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
-                <Clock className="w-3 h-3" />
+              <div className="flex items-center gap-1 mono text-[10px] tracking-[0.2em] uppercase text-theme-muted tabular-nums">
+                <Clock className="w-3 h-3" aria-hidden="true" />
                 {new Date(model.trainedAt).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -118,33 +124,30 @@ function ModelVersionsInner({ models }: ModelVersionsProps) {
             {/* Metrics Row */}
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <div className="text-xs text-[var(--color-text-muted)]">Accuracy</div>
-                <div className="text-sm font-bold text-[var(--color-text)]">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Accuracy</p>
+                <p className="text-sm font-bold text-theme tabular-nums mt-0.5">
                   {(model.accuracy * 100).toFixed(1)}%
-                </div>
+                </p>
               </div>
               <div>
-                <div className="text-xs text-[var(--color-text-muted)]">Sharpe +</div>
-                <div className="text-sm font-bold text-[var(--color-positive)]">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Sharpe Δ</p>
+                <p className="text-sm font-bold text-[var(--color-positive)] tabular-nums mt-0.5">
                   +{(model.sharpeImprovement * 100).toFixed(0)}%
-                </div>
+                </p>
               </div>
               <div>
-                <div className="text-xs text-[var(--color-text-muted)]">DD Reduction</div>
-                <div className="text-sm font-bold text-[var(--color-info)]">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">DD Reduction</p>
+                <p className="text-sm font-bold text-[var(--color-info)] tabular-nums mt-0.5">
                   -{(model.maxDrawdownReduction * 100).toFixed(0)}%
-                </div>
+                </p>
               </div>
             </div>
 
             {/* Accuracy Bar */}
             <div className="mt-3 h-1.5 bg-[var(--color-bg)] rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-300"
-                style={{
-                  width: `${model.accuracy * 100}%`,
-                  background: 'linear-gradient(to right, var(--color-accent), var(--chart-purple))',
-                }}
+                className="h-full rounded-full transition-[width] duration-300 bg-[image:var(--gradient-sovereign)]"
+                style={{ width: `${model.accuracy * 100}%` }}
               />
             </div>
           </div>
@@ -154,12 +157,13 @@ function ModelVersionsInner({ models }: ModelVersionsProps) {
       {models.length > 3 && (
         <button
           onClick={() => setShowAll(!showAll)}
-          className="mt-3 w-full py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors flex items-center justify-center gap-1 hover:bg-[var(--color-bg-secondary)] rounded-lg"
+          className="mt-3 w-full py-2 mono text-[10px] tracking-[0.3em] uppercase text-theme-muted hover:text-theme glass-slab-floating rounded-lg flex items-center justify-center gap-1 animate-press transition-[color,background-color] duration-150"
+          aria-expanded={showAll}
         >
           {showAll ? (
-            <>Show less <ChevronUp className="w-4 h-4" /></>
+            <>Show less <ChevronUp className="w-4 h-4" aria-hidden="true" /></>
           ) : (
-            <>Show all {models.length} versions <ChevronDown className="w-4 h-4" /></>
+            <>Show all {models.length} versions <ChevronDown className="w-4 h-4" aria-hidden="true" /></>
           )}
         </button>
       )}

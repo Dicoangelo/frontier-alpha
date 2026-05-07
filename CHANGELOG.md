@@ -7,6 +7,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-05-07
+
+### UI: family-aesthetic polish across 35 files
+
+Comprehensive visual rev aligning Frontier Alpha with the rest of the Metaventions AI family
+(`metaventionsai.com`, `careers.metaventionsai.com`, `friendlyface.metaventionsai.com`). Five rounds,
+two PRs (#3 + #4), 35 files modified.
+
+#### Added
+
+- **Four missing keyframes** in `client/src/index.css` — `animate-fade-in`, `animate-slide-in-left`,
+  `animate-slide-in-right`, `animate-pulse-subtle`. These were referenced site-wide but only declared in
+  the reduced-motion override, causing every animated overlay/sidebar/toast to land as a hard cut. Now
+  bound to motion tokens (`--motion-duration-base`, `--motion-duration-slow`, `--motion-ease-out`).
+- **`ModelStatusBanner` pattern** — reusable status banner with type-colored 3px rail and shadow glow,
+  shared across CVRF / Backtest / ML / Earnings / Trading.
+- **`SectionShell` wrapper** — consistent section frame for Settings, APIKeys, Help.
+- **`ToggleRow` component** — settings toggle with sovereign-gradient track, used across Settings + APIKeys.
+- **Sovereign-gradient input ring** across all forms (LoginForm, SignupForm, Settings, APIKeys).
+- **Sovereign-bar (3px gradient top rail)** on every modal and page header — CommandPalette, BottomSheet,
+  KeyboardHelpModal, WelcomeModal, FeatureTour, MobileNav, Pricing.
+- **Mono kicker register** — `mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted` —
+  applied as the canonical small-label register across Header, PortfolioOverview, MarketStatusStrip,
+  EquityCurve, intelligence pages, execution pages.
+- **`tabular-nums`** on every numeric metric (anti-jitter on streaming quotes, time displays, equity curve
+  values, position rows).
+
+#### Changed
+
+- **Buttons** — replaced `transition-all` + `hover-scale` (janky on focus) with `animate-press` +
+  `animate-lift` + brightness-filter hover. New token-based vocabulary across the entire interaction layer.
+- **Toasts** — flat tinted backgrounds → `glass-slab-floating` + 3px type-colored left rail + colored
+  shadow glow. Toast pattern now reused for SectionErrorBoundary, ConnectionStatus, MockDataBanner,
+  ModelStatusBanner, banners in Earnings/Trading.
+- **ErrorBoundary** — rogue `--color-info` blue "Try Again" button replaced with sovereign gradient.
+  Full-page boundary now uses `glass-slab-floating` + sovereign-bar. SectionErrorBoundary adopts the Toast
+  banner pattern.
+- **Sidebar active state** — color swap → sovereign-gradient `before:` pseudo rail. Section dividers grouped.
+  Upsell card upgraded to gradient CTA.
+- **Pricing page** — full rebuild with `grid-bg` shell, `holo-pulse` hero, `border-sovereign` on Pro tier.
+- **Settings + APIKeys** — `SectionShell` pattern, canonical inputs, `ToggleRow` with sovereign-gradient
+  track, segmented theme switcher, Danger Zone with red rail.
+- **Forms** — LoginForm + SignupForm canonical input pattern with focus rings; glass-slab error blocks.
+- **Sidebar.tsx, Header.tsx, MobileNav.tsx, BottomSheet.tsx, CommandPalette.tsx, PullToRefresh.tsx** —
+  layout chrome upgraded to family aesthetic; sovereign-violet glow on PullToRefresh; glass-modal on sheets.
+- **PortfolioOverview** — `text-gradient-brand` hero with `holo-pulse`. **EquityCurve** — segmented
+  timeframe pills, fixed `h-64` chart wrapper. **MarketStatusStrip** — glass-slab pills with type rails.
+- **Intelligence pages** — CVRF, Backtest, ML adopt ModelStatusBanner pattern, page-header polish.
+- **Execution pages** — Trading, Options, Earnings, Tax adopt segmented controls and mono uppercase tables.
+- **Help / onboarding** — Help, Social, KeyboardHelpModal, HelpPanel, HelpButton, WelcomeModal, FeatureTour
+  unified under sovereign-bar modal pattern.
+
+#### Fixed
+
+- **CLS on Dashboard** — `min-h` set on every chart wrapper, status-pill stable width, `tabular-nums` on
+  the streaming time display. No more layout shift on first quote tick.
+- **Hard-cut overlay transitions** — the four keyframes (`fade-in`, `slide-in-left`, `slide-in-right`,
+  `pulse-subtle`) were referenced across the codebase but undefined except inside the reduced-motion
+  override. Defining them at the document level restores the intended animations everywhere.
+- **Skeletons** — three skeleton files rebuilt to match final shapes (eliminates skeleton-to-content
+  pop on first render).
+
+#### Files touched
+
+`client/src/index.css`, `client/src/components/shared/Button.tsx`, `Toast.tsx`, `ErrorBoundary.tsx`,
+`MockDataBanner.tsx`, `ConnectionStatus.tsx`, `BottomSheet.tsx`, `PullToRefresh.tsx`, `CommandPalette.tsx`;
+`client/src/components/layout/Sidebar.tsx`, `Header.tsx`, `MobileNav.tsx`;
+`client/src/components/auth/LoginForm.tsx`, `SignupForm.tsx`;
+`client/src/components/portfolio/PortfolioOverview.tsx`;
+`client/src/components/charts/EquityCurve.tsx`, `MarketStatusStrip.tsx`;
+`client/src/components/help/HelpButton.tsx`, `HelpPanel.tsx`, `KeyboardHelpModal.tsx`;
+`client/src/components/onboarding/WelcomeModal.tsx`, `FeatureTour.tsx`;
+`client/src/pages/Landing.tsx`, `Dashboard.tsx`, `Pricing.tsx`, `Settings.tsx`, `APIKeys.tsx`,
+`CVRF.tsx`, `Backtest.tsx`, `ML.tsx`, `Trading.tsx`, `Options.tsx`, `Earnings.tsx`, `Tax.tsx`,
+`Help.tsx`, `Social.tsx`; plus 3 skeleton files.
+
+**Production:** https://frontier-alpha.metaventionsai.com (deployed 2026-05-07).
+
+---
+
 ## [1.0.4] - 2026-03-15
 
 ### Intelligence

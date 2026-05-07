@@ -85,11 +85,18 @@ const formatFactorName = (factor: string): string => {
   );
 };
 
-const severityColors: Record<string, string> = {
-  critical: 'text-[var(--color-negative)] bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]',
-  high: 'text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]',
-  medium: 'text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)] border-[color-mix(in_srgb,var(--color-warning)_20%,transparent)]',
-  low: 'text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]',
+const severityRails: Record<string, string> = {
+  critical: 'before:bg-[var(--color-negative)]',
+  high: 'before:bg-[var(--color-warning)]',
+  medium: 'before:bg-[var(--color-warning)]',
+  low: 'before:bg-[var(--color-info)]',
+};
+
+const severityText: Record<string, string> = {
+  critical: 'text-[var(--color-negative)]',
+  high: 'text-[var(--color-warning)]',
+  medium: 'text-[var(--color-warning)]',
+  low: 'text-[var(--color-info)]',
 };
 
 const healthColors: Record<string, string> = {
@@ -162,27 +169,29 @@ export function FactorDriftAlert({
   // };
 
   return (
-    <Card className={`p-6 ${className}`}>
+    <Card className={className}>
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <h3 className="text-lg font-semibold text-[var(--color-text)]">Factor Drift Monitor</h3>
+        <div className="flex items-center gap-3 min-w-0">
+          <div>
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Risk · Factors</p>
+            <h3 className="text-lg font-semibold text-theme mt-0.5">Factor Drift Monitor</h3>
+          </div>
           {summary && (
-            <span
-              className={`text-sm font-medium ${healthColors[summary.overallHealth]}`}
-            >
+            <span className={`text-sm font-medium ${healthColors[summary.overallHealth]}`}>
               {summary.overallHealth === 'healthy' && (
                 <span className="flex items-center gap-1">
-                  <CheckCircle className="w-4 h-4" /> All factors within tolerance
+                  <CheckCircle className="w-4 h-4" aria-hidden="true" /> All factors within tolerance
                 </span>
               )}
               {summary.overallHealth === 'warning' && (
                 <span className="flex items-center gap-1">
-                  <AlertTriangle className="w-4 h-4" /> {summary.factorsOutsideTolerance} factor(s) drifting
+                  <AlertTriangle className="w-4 h-4" aria-hidden="true" />
+                  <span className="tabular-nums">{summary.factorsOutsideTolerance}</span> factor(s) drifting
                 </span>
               )}
               {summary.overallHealth === 'critical' && (
                 <span className="flex items-center gap-1">
-                  <AlertTriangle className="w-4 h-4" /> Critical drift detected
+                  <AlertTriangle className="w-4 h-4" aria-hidden="true" /> Critical drift detected
                 </span>
               )}
             </span>
@@ -215,17 +224,18 @@ export function FactorDriftAlert({
 
       {/* Strategy selector */}
       {showSettings && (
-        <div className="mb-4 p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
-          <p className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">Target Strategy</p>
+        <div className="glass-slab rounded-lg p-4 mb-4 animate-enter">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">Target Strategy</p>
           <div className="flex flex-wrap gap-2">
             {Object.entries(STRATEGY_PRESETS).map(([key, label]) => (
               <button
                 key={key}
                 onClick={() => handleStrategyChange(key)}
-                className={`px-3 py-1.5 text-sm rounded-lg transition ${
+                aria-pressed={selectedStrategy === key}
+                className={`px-3 py-1.5 mono text-xs tracking-wider uppercase rounded-lg transition-[background-color,color] duration-200 animate-press ${
                   selectedStrategy === key
-                    ? 'bg-[var(--color-info)] text-white'
-                    : 'bg-[var(--color-bg)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)]'
+                    ? 'bg-[image:var(--gradient-sovereign)] text-white shadow-[0_4px_18px_-6px_rgba(123,44,255,0.55)]'
+                    : 'bg-theme-tertiary text-theme-secondary hover:bg-theme-secondary border border-theme'
                 }`}
               >
                 {label}
@@ -237,24 +247,24 @@ export function FactorDriftAlert({
 
       {/* Drift visualization */}
       {drifts.length > 0 && (
-        <div className="space-y-3 mb-4">
+        <div className="space-y-3 mb-4 animate-stagger">
           {drifts.map((drift) => (
-            <div key={drift.factor} className="flex items-center gap-3">
-              <span className="w-24 text-sm font-medium text-[var(--color-text-secondary)] truncate">
+            <div key={drift.factor} className="flex items-center gap-3 animate-enter">
+              <span className="mono text-[10px] tracking-[0.2em] uppercase w-24 text-theme-secondary truncate">
                 {formatFactorName(drift.factor)}
               </span>
               <div className="flex-1 relative">
-                <div className="h-6 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
+                <div className="h-6 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden border border-theme-light">
                   {/* Target indicator */}
                   <div
-                    className="absolute top-0 bottom-0 w-0.5 bg-[var(--color-bg-tertiary)] z-10"
+                    className="absolute top-0 bottom-0 w-0.5 bg-theme-muted z-10"
                     style={{
                       left: `${Math.min(Math.max((drift.target + 1) * 50, 0), 100)}%`,
                     }}
                   />
                   {/* Current value bar */}
                   <div
-                    className={`h-full rounded-full transition-all ${
+                    className={`h-full rounded-full transition-[width,margin-left] duration-500 ${
                       drift.withinTolerance
                         ? 'bg-[var(--color-positive)]'
                         : drift.driftPct > 0.5
@@ -270,13 +280,13 @@ export function FactorDriftAlert({
               </div>
               <div className="w-20 text-right">
                 <span
-                  className={`text-sm font-medium ${
+                  className={`mono tabular-nums text-sm font-semibold ${
                     drift.withinTolerance ? 'text-[var(--color-positive)]' : 'text-[var(--color-warning)]'
                   }`}
                 >
                   {drift.current.toFixed(2)}
                 </span>
-                <span className="text-xs text-[var(--color-text-muted)] ml-1">
+                <span className="mono tabular-nums text-xs text-theme-muted ml-1">
                   ({drift.target.toFixed(2)})
                 </span>
               </div>
@@ -294,33 +304,27 @@ export function FactorDriftAlert({
 
       {/* Alerts */}
       {alerts.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-[var(--color-text-secondary)]">Active Alerts</p>
+        <div className="space-y-2 animate-stagger">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Active Alerts</p>
           {alerts.map((alert) => (
             <div
               key={alert.id}
-              className={`p-3 rounded-lg border ${severityColors[alert.severity]}`}
+              className={`
+                glass-slab-floating relative overflow-hidden p-3 pl-5 rounded-lg animate-enter
+                before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]
+                ${severityRails[alert.severity]}
+              `}
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-medium">{alert.title}</p>
-                  <p className="text-sm opacity-80">{alert.message}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className={`mono text-[10px] tracking-[0.3em] uppercase ${severityText[alert.severity]}`}>
+                    {alert.severity}
+                  </p>
+                  <p className="font-medium text-theme mt-0.5">{alert.title}</p>
+                  <p className="text-sm text-theme-secondary mt-1 leading-relaxed">{alert.message}</p>
                 </div>
-                <span
-                  className={`text-xs font-medium px-2 py-0.5 rounded ${
-                    alert.severity === 'critical'
-                      ? 'bg-[var(--color-negative)]'
-                      : alert.severity === 'high'
-                      ? 'bg-[var(--color-warning)]'
-                      : alert.severity === 'medium'
-                      ? 'bg-[var(--color-warning)]'
-                      : 'bg-[var(--color-info)]'
-                  }`}
-                >
-                  {alert.severity.toUpperCase()}
-                </span>
               </div>
-              <p className="text-xs mt-2 opacity-70">{alert.suggestedAction}</p>
+              <p className="mono text-xs text-theme-muted mt-2">{alert.suggestedAction}</p>
             </div>
           ))}
         </div>
@@ -328,19 +332,19 @@ export function FactorDriftAlert({
 
       {/* Empty state */}
       {exposures.length === 0 && (
-        <p className="text-[var(--color-text-muted)] text-sm text-center py-4">
+        <p className="text-theme-muted text-sm text-center py-4">
           Add positions to monitor factor drift
         </p>
       )}
 
       {/* Summary footer */}
       {summary && summary.totalFactorsTracked > 0 && (
-        <div className="mt-4 pt-4 border-t border-[var(--color-border-light)] flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+        <div className="mt-4 pt-4 border-t border-theme-light flex items-center justify-between mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">
           <span>
-            Tracking {summary.totalFactorsTracked} factors •{' '}
-            {summary.factorsWithinTolerance} within tolerance
+            Tracking <span className="tabular-nums">{summary.totalFactorsTracked}</span> factors ·{' '}
+            <span className="tabular-nums">{summary.factorsWithinTolerance}</span> within tolerance
           </span>
-          <span>Strategy: {STRATEGY_PRESETS[selectedStrategy] || 'Custom'}</span>
+          <span>Strategy · {STRATEGY_PRESETS[selectedStrategy] || 'Custom'}</span>
         </div>
       )}
     </Card>

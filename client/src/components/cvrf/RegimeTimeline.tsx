@@ -2,7 +2,7 @@
  * Regime Timeline Component
  *
  * Horizontal colored timeline showing regime transitions.
- * Bull=green, Bear=red, Sideways=yellow, Volatile=orange, Recovery=blue
+ * Bull=positive, Bear=negative, Sideways=warning, Volatile=warning, Recovery=info
  */
 
 import { Clock } from 'lucide-react';
@@ -40,7 +40,7 @@ export function RegimeTimeline() {
 
   if (isLoading) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
+      <div className="glass-slab rounded-2xl p-6 sm:p-8">
         <div className="h-6 bg-[var(--color-border)] rounded w-1/3 mb-4 animate-shimmer" />
         <div className="h-16 bg-[var(--color-bg-secondary)] rounded animate-shimmer" />
       </div>
@@ -49,12 +49,17 @@ export function RegimeTimeline() {
 
   if (!history || history.length === 0) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Clock className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="text-lg font-semibold text-[var(--color-text)]">Regime Timeline</h3>
+      <div className="glass-slab rounded-2xl p-6 sm:p-8">
+        <div className="mb-4">
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Regime Stream
+          </p>
+          <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
+            <Clock className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            Regime Timeline
+          </h3>
         </div>
-        <div className="flex items-center justify-center h-16 text-[var(--color-text-muted)] text-sm">
+        <div className="flex items-center justify-center h-16 text-theme-muted text-sm">
           Run CVRF cycles to track regime transitions
         </div>
       </div>
@@ -97,14 +102,19 @@ export function RegimeTimeline() {
   const longestRegime = segments.reduce((max, s) => (s.duration > max.duration ? s : max), segments[0]);
 
   return (
-    <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
+    <div className="glass-slab rounded-2xl p-6 sm:p-8 animate-enter">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="text-lg font-semibold text-[var(--color-text)]">Regime Timeline</h3>
+      <div className="flex items-end justify-between gap-3 mb-4">
+        <div>
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Regime Stream
+          </p>
+          <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
+            <Clock className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            Regime Timeline
+          </h3>
         </div>
-        <span className="text-xs text-[var(--color-text-muted)]">
+        <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted tabular-nums">
           {transitions} transition{transitions !== 1 ? 's' : ''}
         </span>
       </div>
@@ -118,19 +128,19 @@ export function RegimeTimeline() {
           return (
             <div
               key={idx}
-              className={`${style.bg} border-r ${style.border} last:border-r-0 flex items-center justify-center transition-all relative group cursor-default`}
+              className={`${style.bg} border-r ${style.border} last:border-r-0 flex items-center justify-center transition-[width] duration-300 relative group cursor-default`}
               style={{ width: `${Math.max(widthPct, 8)}%` }}
               title={`${segment.regime} (Cycles ${segment.startCycle}-${segment.endCycle})`}
             >
-              <span className="text-sm">
+              <span className="text-sm" aria-hidden="true">
                 {REGIME_ICONS[segment.regime] || '❓'}
               </span>
 
-              {/* Tooltip on hover */}
+              {/* Tooltip on hover — backdrop-blurred */}
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                <div className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg shadow-lg p-2 text-xs whitespace-nowrap">
+                <div className="backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-text-inverse)] border border-theme-light rounded-lg shadow-lg p-2 text-xs whitespace-nowrap">
                   <div className={`font-semibold capitalize ${style.text}`}>{segment.regime}</div>
-                  <div className="text-[var(--color-text-muted)]">
+                  <div className="opacity-70 tabular-nums">
                     Cycles {segment.startCycle}–{segment.endCycle} ({segment.duration} cycle{segment.duration !== 1 ? 's' : ''})
                   </div>
                 </div>
@@ -147,14 +157,14 @@ export function RegimeTimeline() {
           return (
             <div key={idx} className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded ${style.bg} border ${style.border}`} />
+                <div className={`w-3 h-3 rounded ${style.bg} border ${style.border}`} aria-hidden="true" />
                 <span className={`capitalize font-medium ${style.text}`}>{segment.regime}</span>
               </div>
-              <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
+              <div className="flex items-center gap-3 mono text-[10px] tracking-[0.2em] uppercase text-theme-muted tabular-nums">
                 <span>
                   Cycles {segment.startCycle}–{segment.endCycle}
                 </span>
-                <span className="font-mono">
+                <span>
                   {segment.duration} cycle{segment.duration !== 1 ? 's' : ''}
                 </span>
               </div>
@@ -164,20 +174,19 @@ export function RegimeTimeline() {
       </div>
 
       {/* Summary */}
-      <div className="mt-4 pt-3 border-t border-[var(--color-border-light)] text-xs text-[var(--color-text-muted)]">
-        Current regime:{' '}
+      <p className="mt-4 pt-3 border-t border-[var(--color-border-light)] mono text-[10px] tracking-[0.2em] uppercase text-theme-muted tabular-nums">
+        Current:{' '}
         <span className={`font-semibold capitalize ${getRegimeStyle(currentRegime).text}`}>
           {currentRegime}
         </span>
         {longestRegime && (
           <>
-            {' '}
-            • Longest:{' '}
+            {' · Longest: '}
             <span className="font-medium capitalize">{longestRegime.regime}</span>{' '}
             ({longestRegime.duration} cycle{longestRegime.duration !== 1 ? 's' : ''})
           </>
         )}
-      </div>
+      </p>
     </div>
   );
 }

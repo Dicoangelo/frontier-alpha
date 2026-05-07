@@ -69,17 +69,17 @@ function ConvictionTooltip({ active, payload, label }: ConvictionTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
 
   return (
-    <div className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-3 shadow-lg text-xs">
-      <p className="font-medium text-[var(--color-text)] mb-1">{label}</p>
+    <div className="backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-text-inverse)] border border-theme-light rounded-lg p-3 shadow-lg text-xs">
+      <p className="mono text-[10px] tracking-[0.3em] uppercase opacity-70 mb-1">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center justify-between gap-3 py-0.5">
           <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-            <span className="text-[var(--color-text-muted)] capitalize">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} aria-hidden="true" />
+            <span className="opacity-70 capitalize">
               {entry.name.replace(/_/g, ' ')}
             </span>
           </div>
-          <span className={`font-mono font-medium ${entry.value >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+          <span className={`mono font-medium tabular-nums ${entry.value >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {entry.value >= 0 ? '+' : ''}{(entry.value * 100).toFixed(1)}%
           </span>
         </div>
@@ -112,15 +112,15 @@ function ConvictionChart({ cycles, factorWeights, onSelectEpisode, selectedIndex
 
   if (data.length < 2) {
     return (
-      <div className="flex flex-col items-center justify-center h-48 text-[var(--color-text-muted)]">
-        <BarChart2 className="w-8 h-8 mb-2 opacity-40" />
+      <div className="flex flex-col items-center justify-center h-48 text-theme-muted">
+        <BarChart2 className="w-8 h-8 mb-2 opacity-40" aria-hidden="true" />
         <p className="text-sm">Need at least 2 episodes to show conviction timeline</p>
       </div>
     );
   }
 
   return (
-    <div className="h-56">
+    <div className="min-h-[224px] h-56">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={data}
@@ -215,42 +215,42 @@ function BeliefDiffPanel({ selected }: { selected: TimelineNode | null }) {
 
   if (!selected || !cycle) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-[var(--color-text-muted)] py-8">
-        <Clock className="w-8 h-8 mb-3 opacity-40" />
+      <div className="flex flex-col items-center justify-center h-full text-theme-muted py-8">
+        <Clock className="w-8 h-8 mb-3 opacity-40" aria-hidden="true" />
         <p className="text-sm">Select a cycle to view belief changes</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-enter">
       {/* Cycle Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg text-center">
-          <p className="text-xs text-[var(--color-text-muted)]">Performance</p>
-          <p className={`text-lg font-bold ${cycle.performanceDelta >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-stagger">
+        <div className="glass-slab-floating rounded-xl p-3 text-center animate-enter">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Performance</p>
+          <p className={`text-lg font-bold tabular-nums mt-0.5 ${cycle.performanceDelta >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {cycle.performanceDelta >= 0 ? '+' : ''}{(cycle.performanceDelta * 100).toFixed(2)}%
           </p>
         </div>
-        <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg text-center">
-          <p className="text-xs text-[var(--color-text-muted)]">Overlap (tau)</p>
-          <p className="text-lg font-bold text-[var(--color-text)]">{cycle.decisionOverlap.toFixed(2)}</p>
+        <div className="glass-slab-floating rounded-xl p-3 text-center animate-enter">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Overlap (τ)</p>
+          <p className="text-lg font-bold text-theme tabular-nums mt-0.5">{cycle.decisionOverlap.toFixed(2)}</p>
         </div>
-        <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg text-center">
-          <p className="text-xs text-[var(--color-text-muted)]">Insights</p>
-          <p className="text-lg font-bold text-[var(--color-accent)]">{cycle.insightsCount}</p>
+        <div className="glass-slab-floating rounded-xl p-3 text-center animate-enter">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Insights</p>
+          <p className="text-lg font-bold text-[var(--color-accent)] tabular-nums mt-0.5">{cycle.insightsCount}</p>
         </div>
-        <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg text-center">
-          <p className="text-xs text-[var(--color-text-muted)]">Belief Updates</p>
-          <p className="text-lg font-bold text-[var(--color-text)]">{cycle.beliefUpdatesCount}</p>
+        <div className="glass-slab-floating rounded-xl p-3 text-center animate-enter">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Belief Updates</p>
+          <p className="text-lg font-bold text-theme tabular-nums mt-0.5">{cycle.beliefUpdatesCount}</p>
         </div>
       </div>
 
       {/* Regime change */}
       {cycle.newRegime && (
-        <div className="flex items-center gap-2 p-3 bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/20 rounded-lg">
-          <ArrowRight className="w-4 h-4 text-[var(--color-accent)]" />
-          <span className="text-sm text-[var(--color-text)]">
+        <div className="flex items-center gap-2 glass-slab-floating rounded-xl p-3">
+          <ArrowRight className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
+          <span className="text-sm text-theme">
             Regime shifted to <span className="font-semibold capitalize">{cycle.newRegime}</span>
           </span>
         </div>
@@ -259,42 +259,42 @@ function BeliefDiffPanel({ selected }: { selected: TimelineNode | null }) {
       {/* Belief Diff Table */}
       {diffs.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-[var(--color-text-secondary)] mb-2">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">
             Factor Weight Changes
-          </h4>
-          <div className="border border-[var(--color-border)] rounded-lg overflow-hidden">
+          </p>
+          <div className="glass-slab-floating rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-[var(--color-bg-tertiary)]">
-                  <th className="text-left py-2 px-3 font-medium text-[var(--color-text-secondary)]">Factor</th>
-                  <th className="text-right py-2 px-3 font-medium text-[var(--color-text-secondary)]">Before</th>
-                  <th className="text-center py-2 px-3 font-medium text-[var(--color-text-secondary)]"></th>
-                  <th className="text-right py-2 px-3 font-medium text-[var(--color-text-secondary)]">After</th>
-                  <th className="text-right py-2 px-3 font-medium text-[var(--color-text-secondary)]">Delta</th>
+                  <th className="text-left py-2 px-3 mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary">Factor</th>
+                  <th className="text-right py-2 px-3 mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary">Before</th>
+                  <th className="text-center py-2 px-3 mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary"></th>
+                  <th className="text-right py-2 px-3 mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary">After</th>
+                  <th className="text-right py-2 px-3 mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary">Δ</th>
                 </tr>
               </thead>
               <tbody>
                 {diffs.slice(0, 10).map((diff) => (
                   <tr
                     key={diff.factor}
-                    className="border-t border-[var(--color-border-light)] hover:bg-[var(--color-bg-tertiary)]"
+                    className="border-t border-[var(--color-border-light)] transition-[background-color] duration-150 hover:bg-[var(--color-bg-tertiary)]"
                   >
-                    <td className="py-2 px-3 text-[var(--color-text)] capitalize">
+                    <td className="py-2 px-3 text-theme capitalize">
                       {diff.factor.replace(/_/g, ' ')}
                     </td>
-                    <td className="py-2 px-3 text-right font-mono text-[var(--color-text-muted)]">
+                    <td className="py-2 px-3 text-right mono text-theme-muted tabular-nums">
                       {(diff.before * 100).toFixed(1)}%
                     </td>
                     <td className="py-2 px-3 text-center">
-                      <ArrowRight className="w-3 h-3 text-[var(--color-text-muted)] inline" />
+                      <ArrowRight className="w-3 h-3 text-theme-muted inline" aria-hidden="true" />
                     </td>
-                    <td className="py-2 px-3 text-right font-mono text-[var(--color-text)]">
+                    <td className="py-2 px-3 text-right mono text-theme tabular-nums">
                       {(diff.after * 100).toFixed(1)}%
                     </td>
-                    <td className={`py-2 px-3 text-right font-mono font-medium ${
+                    <td className={`py-2 px-3 text-right mono font-medium tabular-nums ${
                       diff.delta > 0.001 ? 'text-[var(--color-positive)]' :
                       diff.delta < -0.001 ? 'text-[var(--color-negative)]' :
-                      'text-[var(--color-text-muted)]'
+                      'text-theme-muted'
                     }`}>
                       {diff.delta > 0 ? '+' : ''}{(diff.delta * 100).toFixed(2)}%
                     </td>
@@ -307,17 +307,17 @@ function BeliefDiffPanel({ selected }: { selected: TimelineNode | null }) {
       )}
 
       {/* Episode return comparison */}
-      <div className="flex items-center gap-3 p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
+      <div className="flex items-center gap-3 glass-slab-floating rounded-xl p-3">
         <div className="flex-1 text-center">
-          <p className="text-xs text-[var(--color-text-muted)]">Previous Episode</p>
-          <p className={`text-sm font-bold ${cycle.previousEpisodeReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Previous</p>
+          <p className={`text-sm font-bold tabular-nums mt-0.5 ${cycle.previousEpisodeReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {(cycle.previousEpisodeReturn * 100).toFixed(2)}%
           </p>
         </div>
-        <ArrowRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+        <ArrowRight className="w-4 h-4 text-theme-muted" aria-hidden="true" />
         <div className="flex-1 text-center">
-          <p className="text-xs text-[var(--color-text-muted)]">Current Episode</p>
-          <p className={`text-sm font-bold ${cycle.currentEpisodeReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Current</p>
+          <p className={`text-sm font-bold tabular-nums mt-0.5 ${cycle.currentEpisodeReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {(cycle.currentEpisodeReturn * 100).toFixed(2)}%
           </p>
         </div>
@@ -371,12 +371,17 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
 
   if (isLoading) {
     return (
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Clock className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="font-semibold text-[var(--color-text)]">Conviction Timeline</h3>
+      <Card className="p-6 sm:p-8">
+        <div className="mb-4">
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Belief Drift
+          </p>
+          <h3 className="font-semibold text-theme flex items-center gap-2">
+            <Clock className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            Conviction Timeline
+          </h3>
         </div>
-        <div className="flex items-center justify-center h-48">
+        <div className="min-h-[192px] flex items-center justify-center">
           <Spinner className="w-8 h-8" />
         </div>
       </Card>
@@ -385,13 +390,18 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
 
   if (timelineNodes.length === 0) {
     return (
-      <Card className="p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Clock className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="font-semibold text-[var(--color-text)]">Conviction Timeline</h3>
+      <Card className="p-6 sm:p-8">
+        <div className="mb-4">
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Belief Drift
+          </p>
+          <h3 className="font-semibold text-theme flex items-center gap-2">
+            <Clock className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            Conviction Timeline
+          </h3>
         </div>
-        <div className="flex flex-col items-center justify-center h-48 text-[var(--color-text-muted)]">
-          <Clock className="w-10 h-10 mb-3 opacity-40" />
+        <div className="flex flex-col items-center justify-center min-h-[192px] py-8 text-theme-muted">
+          <Clock className="w-10 h-10 mb-3 opacity-40" aria-hidden="true" />
           <p className="text-sm">No CVRF cycles yet</p>
           <p className="text-xs mt-1">Complete episodes to see belief evolution</p>
         </div>
@@ -404,28 +414,45 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
   return (
     <Card className="p-0 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-[var(--color-border)]">
         <div className="flex items-center gap-3">
-          <Clock className="w-5 h-5 text-[var(--color-accent)]" />
+          <Clock className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
           <div>
-            <h3 className="font-semibold text-[var(--color-text)]">Conviction Timeline</h3>
-            <p className="text-xs text-[var(--color-text-muted)]">
-              {timelineNodes.length} cycles &middot; {viewMode === 'chart' ? 'Belief conviction over time' : 'Click a node to compare beliefs'}
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">
+              Belief Drift
+            </p>
+            <h3 className="font-semibold text-theme">Conviction Timeline</h3>
+            <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted tabular-nums mt-0.5">
+              {timelineNodes.length} cycles · {viewMode === 'chart' ? 'Conviction over time' : 'Click a node to compare beliefs'}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* View mode toggle */}
-          <div className="flex rounded-lg border border-[var(--color-border)] overflow-hidden text-xs">
+          {/* View mode toggle — segmented control pattern */}
+          <div
+            className="flex gap-1 glass-slab-floating rounded-lg p-1"
+            role="group"
+            aria-label="View mode"
+          >
             <button
               onClick={() => setViewMode('chart')}
-              className={`px-3 py-1.5 transition-colors ${viewMode === 'chart' ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]'}`}
+              className={`px-3 py-1.5 min-h-[32px] text-[10px] mono tracking-[0.2em] uppercase rounded-md animate-press transition-[color,background-color] duration-200 ${
+                viewMode === 'chart'
+                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                  : 'text-theme-secondary hover:text-theme'
+              }`}
+              aria-pressed={viewMode === 'chart'}
             >
               Chart
             </button>
             <button
               onClick={() => setViewMode('nodes')}
-              className={`px-3 py-1.5 transition-colors ${viewMode === 'nodes' ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]'}`}
+              className={`px-3 py-1.5 min-h-[32px] text-[10px] mono tracking-[0.2em] uppercase rounded-md animate-press transition-[color,background-color] duration-200 ${
+                viewMode === 'nodes'
+                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                  : 'text-theme-secondary hover:text-theme'
+              }`}
+              aria-pressed={viewMode === 'nodes'}
             >
               Nodes
             </button>
@@ -435,7 +462,7 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
             <select
               value={selectedIndex ?? ''}
               onChange={(e) => setSelectedIndex(e.target.value === '' ? null : Number(e.target.value))}
-              className="text-xs border border-[var(--color-border)] rounded-lg px-2 py-1.5 bg-[var(--color-bg)] text-[var(--color-text-secondary)] cursor-pointer"
+              className="text-xs border border-[var(--color-border)] rounded-lg px-2 py-1.5 bg-[var(--color-bg)] text-theme-secondary cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-[box-shadow,border-color] duration-150"
               aria-label="Select episode"
             >
               <option value="">All episodes</option>
@@ -450,17 +477,17 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => scroll('left')}
-                className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
+                className="p-2 rounded-lg animate-press transition-[background-color] duration-150 hover:bg-[var(--color-bg-tertiary)]"
                 aria-label="Scroll left"
               >
-                <ChevronLeft className="w-4 h-4 text-[var(--color-text-muted)]" />
+                <ChevronLeft className="w-4 h-4 text-theme-muted" aria-hidden="true" />
               </button>
               <button
                 onClick={() => scroll('right')}
-                className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
+                className="p-2 rounded-lg animate-press transition-[background-color] duration-150 hover:bg-[var(--color-bg-tertiary)]"
                 aria-label="Scroll right"
               >
-                <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)]" />
+                <ChevronRight className="w-4 h-4 text-theme-muted" aria-hidden="true" />
               </button>
             </div>
           )}
@@ -469,7 +496,7 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
 
       {/* Chart View — Recharts LineChart */}
       {viewMode === 'chart' && factorWeights && (
-        <div className="px-6 py-4">
+        <div className="px-6 py-4 min-h-[224px]">
           <ConvictionChart
             cycles={cycles}
             factorWeights={factorWeights}
@@ -486,31 +513,32 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
           className="overflow-x-auto scrollbar-thin px-6 py-6"
           style={{ scrollbarColor: 'var(--color-border) transparent' }}
         >
-          <div className="flex items-center gap-0 min-w-max">
+          <div className="flex items-center gap-0 min-w-max animate-stagger">
             {timelineNodes.map((node, i) => {
               const isSelected = selectedIndex === i;
               const date = new Date(node.cycle.timestamp);
               const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
               return (
-                <div key={i} className="flex items-center">
+                <div key={i} className="flex items-center animate-enter">
                   {/* Node */}
                   <button
                     onClick={() => setSelectedIndex(isSelected ? null : i)}
-                    className={`flex flex-col items-center gap-2 px-4 py-3 rounded-xl transition-all min-w-[100px] ${
+                    className={`flex flex-col items-center gap-2 px-4 py-3 rounded-xl animate-press transition-[background-color,border-color,box-shadow] duration-150 min-w-[100px] ${
                       isSelected
-                        ? 'bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 shadow-sm'
-                        : 'hover:bg-[var(--color-bg-tertiary)]'
+                        ? 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)] shadow-[0_10px_30px_-15px_rgba(123,44,255,0.4)]'
+                        : 'hover:bg-[var(--color-bg-tertiary)] border border-transparent'
                     }`}
+                    aria-pressed={isSelected}
                   >
                     {/* Performance indicator */}
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                       node.improved
-                        ? 'bg-[var(--color-positive)]/10 text-[var(--color-positive)]'
+                        ? 'bg-[color-mix(in_srgb,var(--color-positive)_12%,transparent)] text-[var(--color-positive)]'
                         : node.cycle.performanceDelta < 0
-                        ? 'bg-[var(--color-negative)]/10 text-[var(--color-negative)]'
-                        : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
-                    }`}>
+                        ? 'bg-[color-mix(in_srgb,var(--color-negative)_12%,transparent)] text-[var(--color-negative)]'
+                        : 'bg-[var(--color-bg-secondary)] text-theme-muted'
+                    }`} aria-hidden="true">
                       {node.improved ? (
                         <TrendingUp className="w-5 h-5" />
                       ) : node.cycle.performanceDelta < 0 ? (
@@ -521,27 +549,27 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
                     </div>
 
                     {/* Delta */}
-                    <span className={`text-xs font-bold ${
+                    <span className={`text-xs font-bold mono tabular-nums ${
                       node.improved ? 'text-[var(--color-positive)]' :
                       node.cycle.performanceDelta < 0 ? 'text-[var(--color-negative)]' :
-                      'text-[var(--color-text-muted)]'
+                      'text-theme-muted'
                     }`}>
                       {node.cycle.performanceDelta >= 0 ? '+' : ''}
                       {(node.cycle.performanceDelta * 100).toFixed(1)}%
                     </span>
 
                     {/* Regime badge */}
-                    <span className="text-[10px] px-1.5 py-0.5 bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] rounded capitalize">
+                    <span className="mono text-[10px] tracking-[0.2em] uppercase px-1.5 py-0.5 bg-[var(--color-bg-secondary)] text-theme-muted rounded capitalize">
                       {node.regime}
                     </span>
 
                     {/* Date */}
-                    <span className="text-[10px] text-[var(--color-text-muted)]">{dateStr}</span>
+                    <span className="mono text-[10px] tracking-[0.1em] text-theme-muted tabular-nums">{dateStr}</span>
                   </button>
 
                   {/* Connector line */}
                   {i < timelineNodes.length - 1 && (
-                    <div className="w-8 h-0.5 bg-[var(--color-border)] flex-shrink-0" />
+                    <div className="w-8 h-0.5 bg-[var(--color-border)] flex-shrink-0" aria-hidden="true" />
                   )}
                 </div>
               );
@@ -553,9 +581,9 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
       {/* Belief Diff Panel */}
       <div className="border-t border-[var(--color-border)] px-6 py-5 bg-[var(--color-bg)]">
         {selectedNode && (
-          <h4 className="text-sm font-medium text-[var(--color-text)] mb-3">
-            Cycle #{selectedNode.index + 1} &middot; Episode {selectedNode.episodeNumber}
-          </h4>
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-3 tabular-nums">
+            Cycle #{selectedNode.index + 1} · Episode {selectedNode.episodeNumber}
+          </p>
         )}
         <BeliefDiffPanel selected={selectedNode} />
       </div>

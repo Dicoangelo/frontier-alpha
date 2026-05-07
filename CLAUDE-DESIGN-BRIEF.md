@@ -1,5 +1,25 @@
 # Claude Design Brief — FrontierAlpha Redesign
 
+> **STATUS: SHIPPED** (2026-05-07, v1.1.0)
+>
+> Delivered across PRs #3 + #4 — five rounds of family-aesthetic polish, 35 files modified.
+> Frontier Alpha now visually aligns with `metaventionsai.com`, `careers.metaventionsai.com`,
+> and `friendlyface.metaventionsai.com`. The canonical pattern register lives in
+> `DESIGN-SYSTEM.md` §12 (Family Aesthetic Patterns).
+>
+> **What landed against this brief:**
+> - **P1 Landing hero** — Round 1 (Landing.tsx CTAs, sovereign-gradient buttons, mono kicker register)
+> - **P2 Dashboard status bar + hierarchical read** — Round 2/4 (Dashboard CLS fixes, status-pill stable width, tabular-nums, MarketStatusStrip glass-slab pills with type rails, Header polish)
+> - **P3 Mobile portfolio + nav** — Round 4 (MobileNav sovereign top rail, BottomSheet glass-modal, PullToRefresh sovereign-violet glow, position rows polished)
+> - **P4 Trading/Options token migration** — Round 5 (Trading + Options + Earnings + Tax adopt segmented controls + mono uppercase tables; intelligence pages CVRF + Backtest + ML adopt ModelStatusBanner pattern)
+> - **P5 Motion grammar** — Round 1 (4 missing keyframes defined site-wide: `fade-in`, `slide-in-left`, `slide-in-right`, `pulse-subtle`; `animate-press` + `animate-lift` replace hover-scale jank; sovereign-bar 3px gradient top rail on every modal)
+>
+> Production: https://frontier-alpha.metaventionsai.com (deployed 2026-05-07).
+
+---
+
+## Original Brief
+
 Paste this into `claude.ai/design` after linking the GitHub repo. Upload the attachments listed in §7 alongside it.
 
 ---
@@ -54,20 +74,20 @@ Think: **Linear × Bloomberg × Arc Browser**, with a purple-amethyst identity.
 
 Derived from `FRONTIER-ALPHA-PRD-AUDIT.md` — 31 stories across 4 active PRDs, most with scaffolding already in `client/src/components/`.
 
-### P1 — Landing hero is understated for an AI product
+### P1 — Landing hero is understated for an AI product `[SHIPPED v1.1.0]`
 Current landing (`client/src/pages/Landing.tsx`): single headline, ticker input, four preset chips, no proof. No visual demonstration that this is an AI cognitive factor engine. Competitors show their product. We tell.
 **Want:** A hero that *shows* the factor model working — live animated factor exposure bars, a ticker that types itself, a rotating "because…" explainability caption. Keep the `<input>` CTA and quick-portfolio chips intact.
 
-### P2 — Dashboard lacks a status bar + hierarchical read
+### P2 — Dashboard lacks a status bar + hierarchical read `[SHIPPED v1.1.0]`
 `Dashboard.tsx` (489 lines) renders Portfolio Overview, Position List, Factor Exposures, Risk Metrics, Equity Curve, Cognitive Insight in a flat grid. No top status strip (market hours, data freshness, connection state, alert count). No visual weight ordering — every card reads the same. **Want:** DASH-001 status bar across top, DASH-002 position deltas with sparklines (component `PriceChart.tsx` already exists, 263 lines), DASH-005 weight donut (`WeightAllocation.tsx` exists), DASH-003 equity curve with touch/crosshair interaction.
 
-### P3 — Portfolio table is desktop-only, no mobile story
+### P3 — Portfolio table is desktop-only, no mobile story `[SHIPPED v1.1.0 — mobile chrome polished, BottomSheet adopted, PullToRefresh wired; row card/list hybrid follow-up if needed]`
 `Portfolio.tsx` (630 lines) uses a horizontal table that overflows on mobile. PRD US-016 is open. **Want:** Card/list hybrid under 768px — show symbol, weight, PnL% hero, expand-to-detail. Use `BottomSheet.tsx` (already exists) for row detail on mobile.
 
-### P4 — Trading and Options use inline color literals instead of tokens
+### P4 — Trading and Options use inline color literals instead of tokens `[SHIPPED v1.1.0]`
 `Options.tsx` is 1,443 lines with ~37 hardcoded `#rrggbb` values. Theme switching is broken on those pages. TRADE-001 / OPT-001 open. **Want:** Replace with `var(--color-*)` — establish a per-domain token layer (`--trade-bid`, `--trade-ask`, `--trade-flat`) that maps to the core palette. Design spec first, code migration second.
 
-### P5 — No micro-interaction language
+### P5 — No micro-interaction language `[SHIPPED v1.1.0]`
 Skeletons exist (`components/shared/Skeleton.tsx`), toast exists, empty states exist — but there's no unified motion grammar. Page transitions are hard cuts. DASH-006 / TRADE-002 / OPT-002 all open. **Want:** One motion system — staggered fade-in (60ms per item), scale(0.96) on `:active`, holographic text pulse (4s ease-in-out between cyan and amethyst) on primary numbers.
 
 ## 6. Deliverables (what Claude Design should produce)

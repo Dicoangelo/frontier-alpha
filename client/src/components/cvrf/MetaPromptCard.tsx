@@ -65,9 +65,9 @@ function FactorAdjustmentBadge({ factor, adjustment }: FactorAdjustmentBadgeProp
           : 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)] border border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)]'
       }`}
     >
-      <Icon className="w-3.5 h-3.5" />
+      <Icon className="w-3.5 h-3.5" aria-hidden="true" />
       <span className="capitalize">{factor.replace(/_/g, ' ')}</span>
-      <span className="font-mono">
+      <span className="mono tabular-nums">
         {isPositive ? '+' : ''}
         {(adjustment * 100).toFixed(1)}%
       </span>
@@ -81,7 +81,7 @@ export function MetaPromptCard() {
 
   if (isLoading) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
+      <div className="glass-slab rounded-2xl p-6 sm:p-8">
         <div className="h-6 bg-[var(--color-border)] rounded w-1/3 mb-4 animate-shimmer" />
         <div className="space-y-3">
           <div className="h-4 bg-[var(--color-border)] rounded w-full animate-shimmer" />
@@ -93,12 +93,17 @@ export function MetaPromptCard() {
 
   if (!metaPrompt) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-5 h-5 text-[var(--color-accent)]" />
-          <h3 className="text-lg font-semibold text-[var(--color-text)]">Meta-Prompt</h3>
+      <div className="glass-slab rounded-2xl p-6 sm:p-8">
+        <div className="mb-3">
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Self-Update
+          </p>
+          <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            Meta-Prompt
+          </h3>
         </div>
-        <div className="text-center py-6 text-sm text-[var(--color-text-muted)]">
+        <div className="text-center py-6 text-sm text-theme-muted">
           Complete a CVRF cycle to generate your first meta-prompt
         </div>
       </div>
@@ -108,54 +113,57 @@ export function MetaPromptCard() {
   const hasFactorAdjustments = Object.keys(metaPrompt.factorAdjustments).length > 0;
 
   return (
-    <div className="rounded-xl border border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] p-6" style={{ background: 'linear-gradient(to bottom right, var(--color-bg), color-mix(in srgb, var(--color-accent) 4%, transparent))' }}>
+    <div className="glass-slab rounded-2xl p-6 sm:p-8 animate-enter relative overflow-hidden">
+      {/* Subtle sovereign gradient wash */}
+      <div className="absolute inset-0 gradient-brand-subtle pointer-events-none" aria-hidden="true" />
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[var(--color-accent)] rounded-lg flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
+      <div className="relative flex items-start justify-between mb-4 gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[image:var(--gradient-sovereign)] rounded-xl flex items-center justify-center shrink-0 shadow-[0_10px_30px_-12px_rgba(123,44,255,0.6)]">
+            <Sparkles className="w-5 h-5 text-white" aria-hidden="true" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-[var(--color-text)]">Meta-Prompt</h3>
-            <span className="text-xs text-[var(--color-text-muted)]">
-              Cycle #{metaPrompt.cycleNumber} •{' '}
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">
+              Self-Update · Cycle #{metaPrompt.cycleNumber}
+            </p>
+            <h3 className="text-lg font-semibold text-theme">Meta-Prompt</h3>
+            <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted tabular-nums mt-0.5">
               {new Date(metaPrompt.generatedAt).toLocaleDateString()}
-            </span>
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div
-            className={`px-2 py-1 text-xs rounded-full ${
-              metaPrompt.sourceEpisodes.delta >= 0
-                ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]'
-                : 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)]'
-            }`}
-          >
-            {metaPrompt.sourceEpisodes.delta >= 0 ? '+' : ''}
-            {(metaPrompt.sourceEpisodes.delta * 100).toFixed(2)}% delta
-          </div>
+        <div
+          className={`px-2 py-1 mono text-[10px] tracking-[0.2em] uppercase tabular-nums rounded-full ${
+            metaPrompt.sourceEpisodes.delta >= 0
+              ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]'
+              : 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)]'
+          }`}
+        >
+          {metaPrompt.sourceEpisodes.delta >= 0 ? '+' : ''}
+          {(metaPrompt.sourceEpisodes.delta * 100).toFixed(2)}% Δ
         </div>
       </div>
 
       {/* Optimization Direction */}
-      <div className="mb-4 p-4 bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)] border border-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-lg">
-        <div className="text-xs text-[var(--color-accent)] font-medium mb-1 flex items-center gap-1">
-          <Lightbulb className="w-3.5 h-3.5" />
+      <div className="relative mb-4 glass-slab-floating rounded-xl p-4">
+        <div className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] font-medium mb-2 flex items-center gap-1">
+          <Lightbulb className="w-3.5 h-3.5" aria-hidden="true" />
           Optimization Direction
         </div>
-        <p className="text-sm text-[var(--color-text)] leading-relaxed">
+        <p className="text-sm text-theme leading-relaxed">
           {metaPrompt.optimizationDirection}
         </p>
       </div>
 
       {/* Key Learnings */}
       {metaPrompt.keyLearnings.length > 0 && (
-        <div className="mb-4">
-          <div className="text-xs text-[var(--color-text-muted)] font-medium mb-2">Key Learnings</div>
+        <div className="relative mb-4">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">Key Learnings</p>
           <div className="space-y-1.5">
             {metaPrompt.keyLearnings.slice(0, expanded ? undefined : 3).map((learning: string, idx: number) => (
-              <div key={idx} className="flex items-start gap-2 text-sm text-[var(--color-text-secondary)]">
-                <CheckCircle2 className="w-4 h-4 text-[var(--color-accent)] mt-0.5 shrink-0" />
+              <div key={idx} className="flex items-start gap-2 text-sm text-theme-secondary">
+                <CheckCircle2 className="w-4 h-4 text-[var(--color-accent)] mt-0.5 shrink-0" aria-hidden="true" />
                 <span>{learning}</span>
               </div>
             ))}
@@ -163,15 +171,16 @@ export function MetaPromptCard() {
           {metaPrompt.keyLearnings.length > 3 && (
             <button
               onClick={() => setExpanded(!expanded)}
-              className="mt-2 text-xs text-[var(--color-accent)] hover:text-[var(--color-accent)] flex items-center gap-1"
+              className="mt-2 mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] flex items-center gap-1 animate-press transition-[opacity] duration-150 hover:opacity-80"
+              aria-expanded={expanded}
             >
               {expanded ? (
                 <>
-                  <ChevronUp className="w-3 h-3" /> Show less
+                  <ChevronUp className="w-3 h-3" aria-hidden="true" /> Show less
                 </>
               ) : (
                 <>
-                  <ChevronDown className="w-3 h-3" /> Show {metaPrompt.keyLearnings.length - 3} more
+                  <ChevronDown className="w-3 h-3" aria-hidden="true" /> Show {metaPrompt.keyLearnings.length - 3} more
                 </>
               )}
             </button>
@@ -181,10 +190,10 @@ export function MetaPromptCard() {
 
       {/* Factor Adjustments */}
       {hasFactorAdjustments && (
-        <div className="mb-4">
-          <div className="text-xs text-[var(--color-text-muted)] font-medium mb-2">
+        <div className="relative mb-4">
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">
             Recommended Factor Adjustments
-          </div>
+          </p>
           <div className="flex flex-wrap gap-2">
             {Object.entries(metaPrompt.factorAdjustments)
               .sort(([, a], [, b]) => Math.abs(b as number) - Math.abs(a as number))
@@ -196,25 +205,25 @@ export function MetaPromptCard() {
       )}
 
       {/* Risk & Timing */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-3">
         {metaPrompt.riskGuidance && (
-          <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
-            <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] mb-1">
-              <Shield className="w-3.5 h-3.5" />
+          <div className="glass-slab-floating rounded-xl p-3">
+            <div className="flex items-center gap-1 mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">
+              <Shield className="w-3.5 h-3.5" aria-hidden="true" />
               Risk Guidance
             </div>
-            <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+            <p className="text-xs text-theme-secondary leading-relaxed">
               {metaPrompt.riskGuidance}
             </p>
           </div>
         )}
         {metaPrompt.timingInsights && (
-          <div className="p-3 bg-[var(--color-bg-tertiary)] rounded-lg">
-            <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] mb-1">
-              <Clock className="w-3.5 h-3.5" />
+          <div className="glass-slab-floating rounded-xl p-3">
+            <div className="flex items-center gap-1 mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">
+              <Clock className="w-3.5 h-3.5" aria-hidden="true" />
               Timing Insights
             </div>
-            <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+            <p className="text-xs text-theme-secondary leading-relaxed">
               {metaPrompt.timingInsights}
             </p>
           </div>

@@ -87,7 +87,7 @@ function TimingBadge({ timing }: { timing: string | undefined }) {
   return (
     <span
       data-testid={isBMO ? 'bmo-badge' : 'amc-badge'}
-      className={`absolute top-0.5 left-0.5 text-[7px] font-bold leading-none px-0.5 rounded ${
+      className={`mono absolute top-0.5 left-0.5 text-[7px] font-bold leading-none px-0.5 rounded ${
         isBMO
           ? 'bg-[color-mix(in_srgb,var(--color-info)_20%,transparent)] text-[var(--color-info)]'
           : 'bg-[color-mix(in_srgb,var(--color-warning)_20%,transparent)] text-[var(--color-warning)]'
@@ -149,288 +149,318 @@ export function EarningsHeatmap({ earnings, onSelect, selectedSymbol }: Earnings
 
   return (
     <Card title="Earnings Heatmap">
-      {/* Navigation */}
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={prevMonth}
-          className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
-          aria-label="Previous month"
-        >
-          <ChevronLeft className="w-5 h-5 text-[var(--color-text-secondary)]" />
-        </button>
-        <div className="flex items-center gap-3">
-          <h3 className="text-lg font-semibold text-[var(--color-text)]">
-            {MONTHS[viewMonth]} {viewYear}
-          </h3>
-          {(viewMonth !== today.getMonth() || viewYear !== today.getFullYear()) && (
-            <button
-              onClick={goToday}
-              className="text-xs px-2 py-1 rounded bg-[var(--color-accent)]/10 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/20 transition-colors"
-            >
-              Today
-            </button>
-          )}
-          {/* View toggle */}
+      <div className="min-h-[420px]">
+        {/* Navigation */}
+        <div className="flex items-center justify-between mb-4">
           <button
-            onClick={() => setListView(v => !v)}
-            className="p-1.5 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
-            aria-label={listView ? 'Switch to grid view' : 'Switch to list view'}
-            data-testid="view-toggle"
+            onClick={prevMonth}
+            className="p-2 hover:bg-theme-tertiary rounded-lg transition-colors duration-200 animate-press"
+            aria-label="Previous month"
           >
-            {listView
-              ? <Grid className="w-4 h-4 text-[var(--color-text-muted)]" />
-              : <List className="w-4 h-4 text-[var(--color-text-muted)]" />
-            }
+            <ChevronLeft className="w-5 h-5 text-theme-secondary" aria-hidden="true" />
+          </button>
+          <div className="flex items-center gap-3">
+            <h3 className="mono text-sm sm:text-base tracking-[0.2em] uppercase font-semibold text-theme">
+              {MONTHS[viewMonth]} <span className="tabular-nums">{viewYear}</span>
+            </h3>
+            {(viewMonth !== today.getMonth() || viewYear !== today.getFullYear()) && (
+              <button
+                onClick={goToday}
+                className="mono text-[10px] tracking-[0.2em] uppercase font-semibold px-2 py-1 rounded bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_18%,transparent)] transition-colors duration-200 animate-press"
+              >
+                Today
+              </button>
+            )}
+            {/* View toggle */}
+            <button
+              onClick={() => setListView(v => !v)}
+              className="p-1.5 hover:bg-theme-tertiary rounded-lg transition-colors duration-200 animate-press"
+              aria-label={listView ? 'Switch to grid view' : 'Switch to list view'}
+              data-testid="view-toggle"
+            >
+              {listView
+                ? <Grid className="w-4 h-4 text-theme-muted" aria-hidden="true" />
+                : <List className="w-4 h-4 text-theme-muted" aria-hidden="true" />
+              }
+            </button>
+          </div>
+          <button
+            onClick={nextMonth}
+            className="p-2 hover:bg-theme-tertiary rounded-lg transition-colors duration-200 animate-press"
+            aria-label="Next month"
+          >
+            <ChevronRight className="w-5 h-5 text-theme-secondary" aria-hidden="true" />
           </button>
         </div>
-        <button
-          onClick={nextMonth}
-          className="p-2 hover:bg-[var(--color-bg-tertiary)] rounded-lg transition-colors"
-          aria-label="Next month"
-        >
-          <ChevronRight className="w-5 h-5 text-[var(--color-text-secondary)]" />
-        </button>
-      </div>
 
-      {listView ? (
-        /* ── LIST VIEW (mobile-friendly) ── */
-        <div className="space-y-2" data-testid="earnings-list-view">
-          {sortedEarnings.length === 0 ? (
-            <p className="text-sm text-[var(--color-text-muted)] text-center py-8">
-              No earnings this month
-            </p>
-          ) : (
-            sortedEarnings.map((e) => {
-              const d = new Date(e.reportDate);
-              const isSelected = selectedSymbol === e.symbol;
-              return (
-                <button
-                  key={`${e.symbol}-${e.fiscalQuarter}`}
-                  onClick={() => onSelect(e.symbol)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors text-left ${
-                    isSelected
-                      ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
-                      : 'border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-center min-w-[36px]">
-                      <p className="text-xs text-[var(--color-text-muted)]">{MONTHS[d.getMonth()].slice(0, 3)}</p>
-                      <p className="text-base font-bold text-[var(--color-text)]">{d.getDate()}</p>
+        {listView ? (
+          /* ── LIST VIEW (mobile-friendly) ── */
+          <div className="space-y-2 animate-stagger" data-testid="earnings-list-view">
+            {sortedEarnings.length === 0 ? (
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted text-center py-8">
+                No earnings this month
+              </p>
+            ) : (
+              sortedEarnings.map((e) => {
+                const d = new Date(e.reportDate);
+                const isSelected = selectedSymbol === e.symbol;
+                const isHighImpact = (e.expectedMove || 0) >= 0.08;
+                const isModerate = (e.expectedMove || 0) >= 0.05;
+                const rail = isSelected
+                  ? 'before:bg-[image:var(--gradient-sovereign)]'
+                  : isHighImpact
+                  ? 'before:bg-[var(--color-negative)]'
+                  : isModerate
+                  ? 'before:bg-[var(--color-warning)]'
+                  : 'before:bg-[var(--color-positive)]';
+                return (
+                  <button
+                    key={`${e.symbol}-${e.fiscalQuarter}`}
+                    onClick={() => onSelect(e.symbol)}
+                    aria-pressed={isSelected}
+                    className={`
+                      glass-slab-floating animate-enter animate-press relative overflow-hidden
+                      w-full flex items-center justify-between p-3 pl-5 rounded-xl text-left
+                      before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]
+                      ${rail}
+                      transition-[transform,box-shadow] duration-200
+                    `}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="text-center min-w-[36px]">
+                        <p className="mono text-[10px] tracking-wider uppercase text-theme-muted">{MONTHS[d.getMonth()].slice(0, 3)}</p>
+                        <p className="mono tabular-nums text-base font-bold text-theme">{d.getDate()}</p>
+                      </div>
+                      <div>
+                        <span className="mono uppercase tracking-wider font-bold text-theme">{e.symbol}</span>
+                        {e.fiscalQuarter && (
+                          <span className="ml-2 mono text-[10px] tracking-wider uppercase text-theme-muted">{e.fiscalQuarter}</span>
+                        )}
+                        {e.reportTime && (e.reportTime === 'pre_market' || e.reportTime === 'post_market') && (
+                          <span className={`ml-2 mono text-[10px] tracking-wider uppercase font-semibold ${
+                            e.reportTime === 'pre_market' ? 'text-[var(--color-info)]' : 'text-[var(--color-warning)]'
+                          }`}>
+                            {e.reportTime === 'pre_market' ? 'BMO' : 'AMC'}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <span className="font-semibold text-[var(--color-text)]">{e.symbol}</span>
-                      {e.fiscalQuarter && (
-                        <span className="ml-2 text-xs text-[var(--color-text-muted)]">{e.fiscalQuarter}</span>
-                      )}
-                      {e.reportTime && (e.reportTime === 'pre_market' || e.reportTime === 'post_market') && (
-                        <span className={`ml-2 text-xs font-medium ${
-                          e.reportTime === 'pre_market' ? 'text-[var(--color-info)]' : 'text-[var(--color-warning)]'
+                    <div className="flex items-center gap-2">
+                      {e.expectedMove !== undefined && (
+                        <span className={`mono tabular-nums text-sm font-semibold ${
+                          isHighImpact ? 'text-[var(--color-negative)]' :
+                          isModerate ? 'text-[var(--color-warning)]' :
+                          'text-theme-secondary'
                         }`}>
-                          {e.reportTime === 'pre_market' ? 'BMO' : 'AMC'}
+                          ±{(e.expectedMove * 100).toFixed(1)}%
                         </span>
                       )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {e.expectedMove !== undefined && (
-                      <span className={`text-sm font-medium ${
-                        e.expectedMove >= 0.08 ? 'text-[var(--color-danger)]' :
-                        e.expectedMove >= 0.05 ? 'text-[var(--color-warning)]' :
-                        'text-[var(--color-text-secondary)]'
+                      <span className={`mono text-[10px] tracking-wider uppercase font-semibold px-1.5 py-0.5 rounded ${
+                        isHighImpact
+                          ? 'bg-[color-mix(in_srgb,var(--color-negative)_12%,transparent)] text-[var(--color-negative)]'
+                          : isModerate
+                          ? 'bg-[color-mix(in_srgb,var(--color-warning)_12%,transparent)] text-[var(--color-warning)]'
+                          : 'bg-[color-mix(in_srgb,var(--color-positive)_12%,transparent)] text-[var(--color-positive)]'
                       }`}>
-                        ±{(e.expectedMove * 100).toFixed(1)}%
+                        {getImpactLabel(e.expectedMove || 0)}
                       </span>
-                    )}
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${
-                      (e.expectedMove || 0) >= 0.08
-                        ? 'bg-[var(--color-danger)]/10 text-[var(--color-danger)]'
-                        : (e.expectedMove || 0) >= 0.05
-                        ? 'bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
-                        : 'bg-[var(--color-positive)]/10 text-[var(--color-positive)]'
-                    }`}>
-                      {getImpactLabel(e.expectedMove || 0)}
-                    </span>
-                  </div>
-                </button>
-              );
-            })
-          )}
-        </div>
-      ) : (
-        /* ── GRID VIEW (Mon-Fri 5-column) ── */
-        <>
-          {/* Weekday headers — Mon to Fri */}
-          <div className="grid grid-cols-5 gap-1 mb-1" data-testid="weekday-headers">
-            {WEEKDAYS_5.map((day) => (
-              <div key={day} className="text-center text-xs font-medium text-[var(--color-text-muted)] py-1">
-                {day}
-              </div>
-            ))}
+                    </div>
+                  </button>
+                );
+              })
+            )}
           </div>
+        ) : (
+          /* ── GRID VIEW (Mon-Fri 5-column) ── */
+          <>
+            {/* Weekday headers — Mon to Fri */}
+            <div className="grid grid-cols-5 gap-1 mb-1" data-testid="weekday-headers">
+              {WEEKDAYS_5.map((day) => (
+                <div key={day} className="text-center mono text-[10px] tracking-[0.3em] uppercase font-semibold text-theme-muted py-1">
+                  {day}
+                </div>
+              ))}
+            </div>
 
-          {/* Calendar grid — Mon-Fri only */}
-          <div className="space-y-1" data-testid="earnings-grid">
-            {weeks.map((week, wi) => (
-              <div key={wi} className="grid grid-cols-5 gap-1">
-                {week.map((date, di) => {
-                  if (!date) {
-                    return <div key={`empty-${wi}-${di}`} className="aspect-square" />;
-                  }
+            {/* Calendar grid — Mon-Fri only */}
+            <div className="space-y-1" data-testid="earnings-grid">
+              {weeks.map((week, wi) => (
+                <div key={wi} className="grid grid-cols-5 gap-1">
+                  {week.map((date, di) => {
+                    if (!date) {
+                      return <div key={`empty-${wi}-${di}`} className="aspect-square" />;
+                    }
 
-                  const key = dateKey(date);
-                  const dayEarnings = earningsByDate.get(key) || [];
-                  const hasEarnings = dayEarnings.length > 0;
-                  const isToday = isSameDay(date, today);
-                  const isExpanded = expandedDay === key;
-                  const maxMove = hasEarnings
-                    ? Math.max(...dayEarnings.map(e => e.expectedMove || 0))
-                    : 0;
+                    const key = dateKey(date);
+                    const dayEarnings = earningsByDate.get(key) || [];
+                    const hasEarnings = dayEarnings.length > 0;
+                    const isToday = isSameDay(date, today);
+                    const isExpanded = expandedDay === key;
+                    const maxMove = hasEarnings
+                      ? Math.max(...dayEarnings.map(e => e.expectedMove || 0))
+                      : 0;
 
-                  // Pick first earnings item's timing for the badge
-                  const primaryTiming = hasEarnings ? dayEarnings[0].reportTime : undefined;
+                    // Pick first earnings item's timing for the badge
+                    const primaryTiming = hasEarnings ? dayEarnings[0].reportTime : undefined;
 
+                    return (
+                      <button
+                        key={key}
+                        data-testid={`day-cell-${date.getDate()}`}
+                        onClick={() => {
+                          if (hasEarnings) {
+                            setExpandedDay(isExpanded ? null : key);
+                            if (dayEarnings.length === 1) {
+                              onSelect(dayEarnings[0].symbol);
+                            }
+                          }
+                        }}
+                        disabled={!hasEarnings}
+                        className={`
+                          aspect-square rounded-lg border text-sm relative flex flex-col items-center justify-center
+                          ${isToday ? 'ring-2 ring-[var(--color-accent)]' : ''}
+                          ${hasEarnings
+                            ? `${getImpactColor(maxMove)} cursor-pointer hover:scale-105 transition-[transform] duration-150 animate-press`
+                            : 'border-transparent text-theme-muted'
+                          }
+                          ${isExpanded ? 'ring-2 ring-[var(--color-info)]' : ''}
+                        `}
+                        aria-label={hasEarnings
+                          ? `${date.getDate()} ${MONTHS[viewMonth]} — ${dayEarnings.length} earning${dayEarnings.length > 1 ? 's' : ''}`
+                          : `${date.getDate()} ${MONTHS[viewMonth]}`
+                        }
+                      >
+                        {/* BMO/AMC timing badge */}
+                        {hasEarnings && <TimingBadge timing={primaryTiming} />}
+
+                        <span className={`mono tabular-nums text-xs ${isToday ? 'font-bold text-[var(--color-accent)]' : hasEarnings ? 'font-semibold text-theme' : ''}`}>
+                          {date.getDate()}
+                        </span>
+
+                        {/* Dot indicators */}
+                        {hasEarnings && (
+                          <span className="flex gap-0.5 mt-0.5">
+                            {dayEarnings.slice(0, 3).map((_e, i) => (
+                              <span
+                                key={i}
+                                className="w-1 h-1 rounded-full bg-theme"
+                                aria-hidden="true"
+                              />
+                            ))}
+                            {dayEarnings.length > 3 && (
+                              <span className="text-[8px] text-theme-muted">+</span>
+                            )}
+                          </span>
+                        )}
+
+                        {/* High impact alert icon */}
+                        {hasEarnings && maxMove >= 0.08 && (
+                          <AlertTriangle className="absolute top-0.5 right-0.5 w-2.5 h-2.5 text-[var(--color-danger)]" aria-hidden="true" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+
+            {/* Expanded day detail */}
+            {expandedDay && earningsByDate.has(expandedDay) && (
+              <div className="mt-4 space-y-2 border-t border-theme-light pt-4 animate-stagger">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
+                  Earnings on this day
+                </p>
+                {earningsByDate.get(expandedDay)!.map((e) => {
+                  const isSelected = selectedSymbol === e.symbol;
+                  const isHighImpact = (e.expectedMove || 0) >= 0.08;
+                  const isModerate = (e.expectedMove || 0) >= 0.05;
+                  const rail = isSelected
+                    ? 'before:bg-[image:var(--gradient-sovereign)]'
+                    : isHighImpact
+                    ? 'before:bg-[var(--color-negative)]'
+                    : isModerate
+                    ? 'before:bg-[var(--color-warning)]'
+                    : 'before:bg-[var(--color-positive)]';
                   return (
                     <button
-                      key={key}
-                      data-testid={`day-cell-${date.getDate()}`}
-                      onClick={() => {
-                        if (hasEarnings) {
-                          setExpandedDay(isExpanded ? null : key);
-                          if (dayEarnings.length === 1) {
-                            onSelect(dayEarnings[0].symbol);
-                          }
-                        }
-                      }}
-                      disabled={!hasEarnings}
+                      key={`${e.symbol}-${e.fiscalQuarter}`}
+                      onClick={() => onSelect(e.symbol)}
+                      aria-pressed={isSelected}
                       className={`
-                        aspect-square rounded-lg border text-sm relative transition-all flex flex-col items-center justify-center
-                        ${isToday ? 'ring-2 ring-[var(--color-accent)]' : ''}
-                        ${hasEarnings
-                          ? `${getImpactColor(maxMove)} cursor-pointer hover:scale-105`
-                          : 'border-transparent text-[var(--color-text-muted)]'
-                        }
-                        ${isExpanded ? 'ring-2 ring-[var(--color-info)]' : ''}
+                        glass-slab-floating animate-enter animate-press relative overflow-hidden
+                        w-full flex items-center justify-between p-3 pl-5 rounded-xl text-left
+                        before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]
+                        ${rail}
+                        transition-[transform,box-shadow] duration-200
                       `}
-                      aria-label={hasEarnings
-                        ? `${date.getDate()} ${MONTHS[viewMonth]} — ${dayEarnings.length} earning${dayEarnings.length > 1 ? 's' : ''}`
-                        : `${date.getDate()} ${MONTHS[viewMonth]}`
-                      }
                     >
-                      {/* BMO/AMC timing badge */}
-                      {hasEarnings && <TimingBadge timing={primaryTiming} />}
-
-                      <span className={`text-xs ${isToday ? 'font-bold text-[var(--color-accent)]' : hasEarnings ? 'font-semibold text-[var(--color-text)]' : ''}`}>
-                        {date.getDate()}
-                      </span>
-
-                      {/* Dot indicators */}
-                      {hasEarnings && (
-                        <span className="flex gap-0.5 mt-0.5">
-                          {dayEarnings.slice(0, 3).map((_e, i) => (
-                            <span
-                              key={i}
-                              className="w-1 h-1 rounded-full bg-[var(--color-text)]"
-                            />
-                          ))}
-                          {dayEarnings.length > 3 && (
-                            <span className="text-[8px] text-[var(--color-text-muted)]">+</span>
-                          )}
+                      <div>
+                        <span className="mono uppercase tracking-wider font-bold text-theme">{e.symbol}</span>
+                        {e.fiscalQuarter && (
+                          <span className="ml-2 mono text-[10px] tracking-wider uppercase text-theme-muted">{e.fiscalQuarter}</span>
+                        )}
+                        {e.reportTime && (e.reportTime === 'pre_market' || e.reportTime === 'post_market') && (
+                          <span className={`ml-2 mono text-[10px] tracking-wider uppercase font-semibold ${
+                            e.reportTime === 'pre_market' ? 'text-[var(--color-info)]' : 'text-[var(--color-warning)]'
+                          }`}>
+                            {e.reportTime === 'pre_market' ? 'BMO' : 'AMC'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {e.expectedMove !== undefined && (
+                          <span className={`mono tabular-nums text-sm font-semibold ${
+                            isHighImpact ? 'text-[var(--color-negative)]' :
+                            isModerate ? 'text-[var(--color-warning)]' :
+                            'text-theme-secondary'
+                          }`}>
+                            ±{(e.expectedMove * 100).toFixed(1)}%
+                          </span>
+                        )}
+                        <span className={`mono text-[10px] tracking-wider uppercase font-semibold px-1.5 py-0.5 rounded ${
+                          isHighImpact
+                            ? 'bg-[color-mix(in_srgb,var(--color-negative)_12%,transparent)] text-[var(--color-negative)]'
+                            : isModerate
+                            ? 'bg-[color-mix(in_srgb,var(--color-warning)_12%,transparent)] text-[var(--color-warning)]'
+                            : 'bg-[color-mix(in_srgb,var(--color-positive)_12%,transparent)] text-[var(--color-positive)]'
+                        }`}>
+                          {getImpactLabel(e.expectedMove || 0)}
                         </span>
-                      )}
-
-                      {/* High impact alert icon */}
-                      {hasEarnings && maxMove >= 0.08 && (
-                        <AlertTriangle className="absolute top-0.5 right-0.5 w-2.5 h-2.5 text-[var(--color-danger)]" />
-                      )}
+                      </div>
                     </button>
                   );
                 })}
               </div>
-            ))}
+            )}
+          </>
+        )}
+
+        {/* Legend */}
+        <div className="mt-4 flex flex-wrap gap-3 mono text-[10px] tracking-wider uppercase text-theme-muted">
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded bg-[var(--color-positive)]/15 border border-[var(--color-positive)]/25" aria-hidden="true" />
+            Minimal
           </div>
-
-          {/* Expanded day detail */}
-          {expandedDay && earningsByDate.has(expandedDay) && (
-            <div className="mt-4 space-y-2 border-t border-[var(--color-border)] pt-4">
-              <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
-                Earnings on this day
-              </p>
-              {earningsByDate.get(expandedDay)!.map((e) => (
-                <button
-                  key={`${e.symbol}-${e.fiscalQuarter}`}
-                  onClick={() => onSelect(e.symbol)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors text-left ${
-                    selectedSymbol === e.symbol
-                      ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
-                      : 'border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
-                  }`}
-                >
-                  <div>
-                    <span className="font-semibold text-[var(--color-text)]">{e.symbol}</span>
-                    {e.fiscalQuarter && (
-                      <span className="ml-2 text-xs text-[var(--color-text-muted)]">{e.fiscalQuarter}</span>
-                    )}
-                    {e.reportTime && (e.reportTime === 'pre_market' || e.reportTime === 'post_market') && (
-                      <span className={`ml-2 text-xs font-medium ${
-                        e.reportTime === 'pre_market' ? 'text-[var(--color-info)]' : 'text-[var(--color-warning)]'
-                      }`}>
-                        {e.reportTime === 'pre_market' ? 'BMO' : 'AMC'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {e.expectedMove !== undefined && (
-                      <span className={`text-sm font-medium ${
-                        e.expectedMove >= 0.08 ? 'text-[var(--color-danger)]' :
-                        e.expectedMove >= 0.05 ? 'text-[var(--color-warning)]' :
-                        'text-[var(--color-text-secondary)]'
-                      }`}>
-                        ±{(e.expectedMove * 100).toFixed(1)}%
-                      </span>
-                    )}
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${
-                      (e.expectedMove || 0) >= 0.08
-                        ? 'bg-[var(--color-danger)]/10 text-[var(--color-danger)]'
-                        : (e.expectedMove || 0) >= 0.05
-                        ? 'bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
-                        : 'bg-[var(--color-positive)]/10 text-[var(--color-positive)]'
-                    }`}>
-                      {getImpactLabel(e.expectedMove || 0)}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-3 text-xs text-[var(--color-text-muted)]">
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-[var(--color-positive)]/15 border border-[var(--color-positive)]/25" />
-          Minimal
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30" />
-          Low
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-[var(--color-warning)]/30 border border-[var(--color-warning)]/40" />
-          Moderate
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-[var(--color-danger)]/30 border border-[var(--color-danger)]/40" />
-          High Impact
-        </div>
-        <div className="flex items-center gap-1.5 ml-2 border-l border-[var(--color-border)] pl-2">
-          <span className="text-[8px] font-bold text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_20%,transparent)] px-0.5 rounded">BMO</span>
-          Pre-market
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="text-[8px] font-bold text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_20%,transparent)] px-0.5 rounded">AMC</span>
-          Post-market
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded bg-[var(--color-accent)]/20 border border-[var(--color-accent)]/30" aria-hidden="true" />
+            Low
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded bg-[var(--color-warning)]/30 border border-[var(--color-warning)]/40" aria-hidden="true" />
+            Moderate
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded bg-[var(--color-danger)]/30 border border-[var(--color-danger)]/40" aria-hidden="true" />
+            High Impact
+          </div>
+          <div className="flex items-center gap-1.5 ml-2 border-l border-theme-light pl-2">
+            <span className="text-[8px] font-bold text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_20%,transparent)] px-0.5 rounded">BMO</span>
+            Pre-market
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[8px] font-bold text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_20%,transparent)] px-0.5 rounded">AMC</span>
+            Post-market
+          </div>
         </div>
       </div>
     </Card>

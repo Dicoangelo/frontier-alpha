@@ -1,12 +1,62 @@
 # Frontier Alpha — PRD Audit Report
 
-**Date:** 2026-03-25
+**Date:** 2026-03-25 (original) · **Last reconciled:** 2026-05-07
 **Auditor:** QA Lead (qa-lead agent)
 **Method:** Code-first verification — every claim checked against actual files, grep evidence, and structural spot-checks. No completionNotes accepted at face value without corroborating code evidence.
 
 ---
 
+## 2026-05-07 — UI polish wave landed (PRs #3 + #4)
+
+35 files updated across 5 polish rounds, bringing Frontier Alpha into the family aesthetic of `metaventionsai.com`, `careers.metaventionsai.com`, and `friendlyface.metaventionsai.com`. Version bumped to 1.1.0.
+
+**Round 1 — Motion + interactive feedback foundation** (`Button.tsx`, `Toast.tsx`, `index.css`, `Landing.tsx`):
+- Defined the 4 missing keyframes (fade-in, slide-in-left, slide-in-right, pulse-subtle) so existing utility classes resolve at runtime.
+- Rewrote Button to drop `transition-all` + `hover-scale` in favor of `animate-press` + `animate-lift` (canonical interactive feedback).
+- Toast restyled as glass-slab-floating with 3px type-colored rail.
+- Landing CTAs adopt the sovereign-gradient.
+
+**Round 2 — Error UI, auth, dashboard CLS** (`ErrorBoundary`, auth forms, `Dashboard`, 3 skeletons):
+- Full-page error UI gets family chrome with sovereign-gradient Try Again (replaces rogue `--color-info` blue).
+- `SectionErrorBoundary` matches Toast pattern.
+- Auth forms use canonical input pattern with focus rings + glass-slab error blocks.
+- Dashboard CLS resolved via `min-h` on chart wrappers + `tabular-nums` + stable status pill.
+- 3 skeletons rebuilt to match final shapes.
+
+**Round 3 — Sidebar, Pricing, Settings, APIKeys**:
+- Sidebar active state uses 3px sovereign-gradient `before:` rail with grouped section dividers.
+- Pricing fully rebuilt: grid-bg shell + holo-pulse hero + border-sovereign Pro tier.
+- Settings introduces SectionShell + ToggleRow + segmented theme switcher + Danger Zone with red rail.
+
+**Round 4 — Header, status banners, dashboard widgets, mobile chrome, palette** (`Header`, `MockDataBanner`, `ConnectionStatus`, `PortfolioOverview`, `EquityCurve`, `MarketStatusStrip`, `MobileNav`, `BottomSheet`, `PullToRefresh`, `CommandPalette`):
+- Header logo lockup tightened.
+- Status banners adopt the Toast pattern.
+- Dashboard widgets get glass-slab + tabular-nums + fixed chart heights.
+- MobileNav with sovereign-gradient top rail; BottomSheet as glass-modal.
+- CommandPalette with sovereign-bar.
+
+**Round 5 — Page-level chrome alignment** (`CVRF`, `Backtest`, `ML`, `Trading`, `Options`, `Earnings`, `Tax`, `Help`, `Social`, `KeyboardHelpModal`, `HelpPanel`, `HelpButton`, `WelcomeModal`, `FeatureTour`):
+- Family heroes, segmented controls, mono uppercase tables, sovereign-gradient CTAs.
+- Glass-modal on every overlay with sovereign-bar at top.
+
+**PRD impact:** No previously incomplete stories flipped to done — all four active PRDs (motion-system, dashboard-v3, mobile-portfolio, token-migration) were already in done/deferred status. The polish wave **reinforced and extended** the delivery surface. Per-story `notes` fields were added to MOTION-001/002/005/006, DASH3-001/002/004/008, MOBILE-003/005/007, and TOKEN-001/002/003/004/005 documenting which PR + round refined which surface. Verified percentages unchanged; confidence in delivery raised.
+
+**Out-of-scope PRDs:** The original 8 PRDs from the 2026-03-25 audit (`prd.json`, `prd-v2-world-class.json`, `prd-dashboard-upgrade.json`, `prd-trading-upgrade.json`, `prd-options-upgrade.json`, `prd-ux-optimization-r2.json`, plus the 2 in `.graveyard/`) are no longer present as live JSON files in `tasks/` — they were retired or graveyarded between the audit and this reconciliation. The active backlog is now the 4 PRDs above.
+
+---
+
 ## Summary Table
+
+### Active backlog (as of 2026-05-07)
+
+| PRD | Stories | Status | Notes |
+|-----|---------|--------|-------|
+| `tasks/prd-motion-system.json` | 7 | 7/7 done | All stories shipped; PR #3 polish reinforced MOTION-001/002/005/006 |
+| `tasks/prd-dashboard-v3.json` | 8 | 6 done, 2 deferred | DASH3-005 + DASH3-006 deferred (need ML factor-deltas API + dedicated layout sprint); PR #4 reinforced DASH3-001/002/004/008 |
+| `tasks/prd-mobile-portfolio.json` | 7 | 6 done, 1 deferred | MOBILE-004 deferred (swipe gestures); PR #4 reinforced MOBILE-003/005/007 |
+| `tasks/prd-token-migration.json` | 7 | 6 done, 1 deferred | TOKEN-007 deferred (visual regression via Playwright); PR #3 + PR #4 reinforced TOKEN-001/002/003/004/005 |
+
+### Historical PRDs (audited 2026-03-25)
 
 | PRD | Stories | Claimed Done | Verified Done | Verified Partial | Not Done | True % |
 |-----|---------|-------------|--------------|-----------------|----------|--------|

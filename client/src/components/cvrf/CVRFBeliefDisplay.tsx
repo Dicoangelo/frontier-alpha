@@ -20,19 +20,19 @@ function FactorBar({ factor, weight, confidence }: FactorBarProps) {
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-[var(--color-text-secondary)] capitalize">{factor}</span>
+        <span className="font-medium text-theme-secondary capitalize">{factor}</span>
         <div className="flex items-center gap-2">
-          <span className={`font-mono ${isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
+          <span className={`mono tabular-nums ${isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
             {isPositive ? '+' : ''}{(weight * 100).toFixed(1)}%
           </span>
-          <span className="text-xs text-[var(--color-text-muted)]">
+          <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted tabular-nums">
             ({(confidence * 100).toFixed(0)}% conf)
           </span>
         </div>
       </div>
       <div className="h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
         <div
-          className={`h-full transition-all duration-300 ${
+          className={`h-full transition-[width,opacity] duration-300 ${
             isPositive ? 'bg-[var(--color-positive)]' : 'bg-[var(--color-negative)]'
           }`}
           style={{ width: `${Math.min(weightPercent, 100)}%`, opacity: 0.5 + confidence * 0.5 }}
@@ -49,14 +49,14 @@ interface ConstraintRowProps {
   color?: string;
 }
 
-function ConstraintRow({ label, value, icon, color = 'text-[var(--color-text)]' }: ConstraintRowProps) {
+function ConstraintRow({ label, value, icon, color = 'text-theme' }: ConstraintRowProps) {
   return (
     <div className="flex items-center justify-between py-2 border-b border-[var(--color-border-light)] last:border-0">
-      <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
+      <div className="flex items-center gap-2 text-theme-muted">
         {icon}
         <span className="text-sm">{label}</span>
       </div>
-      <span className={`font-mono text-sm font-medium ${color}`}>{value}</span>
+      <span className={`mono text-sm font-medium tabular-nums ${color}`}>{value}</span>
     </div>
   );
 }
@@ -67,7 +67,7 @@ export function CVRFBeliefDisplay() {
 
   if (isLoading) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6 animate-shimmer">
+      <div className="glass-slab rounded-2xl p-6 sm:p-8 animate-shimmer">
         <div className="h-6 bg-[var(--color-border)] rounded w-1/3 mb-6" />
         <div className="space-y-4">
           {[1, 2, 3, 4].map((i) => (
@@ -83,8 +83,12 @@ export function CVRFBeliefDisplay() {
 
   if (isError || !beliefs) {
     return (
-      <div className="bg-[var(--color-bg)] rounded-xl border border-[color-mix(in_srgb,var(--color-negative)_20%,transparent)] p-6">
-        <div className="text-[var(--color-negative)] text-sm">Failed to load belief state</div>
+      <div
+        className="glass-slab-floating relative overflow-hidden rounded-2xl p-6 sm:p-8 shadow-[0_18px_60px_-20px_rgba(239,68,68,0.45)] before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-negative)]"
+        role="alert"
+      >
+        <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">Belief State</p>
+        <p className="text-[var(--color-negative)] text-sm">Failed to load belief state</p>
       </div>
     );
   }
@@ -96,32 +100,41 @@ export function CVRFBeliefDisplay() {
   }));
 
   return (
-    <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
-          <Scale className="w-5 h-5 text-[var(--color-accent)]" />
-          Belief State
-        </h3>
-        <span className="text-xs text-[var(--color-text-muted)]">v{beliefs.version}</span>
+    <div className="glass-slab rounded-2xl p-6 sm:p-8 animate-enter">
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Belief State
+          </p>
+          <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
+            <Scale className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            Active Posture
+          </h3>
+        </div>
+        <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted tabular-nums">
+          v{beliefs.version}
+        </span>
       </div>
 
       {/* Market Regime */}
-      <div className="mb-6 p-4 rounded-lg" style={{ background: 'linear-gradient(to right, var(--color-bg-tertiary), color-mix(in srgb, var(--color-accent) 6%, transparent))' }}>
-        <div className="text-xs text-[var(--color-text-muted)] mb-1">Market Regime</div>
+      <div className="mb-6 glass-slab-floating rounded-xl p-4">
+        <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">Market Regime</p>
         <div className="flex items-center gap-3">
-          <span className="text-2xl">{regime.icon}</span>
+          <span className="text-2xl" aria-hidden="true">{regime.icon}</span>
           <div>
-            <div className={`text-xl font-bold ${regime.color}`}>{regime.label}</div>
-            <div className="text-xs text-[var(--color-text-muted)]">{regime.confidence} confidence</div>
+            <p className={`text-xl font-bold ${regime.color}`}>{regime.label}</p>
+            <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted tabular-nums">
+              {regime.confidence} confidence
+            </p>
           </div>
         </div>
       </div>
 
       {/* Factor Weights */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-[var(--color-text-secondary)] mb-3">
-          <BarChart3 className="w-4 h-4" />
-          <span className="text-sm font-medium">Factor Exposures</span>
+        <div className="flex items-center gap-2 text-theme-secondary mb-3">
+          <BarChart3 className="w-4 h-4" aria-hidden="true" />
+          <span className="mono text-[10px] tracking-[0.3em] uppercase">Factor Exposures</span>
         </div>
         <div className="space-y-3">
           {factors.map((f) => (
@@ -132,9 +145,9 @@ export function CVRFBeliefDisplay() {
 
       {/* Risk Constraints */}
       <div className="border-t border-[var(--color-border-light)] pt-4">
-        <div className="flex items-center gap-2 text-[var(--color-text-secondary)] mb-3">
-          <Shield className="w-4 h-4" />
-          <span className="text-sm font-medium">Risk Constraints</span>
+        <div className="flex items-center gap-2 text-theme-secondary mb-3">
+          <Shield className="w-4 h-4" aria-hidden="true" />
+          <span className="mono text-[10px] tracking-[0.3em] uppercase">Risk Constraints</span>
         </div>
         <div className="space-y-0">
           <ConstraintRow
@@ -170,7 +183,7 @@ export function CVRFBeliefDisplay() {
       {/* Conceptual Priors */}
       {beliefs.conceptualPriors.length > 0 && (
         <div className="mt-4 pt-4 border-t border-[var(--color-border-light)]">
-          <div className="text-xs text-[var(--color-text-muted)] mb-2">Conceptual Priors</div>
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">Conceptual Priors</p>
           <div className="flex flex-wrap gap-1">
             {beliefs.conceptualPriors.slice(0, 5).map((prior) => (
               <span
@@ -180,7 +193,7 @@ export function CVRFBeliefDisplay() {
                     ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]'
                     : prior.impactDirection === 'negative'
                     ? 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)]'
-                    : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]'
+                    : 'bg-[var(--color-bg-secondary)] text-theme-secondary'
                 }`}
                 title={prior.concept}
               >
@@ -188,7 +201,7 @@ export function CVRFBeliefDisplay() {
               </span>
             ))}
             {beliefs.conceptualPriors.length > 5 && (
-              <span className="px-2 py-0.5 text-[var(--color-text-muted)] text-xs">
+              <span className="px-2 py-0.5 text-theme-muted text-xs tabular-nums">
                 +{beliefs.conceptualPriors.length - 5} more
               </span>
             )}

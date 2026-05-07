@@ -18,7 +18,7 @@
 <img src="https://img.shields.io/badge/Files-242+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Files" />
 <img src="https://img.shields.io/badge/Endpoints-48-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Endpoints" />
 <img src="https://img.shields.io/badge/Factors-76-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Factors" />
-<img src="https://img.shields.io/badge/Version-1.0.4-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
+<img src="https://img.shields.io/badge/Version-1.1.0-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
 
 <br/><br/>
 
@@ -83,6 +83,7 @@ flowchart TB
             FACTORS["Factor\nExplorer\n━━━━━━━━━━\nRecharts + D3\nVisualizations"]
             EARNINGS["Earnings\nCalendar\n━━━━━━━━━━\nForecasts\nPositioning"]
             CVRF_UI["CVRF Beliefs\nVisualization\n━━━━━━━━━━\nEpisode History\nConviction Map"]
+            DS_FAMILY["Family Design System\n━━━━━━━━━━\nGlass-slab + Sovereign\nGradient + Type Rails\nv1.1.0 polish"]
         end
 
         subgraph SERVER["INTELLIGENCE LAYER — Fastify 4 + Node 20"]
@@ -236,6 +237,25 @@ ML_RETRAIN_INTERVAL=30
 | **Real-time** | WebSocket → SSE → Polling progressive fallback via `wsClient` |
 | **API Layer** | 7 typed API modules — `client`, `cvrf`, `earnings`, `factors`, `portfolio`, `websocket` + trading hooks |
 | **PWA** | Service Worker, Web Push API, offline caching, installable |
+| **Design System** | Family-aligned with `metaventionsai.com`, `careers.metaventionsai.com`, `friendlyface.metaventionsai.com` — see [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md) |
+
+<br/>
+
+### Design System (v1.1.0 — UI Family Polish)
+
+> **Status:** Shipped 2026-05-07 across 35 files in PRs #3 and #4 — five rounds of family-aesthetic alignment with the metaventionsai ecosystem.
+
+| Layer | Pattern |
+|-------|---------|
+| **Visual language** | Glass-slab surfaces (`glass-slab`, `glass-slab-floating`, `glass-modal`) + sovereign-spectrum gradient (`magenta → amethyst → cyan`) + 3px type-colored rails on banners + mono uppercase kickers |
+| **Motion grammar** | 4-keyframe set defined site-wide (`fade-in`, `slide-in-left`, `slide-in-right`, `pulse-subtle`) bound to motion tokens (`--motion-duration-base`, `--motion-duration-slow`, `--motion-ease-out`) |
+| **Interaction tokens** | `animate-press` (replaces hover-scale jank), `animate-lift` (hover translateY), `animate-stagger`, `animate-enter` |
+| **Anti-CLS posture** | `tabular-nums` on every numeric metric + explicit `min-h` on every chart wrapper + size-matched skeletons |
+| **Banner pattern** | Toast / SectionErrorBoundary / ConnectionStatus / ModelStatusBanner share the type-rail before-pseudo + colored shadow glow |
+| **Active route rail** | Sidebar + MobileNav use sovereign-gradient before-pseudo for active state (replaces color swap) |
+| **CTA primary** | `bg-[image:var(--gradient-sovereign)]` + sovereign-bar 3px top rail on every modal and page header |
+
+> **Screenshots:** Refresh pending — current screenshots in `screenshots/` predate the polish wave.
 
 <br/>
 
@@ -341,13 +361,13 @@ ML_RETRAIN_INTERVAL=30
 | Layer | Component | Description | Tech | Status |
 |:-----:|:----------|:------------|:-----|:------:|
 | **Interface** | 58 Components | Portfolio, Factors, Earnings, CVRF, Risk, Options, Charts | React 19, Tailwind | `Production` |
-| **Intelligence** | Factor Engine | 80+ factor exposures across 6 categories | TypeScript | `v1.0.4` |
-| **Intelligence** | CVRF Manager | Episodic learning with belief persistence | TypeScript, Supabase | `v1.0.4` |
-| **Intelligence** | Earnings Oracle | Forecasts, beat rates, expected moves | TypeScript | `v1.0.4` |
-| **Intelligence** | Cognitive Explainer | GPT-4o + template dual-mode explanations | OpenAI, TypeScript | `v1.0.4` |
-| **Compute** | Portfolio Optimizer | Monte Carlo, max Sharpe, min variance, risk parity | TypeScript | `v1.0.4` |
-| **Compute** | Walk-Forward Backtest | CVRF-integrated historical replay | TypeScript | `v1.0.4` |
-| **Compute** | Risk Alert System | 11 alert types, real-time monitoring | TypeScript | `v1.0.4` |
+| **Intelligence** | Factor Engine | 80+ factor exposures across 6 categories | TypeScript | `v1.1.0` |
+| **Intelligence** | CVRF Manager | Episodic learning with belief persistence | TypeScript, Supabase | `v1.1.0` |
+| **Intelligence** | Earnings Oracle | Forecasts, beat rates, expected moves | TypeScript | `v1.1.0` |
+| **Intelligence** | Cognitive Explainer | GPT-4o + template dual-mode explanations | OpenAI, TypeScript | `v1.1.0` |
+| **Compute** | Portfolio Optimizer | Monte Carlo, max Sharpe, min variance, risk parity | TypeScript | `v1.1.0` |
+| **Compute** | Walk-Forward Backtest | CVRF-integrated historical replay | TypeScript | `v1.1.0` |
+| **Compute** | Risk Alert System | 11 alert types, real-time monitoring | TypeScript | `v1.1.0` |
 | **Data** | Supabase | PostgreSQL + RLS, real-time subscriptions | Supabase | `Active` |
 | **Data** | Polygon.io | WebSocket real-time market data | REST + WS | `Active` |
 | **Data** | Alpha Vantage | Fundamentals, earnings, Ken French Library | REST | `Active` |
@@ -563,6 +583,7 @@ npm run ml:start         # Optional Python ML engine (port 8000)
 - [x] Options Chain Analysis
 - [x] Supabase Auth + RLS
 - [x] Vercel Deployment + CI/CD
+- [x] UI family-aesthetic polish — 35 files across 5 rounds (PRs #3 + #4, v1.1.0)
 
 <div align="center">
 

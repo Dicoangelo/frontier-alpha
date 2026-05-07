@@ -109,7 +109,7 @@ export function TypingTickerDemo() {
 
       <div className="flex items-baseline gap-2 mb-5 min-h-[44px]">
         <span
-          className="text-3xl sm:text-4xl font-black tracking-tight text-gradient-brand holo-pulse"
+          className="text-3xl sm:text-4xl font-black tracking-tight text-gradient-halo holo-pulse"
           style={{ letterSpacing: '-0.02em' }}
         >
           {typed || ' '}

@@ -1,9 +1,12 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { SignupForm } from '@/components/auth/SignupForm';
 
 export function Login() {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get('mode') === 'signup' ? 'signup' : 'login';
+  const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] grid-bg flex items-center justify-center p-4">

@@ -27,32 +27,24 @@ const icons = {
 
 const colors = {
   success: {
-    bg: 'bg-[var(--color-positive)]/10',
-    border: 'border-[var(--color-positive)]/20',
+    rail: 'before:bg-[var(--color-positive)]',
     icon: 'text-[var(--color-positive)]',
-    title: 'text-[var(--color-text)]',
-    message: 'text-[var(--color-text-secondary)]',
+    glow: 'shadow-[0_18px_60px_-20px_rgba(16,185,129,0.45)]',
   },
   error: {
-    bg: 'bg-[var(--color-danger)]/10',
-    border: 'border-[var(--color-danger)]/20',
+    rail: 'before:bg-[var(--color-danger)]',
     icon: 'text-[var(--color-danger)]',
-    title: 'text-[var(--color-text)]',
-    message: 'text-[var(--color-text-secondary)]',
+    glow: 'shadow-[0_18px_60px_-20px_rgba(239,68,68,0.45)]',
   },
   info: {
-    bg: 'bg-[var(--color-accent)]/10',
-    border: 'border-[var(--color-accent)]/20',
+    rail: 'before:bg-[image:var(--gradient-sovereign)]',
     icon: 'text-[var(--color-accent)]',
-    title: 'text-[var(--color-text)]',
-    message: 'text-[var(--color-text-secondary)]',
+    glow: 'shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)]',
   },
   warning: {
-    bg: 'bg-[var(--color-warning)]/10',
-    border: 'border-[var(--color-warning)]/20',
+    rail: 'before:bg-[var(--color-warning)]',
     icon: 'text-[var(--color-warning)]',
-    title: 'text-[var(--color-text)]',
-    message: 'text-[var(--color-text-secondary)]',
+    glow: 'shadow-[0_18px_60px_-20px_rgba(245,158,11,0.45)]',
   },
 };
 
@@ -79,20 +71,22 @@ function Toast({ id, type, title, message, duration = 4000, action, onClose }: T
   return (
     <div
       className={`
-        ${colorScheme.bg} ${colorScheme.border} border
-        rounded-lg shadow-lg p-4 max-w-sm w-full
-        transition-all duration-300 ease-out
-        ${isExiting ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}
-        animate-slide-in-right
+        glass-slab-floating relative overflow-hidden
+        rounded-xl pl-5 pr-4 py-4 max-w-sm w-full
+        ${colorScheme.glow}
+        before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]
+        ${colorScheme.rail}
+        transition-[opacity,transform] duration-300 ease-out
+        ${isExiting ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0 animate-slide-in-right'}
       `}
       role="alert"
     >
       <div className="flex items-start gap-3">
-        <Icon className={`w-5 h-5 flex-shrink-0 ${colorScheme.icon}`} />
+        <Icon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${colorScheme.icon}`} />
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium ${colorScheme.title}`}>{title}</p>
+          <p className="text-sm font-semibold text-theme">{title}</p>
           {message && (
-            <p className={`text-sm mt-1 ${colorScheme.message}`}>{message}</p>
+            <p className="text-sm mt-1 text-theme-secondary leading-relaxed">{message}</p>
           )}
           {action && (
             <button
@@ -100,7 +94,7 @@ function Toast({ id, type, title, message, duration = 4000, action, onClose }: T
                 action.onClick();
                 handleClose();
               }}
-              className={`text-sm font-medium mt-2 ${colorScheme.icon} hover:opacity-80 transition-opacity`}
+              className={`text-sm font-medium mt-2 ${colorScheme.icon} hover:opacity-80 transition-opacity animate-press`}
             >
               {action.label}
             </button>
@@ -108,7 +102,7 @@ function Toast({ id, type, title, message, duration = 4000, action, onClose }: T
         </div>
         <button
           onClick={handleClose}
-          className={`flex-shrink-0 ${colorScheme.icon} hover:opacity-70 transition-opacity`}
+          className="flex-shrink-0 text-theme-muted hover:text-theme transition-colors animate-press"
           aria-label="Close notification"
         >
           <X className="w-4 h-4" />

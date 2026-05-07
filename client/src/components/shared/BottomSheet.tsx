@@ -6,6 +6,7 @@ interface BottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  kicker?: string;
   children: ReactNode;
   height?: 'auto' | 'half' | 'full';
   showHandle?: boolean;
@@ -16,12 +17,14 @@ export function BottomSheet({
   isOpen,
   onClose,
   title,
+  kicker,
   children,
   height = 'auto',
   showHandle = true,
   showCloseButton = true,
 }: BottomSheetProps) {
   const [isClosing, setIsClosing] = useState(false);
+  const [isEntering, setIsEntering] = useState(true);
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -30,7 +33,7 @@ export function BottomSheet({
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const heightClasses = {
-    auto: 'max-h-[85vh]',
+    auto: 'max-h-[80vh]',
     half: 'h-[50vh]',
     full: 'h-[90vh]',
   };
@@ -49,6 +52,9 @@ export function BottomSheet({
   useEffect(() => {
     if (isOpen) {
       previousFocusRef.current = document.activeElement as HTMLElement;
+      // Slide-in: start translated, then release on next frame
+      setIsEntering(true);
+      const raf = requestAnimationFrame(() => setIsEntering(false));
       // Focus the sheet itself (or first focusable child) after render
       const timer = setTimeout(() => {
         const focusable = sheetRef.current?.querySelector<HTMLElement>(
@@ -56,7 +62,10 @@ export function BottomSheet({
         );
         (focusable ?? sheetRef.current)?.focus();
       }, 50);
-      return () => clearTimeout(timer);
+      return () => {
+        cancelAnimationFrame(raf);
+        clearTimeout(timer);
+      };
     }
   }, [isOpen]);
 
@@ -164,16 +173,27 @@ export function BottomSheet({
 
   if (!isOpen && !isClosing) return null;
 
+  // Compute transform: enter from below, exit below, drag follows finger
+  let transform: string | undefined;
+  if (isDragging) {
+    transform = `translateY(${dragY}px)`;
+  } else if (isClosing || isEntering) {
+    transform = 'translateY(100%)';
+  } else {
+    transform = 'translateY(0)';
+  }
+
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-50" role="presentation">
       {/* Backdrop */}
       <div
         className={`
-          absolute inset-0 bg-black/50 backdrop-blur-sm
+          absolute inset-0 bg-black/60 backdrop-blur-sm
           transition-opacity duration-300
-          ${isClosing ? 'opacity-0' : 'opacity-100'}
+          ${isClosing || isEntering ? 'opacity-0' : 'opacity-100 animate-fade-in'}
         `}
         onClick={handleClose}
+        aria-hidden="true"
       />
 
       {/* Sheet */}
@@ -181,46 +201,55 @@ export function BottomSheet({
         ref={sheetRef}
         className={`
           absolute bottom-0 left-0 right-0
-          bg-[var(--color-bg)] rounded-t-2xl shadow-2xl
+          glass-modal rounded-t-3xl
+          shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.4)]
           flex flex-col
-          transition-transform duration-300 ease-out
           ${heightClasses[height]}
-          ${isClosing ? 'translate-y-full' : 'translate-y-0'}
         `}
         style={{
-          transform: isDragging ? `translateY(${dragY}px)` : undefined,
-          transition: isDragging ? 'none' : undefined,
+          transform,
+          transition: isDragging
+            ? 'none'
+            : 'transform var(--motion-duration-slow) var(--motion-ease-out)',
         }}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'sheet-title' : undefined}
         tabIndex={-1}
       >
-        {/* Handle */}
+        {/* Drag handle */}
         {showHandle && (
           <div
             data-sheet-handle
-            className="flex-shrink-0 py-3 cursor-grab active:cursor-grabbing"
+            className="flex-shrink-0 pt-3 pb-2 cursor-grab active:cursor-grabbing"
           >
-            <div className="w-10 h-1 bg-[var(--color-border)] rounded-full mx-auto" />
+            <div className="mx-auto h-1 w-12 rounded-full bg-theme-tertiary" />
           </div>
         )}
 
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex-shrink-0 flex items-center justify-between px-6 pb-4 border-b border-[var(--color-border-light)]">
-            {title && (
-              <h2
-                id="sheet-title"
-                className="text-lg font-semibold text-[var(--color-text)]"
-              >
-                {title}
-              </h2>
-            )}
+          <div className="flex-shrink-0 flex items-start justify-between gap-3 px-6 pt-2 pb-4 border-b border-theme">
+            <div className="min-w-0">
+              {kicker && (
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">
+                  {kicker}
+                </p>
+              )}
+              {title && (
+                <h2
+                  id="sheet-title"
+                  className="text-lg font-semibold text-theme"
+                >
+                  {title}
+                </h2>
+              )}
+            </div>
             {showCloseButton && (
               <button
+                type="button"
                 onClick={handleClose}
-                className="p-2.5 -mr-2 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors flex items-center justify-center touch-manipulation"
+                className="flex-shrink-0 p-2.5 -mr-2 min-w-[44px] min-h-[44px] rounded-sm text-theme-muted hover:text-theme transition-colors duration-200 flex items-center justify-center touch-manipulation animate-press focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -230,7 +259,7 @@ export function BottomSheet({
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-4">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-4 max-h-[80vh]">
           {children}
         </div>
       </div>

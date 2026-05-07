@@ -144,42 +144,60 @@ export function MarketStatusStrip({ isConnected, lastUpdate }: MarketStatusStrip
   const wsColor = isConnected ? 'var(--color-positive)' : 'var(--color-danger)';
   const wsAnim = isConnected ? 'animate-pulse-green' : '';
 
+  const phaseColor = PHASE_COLOR[phase];
+
   return (
     <div
-      className="sticky top-0 z-40 w-full backdrop-blur-md bg-[var(--color-bg-secondary)] border-b border-[var(--color-border-light)]"
+      className="sticky top-0 z-40 w-full backdrop-blur-md bg-[var(--color-bg-secondary)]/80 border-b border-theme-light"
       role="status"
       aria-label="Market status strip"
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-9 flex items-center justify-between gap-4 text-[10px] mono tracking-[0.2em] uppercase">
-        <div className="flex items-center gap-3 sm:gap-5 min-w-0 overflow-hidden">
+      <div className="max-w-6xl mx-auto h-10 flex items-center justify-between gap-4 text-[10px] mono tracking-[0.25em] uppercase">
+        {/* Left scroll rail — edge-to-edge horizontal scroll, scrollbar hidden */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-x-auto -mx-4 px-4 sm:-mx-6 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {/* Phase pill */}
           <span
-            className="flex items-center gap-1.5 px-2 py-0.5 rounded-sm border"
+            className="glass-slab-floating relative flex items-center gap-1.5 pl-3 pr-3 py-1 rounded-full shrink-0 overflow-hidden animate-press transition-[transform,background-color,border-color] duration-200"
             style={{
-              color: PHASE_COLOR[phase],
-              borderColor: `color-mix(in srgb, ${PHASE_COLOR[phase]} 30%, transparent)`,
-              backgroundColor: `color-mix(in srgb, ${PHASE_COLOR[phase]} 10%, transparent)`,
+              color: phaseColor,
+              borderColor: `color-mix(in srgb, ${phaseColor} 30%, transparent)`,
+              backgroundColor: `color-mix(in srgb, ${phaseColor} 10%, transparent)`,
             }}
           >
             <span
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ backgroundColor: PHASE_COLOR[phase] }}
+              aria-hidden="true"
+              className="absolute left-0 top-0 bottom-0 w-[3px]"
+              style={{ backgroundColor: phaseColor }}
+            />
+            <span
+              className="w-1.5 h-1.5 rounded-full ml-0.5"
+              style={{ backgroundColor: phaseColor }}
               aria-hidden="true"
             />
             {PHASE_LABEL[phase]}
           </span>
 
-          <span className="hidden sm:inline text-[var(--color-text-muted)]">
-            <span className="text-[var(--color-text-secondary)]">{nextLabel}</span>
-            <span className="ml-2 tabular-nums">{countdown}</span>
+          {/* Countdown pill */}
+          <span className="hidden sm:flex glass-slab rounded-full px-3 py-1 items-center gap-2 shrink-0 text-theme-muted">
+            <span className="text-theme-secondary">{nextLabel}</span>
+            <span className="tabular-nums text-theme">{countdown}</span>
           </span>
 
-          <span className="hidden md:inline" style={{ color: freshnessColor }}>
-            Quote <span className="tabular-nums">{freshnessMs === null ? '—' : formatAgo(freshnessMs)}</span>
+          {/* Quote freshness pill */}
+          <span
+            className="hidden md:flex glass-slab rounded-full px-3 py-1 items-center gap-2 shrink-0"
+            style={{ color: freshnessColor }}
+          >
+            <span>Quote</span>
+            <span className="tabular-nums">
+              {freshnessMs === null ? '—' : formatAgo(freshnessMs)}
+            </span>
           </span>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-5 shrink-0">
-          <span className="hidden sm:flex items-center gap-1.5 text-[var(--color-text-muted)]">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 pr-4 sm:pr-6">
+          {/* Stream indicator pill */}
+          <span className="hidden sm:flex glass-slab rounded-full px-3 py-1 items-center gap-1.5 text-theme-muted">
             <span
               className={`w-1.5 h-1.5 rounded-full ${wsAnim}`}
               style={{ backgroundColor: wsColor }}
@@ -192,21 +210,31 @@ export function MarketStatusStrip({ isConnected, lastUpdate }: MarketStatusStrip
             <button
               type="button"
               onClick={() => navigate('/alerts')}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded-sm transition-transform duration-200 hover:scale-[1.04] ${flash ? 'animate-pulse-green' : ''}`}
+              className={`glass-slab-floating relative flex items-center gap-1 pl-3 pr-3 py-1 rounded-full overflow-hidden animate-press transition-[transform,background-color,border-color] duration-200 hover:bg-[var(--color-accent-light)]/50 ${flash ? 'animate-pulse-green' : ''}`}
               style={{
                 color: flash ? 'var(--color-negative)' : 'var(--color-warning)',
                 backgroundColor: `color-mix(in srgb, ${flash ? 'var(--color-negative)' : 'var(--color-warning)'} 14%, transparent)`,
               }}
               aria-label={`View ${unreadAlerts} unread alert${unreadAlerts === 1 ? '' : 's'}`}
             >
-              {unreadAlerts} Alert{unreadAlerts === 1 ? '' : 's'}
+              <span
+                aria-hidden="true"
+                className="absolute left-0 top-0 bottom-0 w-[3px]"
+                style={{
+                  backgroundColor: flash
+                    ? 'var(--color-negative)'
+                    : 'var(--color-warning)',
+                }}
+              />
+              <span className="tabular-nums">{unreadAlerts}</span> Alert
+              {unreadAlerts === 1 ? '' : 's'}
             </button>
           )}
 
           <button
             type="button"
             onClick={() => setHelpOpen((v) => !v)}
-            className="hidden sm:inline w-4 h-4 rounded-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary)] transition-colors"
+            className="hidden sm:inline w-5 h-5 rounded-full text-theme-muted hover:text-[var(--color-accent-secondary)] animate-press transition-[color] duration-200"
             aria-label="Show market strip help (press ? key)"
             title="Press ? for help"
           >

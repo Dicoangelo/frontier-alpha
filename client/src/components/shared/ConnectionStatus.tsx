@@ -51,35 +51,52 @@ export function ConnectionStatus() {
   const transportLabel = transport === 'websocket' ? 'WS' : transport === 'sse' ? 'SSE' : transport === 'polling' ? 'Poll' : null;
   const countdownSec = countdownMs !== null ? Math.ceil(countdownMs / 1000) : null;
 
+  const isReconnecting = state === 'reconnecting';
+  const railClass = isReconnecting
+    ? 'before:bg-[var(--color-warning)]'
+    : 'before:bg-[var(--color-negative)]';
+  const textClass = isReconnecting
+    ? 'text-[var(--color-warning)]'
+    : 'text-[var(--color-negative)]';
+  const glowClass = isReconnecting
+    ? 'shadow-[0_18px_60px_-20px_rgba(245,158,11,0.45)]'
+    : 'shadow-[0_18px_60px_-20px_rgba(239,68,68,0.45)]';
+  const dotClass = isReconnecting
+    ? 'bg-[var(--color-warning)] animate-pulse-subtle'
+    : 'bg-[var(--color-negative)]';
+
   return (
     <div
       role="status"
       aria-live="polite"
       className={`
-        flex items-center gap-2 px-4 py-2 text-xs font-medium transition-all duration-300
-        ${state === 'reconnecting'
-          ? 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border-b border-[var(--color-warning)]/20'
-          : 'bg-[var(--color-danger)]/10 text-[var(--color-danger)] border-b border-[var(--color-danger)]/20'
-        }
+        glass-slab-floating fixed top-20 right-4 z-40
+        rounded-full pl-4 pr-3 py-2 flex items-center gap-2
+        before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:rounded-l-full
+        ${railClass} ${glowClass} ${textClass}
+        transition-[opacity,transform] duration-300
       `}
     >
-      {state === 'reconnecting' ? (
+      <span
+        className={`inline-block w-1.5 h-1.5 rounded-full ${dotClass}`}
+        aria-hidden="true"
+      />
+      {isReconnecting ? (
         <>
-          <Wifi className="w-3.5 h-3.5 animate-pulse-subtle" />
-          <span>
-            Live feed disconnected. Reconnecting
-            {attempt > 0 && ` (attempt ${attempt})`}
-            {countdownSec !== null && countdownSec > 0 && ` in ${countdownSec}s`}
-            {transportLabel && <span className="ml-1 opacity-70">via {transportLabel}</span>}
-            ...
+          <Wifi className="w-3.5 h-3.5" aria-hidden="true" />
+          <span className="mono text-[10px] tracking-[0.25em] uppercase font-medium">
+            Reconnecting
+            {attempt > 0 && ` · ${attempt}`}
+            {countdownSec !== null && countdownSec > 0 && ` · ${countdownSec}s`}
+            {transportLabel && <span className="ml-1 opacity-70">· {transportLabel}</span>}
           </span>
         </>
       ) : (
         <>
-          <WifiOff className="w-3.5 h-3.5" />
-          <span>
-            Live feed disconnected. Data may be stale.
-            {transportLabel && <span className="ml-1 opacity-70">[{transportLabel}]</span>}
+          <WifiOff className="w-3.5 h-3.5" aria-hidden="true" />
+          <span className="mono text-[10px] tracking-[0.25em] uppercase font-medium">
+            Offline · Data Stale
+            {transportLabel && <span className="ml-1 opacity-70">· {transportLabel}</span>}
           </span>
         </>
       )}

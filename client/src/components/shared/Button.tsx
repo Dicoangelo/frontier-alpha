@@ -14,31 +14,32 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const variants = {
   primary: `
     bg-[image:var(--gradient-sovereign)] text-white
-    hover:opacity-90
-    active:opacity-80
-    shadow-md hover:shadow-lg active:shadow-sm
-    focus:ring-2 focus:ring-[var(--brand-amethyst)] focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]
+    shadow-[0_4px_14px_rgba(123,44,255,0.25)]
+    hover:shadow-[0_6px_20px_rgba(123,44,255,0.35)] hover:brightness-110
+    active:brightness-95
+    focus-visible:ring-2 focus-visible:ring-[var(--brand-amethyst)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]
   `,
   secondary: `
-    bg-[var(--color-bg-tertiary)] text-[var(--color-text)]
-    hover:opacity-80 active:opacity-70
-    focus:ring-2 focus:ring-[var(--brand-amethyst)]/40 focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]
+    glass-slab text-[var(--color-text)]
+    hover:border-[color:var(--color-border-hover)]
+    focus-visible:ring-2 focus-visible:ring-[var(--brand-amethyst)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]
   `,
   danger: `
     bg-[var(--color-negative)] text-white
-    hover:bg-[var(--color-negative)] active:bg-[var(--color-negative)]
-    shadow-md hover:shadow-lg active:shadow-sm
-    focus:ring-2 focus:ring-[var(--color-negative)] focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]
+    shadow-[0_4px_14px_rgba(239,68,68,0.25)]
+    hover:brightness-110 hover:shadow-[0_6px_20px_rgba(239,68,68,0.35)]
+    active:brightness-95
+    focus-visible:ring-2 focus-visible:ring-[var(--color-negative)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]
   `,
   ghost: `
     bg-transparent text-[var(--color-text-secondary)]
-    hover:bg-[var(--color-bg-tertiary)] active:opacity-70
-    focus:ring-2 focus:ring-[var(--brand-amethyst)]/40 focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]
+    hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--color-text)]
+    focus-visible:ring-2 focus-visible:ring-[var(--brand-amethyst)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]
   `,
   outline: `
     bg-[var(--color-bg-secondary)] text-[var(--color-text)] border border-[var(--color-border)]
-    hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--brand-amethyst)]/30 active:opacity-80
-    focus:ring-2 focus:ring-[var(--brand-amethyst)]/40 focus:ring-offset-2 focus:ring-offset-[var(--color-bg)]
+    hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--brand-amethyst)]/40
+    focus-visible:ring-2 focus-visible:ring-[var(--brand-amethyst)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]
   `,
 };
 
@@ -65,9 +66,8 @@ export function Button({
       className={`
         ${variants[variant]} ${sizes[size]}
         rounded-lg font-medium
-        transition-all duration-150 ease-out
-        transform hover:scale-[1.02] active:scale-[0.98]
-        disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+        animate-press animate-lift
+        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none
         flex items-center justify-center gap-2
         outline-none
         ${fullWidth ? 'w-full' : ''}
@@ -115,9 +115,9 @@ export function IconButton({
         ${variants[variant]}
         ${iconSizes[size]}
         rounded-lg
-        transition-all duration-150 ease-out
-        transform hover:scale-110 active:scale-95
-        disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+        animate-press
+        transition-[background-color,color,border-color,box-shadow] duration-200 ease-out
+        disabled:opacity-50 disabled:cursor-not-allowed
         flex items-center justify-center
         outline-none
         ${className}

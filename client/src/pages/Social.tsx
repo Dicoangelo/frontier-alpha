@@ -286,7 +286,7 @@ function LeaderboardTab({ entries, onToggleFollow }: {
               >
                 {/* Rank */}
                 <td className="px-4 py-3">
-                  <span className={`font-bold font-mono ${
+                  <span className={`font-bold mono ${
                     entry.rank <= 3 ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-muted)]'
                   }`}>
                     {entry.rank <= 3 ? <Trophy className="w-4 h-4 inline mr-1 text-[var(--color-warning)]" aria-hidden="true" /> : null}

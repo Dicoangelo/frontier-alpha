@@ -1,7 +1,12 @@
+/**
+ * Alerts Page
+ *
+ * Risk alerts, factor drift monitoring, and SEC filings — single mission control.
+ * Layout-wrapped (see App.tsx) — page chrome is provided by parent Layout.
+ */
+
 import { useState, useEffect, useCallback } from 'react';
-import { Bell, Filter, RefreshCw } from 'lucide-react';
-import { Card } from '@/components/shared/Card';
-import { Button } from '@/components/shared/Button';
+import { Bell, Filter, RefreshCw, ShieldAlert } from 'lucide-react';
 import { AlertList } from '@/components/alerts/AlertCard';
 import { FactorDriftAlert } from '@/components/alerts/FactorDriftAlert';
 import { SECFilingAlert } from '@/components/alerts/SECFilingAlert';
@@ -16,6 +21,9 @@ interface FactorExposure {
 }
 
 type SeverityFilter = 'all' | 'critical' | 'high' | 'medium' | 'low';
+
+const kickerClass =
+  'mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2';
 
 export function Alerts() {
   const [alerts, setAlerts] = useState<RiskAlert[]>([]);
@@ -139,8 +147,7 @@ export function Alerts() {
   };
 
   const handleAction = async (id: string, action: string) => {
-    // Handle alert action
-    // Navigate to appropriate page based on action
+    // Handle alert action — Navigate to appropriate page based on action
     switch (action) {
       case 'reduce_risk':
       case 'rebalance':
@@ -179,11 +186,14 @@ export function Alerts() {
   // Show skeleton while loading
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Bell className="w-6 h-6 text-[var(--color-text-secondary)]" />
-            <h1 className="text-2xl font-bold text-[var(--color-text)]">Alerts</h1>
+          <div>
+            <p className={kickerClass}>Alerts · Loading</p>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
+              <span className="text-gradient-brand">Risk</span>{' '}
+              <span className="text-theme">Watchtower</span>
+            </h1>
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -203,103 +213,118 @@ export function Alerts() {
   ) : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {errorBanner}
 
-      {/* Header — delay 0ms */}
+      {/* ── Header ──────────────────────────────────────────────────────── */}
       <div
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up"
+        className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 animate-fade-in-up"
         style={{ animationDelay: '0ms', animationFillMode: 'both' }}
       >
         <div>
-          <div className="flex items-center gap-3">
-            <Bell className="w-6 h-6 text-[var(--color-text-muted)]" />
-            <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Alerts</h1>
+          <p className={kickerClass}>
+            Alerts · <span className="text-[color:var(--color-accent-secondary)]">Live Watchtower</span>
+          </p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
+              <span className="text-gradient-brand">Risk</span>{' '}
+              <span className="text-theme">Watchtower</span>
+            </h1>
             {totalActive > 0 && (
               <span
-                className="px-2 py-1 text-sm font-medium rounded-full text-[var(--color-negative)]"
-                style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)' }}
+                className="mono text-[10px] tracking-[0.3em] uppercase px-2.5 py-1 rounded-full tabular-nums text-[var(--color-negative)]"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 12%, transparent)' }}
               >
                 {totalActive} active
               </span>
             )}
           </div>
-          <p className="text-[var(--color-text-muted)] mt-1">Risk alerts, factor drift monitoring, and SEC filings</p>
+          <p className="mt-3 text-sm sm:text-base text-theme-secondary leading-relaxed max-w-2xl">
+            Real-time drawdown, concentration, factor drift, and SEC filing surveillance.
+            Acknowledge or route directly into rebalance flow.
+          </p>
         </div>
-        <Button onClick={loadAlerts} isLoading={isLoading} variant="secondary">
-          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+
+        <button
+          onClick={loadAlerts}
+          disabled={isLoading}
+          aria-label="Refresh alerts"
+          className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-sm glass-slab text-theme-secondary hover:text-theme mono text-[10px] tracking-[0.3em] uppercase animate-press transition-colors duration-200 disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
           Refresh
-        </Button>
+        </button>
       </div>
 
-      {/* Summary Cards — delay 50ms */}
+      {/* ── Severity Summary Tiles ──────────────────────────────────────── */}
       <div
-        className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up"
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up animate-stagger"
         style={{ animationDelay: '50ms', animationFillMode: 'both' }}
       >
-        <SummaryCard
+        <SeverityTile
           label="Critical"
           count={severityCounts.critical || 0}
-          indicator="🔴"
-          bgStyle={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--color-negative) 20%, transparent)' }}
+          rail="var(--color-negative)"
           onClick={() => setSeverityFilter(severityFilter === 'critical' ? 'all' : 'critical')}
           active={severityFilter === 'critical'}
         />
-        <SummaryCard
+        <SeverityTile
           label="High"
           count={severityCounts.high || 0}
-          indicator="🟠"
-          bgStyle={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--color-warning) 20%, transparent)' }}
+          rail="var(--color-warning)"
           onClick={() => setSeverityFilter(severityFilter === 'high' ? 'all' : 'high')}
           active={severityFilter === 'high'}
         />
-        <SummaryCard
+        <SeverityTile
           label="Medium"
           count={severityCounts.medium || 0}
-          indicator="🟡"
-          bgStyle={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--color-warning) 20%, transparent)' }}
+          rail="var(--color-accent-secondary)"
           onClick={() => setSeverityFilter(severityFilter === 'medium' ? 'all' : 'medium')}
           active={severityFilter === 'medium'}
         />
-        <SummaryCard
+        <SeverityTile
           label="Low"
           count={severityCounts.low || 0}
-          indicator="🔵"
-          bgStyle={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)', borderColor: 'color-mix(in srgb, var(--color-info) 20%, transparent)' }}
+          rail="var(--color-accent)"
           onClick={() => setSeverityFilter(severityFilter === 'low' ? 'all' : 'low')}
           active={severityFilter === 'low'}
         />
       </div>
 
-      {/* Filters — delay 100ms */}
+      {/* ── Filter Chips ────────────────────────────────────────────────── */}
       <div
-        className="flex flex-wrap items-center gap-4 animate-fade-in-up"
+        className="glass-slab-floating rounded-xl px-4 py-3 flex flex-wrap items-center gap-3 animate-fade-in-up"
         style={{ animationDelay: '100ms', animationFillMode: 'both' }}
       >
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-[var(--color-text-muted)]" />
-          <span className="text-sm text-[var(--color-text-secondary)]">Filter:</span>
+        <div className="flex items-center gap-2 mr-1">
+          <Filter className="w-4 h-4 text-theme-muted" aria-hidden="true" />
+          <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Filter</span>
         </div>
-        <label className="flex items-center gap-2 text-sm min-h-[44px]">
+
+        <label className="inline-flex items-center gap-2 cursor-pointer min-h-[36px] animate-press">
           <input
             type="checkbox"
             checked={showAcknowledged}
             onChange={(e) => setShowAcknowledged(e.target.checked)}
-            className="w-5 h-5 rounded border-[var(--color-border)]"
+            className="w-4 h-4 rounded-sm border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 transition-[border-color,box-shadow] duration-200 accent-[var(--color-accent)]"
           />
-          Show acknowledged
+          <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-secondary">
+            Show acknowledged
+          </span>
         </label>
+
         {severityFilter !== 'all' && (
           <button
             onClick={() => setSeverityFilter('all')}
-            className="text-sm min-h-[44px] px-2 text-[var(--color-accent)] hover:opacity-80"
+            aria-label="Clear severity filter"
+            className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-[color:var(--color-border)] text-[var(--color-accent)] mono text-[10px] tracking-[0.3em] uppercase animate-press hover:border-[var(--color-accent)] transition-[color,border-color] duration-200"
           >
             Clear filter
           </button>
         )}
       </div>
 
-      {/* Factor Drift Monitor — delay 150ms */}
+      {/* ── Factor Drift Monitor ────────────────────────────────────────── */}
       <div
         className="animate-fade-in-up"
         style={{ animationDelay: '150ms', animationFillMode: 'both' }}
@@ -310,7 +335,7 @@ export function Alerts() {
         />
       </div>
 
-      {/* SEC Filing Alerts — delay 200ms */}
+      {/* ── SEC Filing Alerts ───────────────────────────────────────────── */}
       <div
         className="animate-fade-in-up"
         style={{ animationDelay: '200ms', animationFillMode: 'both' }}
@@ -321,70 +346,100 @@ export function Alerts() {
         />
       </div>
 
-      {/* Alert List — delay 250ms */}
+      {/* ── Alert List ──────────────────────────────────────────────────── */}
       <div
         className="animate-fade-in-up"
         style={{ animationDelay: '250ms', animationFillMode: 'both' }}
       >
-        <Card>
-          {filteredAlerts.length === 0 ? (
-            <EmptyAlerts />
-          ) : (
+        {filteredAlerts.length === 0 ? (
+          <div className="glass-slab gradient-brand-subtle rounded-2xl p-10 text-center">
+            <div
+              className="w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--color-positive) 14%, transparent)' }}
+            >
+              <ShieldAlert className="w-6 h-6" style={{ color: 'var(--color-positive)' }} aria-hidden="true" />
+            </div>
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">
+              All Clear
+            </p>
+            <h3 className="text-lg font-bold text-theme mb-2">No active alerts</h3>
+            <p className="text-sm text-theme-secondary max-w-md mx-auto mb-6">
+              Your watchtower is quiet. Configure thresholds to be notified when drawdown,
+              concentration, or factor drift cross your tolerance.
+            </p>
+            <button
+              type="button"
+              onClick={() => { window.location.href = '/settings'; }}
+              aria-label="Configure alerts"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] rounded-sm bg-[image:var(--gradient-sovereign)] text-white mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:brightness-110 hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)] transition-[filter,box-shadow] duration-200"
+            >
+              <Bell className="w-4 h-4" aria-hidden="true" />
+              Configure Alerts
+            </button>
+            {/* Defensive — keep underlying empty-state slot if the gradient panel is hidden */}
+            <div className="sr-only">
+              <EmptyAlerts />
+            </div>
+          </div>
+        ) : (
+          <div className="glass-slab rounded-2xl p-2 sm:p-4">
             <AlertList
               alerts={filteredAlerts}
               onAcknowledge={handleAcknowledge}
               onAction={handleAction}
               maxVisible={10}
             />
-          )}
-        </Card>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function SummaryCard({
+// ── Severity Tile ────────────────────────────────────────────────────────
+function SeverityTile({
   label,
   count,
-  indicator,
-  bgStyle,
+  rail,
   onClick,
   active,
 }: {
   label: string;
   count: number;
-  indicator: string;
-  bgStyle: React.CSSProperties;
+  rail: string;
   onClick: () => void;
   active: boolean;
 }) {
-  // Map emoji indicators to CSS variable colors
-  const dotColorMap: Record<string, string> = {
-    '🔴': 'var(--chart-danger)',
-    '🟠': 'var(--chart-accent)',
-    '🟡': 'var(--color-warning)',
-    '🔵': 'var(--chart-primary)',
-  };
-  const dotColor = dotColorMap[indicator] || 'var(--color-text-muted)';
-
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="p-4 min-h-[44px] rounded-xl border transition-all duration-200 hover:shadow-md"
+      aria-pressed={active}
+      aria-label={`Filter by ${label} severity`}
+      className={`animate-enter glass-slab-floating relative overflow-hidden rounded-xl p-4 text-left animate-press transition-[border-color,box-shadow] duration-200 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]`}
       style={{
-        ...bgStyle,
-        ...(active ? { boxShadow: '0 0 0 2px var(--color-accent)' } : {}),
+        ...(active
+          ? { boxShadow: `0 8px 30px -12px ${rail === 'var(--color-accent-secondary)' ? 'rgba(192,132,252,0.4)' : rail === 'var(--color-warning)' ? 'rgba(245,158,11,0.4)' : rail === 'var(--color-negative)' ? 'rgba(239,68,68,0.4)' : 'rgba(123,44,255,0.4)'}` }
+          : {}),
+        // rail before-pseudo via inline style is not possible — set via CSS var fallback
       }}
     >
-      <div className="flex items-center justify-between mb-2">
+      <span
+        aria-hidden="true"
+        className="absolute left-0 top-0 bottom-0 w-[3px]"
+        style={{ backgroundColor: rail }}
+      />
+      <div className="flex items-center justify-between mb-2 pl-1">
         <span
-          className="w-3 h-3 rounded-full flex-shrink-0"
-          style={{ backgroundColor: dotColor }}
+          className="w-2 h-2 rounded-full"
+          style={{ backgroundColor: rail }}
           aria-hidden="true"
         />
-        <span className="text-2xl font-bold text-[var(--color-text)]">{count}</span>
+        <span className="text-2xl font-bold text-theme tabular-nums">{count}</span>
       </div>
-      <p className="text-xs text-[var(--color-text-muted)] text-left uppercase tracking-wider font-medium">{label}</p>
+      <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted text-left pl-1">
+        {label}
+      </p>
     </button>
   );
 }

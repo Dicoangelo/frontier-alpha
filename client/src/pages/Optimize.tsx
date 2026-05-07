@@ -1,10 +1,16 @@
+/**
+ * Portfolio Optimization Page
+ *
+ * Multi-objective Monte Carlo optimization with cognitive insights.
+ * Layout-wrapped (see App.tsx) — page chrome is provided by parent Layout.
+ * This page contributes the section shell, hero, controls, and result surfaces.
+ */
+
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Sparkles, TrendingUp, Shield, Target, Info } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import { useToast } from '@/hooks/useToast';
-import { Card } from '@/components/shared/Card';
-import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
 import { MonteCarloChart } from '@/components/charts/MonteCarloChart';
 
@@ -46,6 +52,16 @@ interface OptimizationResult {
   }>;
   monteCarlo?: MonteCarloResult;
 }
+
+// Canonical input class — matches Settings/Backtest/LoginForm pattern.
+const inputClass =
+  'block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm';
+
+const labelClass =
+  'block mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2';
+
+const kickerClass =
+  'mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2';
 
 const objectives: { value: OptimizationObjective; label: string; description: string; icon: typeof TrendingUp }[] = [
   { value: 'max_sharpe', label: 'Maximum Sharpe', description: 'Maximize risk-adjusted returns', icon: TrendingUp },
@@ -96,202 +112,331 @@ export function Optimize() {
   };
 
   const result = optimizeMutation.data?.data;
+  const isPending = optimizeMutation.isPending;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between animate-fade-in-up" style={{ animationFillMode: 'both' }}>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <div
+        className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 animate-fade-in-up"
+        style={{ animationDelay: '0ms', animationFillMode: 'both' }}
+      >
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Portfolio Optimization</h1>
-          <p className="text-[var(--color-text-muted)] mt-1">Multi-factor optimization with cognitive insights</p>
+          <p className={kickerClass}>
+            Optimize · <span className="text-[color:var(--color-accent-secondary)]">Monte Carlo</span>
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
+            <span className="text-gradient-brand">Portfolio</span>{' '}
+            <span className="text-theme">Optimization</span>
+          </h1>
+          <p className="mt-3 text-sm sm:text-base text-theme-secondary leading-relaxed max-w-2xl">
+            Multi-factor optimization with cognitive insights. Maximize Sharpe, minimize variance,
+            balance risk contribution, or pin volatility to a target band.
+          </p>
         </div>
+
+        {/* Convergence indicator — type-rail pill */}
+        {(isPending || result) && (
+          <div
+            className={`glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-2.5 inline-flex items-center gap-2 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] ${
+              isPending
+                ? "before:bg-[var(--color-warning)] shadow-[0_8px_30px_-12px_rgba(245,158,11,0.45)]"
+                : "before:bg-[var(--color-positive)] shadow-[0_8px_30px_-12px_rgba(34,197,94,0.45)]"
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            {isPending ? (
+              <>
+                <div className="w-3 h-3 border-2 border-[var(--color-warning)]/30 border-t-[var(--color-warning)] rounded-full animate-spin" aria-hidden="true" />
+                <span className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-warning)]">
+                  Sampling
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 rounded-full bg-[var(--color-positive)] holo-pulse" aria-hidden="true" />
+                <span className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-positive)]">
+                  Converged
+                </span>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* OPT2-002: Left column — 50ms */}
-        <div className="lg:col-span-2 space-y-6 animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Optimization Objective</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {objectives.map((obj) => (
-                <button
-                  key={obj.value}
-                  onClick={() => setSelectedObjective(obj.value)}
-                  className={`p-4 min-h-[44px] rounded-lg border-2 text-left transition hover:shadow-md transition-all duration-200 ${
-                    selectedObjective === obj.value
-                      ? ''
-                      : 'border-[var(--color-border)] hover:border-[var(--color-border)]'
-                  }`}
-                  /* OPT2-001: accent border/bg for selected state */
-                  style={
-                    selectedObjective === obj.value
-                      ? { borderColor: 'var(--color-accent)', backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }
-                      : undefined
-                  }
-                >
-                  {/* OPT2-001: icon color */}
-                  <obj.icon
-                    className="w-5 h-5 mb-2"
-                    style={{ color: selectedObjective === obj.value ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
-                  />
-                  <p className="font-medium text-[var(--color-text)]">{obj.label}</p>
-                  <p className="text-sm text-[var(--color-text-muted)]">{obj.description}</p>
-                </button>
-              ))}
-            </div>
-          </Card>
+        {/* ── Objective + Constraints (left) ────────────────────────────── */}
+        <div
+          className="lg:col-span-2 space-y-6 animate-fade-in-up"
+          style={{ animationDelay: '50ms', animationFillMode: 'both' }}
+        >
+          <section className="glass-slab rounded-2xl p-6 sm:p-8">
+            <header className="flex items-start gap-4 mb-6">
+              <div
+                className="p-2.5 rounded-lg shrink-0"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
+              >
+                <Sparkles className="w-5 h-5" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <p className={kickerClass}>Strategy</p>
+                <h2 className="text-lg font-bold text-theme mt-1">Optimization Objective</h2>
+                <p className="text-sm text-theme-secondary mt-1">
+                  Choose what the optimizer should solve for
+                </p>
+              </div>
+            </header>
 
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Constraints</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-stagger">
+              {objectives.map((obj) => {
+                const active = selectedObjective === obj.value;
+                return (
+                  <button
+                    key={obj.value}
+                    type="button"
+                    onClick={() => setSelectedObjective(obj.value)}
+                    aria-pressed={active}
+                    className={`animate-enter glass-slab-floating relative overflow-hidden p-4 min-h-[44px] rounded-xl text-left animate-press transition-[border-color,box-shadow,background-color] duration-200 ${
+                      active
+                        ? "before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] shadow-[0_4px_20px_rgba(123,44,255,0.18)]"
+                        : ''
+                    }`}
+                    style={
+                      active
+                        ? { backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }
+                        : undefined
+                    }
+                  >
+                    <obj.icon
+                      className="w-5 h-5 mb-2"
+                      aria-hidden="true"
+                      style={{ color: active ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
+                    />
+                    <p className={`font-semibold ${active ? 'text-gradient-brand' : 'text-theme'}`}>
+                      {obj.label}
+                    </p>
+                    <p className="text-sm text-theme-muted mt-0.5">{obj.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="glass-slab rounded-2xl p-6 sm:p-8">
+            <header className="flex items-start gap-4 mb-6">
+              <div
+                className="p-2.5 rounded-lg shrink-0"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
+              >
+                <Shield className="w-5 h-5" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <p className={kickerClass}>Constraints</p>
+                <h2 className="text-lg font-bold text-theme mt-1">Bounds & Targets</h2>
+                <p className="text-sm text-theme-secondary mt-1">
+                  Per-position caps and any volatility targeting
+                </p>
+              </div>
+            </header>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+                <label htmlFor="opt-max-weight" className={labelClass}>
                   Max Position Weight
                 </label>
                 <input
+                  id="opt-max-weight"
                   type="number"
                   step="0.01"
                   min="0.05"
                   max="1"
                   value={maxWeight}
                   onChange={(e) => setMaxWeight(e.target.value)}
-                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg"
+                  className={`${inputClass} tabular-nums`}
                 />
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">Max {(parseFloat(maxWeight) * 100).toFixed(0)}% in any position</p>
+                <p className="text-xs text-theme-muted mt-2 tabular-nums">
+                  Cap any single name at {(parseFloat(maxWeight) * 100).toFixed(0)}%
+                </p>
               </div>
               {selectedObjective === 'target_volatility' && (
                 <div>
-                  <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+                  <label htmlFor="opt-target-vol" className={labelClass}>
                     Target Volatility
                   </label>
                   <input
+                    id="opt-target-vol"
                     type="number"
                     step="0.01"
                     min="0.05"
                     max="0.5"
                     value={targetVol}
                     onChange={(e) => setTargetVol(e.target.value)}
-                    className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg"
+                    className={`${inputClass} tabular-nums`}
                   />
-                  <p className="text-xs text-[var(--color-text-muted)] mt-1">Target {(parseFloat(targetVol) * 100).toFixed(0)}% annualized</p>
+                  <p className="text-xs text-theme-muted mt-2 tabular-nums">
+                    Pin annualized vol at {(parseFloat(targetVol) * 100).toFixed(0)}%
+                  </p>
                 </div>
               )}
             </div>
 
-            <div className="mt-6">
-              <Button
+            <div className="mt-7 flex flex-col sm:flex-row sm:items-center gap-4">
+              <button
                 onClick={handleOptimize}
-                disabled={symbols.length === 0 || optimizeMutation.isPending}
-                className="w-full"
+                disabled={symbols.length === 0 || isPending}
+                aria-label="Run optimization"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] rounded-sm bg-[image:var(--gradient-sovereign)] text-white mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:brightness-110 hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)] disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-[0_4px_30px_rgba(123,44,255,0.35)] transition-[filter,box-shadow] duration-200"
               >
-                {optimizeMutation.isPending ? (
-                  <Spinner className="w-5 h-5" />
+                {isPending ? (
+                  <>
+                    <Spinner className="w-4 h-4" />
+                    Running…
+                  </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4 mr-2" />
+                    <Sparkles className="w-4 h-4" aria-hidden="true" />
                     Run Optimization
                   </>
                 )}
-              </Button>
+              </button>
               {symbols.length === 0 && (
-                /* OPT2-001: warning color */
-                <p className="text-sm text-[var(--color-warning)] mt-2">
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-warning)]">
                   Add positions to your portfolio first
                 </p>
               )}
             </div>
-          </Card>
+          </section>
         </div>
 
-        {/* OPT2-002: Right column (Holdings) — 100ms */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Current Holdings</h2>
+        {/* ── Holdings (right) ──────────────────────────────────────────── */}
+        <div
+          className="animate-fade-in-up"
+          style={{ animationDelay: '100ms', animationFillMode: 'both' }}
+        >
+          <section className="glass-slab rounded-2xl p-6 sm:p-8">
+            <header className="flex items-start gap-4 mb-6">
+              <div
+                className="p-2.5 rounded-lg shrink-0"
+                style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
+              >
+                <Target className="w-5 h-5" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <p className={kickerClass}>Universe</p>
+                <h2 className="text-lg font-bold text-theme mt-1">Current Holdings</h2>
+              </div>
+            </header>
+
             {symbols.length === 0 ? (
-              <p className="text-[var(--color-text-muted)] text-sm">No positions in portfolio</p>
+              <p className="text-sm text-theme-muted">No positions in portfolio.</p>
             ) : (
-              <div className="space-y-2">
-                {symbols.map((symbol: string) => (
-                  <div key={symbol} className="flex items-center justify-between py-2 border-b last:border-0">
-                    <span className="font-medium">{symbol}</span>
-                    {result?.weights?.[symbol] !== undefined && (
-                      /* OPT2-001: accent color for result weight */
-                      <span className="text-[var(--color-accent)] font-medium">
-                        {(result.weights[symbol] * 100).toFixed(1)}%
-                      </span>
-                    )}
-                  </div>
-                ))}
+              <div className="space-y-1 animate-stagger">
+                {symbols.map((symbol: string) => {
+                  const weight = result?.weights?.[symbol];
+                  return (
+                    <div
+                      key={symbol}
+                      className="animate-enter flex items-center justify-between py-2.5 px-3 rounded-sm hover:bg-[var(--color-bg-tertiary)] transition-colors duration-150"
+                    >
+                      <span className="mono text-xs tracking-[0.2em] uppercase text-theme">{symbol}</span>
+                      {weight !== undefined && (
+                        <span className="mono text-xs tabular-nums text-[var(--color-accent)] font-semibold">
+                          {(weight * 100).toFixed(1)}%
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
-          </Card>
+          </section>
         </div>
       </div>
 
+      {/* ── Results ───────────────────────────────────────────────────── */}
       {result && (
-        /* OPT2-002: Results section — 150ms */
-        <Card className="p-6 animate-fade-in-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
-          <h2 className="text-lg font-semibold mb-4">Optimization Results</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
-              <p className="text-sm text-[var(--color-text-muted)]">Expected Return</p>
-              {/* OPT2-001: positive color */}
-              <p className="text-xl font-bold text-[var(--color-positive)]">
+        <section
+          className="glass-slab rounded-2xl p-6 sm:p-8 animate-fade-in-up"
+          style={{ animationDelay: '150ms', animationFillMode: 'both' }}
+        >
+          <header className="flex items-start gap-4 mb-6">
+            <div
+              className="p-2.5 rounded-lg shrink-0"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
+            >
+              <Sparkles className="w-5 h-5" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
+            </div>
+            <div className="min-w-0">
+              <p className={kickerClass}>Output</p>
+              <h2 className="text-lg font-bold text-theme mt-1">Optimization Results</h2>
+              <p className="text-sm text-theme-secondary mt-1">
+                Solver-derived weights, expected return, and risk profile
+              </p>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 animate-stagger">
+            <div className="animate-enter glass-slab-floating rounded-xl p-4">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Expected Return</p>
+              <p className="text-xl font-bold tabular-nums mt-1 text-[var(--color-positive)]">
                 {(result.expectedReturn * 100).toFixed(1)}%
               </p>
             </div>
-            <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
-              <p className="text-sm text-[var(--color-text-muted)]">Expected Volatility</p>
-              {/* OPT2-001: warning color */}
-              <p className="text-xl font-bold text-[var(--color-warning)]">
+            <div className="animate-enter glass-slab-floating rounded-xl p-4">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Expected Volatility</p>
+              <p className="text-xl font-bold tabular-nums mt-1 text-[var(--color-warning)]">
                 {(result.expectedVolatility * 100).toFixed(1)}%
               </p>
             </div>
-            <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
-              <p className="text-sm text-[var(--color-text-muted)]">Sharpe Ratio</p>
-              {/* OPT2-001: accent color */}
-              <p className="text-xl font-bold text-[var(--color-accent)]">
+            <div className="animate-enter glass-slab-floating rounded-xl p-4">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Sharpe Ratio</p>
+              <p className="text-xl font-bold tabular-nums mt-1 text-gradient-brand holo-pulse">
                 {result.sharpeRatio.toFixed(2)}
               </p>
             </div>
-            <div className="p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
-              <p className="text-sm text-[var(--color-text-muted)]">Positions</p>
-              <p className="text-xl font-bold text-[var(--color-text)]">
+            <div className="animate-enter glass-slab-floating rounded-xl p-4">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Positions</p>
+              <p className="text-xl font-bold tabular-nums mt-1 text-theme">
                 {Object.keys(result.weights).length}
               </p>
             </div>
           </div>
 
-          <h3 className="font-medium text-[var(--color-text-secondary)] mb-3">Optimal Weights</h3>
-          <div className="space-y-2">
+          <p className={`${kickerClass} mt-2`}>Optimal Weights</p>
+          <div className="space-y-2 animate-stagger">
             {Object.entries(result.weights)
               .sort(([, a], [, b]) => b - a)
               .map(([symbol, weight]) => (
-                /* OPT2-003: weight bar row hover polish */
-                <div key={symbol} className="flex items-center gap-3 hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors duration-150 px-1">
-                  <span className="w-16 font-medium">{symbol}</span>
-                  <div className="flex-1 h-6 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
+                <div
+                  key={symbol}
+                  className="animate-enter flex items-center gap-3 py-1.5 px-2 rounded-sm hover:bg-[var(--color-bg-tertiary)] transition-colors duration-150"
+                >
+                  <span className="w-16 mono text-xs tracking-[0.2em] uppercase text-theme">{symbol}</span>
+                  <div className="flex-1 h-2.5 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full"
-                      /* OPT2-001: gradient via inline style */
                       style={{
                         width: `${weight * 100}%`,
-                        background: 'linear-gradient(to right, var(--color-accent), var(--chart-purple))',
+                        background: 'var(--gradient-sovereign)',
                       }}
                     />
                   </div>
-                  <span className="w-16 text-right text-[var(--color-text-secondary)]">
+                  <span className="w-16 text-right mono text-xs tabular-nums text-theme-secondary">
                     {(weight * 100).toFixed(1)}%
                   </span>
                 </div>
               ))}
           </div>
-        </Card>
+        </section>
       )}
 
-      {/* OPT2-002: Monte Carlo — 200ms */}
+      {/* ── Monte Carlo Chart ─────────────────────────────────────────── */}
       {result && (
-        <div className="animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
+        <div
+          className="animate-fade-in-up"
+          style={{ animationDelay: '200ms', animationFillMode: 'both' }}
+        >
           <MonteCarloChart
             result={result.monteCarlo || {
               // Generate Monte Carlo estimate from optimization result if not provided by API

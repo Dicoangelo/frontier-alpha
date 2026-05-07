@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { WelcomeModal, useOnboarding } from './WelcomeModal';
 import { FeatureTour } from './FeatureTour';
 import { useAuthStore } from '@/stores/authStore';
+import { toast } from '@/components/shared/Toast';
 
 interface OnboardingContextValue {
   showWelcome: boolean;
@@ -78,6 +79,23 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     navigate('/dashboard?demo=true');
   }, [navigate, completeOnboarding]);
 
+  const handleImportDemoSymbols = useCallback((symbols: string[]) => {
+    if (typeof window === 'undefined' || symbols.length === 0) return;
+    try {
+      // Persist as the durable "user wanted these in their portfolio" key
+      window.localStorage.setItem('imported_symbols', JSON.stringify(symbols));
+      // Clear the preview key so the prompt doesn't show again
+      window.localStorage.removeItem('analyze_symbols');
+      const count = symbols.length;
+      toast.success(
+        `Imported ${count} ${count === 1 ? 'symbol' : 'symbols'} to your portfolio`,
+        'Visit the Portfolio page to wire live data and run a real read.',
+      );
+    } catch {
+      // Storage unavailable — fail quietly, banner still dismisses
+    }
+  }, []);
+
   const handleTourComplete = useCallback(() => {
     setShowTour(false);
     completeOnboarding();
@@ -117,6 +135,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         onClose={handleCloseWelcome}
         onStartTour={handleStartTour}
         onTryDemo={handleTryDemo}
+        onImportDemoSymbols={handleImportDemoSymbols}
       />
 
       {/* Feature Tour */}

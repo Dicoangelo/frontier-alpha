@@ -412,10 +412,12 @@ export function Dashboard() {
     });
   }, [quotes]);
 
-  // Show skeleton while loading
+  // Show skeleton while loading. Render inside the SAME PullToRefresh +
+  // pt-6 chrome the loaded view uses, so the only thing that swaps is
+  // skeleton-shimmer -> content within identically-sized boxes.
   if (isLoading) {
     return (
-      <div className="animate-fade-in">
+      <div className="min-h-screen">
         <SkeletonDashboard />
       </div>
     );
@@ -468,9 +470,11 @@ export function Dashboard() {
             </div>
           </div>
 
-          {/* Live status pill — glass morphism */}
+          {/* Live status pill — glass morphism. min-w + tabular-nums + reserved
+              timestamp slot prevents header CLS when first quote arrives and
+              when seconds tick (digit width swap). */}
           <div
-            className="glass-slab rounded-full px-4 py-2 flex items-center gap-2 self-start flex-shrink-0"
+            className="glass-slab rounded-full px-4 py-2 flex items-center gap-2 self-start flex-shrink-0 min-w-[168px] h-9"
           >
             <span
               className={`inline-block w-2 h-2 rounded-full transition-colors duration-300 ${
@@ -479,14 +483,19 @@ export function Dashboard() {
                   : 'bg-[var(--color-text-muted)]'
               }`}
             />
-            <span className={`text-xs font-medium transition-colors duration-300 ${isConnected ? 'text-[var(--color-positive)]' : 'text-[var(--color-text-muted)]'}`}>
+            <span
+              className={`text-xs font-medium transition-colors duration-300 inline-block w-[42px] ${isConnected ? 'text-[var(--color-positive)]' : 'text-[var(--color-text-muted)]'}`}
+            >
               {isConnected ? 'Live' : 'Offline'}
             </span>
-            {lastUpdate && (
-              <span className="text-xs text-[var(--color-text-muted)] border-l border-[var(--color-border-light)] pl-2 ml-0.5">
-                {lastUpdate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-              </span>
-            )}
+            <span
+              className="text-xs text-[var(--color-text-muted)] border-l border-[var(--color-border-light)] pl-2 ml-0.5 tabular-nums inline-block min-w-[64px]"
+              aria-live="off"
+            >
+              {lastUpdate
+                ? lastUpdate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                : ' '}
+            </span>
           </div>
         </div>
 
@@ -499,10 +508,12 @@ export function Dashboard() {
             weight="primary"
             className="lg:col-span-2"
           >
-            <div data-tour="portfolio-overview">
+            <div data-tour="portfolio-overview" className="min-h-[260px]">
               <PortfolioOverview portfolio={portfolio} />
             </div>
-            <div data-tour="equity-curve" className="mt-5">
+            {/* min-h reserves canvas + chrome (h-64 canvas + ~120px chrome)
+                so EquityCurve's ResizeObserver can't reflow neighbors. */}
+            <div data-tour="equity-curve" className="mt-5 min-h-[420px]">
               <EquityCurve portfolioValue={portfolio.totalValue} />
             </div>
           </DashZone>
@@ -515,10 +526,12 @@ export function Dashboard() {
             weight="secondary"
             className="lg:col-span-1"
           >
-            <div data-tour="weight-allocation">
+            {/* WeightAllocation donut SVG — reserve donut box so the SVG
+                can't pop secondary column up when positions stream. */}
+            <div data-tour="weight-allocation" className="min-h-[260px]">
               <WeightAllocation positions={portfolio.positions} totalValue={portfolio.totalValue} />
             </div>
-            <div data-tour="positions" className="mt-5">
+            <div data-tour="positions" className="mt-5 min-h-[320px]">
               <PositionList positions={portfolio.positions} quotes={quotes} />
             </div>
           </DashZone>
@@ -533,14 +546,16 @@ export function Dashboard() {
           collapsible
           className="animate-fade-in-up"
         >
+          {/* Tertiary tiles — match skeleton min-h so async cognitive-insight
+              fetch can't push the page footer when it lands. */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <div data-tour="factors">
+            <div data-tour="factors" className="min-h-[280px]">
               <FactorExposures factors={factors} insight={insight} />
             </div>
-            <div data-tour="risk-metrics">
+            <div data-tour="risk-metrics" className="min-h-[280px]">
               <RiskMetrics metrics={metrics} />
             </div>
-            <div data-tour="cognitive-insight">
+            <div data-tour="cognitive-insight" className="min-h-[280px]">
               <CognitiveInsight symbols={portfolio.positions.map((p) => p.symbol)} factors={factors} />
             </div>
           </div>

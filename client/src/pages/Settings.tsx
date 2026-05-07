@@ -5,7 +5,6 @@ import { useThemeStore } from '@/stores/themeStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubscription } from '@/hooks/useSubscription';
 import { api } from '@/api/client';
-import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Spinner } from '@/components/shared/Spinner';
 import { SkeletonSettingsPage } from '@/components/shared/Skeleton';
@@ -21,6 +20,90 @@ interface UserSettings {
   max_position_pct: number;
   stop_loss_pct: number;
   take_profit_pct: number;
+}
+
+// Canonical input class — matches LoginForm pattern across the family aesthetic.
+const inputClass =
+  'block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm';
+
+const labelClass =
+  'block text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-2';
+
+const kickerClass =
+  'text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)]';
+
+interface SectionShellProps {
+  kicker: string;
+  title: string;
+  description?: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  delay?: number;
+  danger?: boolean;
+}
+
+function SectionShell({ kicker, title, description, icon, children, delay = 0, danger = false }: SectionShellProps) {
+  if (danger) {
+    return (
+      <div
+        className="glass-slab-floating relative overflow-hidden rounded-2xl p-6 sm:p-8 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-negative)] shadow-[0_8px_30px_-10px_rgba(239,68,68,0.35)] animate-fade-in-up"
+        style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
+      >
+        <SectionHeader kicker={kicker} title={title} description={description} icon={icon} danger />
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <section
+      className="glass-slab rounded-2xl p-6 sm:p-8 animate-fade-in-up"
+      style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
+    >
+      <SectionHeader kicker={kicker} title={title} description={description} icon={icon} />
+      {children}
+    </section>
+  );
+}
+
+function SectionHeader({
+  kicker,
+  title,
+  description,
+  icon,
+  danger = false,
+}: {
+  kicker: string;
+  title: string;
+  description?: string;
+  icon: React.ReactNode;
+  danger?: boolean;
+}) {
+  return (
+    <header className="flex items-start gap-4 mb-6">
+      <div
+        className="p-2.5 rounded-lg shrink-0"
+        style={{
+          backgroundColor: danger
+            ? 'color-mix(in srgb, var(--color-negative) 10%, transparent)'
+            : 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
+        }}
+      >
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className={kickerClass}>{kicker}</p>
+        <h2
+          className={`text-lg font-bold mt-1 ${danger ? 'text-[var(--color-negative)]' : 'text-[var(--color-text)]'}`}
+        >
+          {title}
+        </h2>
+        {description && (
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">{description}</p>
+        )}
+      </div>
+    </header>
+  );
 }
 
 export function Settings() {
@@ -87,10 +170,16 @@ export function Settings() {
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header — delay 0ms */}
-      <div className="flex items-center justify-between animate-fade-in-up" style={{ animationDelay: '0ms', animationFillMode: 'both' }}>
+      <div
+        className="flex items-center justify-between animate-fade-in-up"
+        style={{ animationDelay: '0ms', animationFillMode: 'both' }}
+      >
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Settings</h1>
-          <p className="text-[var(--color-text-muted)] mt-1">Account preferences, risk parameters, and integrations</p>
+          <p className={kickerClass}>Account</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)] mt-1">Settings</h1>
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+            Account preferences, risk parameters, and integrations
+          </p>
         </div>
         {hasChanges && (
           <Button onClick={handleSave} disabled={updateMutation.isPending}>
@@ -100,188 +189,191 @@ export function Settings() {
         )}
       </div>
 
-      {/* Appearance card — delay 50ms */}
+      {/* Appearance — delay 50ms */}
       <AppearanceCard />
 
-      {/* Profile card — delay 100ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)' }}>
-            <User className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-          </div>
-          <h2 className="text-lg font-semibold">Profile</h2>
-        </div>
-
-        <div className="space-y-4">
+      {/* Profile — delay 100ms */}
+      <SectionShell
+        kicker="Identity"
+        title="Profile"
+        description="How your account appears across Frontier Alpha"
+        icon={<User className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />}
+        delay={100}
+      >
+        <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Email</label>
+            <label htmlFor="settings-email" className={labelClass}>
+              Email
+            </label>
             <input
+              id="settings-email"
               type="email"
               value={user?.email || ''}
               disabled
-              className="w-full px-3 py-2 min-h-[44px] bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-muted)]"
+              className={`${inputClass} opacity-60 cursor-not-allowed`}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">Display Name</label>
+            <label htmlFor="settings-display-name" className={labelClass}>
+              Display Name
+            </label>
             <input
+              id="settings-display-name"
               type="text"
               value={settings.display_name || ''}
               onChange={(e) => handleChange('display_name', e.target.value)}
               placeholder="Your name"
-              className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-accent)]"
+              className={inputClass}
             />
           </div>
         </div>
-      </Card>
+      </SectionShell>
 
-      {/* Risk preferences card — delay 150ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--color-positive) 8%, transparent)' }}>
-            <Shield className="w-5 h-5" style={{ color: 'var(--color-positive)' }} />
-          </div>
-          <h2 className="text-lg font-semibold">Risk Preferences</h2>
-        </div>
-
-        <div className="space-y-4">
+      {/* Risk preferences — delay 150ms */}
+      <SectionShell
+        kicker="Strategy"
+        title="Risk Preferences"
+        description="Position sizing and protective rails for your portfolio"
+        icon={<Shield className="w-5 h-5" style={{ color: 'var(--color-positive)' }} />}
+        delay={150}
+      >
+        <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">Risk Tolerance</label>
+            <p className={`${labelClass} mb-3`}>Risk Tolerance</p>
             <div className="flex flex-col sm:flex-row gap-3">
-              {(['conservative', 'moderate', 'aggressive'] as const).map((level) => (
-                <button
-                  key={level}
-                  onClick={() => handleChange('risk_tolerance', level)}
-                  className="flex-1 py-3 px-4 min-h-[44px] rounded-lg border-2 capitalize transition hover:shadow-sm transition-all duration-200"
-                  style={
-                    settings.risk_tolerance === level
-                      ? {
-                          borderColor: 'var(--color-accent)',
-                          backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
-                          color: 'var(--color-accent)',
-                        }
-                      : {
-                          borderColor: 'var(--color-border)',
-                        }
-                  }
-                >
-                  {level}
-                </button>
-              ))}
+              {(['conservative', 'moderate', 'aggressive'] as const).map((level) => {
+                const active = settings.risk_tolerance === level;
+                return (
+                  <button
+                    key={level}
+                    onClick={() => handleChange('risk_tolerance', level)}
+                    className={`flex-1 py-3 px-4 min-h-[44px] rounded-lg border-2 capitalize mono text-sm tracking-[0.1em] transition-[border-color,background-color,color] duration-200 animate-press ${
+                      active
+                        ? 'border-[var(--color-accent)] bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                        : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] hover:text-[var(--color-text)]'
+                    }`}
+                    aria-pressed={active}
+                  >
+                    {level}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+              <label htmlFor="settings-max-position" className={labelClass}>
                 Max Position Size
               </label>
               <div className="relative">
                 <input
+                  id="settings-max-position"
                   type="number"
                   min="5"
                   max="50"
                   step="5"
                   value={settings.max_position_pct}
                   onChange={(e) => handleChange('max_position_pct', parseFloat(e.target.value))}
-                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg pr-8 focus:ring-2 focus:ring-[var(--color-accent)]"
+                  className={`${inputClass} pr-9`}
                 />
-                <span className="absolute right-3 top-2 text-[var(--color-text-muted)]">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] mono text-sm">
+                  %
+                </span>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+              <label htmlFor="settings-stop-loss" className={labelClass}>
                 Stop Loss
               </label>
               <div className="relative">
                 <input
+                  id="settings-stop-loss"
                   type="number"
                   min="1"
                   max="50"
                   step="1"
                   value={settings.stop_loss_pct}
                   onChange={(e) => handleChange('stop_loss_pct', parseFloat(e.target.value))}
-                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg pr-8 focus:ring-2 focus:ring-[var(--color-accent)]"
+                  className={`${inputClass} pr-9`}
                 />
-                <span className="absolute right-3 top-2 text-[var(--color-text-muted)]">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] mono text-sm">
+                  %
+                </span>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+              <label htmlFor="settings-take-profit" className={labelClass}>
                 Take Profit
               </label>
               <div className="relative">
                 <input
+                  id="settings-take-profit"
                   type="number"
                   min="5"
                   max="100"
                   step="5"
                   value={settings.take_profit_pct}
                   onChange={(e) => handleChange('take_profit_pct', parseFloat(e.target.value))}
-                  className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg pr-8 focus:ring-2 focus:ring-[var(--color-accent)]"
+                  className={`${inputClass} pr-9`}
                 />
-                <span className="absolute right-3 top-2 text-[var(--color-text-muted)]">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] mono text-sm">
+                  %
+                </span>
               </div>
             </div>
           </div>
         </div>
-      </Card>
+      </SectionShell>
 
-      {/* Notifications card — delay 200ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 8%, transparent)' }}>
-            <Bell className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
-          </div>
-          <h2 className="text-lg font-semibold">Notifications</h2>
-        </div>
-
+      {/* Notifications — delay 200ms */}
+      <SectionShell
+        kicker="Signal"
+        title="Notifications"
+        description="Where alerts land and how often you hear from us"
+        icon={<Bell className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />}
+        delay={200}
+      >
         <div className="space-y-4">
-          {/* Push Notification Settings */}
+          {/* Push notification settings — shared component, untouched */}
           <NotificationSettings />
 
-          {/* Email Alerts */}
-          <label className="flex items-center justify-between pt-4 border-t border-[var(--color-border-light)]">
-            <div>
-              <p className="font-medium text-[var(--color-text-secondary)]">Email Alerts</p>
-              <p className="text-sm text-[var(--color-text-muted)]">Get critical alerts via email</p>
-            </div>
-            <input
-              type="checkbox"
-              checked={settings.email_alerts}
-              onChange={(e) => handleChange('email_alerts', e.target.checked)}
-              className="w-5 h-5 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
-            />
-          </label>
+          {/* Email alerts toggle */}
+          <ToggleRow
+            id="settings-email-alerts"
+            title="Email Alerts"
+            description="Get critical alerts via email"
+            checked={settings.email_alerts}
+            onChange={(value) => handleChange('email_alerts', value)}
+            divider
+          />
         </div>
-      </Card>
+      </SectionShell>
 
-      {/* Subscription card — delay 250ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 8%, transparent)' }}>
-            <CreditCard className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
-          </div>
-          <h2 className="text-lg font-semibold">Subscription</h2>
-        </div>
-
-        <div className="flex items-center justify-between">
+      {/* Subscription — delay 250ms */}
+      <SectionShell
+        kicker="Billing"
+        title="Subscription"
+        description="Plan tier and billing portal"
+        icon={<CreditCard className="w-5 h-5" style={{ color: 'var(--color-info)' }} />}
+        delay={250}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="font-medium text-[var(--color-text-secondary)]">
-              Current Plan: <span className="capitalize text-[var(--color-accent)]">{plan}</span>
+            <p className="text-sm text-[var(--color-text-secondary)]">
+              Current Plan:{' '}
+              <span className="capitalize text-[var(--color-accent)] font-semibold">{plan}</span>
             </p>
-            <p className="text-sm text-[var(--color-text-muted)]">
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">
               Status: <span className="capitalize">{status}</span>
             </p>
           </div>
           <div className="flex gap-3">
             {plan === 'free' ? (
-              <Button onClick={() => window.location.href = '/pricing'}>
-                Upgrade
-              </Button>
+              <Button onClick={() => (window.location.href = '/pricing')}>Upgrade</Button>
             ) : (
               <Button
                 variant="outline"
@@ -289,7 +381,7 @@ export function Settings() {
                 onClick={async () => {
                   setBillingLoading(true);
                   try {
-                    const response = await api.post('/billing/portal') as { data: { url: string } };
+                    const response = (await api.post('/billing/portal')) as { data: { url: string } };
                     if (response.data?.url) {
                       window.location.href = response.data.url;
                     }
@@ -305,42 +397,86 @@ export function Settings() {
             )}
           </div>
         </div>
-      </Card>
+      </SectionShell>
 
-      {/* API Keys card — delay 300ms */}
-      <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)' }}>
-            <Key className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-          </div>
-          <h2 className="text-lg font-semibold">API Keys</h2>
-        </div>
-        <APIKeys />
-      </Card>
-
-      {/* Danger zone card — delay 350ms */}
-      <Card
-        className="p-6 hover:shadow-md transition-shadow animate-fade-in-up"
-        style={{ borderColor: 'color-mix(in srgb, var(--color-negative) 20%, transparent)', animationDelay: '350ms', animationFillMode: 'both' }}
+      {/* API Keys — delay 300ms */}
+      <SectionShell
+        kicker="Integrations"
+        title="API Keys"
+        description="Programmatic access for bots, sync jobs, and external clients"
+        icon={<Key className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />}
+        delay={300}
       >
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--color-negative) 8%, transparent)' }}>
-            <AlertTriangle className="w-5 h-5" style={{ color: 'var(--color-negative)' }} />
-          </div>
-          <h2 className="text-lg font-semibold text-[var(--color-negative)]">Danger Zone</h2>
-        </div>
+        <APIKeys />
+      </SectionShell>
 
-        <div className="flex items-center justify-between">
+      {/* Danger zone — delay 350ms */}
+      <SectionShell
+        kicker="Caution"
+        title="Danger Zone"
+        description="Irreversible or session-ending actions"
+        icon={<AlertTriangle className="w-5 h-5" style={{ color: 'var(--color-negative)' }} />}
+        delay={350}
+        danger
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <p className="font-medium text-[var(--color-text-secondary)]">Sign Out</p>
-            <p className="text-sm text-[var(--color-text-muted)]">Sign out of your account on this device</p>
+            <p className="text-sm font-semibold text-[var(--color-text)]">Sign Out</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">
+              Sign out of your account on this device
+            </p>
           </div>
           <Button variant="danger" onClick={handleLogout}>
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out
           </Button>
         </div>
-      </Card>
+      </SectionShell>
+    </div>
+  );
+}
+
+interface ToggleRowProps {
+  id: string;
+  title: string;
+  description: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  divider?: boolean;
+}
+
+function ToggleRow({ id, title, description, checked, onChange, divider }: ToggleRowProps) {
+  return (
+    <div
+      className={`flex items-center justify-between gap-4 ${
+        divider ? 'pt-4 border-t border-[var(--color-border-light)]' : ''
+      }`}
+    >
+      <div className="min-w-0">
+        <label htmlFor={id} className="text-sm font-semibold text-[var(--color-text)] cursor-pointer">
+          {title}
+        </label>
+        <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{description}</p>
+      </div>
+      <button
+        id={id}
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={title}
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 animate-press focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:ring-offset-2 focus:ring-offset-[var(--color-bg)] ${
+          checked
+            ? 'bg-[image:var(--gradient-sovereign)]'
+            : 'bg-theme-tertiary border border-[var(--color-border)]'
+        }`}
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+            checked ? 'translate-x-6' : 'translate-x-1'
+          }`}
+        />
+      </button>
     </div>
   );
 }
@@ -355,50 +491,45 @@ function AppearanceCard() {
   ];
 
   return (
-    <Card className="p-6 hover:shadow-md transition-shadow animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 8%, transparent)' }}>
-          {resolved === 'dark' ? (
-            <Moon className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
-          ) : (
-            <Sun className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
-          )}
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold">Appearance</h2>
-          <p className="text-sm text-[var(--color-text-muted)]">Currently {resolved}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-3">
+    <SectionShell
+      kicker="Appearance"
+      title="Theme"
+      description={`Currently ${resolved}`}
+      icon={
+        resolved === 'dark' ? (
+          <Moon className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
+        ) : (
+          <Sun className="w-5 h-5" style={{ color: 'var(--color-info)' }} />
+        )
+      }
+      delay={50}
+    >
+      {/* Segmented control — single rounded shell, three segments */}
+      <div className="grid grid-cols-3 gap-2 p-1 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)]">
         {options.map((opt) => {
           const Icon = opt.icon;
           const isActive = theme === opt.value;
           return (
             <button
               key={opt.value}
+              type="button"
               onClick={() => setTheme(opt.value)}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-sm"
-              style={
+              aria-pressed={isActive}
+              title={opt.description}
+              className={`flex flex-col items-center justify-center gap-1.5 py-3 px-3 rounded-md transition-colors duration-200 animate-press ${
                 isActive
-                  ? {
-                      borderColor: 'var(--color-accent)',
-                      backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)',
-                    }
-                  : {
-                      borderColor: 'var(--color-border)',
-                    }
-              }
+                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                  : 'text-theme-secondary hover:text-theme'
+              }`}
             >
-              <Icon className="w-6 h-6" style={{ color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)' }} />
-              <span className="text-sm font-medium" style={{ color: isActive ? 'var(--color-accent)' : 'var(--color-text)' }}>
+              <Icon className="w-5 h-5" />
+              <span className="text-[11px] mono tracking-[0.2em] uppercase font-semibold">
                 {opt.label}
               </span>
-              <span className="text-xs text-[var(--color-text-muted)] text-center">{opt.description}</span>
             </button>
           );
         })}
       </div>
-    </Card>
+    </SectionShell>
   );
 }

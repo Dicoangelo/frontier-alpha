@@ -35,21 +35,52 @@ const routePrefetchMap: Record<string, () => Promise<unknown>> = {
   '/help':     () => import('@/pages/Help'),
 };
 
-const navigation = [
-  { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
-  { name: 'Portfolio', icon: Briefcase, href: '/portfolio' },
-  { name: 'Trade', icon: ShoppingCart, href: '/trade' },
-  { name: 'Optimize', icon: Sparkles, href: '/optimize' },
-  { name: 'Factors', icon: BarChart3, href: '/factors' },
-  { name: 'Earnings', icon: Calendar, href: '/earnings' },
-  { name: 'Alerts', icon: Bell, href: '/alerts' },
-  { name: 'CVRF', icon: Brain, href: '/cvrf' },
-  { name: 'ML', icon: Cpu, href: '/ml' },
-  { name: 'Options', icon: Sigma, href: '/options' },
-  { name: 'Social', icon: Users, href: '/social' },
-  { name: 'Tax', icon: Receipt, href: '/tax' },
-  { name: 'Settings', icon: Settings, href: '/settings' },
-  { name: 'Help', icon: HelpCircle, href: '/help' },
+type NavItem = {
+  name: string;
+  icon: typeof LayoutDashboard;
+  href: string;
+};
+
+type NavSection = {
+  label: string;
+  items: NavItem[];
+};
+
+const navSections: NavSection[] = [
+  {
+    label: 'Overview',
+    items: [
+      { name: 'Dashboard', icon: LayoutDashboard, href: '/' },
+      { name: 'Portfolio', icon: Briefcase, href: '/portfolio' },
+    ],
+  },
+  {
+    label: 'Execution',
+    items: [
+      { name: 'Trade', icon: ShoppingCart, href: '/trade' },
+      { name: 'Optimize', icon: Sparkles, href: '/optimize' },
+      { name: 'Options', icon: Sigma, href: '/options' },
+    ],
+  },
+  {
+    label: 'Intelligence',
+    items: [
+      { name: 'Factors', icon: BarChart3, href: '/factors' },
+      { name: 'CVRF', icon: Brain, href: '/cvrf' },
+      { name: 'ML', icon: Cpu, href: '/ml' },
+      { name: 'Earnings', icon: Calendar, href: '/earnings' },
+      { name: 'Social', icon: Users, href: '/social' },
+    ],
+  },
+  {
+    label: 'Account',
+    items: [
+      { name: 'Alerts', icon: Bell, href: '/alerts' },
+      { name: 'Tax', icon: Receipt, href: '/tax' },
+      { name: 'Settings', icon: Settings, href: '/settings' },
+      { name: 'Help', icon: HelpCircle, href: '/help' },
+    ],
+  },
 ];
 
 interface SidebarProps {
@@ -65,33 +96,42 @@ export function Sidebar({ onNavigate }: SidebarProps) {
 
   return (
     <aside className="fixed left-0 top-16 bottom-0 w-64 glass-slab overflow-y-auto">
-      <nav className="p-4 space-y-1">
-        {navigation.map((item) => (
-          <NavLink
-            key={item.name}
-            to={item.href}
-            end={item.href === '/'}
-            onClick={onNavigate}
-            onPointerEnter={() => handlePrefetch(item.href)}
-            className={({ isActive }: { isActive: boolean }) => `
-              flex items-center gap-3 px-4 py-3 rounded-sm transition-all click-feedback
-              focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset
-              ${isActive
-                ? 'gradient-brand-subtle text-accent font-medium'
-                : 'text-theme-secondary hover:bg-theme-tertiary'
-              }
-            `}
-          >
-            <item.icon className="w-5 h-5" aria-hidden="true" />
-            <span className="text-sm">{item.name}</span>
-          </NavLink>
+      <nav className="p-4 pb-32 space-y-6">
+        {navSections.map((section) => (
+          <div key={section.label} className="space-y-1">
+            <p className="px-4 pb-1 mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
+              {section.label}
+            </p>
+            {section.items.map((item) => (
+              <NavLink
+                key={item.name}
+                to={item.href}
+                end={item.href === '/'}
+                onClick={onNavigate}
+                onPointerEnter={() => handlePrefetch(item.href)}
+                className={({ isActive }: { isActive: boolean }) => `
+                  relative flex items-center gap-3 px-4 py-3 rounded-sm
+                  transition-[background-color,color] duration-200 animate-press
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset
+                  before:content-[''] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-full
+                  ${isActive
+                    ? 'bg-[var(--color-accent-light)] text-[var(--color-text)] font-medium before:bg-[image:var(--gradient-sovereign)]'
+                    : 'text-theme-secondary hover:bg-[var(--color-bg-tertiary)] hover:text-theme before:bg-transparent'
+                  }
+                `}
+              >
+                <item.icon className="w-5 h-5" aria-hidden="true" />
+                <span className="text-sm">{item.name}</span>
+              </NavLink>
+            ))}
+          </div>
         ))}
       </nav>
 
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-theme">
-        <div className="p-3 gradient-brand-subtle rounded-sm">
-          <p className="text-[10px] text-accent font-bold mono tracking-[0.3em] uppercase">DQ Score: 0.88</p>
-          <p className="text-[10px] text-theme-muted mono mt-1">Powered by 80+ factors</p>
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-theme glass-slab">
+        <div className="p-3 rounded-sm bg-[image:var(--gradient-sovereign)] text-white animate-press animate-lift shadow-[0_4px_20px_rgba(123,44,255,0.3)] hover:brightness-110 transition-[filter] duration-200 cursor-default">
+          <p className="text-[10px] font-bold mono tracking-[0.3em] uppercase">DQ Score: 0.88</p>
+          <p className="text-[10px] mono mt-1 opacity-80">Powered by 80+ factors</p>
         </div>
       </div>
     </aside>

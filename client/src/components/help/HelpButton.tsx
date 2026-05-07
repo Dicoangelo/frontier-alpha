@@ -30,12 +30,11 @@ export function HelpButton({
       <button
         onClick={onClick}
         className={`
-          flex items-center gap-2 px-3 py-2
-          text-[var(--color-text-secondary)] hover:text-[var(--color-info)]
-          bg-[var(--color-bg-tertiary)] hover:bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]
-          border border-[var(--color-border)] hover:border-[color-mix(in_srgb,var(--color-info)_20%,transparent)]
-          rounded-lg transition-all duration-150
-          focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] focus:ring-offset-2
+          glass-slab flex items-center gap-2 px-3 py-2 rounded-lg
+          text-theme-secondary hover:text-[var(--color-accent)]
+          hover:border-[color:var(--color-border-hover)]
+          animate-press animate-lift
+          focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/40
           ${className}
         `}
         aria-label="Open help"
@@ -50,14 +49,11 @@ export function HelpButton({
     <button
       onClick={onClick}
       className={`
-        ${sizeClasses[size]}
-        flex items-center justify-center
-        text-[var(--color-text-muted)] hover:text-[var(--color-info)]
-        bg-[var(--color-bg)] hover:bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]
-        border border-[var(--color-border)] hover:border-[var(--color-info)]
-        rounded-full shadow-sm hover:shadow
-        transition-all duration-150
-        focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] focus:ring-offset-2
+        glass-slab ${sizeClasses[size]} flex items-center justify-center rounded-full
+        text-theme-muted hover:text-[var(--color-accent)]
+        hover:border-[color:var(--color-border-hover)]
+        animate-press animate-lift
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/40
         ${className}
       `}
       aria-label="Open help"
@@ -88,20 +84,24 @@ export function FloatingHelpButton({
     <button
       onClick={onClick}
       className={`
-        fixed ${positionClasses[position]} z-40
-        w-12 h-12
+        glass-slab-floating fixed ${positionClasses[position]} z-40
+        w-12 h-12 rounded-full
         flex items-center justify-center
-        bg-[var(--color-accent)]
-        text-white
-        rounded-full shadow-lg hover:shadow-xl
-        transition-all duration-200
-        hover:scale-110 active:scale-95
-        focus:outline-none focus:ring-2 focus:ring-[var(--color-info)] focus:ring-offset-2
+        text-[var(--color-accent)]
+        animate-press animate-lift
+        shadow-[0_10px_40px_-10px_rgba(123,44,255,0.55)]
+        hover:shadow-[0_18px_60px_-12px_rgba(123,44,255,0.75)]
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/50
       `}
       aria-label="Open help (press ? for keyboard shortcut)"
       title="Help (press ?)"
     >
-      <HelpCircle className="w-6 h-6" />
+      <span
+        aria-hidden="true"
+        className="absolute inset-0 rounded-full opacity-30 pointer-events-none"
+        style={{ background: 'var(--gradient-sovereign)', filter: 'blur(14px)' }}
+      />
+      <HelpCircle className="relative w-6 h-6" />
     </button>
   );
 }
@@ -111,9 +111,11 @@ export function FloatingHelpButton({
  */
 export function HelpKeyboardHint() {
   return (
-    <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 bg-[var(--color-bg-secondary)] rounded text-xs text-[var(--color-text-muted)]">
+    <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] mono tracking-[0.2em] uppercase text-theme-muted">
       <span>Press</span>
-      <kbd className="px-1.5 py-0.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded text-[var(--color-text-secondary)] font-mono">?</kbd>
+      <kbd className="glass-slab rounded px-1.5 py-0.5 mono text-[10px] text-theme-secondary border border-theme">
+        ?
+      </kbd>
       <span>for help</span>
     </div>
   );

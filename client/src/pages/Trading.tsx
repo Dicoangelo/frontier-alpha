@@ -15,7 +15,6 @@ import {
   CheckCircle2,
   X,
 } from 'lucide-react';
-import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { Badge } from '@/components/shared/Badge';
 import { TradeExecutor } from '@/components/trading/TradeExecutor';
@@ -136,9 +135,17 @@ export default function Trading() {
     <div className="min-h-screen bg-[var(--color-bg)]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
-          <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-text)]">Trade</h1>
-          <p className="text-[var(--color-text-muted)] mt-1">
+        <div
+          className="mb-8 animate-fade-in-up"
+          style={{ animationFillMode: 'both' }}
+        >
+          <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+            Execution · Trading
+          </p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-theme">
+            <span className="text-gradient-brand">Trade</span>
+          </h1>
+          <p className="text-sm text-theme-secondary mt-1">
             Execute orders and manage your positions
           </p>
         </div>
@@ -150,16 +157,12 @@ export default function Trading() {
         >
           {!brokerConnected ? (
             <div
-              className="mb-6 p-4 rounded-lg flex items-start gap-3 border"
-              style={{
-                backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
-                borderColor: 'color-mix(in srgb, var(--color-warning) 20%, transparent)',
-              }}
+              className="glass-slab-floating relative overflow-hidden mb-6 rounded-xl pl-5 pr-4 py-4 flex items-start gap-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-warning)] shadow-[0_18px_60px_-20px_rgba(245,158,11,0.45)]"
             >
               <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-warning)]" />
               <div className="flex-1">
-                <p className="font-medium text-[var(--color-warning)]">No Broker Connected</p>
-                <p className="text-sm mt-1 text-[var(--color-warning)]" style={{ opacity: 0.8 }}>
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-warning)]">No Broker Connected</p>
+                <p className="text-sm mt-1 text-theme-secondary">
                   Connect your Alpaca account to start trading, or use demo mode to practice.
                 </p>
                 <div className="flex gap-2 mt-3">
@@ -184,21 +187,17 @@ export default function Trading() {
             </div>
           ) : paperTrading ? (
             <div
-              className="mb-6 p-4 rounded-lg flex items-start gap-3 border"
-              style={{
-                backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)',
-                borderColor: 'color-mix(in srgb, var(--color-info) 20%, transparent)',
-              }}
+              className="glass-slab-floating relative overflow-hidden mb-6 rounded-xl pl-5 pr-4 py-4 flex items-start gap-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)]"
             >
-              <Info className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-info)]" />
+              <Info className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent)]" />
               <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium text-[var(--color-info)]">Paper Trading Mode</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)]">Paper Trading Mode</p>
                   <Badge variant="info">
                     {brokerType === 'alpaca' ? 'Alpaca Paper' : 'Demo'}
                   </Badge>
                 </div>
-                <p className="text-sm mt-1 text-[var(--color-info)]" style={{ opacity: 0.8 }}>
+                <p className="text-sm mt-1 text-theme-secondary">
                   All trades are simulated with virtual money. No real funds will be used.
                 </p>
               </div>
@@ -206,25 +205,22 @@ export default function Trading() {
                 size="sm"
                 variant="ghost"
                 onClick={() => setShowConnectionSettings(true)}
+                aria-label="Open broker connection settings"
               >
                 <Settings className="w-4 h-4" />
               </Button>
             </div>
           ) : (
             <div
-              className="mb-6 p-4 rounded-lg flex items-start gap-3 border"
-              style={{
-                backgroundColor: 'color-mix(in srgb, var(--color-positive) 10%, transparent)',
-                borderColor: 'color-mix(in srgb, var(--color-positive) 20%, transparent)',
-              }}
+              className="glass-slab-floating relative overflow-hidden mb-6 rounded-xl pl-5 pr-4 py-4 flex items-start gap-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-warning)] shadow-[0_18px_60px_-20px_rgba(245,158,11,0.45)]"
             >
-              <Shield className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-positive)]" />
+              <Shield className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-warning)]" />
               <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-medium text-[var(--color-positive)]">Live Trading</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-warning)]">Live Trading</p>
                   <Badge variant="success">Alpaca Live</Badge>
                 </div>
-                <p className="text-sm mt-1 text-[var(--color-positive)]" style={{ opacity: 0.8 }}>
+                <p className="text-sm mt-1 text-theme-secondary">
                   You are connected to live trading. Real funds will be used for trades.
                 </p>
               </div>
@@ -232,6 +228,7 @@ export default function Trading() {
                 size="sm"
                 variant="ghost"
                 onClick={() => setShowConnectionSettings(true)}
+                aria-label="Open broker connection settings"
               >
                 <Settings className="w-4 h-4" />
               </Button>
@@ -260,18 +257,24 @@ export default function Trading() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Market Status */}
-            <div
-              className="animate-fade-in-up"
+            <section
+              className="glass-slab rounded-xl p-4 sm:p-6 animate-fade-in-up"
               style={{ animationDelay: '200ms', animationFillMode: 'both' }}
             >
-              <Card className="p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <Clock className="w-5 h-5 text-[var(--color-accent)]" />
-                  <h3 className="font-semibold text-[var(--color-text)]">Market Status</h3>
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="p-2 rounded-lg shrink-0"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
+                >
+                  <Clock className="w-4 h-4 text-[var(--color-accent)]" />
                 </div>
-                <MarketStatusDisplay clock={marketClock} />
-              </Card>
-            </div>
+                <div>
+                  <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Session</p>
+                  <h3 className="text-sm font-bold text-theme">Market Status</h3>
+                </div>
+              </div>
+              <MarketStatusDisplay clock={marketClock} />
+            </section>
 
             {/* Price Chart */}
             {selectedSymbol && (
@@ -287,59 +290,65 @@ export default function Trading() {
             )}
 
             {/* Positions */}
-            <div
-              className="animate-fade-in-up"
+            <section
+              className="glass-slab rounded-xl p-4 sm:p-6 animate-fade-in-up"
               style={{ animationDelay: '250ms', animationFillMode: 'both' }}
             >
-              <Card className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
-                    <h3 className="font-semibold text-[var(--color-text)]">Positions</h3>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => refetchPositions()}
-                    disabled={positionsLoading}
-                    aria-label="Refresh positions"
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="p-2 rounded-lg shrink-0"
+                    style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
                   >
-                    <RefreshCw className={`w-4 h-4 ${positionsLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
-                  </Button>
+                    <BarChart3 className="w-4 h-4 text-[var(--color-accent)]" />
+                  </div>
+                  <div>
+                    <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Holdings</p>
+                    <h3 className="text-sm font-bold text-theme">Positions</h3>
+                  </div>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => refetchPositions()}
+                  disabled={positionsLoading}
+                  aria-label="Refresh positions"
+                >
+                  <RefreshCw className={`w-4 h-4 ${positionsLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+                </Button>
+              </div>
 
-                {positionsLoading ? (
-                  <div className="py-6 text-center text-[var(--color-text-muted)]">
-                    <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin" />
-                    <p className="text-sm">Loading positions...</p>
-                  </div>
-                ) : positions.length === 0 ? (
-                  <div className="py-6 text-center text-[var(--color-text-muted)]">
-                    <Activity className="w-8 h-8 mx-auto mb-2 text-[var(--color-text-muted)]" />
-                    <p>No positions</p>
-                    <p className="text-sm">Place trades to build your portfolio</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {positions.map((position) => (
+              {positionsLoading ? (
+                <div className="py-6 text-center text-theme-muted">
+                  <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin" />
+                  <p className="text-sm">Loading positions...</p>
+                </div>
+              ) : positions.length === 0 ? (
+                <div className="py-6 text-center text-theme-muted">
+                  <Activity className="w-8 h-8 mx-auto mb-2 text-theme-muted" />
+                  <p className="text-sm font-semibold">No positions</p>
+                  <p className="text-xs mt-1">Place trades to build your portfolio</p>
+                </div>
+              ) : (
+                <div className="space-y-2 animate-stagger">
+                  {positions.map((position) => {
+                    const isSelected = selectedSymbol === position.symbol;
+                    const isPositive = position.unrealizedPnL >= 0;
+                    return (
                       <button
                         key={position.symbol}
                         onClick={() => setSelectedSymbol(position.symbol)}
-                        className={`w-full p-3 rounded-lg border transition-all duration-200 text-left hover:shadow-lg active:scale-[0.98] ${
-                          selectedSymbol === position.symbol
-                            ? 'border-[var(--color-info)] animate-pulse-subtle'
-                            : 'border-[var(--color-border-light)] hover:border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'
+                        aria-pressed={isSelected}
+                        className={`glass-slab-floating animate-enter w-full p-3 rounded-xl text-left animate-press transition-[border-color,box-shadow] duration-200 relative overflow-hidden ${
+                          isSelected
+                            ? "before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] shadow-[0_4px_20px_rgba(123,44,255,0.18)]"
+                            : 'hover:border-[var(--color-border-hover)]'
                         }`}
-                        style={
-                          selectedSymbol === position.symbol
-                            ? { backgroundColor: 'color-mix(in srgb, var(--color-info) 10%, transparent)' }
-                            : undefined
-                        }
                       >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-[var(--color-text)]">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="mono uppercase font-bold text-theme">
                                 {position.symbol}
                               </span>
                               {position.side === 'long' ? (
@@ -349,69 +358,71 @@ export default function Trading() {
                               )}
                               <Sparkline symbol={position.symbol} />
                             </div>
-                            <p className="text-xs text-[var(--color-text-muted)]">
-                              {position.qty} shares @ ${position.avgEntryPrice.toFixed(2)}
+                            <p className="mono text-[11px] tabular-nums text-theme-muted mt-0.5">
+                              {position.qty} sh @ ${position.avgEntryPrice.toFixed(2)}
                             </p>
                           </div>
                           <div className="text-right">
-                            <p className="font-medium text-[var(--color-text)]">
+                            <p className="mono tabular-nums font-semibold text-theme">
                               ${position.currentPrice.toFixed(2)}
                             </p>
                             <p
-                              className="text-xs"
-                              style={{
-                                color:
-                                  position.unrealizedPnL >= 0
-                                    ? 'var(--color-positive)'
-                                    : 'var(--color-negative)',
-                              }}
+                              className={`mono text-[11px] tabular-nums mt-0.5 ${
+                                isPositive ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'
+                              }`}
                             >
-                              {position.unrealizedPnL >= 0 ? '+' : ''}
+                              {isPositive ? '+' : ''}
                               ${position.unrealizedPnL.toFixed(2)} ({position.unrealizedPnLPercent.toFixed(2)}%)
                             </p>
                           </div>
                         </div>
                       </button>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
 
             {/* Trading Tips */}
-            <div
-              className="animate-fade-in-up"
+            <section
+              className="glass-slab rounded-xl p-4 sm:p-6 animate-fade-in-up"
               style={{ animationDelay: '300ms', animationFillMode: 'both' }}
             >
-              <Card className="p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <AlertTriangle className="w-5 h-5 text-[var(--color-warning)]" />
-                  <h3 className="font-semibold text-[var(--color-text)]">Trading Tips</h3>
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="p-2 rounded-lg shrink-0"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)' }}
+                >
+                  <AlertTriangle className="w-4 h-4 text-[var(--color-warning)]" />
                 </div>
-                <ul className="space-y-2 text-sm text-[var(--color-text-secondary)]">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[var(--color-info)]" />
-                    Use limit orders for better price control
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[var(--color-info)]" />
-                    Preview orders before submission to check estimated costs
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[var(--color-info)]" />
-                    Check factor exposures before large trades
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[var(--color-info)]" />
-                    Consider earnings dates for volatile stocks
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[var(--color-info)]" />
-                    Review optimization suggestions regularly
-                  </li>
-                </ul>
-              </Card>
-            </div>
+                <div>
+                  <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Discipline</p>
+                  <h3 className="text-sm font-bold text-theme">Trading Tips</h3>
+                </div>
+              </div>
+              <ul className="space-y-2.5 text-sm text-theme-secondary">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[var(--color-info)]" />
+                  Use limit orders for better price control
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[var(--color-info)]" />
+                  Preview orders before submission to check estimated costs
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[var(--color-info)]" />
+                  Check factor exposures before large trades
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[var(--color-info)]" />
+                  Consider earnings dates for volatile stocks
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-[var(--color-info)]" />
+                  Review optimization suggestions regularly
+                </li>
+              </ul>
+            </section>
           </div>
         </div>
 
@@ -551,12 +562,12 @@ function MarketStatusDisplay({ clock }: { clock?: { isOpen: boolean; nextOpen: s
             className={`w-3 h-3 rounded-full flex-shrink-0 ${isOpen ? 'animate-pulse-green' : ''}`}
             style={{ backgroundColor: isOpen ? 'var(--color-positive)' : 'var(--color-negative)' }}
           />
-          <span className="font-medium text-[var(--color-text)]">
+          <span className="mono text-[11px] tracking-[0.2em] uppercase font-semibold text-theme">
             Market {clock.isOpen ? 'Open' : 'Closed'}
           </span>
         </div>
         <span
-          className="text-xs font-medium px-2 py-0.5 rounded-full"
+          className="mono text-[10px] tracking-[0.2em] uppercase px-2 py-0.5 rounded-full"
           style={{
             color: barColor,
             backgroundColor: `color-mix(in srgb, ${barColor} 12%, transparent)`,
@@ -568,12 +579,9 @@ function MarketStatusDisplay({ clock }: { clock?: { isOpen: boolean; nextOpen: s
 
       {/* Progress bar */}
       <div>
-        <div
-          className="w-full h-2 rounded-full overflow-hidden"
-          style={{ backgroundColor: 'var(--color-bg-tertiary)' }}
-        >
+        <div className="w-full h-2 rounded-full overflow-hidden bg-[var(--color-bg-tertiary)]">
           <div
-            className="h-full rounded-full transition-all duration-1000"
+            className="h-full rounded-full transition-[width] duration-1000"
             style={{
               width: `${progressPercent}%`,
               background: `linear-gradient(to right, ${barColor}, color-mix(in srgb, ${barColor} 70%, var(--color-accent-secondary)))`,
@@ -581,25 +589,22 @@ function MarketStatusDisplay({ clock }: { clock?: { isOpen: boolean; nextOpen: s
           />
         </div>
         <div className="flex justify-between mt-1">
-          <span className="text-[10px] text-[var(--color-text-muted)]">
+          <span className="mono text-[10px] tabular-nums text-theme-muted">
             {label === 'Pre-Market' ? '4:00 AM' : label === 'Regular Hours' ? '9:30 AM' : label === 'After Hours' ? '4:00 PM' : '—'}
           </span>
-          <span className="text-[10px] text-[var(--color-text-muted)]">
+          <span className="mono text-[10px] tabular-nums text-theme-muted">
             {label === 'Pre-Market' ? '9:30 AM' : label === 'Regular Hours' ? '4:00 PM' : label === 'After Hours' ? '8:00 PM' : '—'}
           </span>
         </div>
       </div>
 
       {/* Countdown */}
-      <div
-        className="flex items-center justify-between p-2 rounded-lg"
-        style={{ backgroundColor: 'var(--color-bg-tertiary)' }}
-      >
-        <span className="text-xs text-[var(--color-text-muted)]">
+      <div className="flex items-center justify-between p-2.5 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
+        <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">
           {clock.isOpen ? 'Closes in' : 'Opens in'}
         </span>
         <span
-          className="text-sm font-mono font-semibold tabular-nums"
+          className="mono tabular-nums text-sm font-semibold"
           style={{ color: barColor }}
         >
           {countdown}
@@ -608,18 +613,20 @@ function MarketStatusDisplay({ clock }: { clock?: { isOpen: boolean; nextOpen: s
 
       {/* Next event time */}
       {nextEventDate && (
-        <p className="text-xs text-[var(--color-text-secondary)]">
+        <p className="text-xs text-theme-secondary">
           {clock.isOpen ? 'Closes' : 'Opens'}:{' '}
-          {nextEventDate.toLocaleString('en-US', {
-            weekday: 'short',
-            hour: 'numeric',
-            minute: '2-digit',
-            timeZoneName: 'short',
-          })}
+          <span className="mono tabular-nums">
+            {nextEventDate.toLocaleString('en-US', {
+              weekday: 'short',
+              hour: 'numeric',
+              minute: '2-digit',
+              timeZoneName: 'short',
+            })}
+          </span>
         </p>
       )}
 
-      <p className="text-xs text-[var(--color-text-muted)]">
+      <p className="text-xs text-theme-muted">
         Extended hours trading may be available
       </p>
     </div>
@@ -668,31 +675,35 @@ function ConnectionSettingsModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
-      <Card className="w-full max-w-lg p-6 animate-scale-in">
+      <div className="glass-slab rounded-2xl p-6 sm:p-8 w-full max-w-lg animate-scale-in">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-[var(--color-text)]">Broker Connection</h2>
+          <div>
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">Integrations</p>
+            <h2 className="text-lg font-bold text-theme">Broker Connection</h2>
+          </div>
           <button
             onClick={onClose}
-            className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[var(--color-bg-secondary)] rounded transition-colors"
+            className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[var(--color-bg-tertiary)] rounded animate-press transition-colors duration-200"
+            aria-label="Close broker connection settings"
           >
-            <X className="w-5 h-5 text-[var(--color-text-muted)]" />
+            <X className="w-5 h-5 text-theme-muted" />
           </button>
         </div>
 
         {/* Current Status */}
-        <div className="mb-6 p-4 bg-[var(--color-bg-tertiary)] rounded-lg">
+        <div className="mb-6 glass-slab-floating rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             {isConnected ? (
               <Link2 className="w-5 h-5 text-[var(--color-positive)]" />
             ) : (
-              <Unlink className="w-5 h-5 text-[var(--color-text-muted)]" />
+              <Unlink className="w-5 h-5 text-theme-muted" />
             )}
-            <span className="font-medium text-[var(--color-text)]">
+            <span className="mono text-[10px] tracking-[0.3em] uppercase font-semibold text-theme">
               {isConnected ? 'Connected' : 'Not Connected'}
             </span>
           </div>
           {isConnected && (
-            <p className="text-sm text-[var(--color-text-secondary)]">
+            <p className="text-sm text-theme-secondary">
               Broker: <span className="font-medium capitalize">{currentBroker}</span>
               {isPaperTrading && <Badge variant="info" className="ml-2">Paper</Badge>}
             </p>
@@ -701,76 +712,73 @@ function ConnectionSettingsModal({
 
         {/* Alpaca Connection Form */}
         <div className="space-y-4 mb-6">
-          <h3 className="font-medium text-[var(--color-text)]">Connect Alpaca Account</h3>
-          <p className="text-sm text-[var(--color-text-secondary)]">
+          <div>
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Alpaca</p>
+            <h3 className="text-sm font-bold text-theme mt-1">Connect Account</h3>
+          </div>
+          <p className="text-sm text-theme-secondary">
             Get your API keys from{' '}
             <a
               href="https://app.alpaca.markets/paper/dashboard/overview"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[var(--color-info)] hover:underline"
+              className="text-[var(--color-accent)] hover:underline animate-press"
             >
               Alpaca Dashboard
             </a>
           </p>
 
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+            <label htmlFor="alpaca-api-key" className="block text-[10px] mono tracking-[0.3em] uppercase text-theme-muted mb-2">
               API Key
             </label>
             <input
+              id="alpaca-api-key"
               type="text"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="PK..."
-              className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-info)]"
+              className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
+            <label htmlFor="alpaca-api-secret" className="block text-[10px] mono tracking-[0.3em] uppercase text-theme-muted mb-2">
               API Secret
             </label>
             <input
+              id="alpaca-api-secret"
               type="password"
               value={apiSecret}
               onChange={(e) => setApiSecret(e.target.value)}
               placeholder="Your secret key"
-              className="w-full px-3 py-2 min-h-[44px] border border-[var(--color-border)] rounded-lg focus:ring-2 focus:ring-[var(--color-info)]"
+              className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm"
             />
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+          <label className="flex items-center gap-2 cursor-pointer min-h-[44px] animate-press">
             <input
               type="checkbox"
               checked={paperTrading}
               onChange={(e) => setPaperTrading(e.target.checked)}
-              className="w-5 h-5 rounded border-[var(--color-border)] accent-[var(--color-info)]"
+              className="w-5 h-5 rounded border-[var(--color-border)] accent-[var(--color-accent)]"
             />
-            <span className="text-sm text-[var(--color-text-secondary)]">Paper trading (recommended)</span>
+            <span className="text-sm text-theme-secondary">Paper trading (recommended)</span>
           </label>
 
           {!paperTrading && (
-            <div
-              className="p-3 rounded-lg text-sm"
-              style={{
-                backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)',
-                color: 'var(--color-negative)',
-              }}
-            >
-              <strong>Warning:</strong> Live trading uses real money. Only disable paper trading if you understand the risks.
+            <div className="glass-slab-floating relative overflow-hidden rounded-xl p-3 text-sm before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-negative)]">
+              <p className="text-[var(--color-negative)]">
+                <strong>Warning:</strong> Live trading uses real money. Only disable paper trading if you understand the risks.
+              </p>
             </div>
           )}
 
           {connectBroker.isError && (
-            <div
-              className="p-3 rounded-lg text-sm"
-              style={{
-                backgroundColor: 'color-mix(in srgb, var(--color-negative) 10%, transparent)',
-                color: 'var(--color-negative)',
-              }}
-            >
-              {(connectBroker.error as Error)?.message || 'Connection failed. Check your credentials.'}
+            <div className="glass-slab-floating relative overflow-hidden rounded-xl p-3 text-sm before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-negative)]">
+              <p className="text-[var(--color-negative)]">
+                {(connectBroker.error as Error)?.message || 'Connection failed. Check your credentials.'}
+              </p>
             </div>
           )}
 
@@ -785,11 +793,11 @@ function ConnectionSettingsModal({
           </Button>
         </div>
 
-        <hr className="my-6 border-[var(--color-border)]" />
+        <hr className="my-6 border-[var(--color-border-light)]" />
 
         {/* Demo Mode */}
         <div className="text-center">
-          <p className="text-sm text-[var(--color-text-secondary)] mb-3">
+          <p className="text-sm text-theme-secondary mb-3">
             Or try the platform without a broker account
           </p>
           <Button
@@ -800,7 +808,7 @@ function ConnectionSettingsModal({
             Use Demo Mode
           </Button>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

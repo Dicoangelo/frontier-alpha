@@ -37,7 +37,7 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 
 ## Deployment Architecture
 
-**Two-tier production split (v1.2.0, 2026-05-08):** the same codebase runs in two runtime modes. Vercel hosts the SPA + REST surface as serverless functions; Railway hosts a long-running Fastify process for the Polygon WebSocket gateway because Vercel serverless can't keep WS connections alive.
+**Two-tier production split (v1.2.0, 2026-05-08):** the same codebase runs in two runtime modes. Vercel hosts the SPA + REST surface as serverless functions; Railway hosts a long-running Fastify process for the Polygon WebSocket gateway because Vercel serverless can't keep WS connections alive. Vercel cron runs the weekly digest hit at `/api/v1/digest/run` Mondays 13:00 UTC (added v1.2.0, real metrics in v1.2.1).
 
 ### Tier 1 — Vercel (Serverless)
 
@@ -86,7 +86,7 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 
 ## Backend Integrations
 
-**Status as of v1.2.0 (2026-05-08):** 9 of 11 integrations are live in production. Diagnostic endpoint: `GET /api/v1/health/integrations`.
+**Status as of v1.2.2 (2026-05-08):** 10 of 11 integrations are live in production. Diagnostic endpoint: `GET /api/v1/health/integrations`.
 
 | Integration | Status | Provider | Wired by |
 |-------------|--------|----------|----------|
@@ -95,15 +95,18 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 | Polygon WebSocket | ✅ live (Railway) | Polygon.io | env + Railway always-on |
 | Alpha Vantage | ✅ live | Alpha Vantage | env (`ALPHAVANTAGE_API_KEY`) |
 | LLM explainer | ✅ live | DeepSeek primary / OpenAI fallback | `wire-deepseek.sh` |
-| Stripe billing | ✅ live | Stripe (Pro $29 + Enterprise $99) | `create-stripe-products.mjs` + `wire-stripe-webhook.mjs` |
+| Stripe billing | ✅ live | Stripe (Pro $29 + Enterprise $99), `BILLING_ENABLED` kill switch + comp-customer guard | `create-stripe-products.mjs` + `wire-stripe-webhook.mjs` |
+| Connect Alpaca | ✅ live (Pro+) | per-user encrypted creds (AES-256-GCM) | `src/routes/broker-connect.ts` + `BROKER_CRED_ENC_KEY` |
 | Paper trading | ✅ live | Internal SimulatedBroker | Polygon WS + Supabase |
 | VAPID web push | ✅ live | self-generated keys | `wire-vapid.sh` |
-| Email | ✅ live | Resend | env (`RESEND_API_KEY`) |
+| Email | ✅ live | Resend (welcome + subscription-confirmed + alert-fired + weekly-digest) | env (`RESEND_API_KEY`) |
+| Weekly digest cron | ✅ live | Vercel cron, Mondays 13:00 UTC, real portfolio metrics | `vercel.json` crons + `src/routes/digest.ts` + `src/notifications/digest-metrics.ts` |
 | ML sentiment | ✅ live | DeepSeek llm-classification | shared LLM client |
 | Rate limiter | ⚠️ in-memory fallback | Upstash deferred | `src/lib/rateLimiter.ts` |
 
-### New in v1.2.0
+### New in v1.2.0 → v1.2.2
 
+**v1.2.0:**
 - 4 wire-* scripts under `scripts/`: `wire-production-env.sh`, `wire-deepseek.sh`, `wire-vapid.sh`, `wire-stripe-webhook.mjs`
 - `scripts/create-stripe-products.mjs` (idempotent — uses lookup_keys to skip existing products)
 - `/api/v1/health/integrations` diagnostic endpoint
@@ -111,6 +114,15 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 - DeepSeek wired as primary LLM provider for explainer + sentiment classification
 - Subscription gating via `UpgradeGate` enforced on Optimize + CVRF pages
 - Stripe checkout return flow: `BillingSuccess` + `BillingCanceled` pages
+- `BILLING_ENABLED` kill switch — defense-in-depth gate that returns 503 on `/checkout` and degrades the integration health check unless explicitly set to `true`
+- Email wave: welcome (fires on first auth-gated portfolio call, stamps `welcomed_at`), subscription-confirmed (fires from Stripe webhook), alert-fired
+- Connect Alpaca for Pro+: 3 endpoints (`/connect`, `/status`, `/disconnect`), AES-256-GCM at rest in `user_broker_credentials`, `resolveBrokerKindForUser()` resolves user → env → simulated
+
+**v1.2.1:**
+- Real portfolio metrics in weekly digest cron (`src/notifications/digest-metrics.ts`) — 7-day delta, top mover (largest dollar swing), worst mover. Per-symbol fetch failures are skipped, users with unresolvable portfolios are skipped instead of getting zeroed-out emails
+
+**v1.2.2:**
+- Comp-customer guard — `comp_*` sentinel IDs in `stripe_customer_id` / `stripe_subscription_id` are immune to all four billing webhook branches (`checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`). Checkout endpoint returns 409 `COMP_ACCOUNT` for users with comp IDs.
 
 ---
 
@@ -143,12 +155,12 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 | `src/lib/` | Shared utilities | supabase.ts, stripe.ts, logger.ts |
 | `src/types/` | Shared TypeScript types | index.ts |
 
-**Total server source files: 79 .ts files** (76 non-test + 3 in-source test files)
+**Total server source files: 80+ .ts files** (76 non-test + 3 in-source test files + v1.2.x additions)
 
-### Fastify API Endpoints (48 total — verified from `src/index.ts`)
+### Fastify API Endpoints (107 registrations across 26 route modules — verified by `grep -c "fastify.(get|post|put|delete|patch)" src/routes/*.ts`)
 
 **Health & Observability**
-1. `GET  /health` — returns `{ status, timestamp, version }` (reads from `package.json` — currently `1.2.0`)
+1. `GET  /health` — returns `{ status, timestamp, version }` (reads from `package.json` — currently `1.2.2`)
 2. `GET  /api/v1/metrics` — Prometheus metrics (text/plain)
 
 **Portfolio (protected)**
@@ -455,9 +467,9 @@ Commands: `npm run test:unit` (server), `npm run test:all` (server + client), `c
 
 | Metric | Claimed | Verified | Evidence |
 |--------|---------|----------|----------|
-| Version (package.json) | 1.2.0 | 1.2.0 | package.json (v1.2.0 bump 2026-05-08) |
+| Version (package.json) | 1.2.2 | 1.2.2 | package.json (v1.2.2 bump 2026-05-08, comp-customer guard) |
 | Factor count | "80+" | **76** | src/factors/FactorEngine.ts:22–126 |
-| Fastify endpoints | "48+" | **48+** | src/routes/* + src/index.ts |
+| Fastify endpoints | "107" | **107** | `grep -c` on src/routes/*.ts |
 | Vercel API files | — | **10** | api/ glob (post-consolidation) |
 | Client pages | 21 | **21** | client/src/App.tsx (added BillingSuccess + BillingCanceled) |
 | Zustand stores | 6 | **6** | client/src/stores/ glob |
@@ -466,7 +478,7 @@ Commands: `npm run test:unit` (server), `npm run test:all` (server + client), `c
 | Supabase migrations | "10" | **14** | supabase/migrations/ glob (added 3 paper-trading tables) |
 | Server .ts files | — | **79** | src/ glob |
 | Component .tsx files | "68+" | **~95** | client/src/components/ glob |
-| Backend integrations live | 9 of 11 | **9 of 11** | `/api/v1/health/integrations` |
+| Backend integrations live | 10 of 11 | **10 of 11** | `/api/v1/health/integrations` (Connect Alpaca + weekly digest cron added v1.2.0–v1.2.1) |
 | Deployment tiers | 2 | **2** | Vercel (SPA + REST) + Railway (WS + REST) |
 
 ---

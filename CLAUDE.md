@@ -122,15 +122,17 @@ npm run ml:start         # uvicorn on port 8000
 
 ## Current State
 
-- **Version:** 1.1.0 (server `package.json`) — bumped 2026-05-07 for UI family-aesthetic polish
+- **Version:** 1.2.2 (server `package.json`) — bumped 2026-05-08 for comp-customer webhook guard
 - **Phase 1:** Complete — all 4 weeks shipped (Feb–Mar 2026)
 - **UI polish wave:** Complete — 35 files across 5 rounds, PRs #3 + #4, v1.1.0 (2026-05-07). Frontier Alpha's visual language now aligns with `metaventionsai.com`, `careers.metaventionsai.com`, `friendlyface.metaventionsai.com`. See `DESIGN-SYSTEM.md` §12 for the canonical pattern register.
+- **Backend integration wave:** Complete — 10 of 11 integrations live. Stripe billing (live + comp guard), DeepSeek explainer, Resend email (welcome + subscription-confirmed + alert-fired + weekly-digest), VAPID web push, internal SimulatedBroker, per-user Alpaca connect (AES-256-GCM at rest), weekly digest cron with real portfolio metrics. Only Upstash rate-limiter is deferred.
 - **Production URL:** https://frontier-alpha.metaventionsai.com
-- **Deployment:** Vercel (auto-deploy disabled to save build credits — deploy manually)
+- **Deployment:** Two-tier — Vercel (SPA + REST, auto-deploy disabled, deploy manually) + Railway (always-on Fastify + Polygon WebSocket, `frontier-alpha-api`)
 - **Tests:** 54 test files (server + client), 265 tests passing (84 server + 181 client)
-- **API surface:** Fully unified via `src/app.ts::buildApp()` — single source of truth for standalone Fastify and Vercel serverless. 81 unique Fastify route paths across 19 route modules; `api/fastify.ts` catch-all handles them in Vercel. Only 10 Vercel .ts files remain: infrastructure (fastify catch-all, lib/auth, lib/errorHandler, lib/rateLimiter, lib/validation, docs, openapi), runtime-specific (edge/quotes), and platform health checks (api/health, api/v1/health). Zero hand-written Vercel endpoint handlers remain — all business logic lives in `src/routes/`.
-- **Server files:** 79 .ts files
-- **Supabase migrations:** 11
+- **API surface:** Fully unified via `src/app.ts::buildApp()` — single source of truth for standalone Fastify and Vercel serverless. 107 unique Fastify route registrations across 26 route modules; `api/fastify.ts` catch-all handles them in Vercel. Only 10 Vercel .ts files remain: infrastructure (fastify catch-all, lib/auth, lib/errorHandler, lib/rateLimiter, lib/validation, docs, openapi), runtime-specific (edge/quotes), and platform health checks (api/health, api/v1/health). Zero hand-written Vercel endpoint handlers remain — all business logic lives in `src/routes/`.
+- **Server files:** 80+ .ts files
+- **Supabase migrations:** 13 (last applied: `add_frontier_subscriptions` via MCP, 2026-05-08)
+- **Comp accounts:** dicoangelo@metaventionsai.com seeded with sentinel `comp_founder` IDs — write-protected from all four billing webhook branches. See `feedback_comp_customer_guard` pattern in `src/routes/billing.ts`.
 
 ## PRD Status
 

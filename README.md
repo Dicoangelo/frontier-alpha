@@ -16,9 +16,9 @@
 <img src="https://img.shields.io/badge/Tests-265-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Tests" />
 <img src="https://img.shields.io/badge/Lines-62,000+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Lines" />
 <img src="https://img.shields.io/badge/Files-242+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Files" />
-<img src="https://img.shields.io/badge/Endpoints-48-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Endpoints" />
+<img src="https://img.shields.io/badge/Endpoints-107-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Endpoints" />
 <img src="https://img.shields.io/badge/Factors-76-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Factors" />
-<img src="https://img.shields.io/badge/Version-1.2.0-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
+<img src="https://img.shields.io/badge/Version-1.2.2-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
 
 <br/><br/>
 
@@ -200,7 +200,7 @@ Client config:
 
 <br/>
 
-### Backend Integrations (9 of 11 live)
+### Backend Integrations (10 of 11 live)
 
 | Integration | Status | Provider |
 |:------------|:------:|:---------|
@@ -209,10 +209,12 @@ Client config:
 | **Polygon WebSocket** | ✅ Live (Railway-hosted) | Polygon.io |
 | **Alpha Vantage** | ✅ Live | Alpha Vantage |
 | **LLM explainer** | ✅ Live | DeepSeek (preferred) / OpenAI fallback |
-| **Stripe billing** | ✅ Live | Pro $29 + Enterprise $99 |
+| **Stripe billing** | ✅ Live | Pro $29 + Enterprise $99 — `BILLING_ENABLED` kill switch + comp-customer guard |
+| **Connect Alpaca** | ✅ Live (Pro+) | per-user encrypted credentials (AES-256-GCM) |
 | **Paper trading** | ✅ Live | Internal SimulatedBroker (Supabase + Polygon WS) |
 | **VAPID web push** | ✅ Live | self-generated keys |
-| **Email** | ✅ Live | Resend |
+| **Email** | ✅ Live | Resend — welcome + subscription-confirmed + alert-fired + weekly-digest |
+| **Weekly digest cron** | ✅ Live | Vercel cron, Mondays 13:00 UTC, real portfolio metrics |
 | **ML sentiment** | ✅ Live | DeepSeek llm-classification |
 | **Rate limiter** | ⚠️ in-memory fallback | Upstash deferred |
 
@@ -229,7 +231,7 @@ Diagnostic endpoint: `GET /api/v1/health/integrations`
 Every subsystem is a **module** — swap implementations with a config change, zero code changes.
 
 ```
-75+ modules · 81+ API routes · 265 tests · 22 subsystems · 14 migrations · 9/11 integrations live · Two-tier deploy
+75+ modules · 107 API routes (26 modules) · 265 tests · 22 subsystems · 13 migrations · 10/11 integrations live · Two-tier deploy
 ```
 
 | Subsystem | Module | Ships with | Extend |
@@ -550,14 +552,18 @@ The client opens at `http://localhost:5173` and the API at `http://localhost:300
 | Endpoint | Method | Description |
 |:---------|:------:|:------------|
 | `/api/v1/health` | GET | Health check |
-| `/api/v1/health/integrations` | GET | Integration diagnostic (9 of 11 live) |
+| `/api/v1/health/integrations` | GET | Integration diagnostic (10 of 11 live) |
 | `/api/openapi` | GET | OpenAPI specification |
 | `/api/v1/quotes/:symbol` | GET | Real-time quote |
 | `/api/v1/portfolio/factors/:symbols` | GET | Factor exposures |
 | `/api/v1/portfolio/optimize` | POST | Portfolio optimization (Pro gated) |
 | `/api/v1/earnings/forecast/:symbol` | GET | Earnings forecast |
 | `/api/v1/cvrf/beliefs` | GET | Current CVRF beliefs (Pro gated) |
-| `/api/v1/billing/checkout` | POST | Stripe checkout session |
+| `/api/v1/billing/checkout` | POST | Stripe checkout session — 409 for comp accounts |
+| `/api/v1/broker/connect` | POST | Connect Alpaca (Pro+) — AES-256-GCM at rest |
+| `/api/v1/broker/status` | GET | Active broker — `simulated`, `alpaca-env`, or `alpaca-user` |
+| `/api/v1/broker/disconnect` | POST | Revoke Alpaca creds + fall back to SimulatedBroker |
+| `/api/v1/digest/run` | GET | Weekly digest cron (Vercel-scheduled, CRON_SECRET-gated) |
 | `/ws/quotes` | WSS | Polygon real-time quote stream (Railway) |
 
 <details>
@@ -678,6 +684,11 @@ npm run ml:start         # Optional Python ML engine (port 8000)
 - [x] Two-tier Deployment — Vercel SPA + REST + Railway WebSocket ✅ v1.2.0
 - [x] Subscription gating (UpgradeGate on Optimize + CVRF) ✅ v1.2.0
 - [x] Demo workflow — landing → signup → dashboard handoff ✅ v1.2.0
+- [x] Email wave — welcome + subscription-confirmed + alert-fired + weekly-digest ✅ v1.2.0
+- [x] Connect Alpaca for Pro+ users — AES-256-GCM encrypted creds, paper/live toggle ✅ v1.2.0
+- [x] `BILLING_ENABLED` kill switch — default-off gate prevents accidental live charges ✅ v1.2.0
+- [x] Weekly digest cron with real portfolio metrics — Mondays 13:00 UTC ✅ v1.2.1
+- [x] Comp-customer guard — webhook clobber protection for founder/lifetime accounts ✅ v1.2.2
 
 <div align="center">
 

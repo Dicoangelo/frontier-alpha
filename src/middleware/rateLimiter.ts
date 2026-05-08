@@ -1,11 +1,20 @@
 /**
  * FRONTIER ALPHA - Rate Limiting Middleware
  *
- * In-memory rate limiter for Fastify. Supports per-IP and per-API-key limits.
- * No external dependencies (Redis, etc.) -- uses a simple Map with cleanup.
+ * Two-tier rate limiter for Fastify. Uses Supabase as the durable shared
+ * counter when SUPABASE_SERVICE_KEY is present (production / staging), and
+ * falls back to an in-process Map for local dev. The Supabase path is the
+ * default in production because Vercel cold starts blow away in-memory
+ * state, so the in-memory store would silently leak limits across instances.
+ *
+ * Atomicity is enforced server-side via the `rate_limit_check(text,int,int)`
+ * Postgres function — single round-trip UPSERT that increments or rolls the
+ * window depending on `reset_at`. See `supabase/migrations/*frontier_rate_limits.sql`.
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
+import { supabaseAdmin } from '../lib/supabase.js';
+import { logger } from '../observability/logger.js';
 
 // ============================================================================
 // TYPES
@@ -130,14 +139,89 @@ class RateLimiterStore {
 }
 
 // ============================================================================
+// SUPABASE-BACKED STORE
+// ============================================================================
+
+/**
+ * Shared rate-limit store backed by Postgres via the `rate_limit_check` RPC.
+ * One round-trip per request, atomic UPSERT semantics, durable across Vercel
+ * cold starts. Falls back to the in-memory store when the RPC errors so a
+ * Supabase blip cannot wedge the API.
+ */
+class SupabaseRateLimiterStore {
+  private fallback: RateLimiterStore;
+  private windowMs: number;
+
+  constructor(config: Partial<RateLimitConfig> = {}) {
+    const merged = { ...DEFAULT_CONFIG, ...config };
+    this.windowMs = merged.windowMs;
+    // Memory fallback is used only when Supabase RPC fails.
+    this.fallback = new RateLimiterStore(config);
+  }
+
+  async check(
+    identifier: string,
+    limit: number
+  ): Promise<{ allowed: boolean; limit: number; remaining: number; resetAt: number }> {
+    try {
+      const { data, error } = await supabaseAdmin.rpc('rate_limit_check', {
+        p_identifier: identifier,
+        p_limit: limit,
+        p_window_ms: this.windowMs,
+      });
+      if (error || !data || (Array.isArray(data) && data.length === 0)) {
+        throw error ?? new Error('rate_limit_check returned no rows');
+      }
+      const row = (Array.isArray(data) ? data[0] : data) as {
+        allowed: boolean;
+        remaining: number;
+        reset_at: string;
+      };
+      return {
+        allowed: row.allowed,
+        limit,
+        remaining: row.remaining,
+        resetAt: new Date(row.reset_at).getTime(),
+      };
+    } catch (err) {
+      // Don't block the request on a database hiccup — degrade to in-memory.
+      logger.warn(
+        { err, identifier },
+        'rate_limit_check RPC failed, falling back to in-memory store',
+      );
+      return this.fallback.check(identifier, limit);
+    }
+  }
+
+  destroy(): void {
+    this.fallback.destroy();
+  }
+}
+
+interface SharedStore {
+  check(
+    identifier: string,
+    limit: number,
+  ):
+    | { allowed: boolean; limit: number; remaining: number; resetAt: number }
+    | Promise<{ allowed: boolean; limit: number; remaining: number; resetAt: number }>;
+  destroy(): void;
+}
+
+// ============================================================================
 // SINGLETON STORE
 // ============================================================================
 
-let store: RateLimiterStore | null = null;
+let store: SharedStore | null = null;
 
-function getStore(): RateLimiterStore {
+function getStore(): SharedStore {
   if (!store) {
-    store = new RateLimiterStore();
+    // Prefer the Supabase-backed store when the service key is present,
+    // which is the case for both Vercel production and Railway. Local dev
+    // without SUPABASE_SERVICE_KEY transparently falls back to in-memory.
+    store = process.env.SUPABASE_SERVICE_KEY
+      ? new SupabaseRateLimiterStore()
+      : new RateLimiterStore();
   }
   return store;
 }
@@ -148,6 +232,11 @@ export function resetRateLimiterStore(): void {
     store.destroy();
     store = null;
   }
+}
+
+/** Identify which mode is active — used by /health/integrations. */
+export function getRateLimiterMode(): 'supabase' | 'memory' {
+  return process.env.SUPABASE_SERVICE_KEY ? 'supabase' : 'memory';
 }
 
 // ============================================================================
@@ -210,7 +299,7 @@ export async function rateLimiterMiddleware(
     limit = DEFAULT_CONFIG.unauthenticatedLimit;
   }
 
-  const result = limiter.check(identifier, limit);
+  const result = await Promise.resolve(limiter.check(identifier, limit));
 
   // Always set standard rate limit headers (RFC draft-ietf-httpapi-ratelimit-headers)
   const resetAtSeconds = Math.ceil(result.resetAt / 1000);
@@ -238,7 +327,9 @@ export async function rateLimiterMiddleware(
  * Returns a Fastify preHandler-compatible function.
  */
 export function createRateLimiter(config: Partial<RateLimitConfig> = {}) {
-  const customStore = new RateLimiterStore(config);
+  const customStore: SharedStore = process.env.SUPABASE_SERVICE_KEY
+    ? new SupabaseRateLimiterStore(config)
+    : new RateLimiterStore(config);
   const mergedConfig = { ...DEFAULT_CONFIG, ...config };
 
   return async function customRateLimiter(
@@ -262,7 +353,7 @@ export function createRateLimiter(config: Partial<RateLimitConfig> = {}) {
       limit = mergedConfig.unauthenticatedLimit;
     }
 
-    const result = customStore.check(identifier, limit);
+    const result = await Promise.resolve(customStore.check(identifier, limit));
 
     const resetAtSeconds = Math.ceil(result.resetAt / 1000);
     reply.header('RateLimit-Limit', result.limit);

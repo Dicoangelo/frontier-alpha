@@ -365,9 +365,10 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
       };
     }
 
-    // --- Rate limiter (Redis) ----------------------------------------------
-    // Either REDIS_URL (self-hosted) or UPSTASH_REDIS_REST_URL (serverless)
-    // satisfies the rate limiter. In-memory fallback resets per cold start.
+    // --- Rate limiter ------------------------------------------------------
+    // Production: Supabase-backed via the rate_limit_check RPC (durable
+    // across Vercel cold starts). Optional Redis paths still recognized.
+    // The middleware always falls back to in-memory if neither is wired.
     const redisVar = has('REDIS_URL')
       ? 'REDIS_URL'
       : has('UPSTASH_REDIS_REST_URL')
@@ -377,12 +378,20 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
       integrations.rateLimiter = {
         status: 'live',
         via: redisVar,
+        provider: redisVar.startsWith('UPSTASH') ? 'upstash-redis' : 'redis',
+      };
+    } else if (has('SUPABASE_SERVICE_KEY')) {
+      integrations.rateLimiter = {
+        status: 'live',
+        via: 'SUPABASE_SERVICE_KEY',
+        provider: 'supabase-postgres',
+        mode: 'rate_limit_check RPC',
       };
     } else {
       integrations.rateLimiter = {
         status: 'degraded',
         via: null,
-        reason: 'Neither REDIS_URL nor UPSTASH_REDIS_REST_URL set',
+        reason: 'No SUPABASE_SERVICE_KEY, REDIS_URL, or UPSTASH_REDIS_REST_URL set',
         fallback: 'in-memory (resets per cold start)',
       };
     }

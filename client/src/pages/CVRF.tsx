@@ -10,6 +10,7 @@
  */
 
 import { CVRFDashboard } from '@/components/cvrf';
+import { UpgradeGate } from '@/components/shared/UpgradeGate';
 
 export function CVRF() {
   return (
@@ -53,7 +54,13 @@ export function CVRF() {
       {/* ── Dashboard slab ──────────────────────────────────────────────── */}
       <section className="px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20">
         <div className="max-w-7xl mx-auto">
-          <CVRFDashboard />
+          <UpgradeGate
+            requiredPlan="pro"
+            title="Episodic Belief Learning"
+            description="The CVRF dashboard exposes live belief updates, confidence decay, and per-episode factor signal — included in the Pro Plan. Upgrade to watch the system learn."
+          >
+            <CVRFDashboard />
+          </UpgradeGate>
         </div>
       </section>
     </div>

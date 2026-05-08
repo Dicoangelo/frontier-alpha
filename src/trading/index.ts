@@ -1,5 +1,13 @@
 /**
- * Trading Module - Unified exports for broker integrations
+ * Trading Module — Unified exports for broker integrations.
+ *
+ * Broker resolution rules:
+ *   - ALPACA_API_KEY + ALPACA_API_SECRET set  → AlpacaAdapter
+ *   - otherwise (per-user calls)              → SimulatedBroker (Supabase-persisted,
+ *                                                live Polygon quotes)
+ *   - otherwise (singleton, no user context)  → MockBrokerAdapter
+ *
+ * Per-user route handlers should call `getBrokerForUser(userId)`.
  */
 
 export {
@@ -22,6 +30,15 @@ export {
   AlpacaAdapter,
   createBroker,
   getBroker,
+  getBrokerForUser,
+  resolveBrokerKind,
   setBroker,
   resetBroker,
+  type BrokerKind,
 } from './AlpacaAdapter.js';
+
+export {
+  SimulatedBroker,
+  createSimulatedBroker,
+  type SimulatedBrokerConfig,
+} from './SimulatedBroker.js';

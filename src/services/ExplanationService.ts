@@ -156,32 +156,67 @@ function setTradeChainCache(result: TradeReasoningChain): void {
 // ============================================================================
 
 /**
- * Check if an LLM API key is available for enhanced generation.
+ * LLM provider config — auto-selected from env. Both OpenAI and DeepSeek expose the
+ * /v1/chat/completions schema, so the same fetch shape works for either.
+ *
+ * Priority: DEEPSEEK_API_KEY (preferred — cheaper) → OPENAI_API_KEY → null (templates).
  */
-function hasLLMKey(): boolean {
-  return !!(process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY);
+type LLMProvider = {
+  name: 'deepseek' | 'openai';
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+};
+
+function resolveLLMProvider(): LLMProvider | null {
+  if (process.env.DEEPSEEK_API_KEY) {
+    return {
+      name: 'deepseek',
+      apiKey: process.env.DEEPSEEK_API_KEY,
+      baseUrl: 'https://api.deepseek.com/v1',
+      // DeepSeek V3.x ships as `deepseek-chat`. V4 will resolve here once published.
+      // Override via DEEPSEEK_MODEL env var if needed (model-id sovereignty).
+      model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+    };
+  }
+  if (process.env.OPENAI_API_KEY) {
+    return {
+      name: 'openai',
+      apiKey: process.env.OPENAI_API_KEY,
+      baseUrl: 'https://api.openai.com/v1',
+      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+    };
+  }
+  return null;
 }
 
 /**
- * Generate an explanation via OpenAI (if key present).
+ * Check if an LLM API key is available for enhanced generation.
+ */
+function hasLLMKey(): boolean {
+  return resolveLLMProvider() !== null;
+}
+
+/**
+ * Generate an explanation via the configured LLM (DeepSeek or OpenAI).
  * Returns null if unavailable or on error, allowing fallback.
  */
 async function generateWithLLM(
-  type: ExplanationType,
+  _type: ExplanationType,
   prompt: string,
 ): Promise<{ text: string; confidence: number } | null> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return null;
+  const provider = resolveLLMProvider();
+  if (!provider) return null;
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(`${provider.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${provider.apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: provider.model,
         messages: [
           {
             role: 'system',
@@ -199,7 +234,7 @@ async function generateWithLLM(
     });
 
     if (!response.ok) {
-      logger.warn({ status: response.status }, 'OpenAI API returned error, falling back to templates');
+      logger.warn({ status: response.status, provider: provider.name }, 'LLM API returned error, falling back to templates');
       return null;
     }
 

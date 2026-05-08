@@ -86,7 +86,7 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 
 ## Backend Integrations
 
-**Status as of v1.2.3 (2026-05-08):** 12 of 14 integrations are live in production. Diagnostic endpoint: `GET /api/v1/health/integrations` — surfaces all 14 entries including Connect Alpaca crypto probe, weekly digest cron auth, and comp-customer guard. Two remain degraded: Vercel WS (by design — Railway covers that tier) and Upstash rate-limiter (deferred).
+**Status as of v1.2.4 (2026-05-08):** 12 of 14 integrations are live in production. Diagnostic endpoint: `GET /api/v1/health/integrations` — surfaces all 14 entries including Connect Alpaca crypto probe, weekly digest cron auth, and comp-customer guard. Two remain degraded: Vercel WS (by design — Railway covers that tier) and Upstash rate-limiter (deferred). v1.2.4 also restored WebSocket connectivity and Stripe checkout after a trailing-newline regression in seven `VITE_*` Vercel env vars.
 
 | Integration | Status | Provider | Wired by |
 |-------------|--------|----------|----------|
@@ -104,7 +104,7 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 | ML sentiment | ✅ live | DeepSeek llm-classification | shared LLM client |
 | Rate limiter | ⚠️ in-memory fallback | Upstash deferred | `src/lib/rateLimiter.ts` |
 
-### New in v1.2.0 → v1.2.2
+### New in v1.2.0 → v1.2.4
 
 **v1.2.0:**
 - 4 wire-* scripts under `scripts/`: `wire-production-env.sh`, `wire-deepseek.sh`, `wire-vapid.sh`, `wire-stripe-webhook.mjs`
@@ -123,6 +123,12 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 
 **v1.2.2:**
 - Comp-customer guard — `comp_*` sentinel IDs in `stripe_customer_id` / `stripe_subscription_id` are immune to all four billing webhook branches (`checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`). Checkout endpoint returns 409 `COMP_ACCOUNT` for users with comp IDs.
+
+**v1.2.3:**
+- Health endpoint surfaces three new entries: `connectAlpaca` (round-trip probe of `BROKER_CRED_ENC_KEY` via `isCryptoReady()`), `weeklyDigestCron` (`CRON_SECRET` presence), `compGuard` (informational, code-level). Email entry now `.trim()`s the provider name before echo (was rendering `"resend\n"`).
+
+**v1.2.4:**
+- Trailing-newline regression in seven `VITE_*` Vercel envs caused two user-facing failures: WebSocket fell to polling and showed `Offline · Data Stale`, and Stripe checkout silently rejected price IDs with embedded newlines. Reset all envs cleanly via `printf` and added `.trim()` defense in `client/src/api/websocket.ts::getWebSocketUrl()`. Also adds `/terms` and `/privacy` static routes linked from Login page footer (target=_blank) and Landing page footer.
 
 ---
 
@@ -467,7 +473,7 @@ Commands: `npm run test:unit` (server), `npm run test:all` (server + client), `c
 
 | Metric | Claimed | Verified | Evidence |
 |--------|---------|----------|----------|
-| Version (package.json) | 1.2.2 | 1.2.2 | package.json (v1.2.2 bump 2026-05-08, comp-customer guard) |
+| Version (package.json) | 1.2.4 | 1.2.4 | package.json (v1.2.4 bump 2026-05-08, VITE env-newline fix + Terms/Privacy) |
 | Factor count | "80+" | **76** | src/factors/FactorEngine.ts:22–126 |
 | Fastify endpoints | "107" | **107** | `grep -c` on src/routes/*.ts |
 | Vercel API files | — | **10** | api/ glob (post-consolidation) |

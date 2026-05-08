@@ -1,5 +1,5 @@
 # ARCHITECTURE.md — Verified Ground Truth
-*Generated: 2026-03-25 | Last UI sweep: 2026-05-07 | Scanner: arch-scanner | Source: direct file inspection*
+*Generated: 2026-03-25 | Last UI sweep: 2026-05-07 | Last deploy: 2026-05-08 | Scanner: arch-scanner | Source: direct file inspection*
 
 ## Tech Stack (Verified)
 
@@ -29,9 +29,88 @@
 | Testing (server) | Vitest | ^1.2.2 | package.json devDeps |
 | Testing (client) | Vitest | ^2.0.0 | client/package.json devDeps |
 | Mocking | MSW | ^2.12.9 | package.json devDeps |
-| Deployment | Vercel, Docker, Railway | — | CLAUDE.md |
+| Deployment | Vercel (SPA + REST) + Railway (WebSocket + REST), Docker | — | v1.2.0 two-tier |
 
 Node.js runtime: v20 (server/production), v25 (local dev).
+
+---
+
+## Deployment Architecture
+
+**Two-tier production split (v1.2.0, 2026-05-08):** the same codebase runs in two runtime modes. Vercel hosts the SPA + REST surface as serverless functions; Railway hosts a long-running Fastify process for the Polygon WebSocket gateway because Vercel serverless can't keep WS connections alive.
+
+### Tier 1 — Vercel (Serverless)
+
+| Field | Value |
+|-------|-------|
+| Domain | `frontier-alpha.metaventionsai.com` (apex) |
+| Runtime | Vercel serverless (Node 20) |
+| Entry | `api/fastify.ts` catch-all → `src/app.ts::buildApp()` |
+| Hosts | React 19 SPA (static) + REST API (serverless) |
+| Client config | `VITE_API_URL=''` (same-origin) |
+
+### Tier 2 — Railway (Always-on)
+
+| Field | Value |
+|-------|-------|
+| Default URL | `frontier-alpha-api-production.up.railway.app` |
+| Custom domain | `api.frontier-alpha.metaventionsai.com` (TLS provisioning) |
+| Runtime | Railway always-on Node 20 container |
+| Entry | `src/index.ts` → standalone Fastify with `@fastify/websocket` |
+| Hosts | Polygon WebSocket gateway + full REST API |
+| Client config | `VITE_WS_URL=wss://frontier-alpha-api-production.up.railway.app/ws/quotes` |
+
+### Why two tiers
+
+- Vercel serverless functions cannot host long-lived WebSocket connections (15-minute hard ceiling, no persistent process).
+- Polygon's real-time stream requires a single always-on subscriber that fans out to clients.
+- Splitting the runtime keeps the SPA on Vercel's CDN edge while the WS gateway lives on Railway.
+- Both surfaces import the same `src/app.ts::buildApp()` — zero code duplication, only deployment config differs.
+
+### Deployment-related files
+
+| File | Purpose |
+|------|---------|
+| `vercel.json` | Vercel build + route config |
+| `railway.toml` | Railway service config |
+| `api/fastify.ts` | Vercel serverless catch-all (delegates to buildApp) |
+| `src/app.ts` | `buildApp()` — single source of truth |
+| `src/index.ts` | Standalone Fastify entry (Railway + Docker + local) |
+| `scripts/wire-production-env.sh` | Idempotent env wiring for both tiers |
+| `scripts/wire-deepseek.sh` | DeepSeek API key + model wiring |
+| `scripts/wire-vapid.sh` | VAPID key generation + push config |
+| `scripts/wire-stripe-webhook.mjs` | Stripe webhook endpoint registration |
+| `scripts/create-stripe-products.mjs` | Idempotent Stripe products via lookup_keys |
+
+---
+
+## Backend Integrations
+
+**Status as of v1.2.0 (2026-05-08):** 9 of 11 integrations are live in production. Diagnostic endpoint: `GET /api/v1/health/integrations`.
+
+| Integration | Status | Provider | Wired by |
+|-------------|--------|----------|----------|
+| Supabase auth + RLS | ✅ live | service-role JWT | env (`SUPABASE_*`) |
+| Polygon REST | ✅ live | Polygon.io | env (`POLYGON_API_KEY`) |
+| Polygon WebSocket | ✅ live (Railway) | Polygon.io | env + Railway always-on |
+| Alpha Vantage | ✅ live | Alpha Vantage | env (`ALPHAVANTAGE_API_KEY`) |
+| LLM explainer | ✅ live | DeepSeek primary / OpenAI fallback | `wire-deepseek.sh` |
+| Stripe billing | ✅ live | Stripe (Pro $29 + Enterprise $99) | `create-stripe-products.mjs` + `wire-stripe-webhook.mjs` |
+| Paper trading | ✅ live | Internal SimulatedBroker | Polygon WS + Supabase |
+| VAPID web push | ✅ live | self-generated keys | `wire-vapid.sh` |
+| Email | ✅ live | Resend | env (`RESEND_API_KEY`) |
+| ML sentiment | ✅ live | DeepSeek llm-classification | shared LLM client |
+| Rate limiter | ⚠️ in-memory fallback | Upstash deferred | `src/lib/rateLimiter.ts` |
+
+### New in v1.2.0
+
+- 4 wire-* scripts under `scripts/`: `wire-production-env.sh`, `wire-deepseek.sh`, `wire-vapid.sh`, `wire-stripe-webhook.mjs`
+- `scripts/create-stripe-products.mjs` (idempotent — uses lookup_keys to skip existing products)
+- `/api/v1/health/integrations` diagnostic endpoint
+- 3 Supabase tables added for paper trading: `paper_accounts`, `paper_orders`, `paper_positions` (RLS via `auth.uid()`)
+- DeepSeek wired as primary LLM provider for explainer + sentiment classification
+- Subscription gating via `UpgradeGate` enforced on Optimize + CVRF pages
+- Stripe checkout return flow: `BillingSuccess` + `BillingCanceled` pages
 
 ---
 
@@ -69,7 +148,7 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 ### Fastify API Endpoints (48 total — verified from `src/index.ts`)
 
 **Health & Observability**
-1. `GET  /health` — returns `{ status, timestamp, version: "1.0.3-debug" }` *(version mismatch — see tech debt)*
+1. `GET  /health` — returns `{ status, timestamp, version }` (reads from `package.json` — currently `1.2.0`)
 2. `GET  /api/v1/metrics` — Prometheus metrics (text/plain)
 
 **Portfolio (protected)**
@@ -194,7 +273,7 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 
 ## Client Architecture
 
-### Pages (19 — verified from `client/src/App.tsx`)
+### Pages (21 — verified from `client/src/App.tsx`)
 
 | Route | Component | Auth | Layout |
 |-------|-----------|------|--------|
@@ -204,21 +283,23 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 | `/portfolio` | Portfolio | Protected | Layout |
 | `/factors` | Factors | Protected | Layout |
 | `/earnings` | Earnings | Protected | Layout |
-| `/optimize` | Optimize | Protected | Layout |
+| `/optimize` | Optimize | Protected (Pro gated) | Layout |
 | `/alerts` | Alerts | Protected | Layout |
-| `/trade` | Trading | Protected | Layout |
+| `/trade` | Trading | Protected (paper trading) | Layout |
 | `/settings` | Settings | Protected | Layout |
 | `/help` | Help | Protected | Layout |
-| `/cvrf` | CVRF | Protected | None (full-screen) |
+| `/cvrf` | CVRF | Protected (Pro gated) | None (full-screen) |
 | `/ml` | ML | Protected | Layout |
 | `/options` | Options | Protected | Layout |
 | `/social` | Social | Protected | Layout |
 | `/tax` | Tax | Protected | Layout |
 | `/backtest` | Backtest | Protected | Layout |
 | `/pricing` | Pricing | Public | None |
+| `/billing/success` | BillingSuccess | Protected (post-checkout) | None |
+| `/billing/canceled` | BillingCanceled | Protected (post-checkout) | None |
 | `/shared/:token` | SharedPortfolio | Public | None |
 
-All heavy pages are lazy-loaded via `React.lazy()`.
+All heavy pages are lazy-loaded via `React.lazy()`. Pro gating is enforced via `<UpgradeGate>` wrapper on Optimize and CVRF; the Trading page now displays `PAPER TRADING · Frontier Alpha Engine` (internal SimulatedBroker, not Alpaca).
 
 ### Visual Design System (verified 2026-05-07 across 35 files)
 
@@ -374,18 +455,19 @@ Commands: `npm run test:unit` (server), `npm run test:all` (server + client), `c
 
 | Metric | Claimed | Verified | Evidence |
 |--------|---------|----------|----------|
-| Version (package.json) | 1.0.4 | 1.0.4 | package.json |
-| Version (runtime `/health`) | 1.0.4 | **"1.0.3-debug"** | src/index.ts:219, :2694 |
+| Version (package.json) | 1.2.0 | 1.2.0 | package.json (v1.2.0 bump 2026-05-08) |
 | Factor count | "80+" | **76** | src/factors/FactorEngine.ts:22–126 |
-| Fastify endpoints | "29+" | **48** | src/index.ts route registrations |
-| Vercel API files | — | **69** | api/ glob |
-| Client pages | 19 | **19** | client/src/App.tsx |
-| Zustand stores | 5 | **6** | client/src/stores/ glob |
+| Fastify endpoints | "48+" | **48+** | src/routes/* + src/index.ts |
+| Vercel API files | — | **10** | api/ glob (post-consolidation) |
+| Client pages | 21 | **21** | client/src/App.tsx (added BillingSuccess + BillingCanceled) |
+| Zustand stores | 6 | **6** | client/src/stores/ glob |
 | API modules | 7 | **6** | client/src/api/ glob |
 | Test files | — | **54** | tests/ + src/ + client/ glob |
-| Supabase migrations | 10 | **11** | supabase/migrations/ glob |
+| Supabase migrations | "10" | **14** | supabase/migrations/ glob (added 3 paper-trading tables) |
 | Server .ts files | — | **79** | src/ glob |
 | Component .tsx files | "68+" | **~95** | client/src/components/ glob |
+| Backend integrations live | 9 of 11 | **9 of 11** | `/api/v1/health/integrations` |
+| Deployment tiers | 2 | **2** | Vercel (SPA + REST) + Railway (WS + REST) |
 
 ---
 
@@ -467,47 +549,33 @@ Commands: `npm run test:unit` (server), `npm run test:all` (server + client), `c
 
 ### Critical
 
-**1. Version string mismatch**
-`package.json` reports `1.0.4` but `/health` endpoint (`src/index.ts:219`) and startup log (`src/index.ts:2694`) both return `"1.0.3-debug"`. The running server version string is stale. Fix: update both hardcoded strings to read from `package.json` at startup.
+_None currently tracked._
 
-### Structural
+### Resolved (v1.2.0 — 2026-05-08)
 
-**2. Dead code — backup file**
-`src/index.ts.backup` exists alongside `src/index.ts`. No evidence this is intentional. Per dead code policy, archive to `.graveyard/` with a manifest entry before deleting.
+- ~~**Unsynchronized dual API surface**~~ — Fixed: `src/app.ts::buildApp()` is single source of truth. Vercel serverless catch-all at `api/fastify.ts` delegates to it. Only 10 Vercel `.ts` files remain (infrastructure + runtime-specific edge handlers). All business logic lives in `src/routes/*.ts`.
+- ~~**Polygon WebSocket on Vercel**~~ — Fixed: WebSocket gateway moved to Railway always-on Node container at `frontier-alpha-api-production.up.railway.app`. Vercel serverless can't host long-lived WS. Custom domain `api.frontier-alpha.metaventionsai.com` provisioning TLS.
+- ~~**Stripe billing not wired**~~ — Fixed: Pro $29 + Enterprise $99 live, `create-stripe-products.mjs` (idempotent via lookup_keys) + `wire-stripe-webhook.mjs` shipped, BillingSuccess + BillingCanceled return-flow pages added.
+- ~~**LLM explainer locked to OpenAI**~~ — Fixed: DeepSeek wired as primary via `wire-deepseek.sh`, OpenAI demoted to fallback. Same client used for ML sentiment classification.
+- ~~**No paper trading**~~ — Fixed: internal SimulatedBroker on Polygon WS + 3 new Supabase tables (`paper_accounts`, `paper_orders`, `paper_positions`) with RLS via `auth.uid()`. Trading page now shows `PAPER TRADING · Frontier Alpha Engine`.
+- ~~**No subscription gating**~~ — Fixed: `<UpgradeGate>` enforced on Optimize + CVRF pages.
 
-**3. Duplicate broker layer**
-`src/broker/AlpacaAdapter.ts` and `src/trading/AlpacaAdapter.ts` both exist with identical headers. Same for `BrokerAdapter.ts`. The live import path in `src/index.ts` uses `src/trading/`. The `src/broker/` directory appears to be a legacy parallel layer with no clear ownership boundary. Needs triage.
+### Resolved (v1.1.0 — 2026-04-04)
 
-**4. Duplicate share endpoint paths**
-Two overlapping share route pairs registered in Fastify:
-- `POST /api/v1/portfolios/share` + `GET /api/v1/portfolios/shared/:token`
-- `POST /api/v1/portfolio/share` + `GET /api/v1/portfolio/shared/:token`
-
-Different paths (`portfolios` vs `portfolio`), different implementations. Unclear which is canonical; one may be dead.
-
-**5. Unsynchronized dual API surface**
-Fastify server (`src/`) and Vercel serverless (`api/`) implement overlapping endpoint coverage with no sync mechanism. A feature added to one surface may not exist in the other. The Vercel layer has significantly more CVRF and trading endpoints than the Fastify layer. This creates an invisible maintenance split: Railway/Docker deployments use Fastify, Vercel production uses the serverless layer.
-
-### Documentation Drift
-
-**6. Stale counts in CLAUDE.md and README**
-
-| Field | Documented | Actual |
-|-------|-----------|--------|
-| Factors | "80+" | 76 |
-| Zustand stores | 5 | 6 |
-| API modules | 7 | 6 |
-| Fastify endpoints | "29+" | 48 |
-| Supabase migrations | 10 | 11 |
+- ~~**Version string mismatch**~~ — Fixed: `/health` reads from `package.json` (`d763465`).
+- ~~**Dead code — backup file**~~ — Fixed: `src/index.ts.backup` removed (`a0e996b`).
+- ~~**Duplicate broker layer**~~ — Fixed: `src/broker/` archived to `.graveyard/` (`a0e996b`).
+- ~~**Duplicate share endpoint paths**~~ — Fixed: removed `/portfolios/share` (plural), kept `/portfolio/share` (`84f4766`).
+- ~~**Stale counts in CLAUDE.md and README**~~ — Fixed: counts updated to 76 factors, 265 tests, 48+ endpoints, 6 stores, 11+ migrations.
 
 ### Low Priority
 
-**7. Python ML engine not integrated**
-`ml/main.py` (uvicorn port 8000) is marked work-in-progress. Not called by any server code path. Optional enhancement only.
+**Python ML engine not integrated** — `ml/main.py` (uvicorn port 8000) is marked work-in-progress. Not called by any server code path. Optional enhancement only.
 
-**8. Vercel auto-deploy disabled**
-Disabled at commit `acf6987` to conserve build credits. Manual deploy required. Easy to forget; document in runbook.
+**Vercel auto-deploy disabled** — Disabled at commit `acf6987` to conserve build credits. Manual deploy required. Easy to forget; document in runbook.
+
+**Rate limiter in-memory only** — Upstash deferred. Current implementation in `src/lib/rateLimiter.ts` uses in-memory Map fallback; not durable across serverless cold starts.
 
 ---
 
-*All counts and claims in this document are verified by direct file inspection (Read, Grep, Glob) of the codebase at HEAD on 2026-03-25. No figures are taken from documentation alone.*
+*All counts and claims in this document are verified by direct file inspection (Read, Grep, Glob) of the codebase at HEAD on 2026-03-25. v1.2.0 deployment + integration sections verified against operational state on 2026-05-08. No figures are taken from documentation alone.*

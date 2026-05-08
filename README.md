@@ -338,7 +338,34 @@ ML_RETRAIN_INTERVAL=30
 | **Active route rail** | Sidebar + MobileNav use sovereign-gradient before-pseudo for active state (replaces color swap) |
 | **CTA primary** | `bg-[image:var(--gradient-sovereign)]` + sovereign-bar 3px top rail on every modal and page header |
 
-> **Screenshots:** Refresh pending — current screenshots in `screenshots/` predate the polish wave.
+> **Screenshots:** Captured 2026-05-08 against the v1.2.2 production deploy — show the v1.1.0 family aesthetic in flight (sovereign gradient, glass-slab surfaces, halo title gradient, mono kicker register).
+
+<div align="center">
+
+<table>
+<tr>
+<td width="50%" align="center">
+<img src="screenshots/v122-01-landing-hero.png" width="100%" alt="Landing hero — desktop"/>
+<br/><sub><b>Landing — desktop hero</b><br/>Sovereign gradient title · Live factor radar</sub>
+</td>
+<td width="50%" align="center">
+<img src="screenshots/v122-03-pricing.png" width="100%" alt="Pricing — desktop"/>
+<br/><sub><b>Pricing — Free / Pro / Enterprise</b><br/>Stripe live billing wired</sub>
+</td>
+</tr>
+<tr>
+<td width="50%" align="center">
+<img src="screenshots/v122-04-landing-mobile.png" width="60%" alt="Landing — mobile"/>
+<br/><sub><b>Landing — mobile</b><br/>Family-aligned with metaventionsai.com</sub>
+</td>
+<td width="50%" align="center">
+<img src="screenshots/v122-05-pricing-mobile.png" width="60%" alt="Pricing — mobile"/>
+<br/><sub><b>Pricing — mobile</b><br/>Sovereign-bar 3px top rail on every modal/page</sub>
+</td>
+</tr>
+</table>
+
+</div>
 
 <br/>
 

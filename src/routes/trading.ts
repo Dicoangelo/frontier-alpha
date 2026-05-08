@@ -21,6 +21,7 @@
 import type { FastifyInstance } from 'fastify';
 import { authMiddleware } from '../middleware/auth.js';
 import { logger } from '../observability/logger.js';
+import { getBrokerForUser } from '../trading/index.js';
 
 interface RouteContext {
   server: unknown;
@@ -110,8 +111,10 @@ function getDemoMarketClock() {
   };
 }
 
-// In-memory demo orders (ephemeral)
-interface DemoOrder {
+// Wire-format order shape used when proxying Alpaca responses. The simulated
+// path no longer touches any in-memory map — orders persist via SimulatedBroker
+// to the paper_orders table.
+interface MappedAlpacaOrder {
   id: string;
   symbol: string;
   qty: number;
@@ -130,9 +133,8 @@ interface DemoOrder {
   canceledAt?: string;
   extendedHours?: boolean;
 }
-const demoOrders = new Map<string, DemoOrder>();
 
-function mapAlpacaOrder(data: Record<string, unknown>): DemoOrder {
+function mapAlpacaOrder(data: Record<string, unknown>): MappedAlpacaOrder {
   const d = data as Record<string, string | null | undefined>;
   return {
     id: d.id as string,
@@ -166,17 +168,60 @@ export async function tradingRoutes(fastify: FastifyInstance, _opts: RouteContex
   fastify.get(
     '/api/v1/trading/account',
     { preHandler: authMiddleware },
-    async (_request, reply) => {
+    async (request, reply) => {
       const { alpacaKey, alpacaSecret, isPaper, configured, baseUrl } = brokerConfig();
+
+      // Simulated broker path — no Alpaca configured.
       if (!configured) {
-        return reply.status(503).send({
-          success: false,
-          error: {
-            code: 'BROKER_UNAVAILABLE',
-            message: 'Broker not configured. Set ALPACA_API_KEY and ALPACA_API_SECRET.',
-          },
-        });
+        const userId = request.user?.id;
+        if (!userId) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+          });
+        }
+        try {
+          const broker = getBrokerForUser(userId);
+          const a = await broker.getAccount();
+          reply.header('X-Data-Source', 'simulated');
+          return {
+            success: true,
+            data: {
+              accountId: a.id,
+              accountNumber: a.id,
+              status: a.status,
+              currency: a.currency,
+              buyingPower: a.buyingPower,
+              cash: a.cash,
+              portfolioValue: a.portfolioValue,
+              equity: a.equity,
+              lastEquity: a.lastEquity,
+              longMarketValue: a.longMarketValue,
+              shortMarketValue: a.shortMarketValue,
+              initialMargin: a.initialMargin,
+              maintenanceMargin: a.maintenanceMargin,
+              daytradeCount: a.dayTradeCount,
+              dayTradingBuyingPower: a.dayTradingBuyingPower,
+              regtBuyingPower: a.regtBuyingPower,
+              multiplier: a.multiplier,
+              patternDayTrader: a.patternDayTrader,
+              tradingBlocked: a.tradingBlocked,
+              transfersBlocked: a.transfersBlocked,
+              accountBlocked: a.accountBlocked,
+              createdAt: a.createdAt?.toISOString(),
+              paperTrading: true,
+              broker: 'simulated',
+            },
+          };
+        } catch (err) {
+          logger.error({ err }, '[Trading Account] Simulated broker error');
+          return reply.status(502).send({
+            success: false,
+            error: { code: 'BROKER_ERROR', message: 'Failed to fetch simulated account' },
+          });
+        }
       }
+
       try {
         const { default: axios } = await import('axios');
         const response = await axios.get(`${baseUrl}/v2/account`, {
@@ -336,14 +381,38 @@ export async function tradingRoutes(fastify: FastifyInstance, _opts: RouteContex
   fastify.get(
     '/api/v1/trading/positions',
     { preHandler: authMiddleware },
-    async (_request, reply) => {
+    async (request, reply) => {
       const { alpacaKey, alpacaSecret, isPaper, configured, baseUrl } = brokerConfig();
       if (!configured) {
-        reply.header('X-Data-Source', 'mock');
-        return {
-          success: true,
-          data: { positions: [], count: 0, brokerConnected: false, brokerType: 'demo' },
-        };
+        const userId = request.user?.id;
+        if (!userId) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+          });
+        }
+        try {
+          const broker = getBrokerForUser(userId);
+          const positions = await broker.getPositions();
+          reply.header('X-Data-Source', 'simulated');
+          return {
+            success: true,
+            data: {
+              positions,
+              count: positions.length,
+              brokerConnected: true,
+              brokerType: 'simulated',
+              paperTrading: true,
+            },
+          };
+        } catch (err) {
+          logger.error({ err }, '[Trading Positions] Simulated broker error');
+          reply.header('X-Data-Source', 'simulated');
+          return {
+            success: true,
+            data: { positions: [], count: 0, brokerConnected: false, brokerType: 'simulated' },
+          };
+        }
       }
       try {
         const { default: axios } = await import('axios');
@@ -624,21 +693,36 @@ export async function tradingRoutes(fastify: FastifyInstance, _opts: RouteContex
       const { alpacaKey, alpacaSecret, isPaper, configured, baseUrl } = brokerConfig();
 
       if (!configured) {
-        const orders = Array.from(demoOrders.values())
-          .filter((o) => !status || o.status === status)
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, parseInt(limit, 10));
-        reply.header('X-Data-Source', 'mock');
-        return {
-          success: true,
-          data: {
-            orders,
-            count: orders.length,
-            brokerConnected: false,
-            brokerType: 'demo',
-            paperTrading: true,
-          },
-        };
+        const userId = request.user?.id;
+        if (!userId) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+          });
+        }
+        try {
+          const broker = getBrokerForUser(userId);
+          const orders = (await broker.getOrders(status))
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            .slice(0, parseInt(limit, 10));
+          reply.header('X-Data-Source', 'simulated');
+          return {
+            success: true,
+            data: {
+              orders,
+              count: orders.length,
+              brokerConnected: true,
+              brokerType: 'simulated',
+              paperTrading: true,
+            },
+          };
+        } catch (err) {
+          logger.error({ err }, '[Trading Orders] Simulated broker list error');
+          return reply.status(502).send({
+            success: false,
+            error: { code: 'BROKER_ERROR', message: 'Failed to fetch simulated orders' },
+          });
+        }
       }
 
       try {
@@ -728,42 +812,47 @@ export async function tradingRoutes(fastify: FastifyInstance, _opts: RouteContex
       const { alpacaKey, alpacaSecret, isPaper, configured, baseUrl } = brokerConfig();
 
       if (!configured) {
-        const orderId = `demo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-        const now = new Date();
-        const sym = orderReq.symbol!.toUpperCase();
-        const demoPrice = DEMO_PRICES[sym] || 100 + Math.random() * 100;
-        const fillPrice = orderReq.limitPrice || demoPrice;
-        const qty = orderReq.qty || (orderReq.notional ? Math.floor(orderReq.notional / fillPrice) : 0);
-        const isFilled = orderReq.type === 'market';
-        const order: DemoOrder = {
-          id: orderId,
-          symbol: sym,
-          qty,
-          side: orderReq.side!,
-          type: orderReq.type!,
-          status: isFilled ? 'filled' : 'new',
-          timeInForce: orderReq.timeInForce || 'day',
-          limitPrice: orderReq.limitPrice,
-          stopPrice: orderReq.stopPrice,
-          filledQty: isFilled ? qty : 0,
-          filledAvgPrice: isFilled ? fillPrice : undefined,
-          createdAt: now.toISOString(),
-          updatedAt: now.toISOString(),
-          submittedAt: now.toISOString(),
-          filledAt: isFilled ? now.toISOString() : undefined,
-          extendedHours: orderReq.extendedHours,
-        };
-        demoOrders.set(orderId, order);
-        reply.header('X-Data-Source', 'mock');
-        return {
-          success: true,
-          data: {
-            order,
-            broker: 'demo',
-            paperTrading: true,
-            message: 'Demo order submitted. Configure ALPACA_API_KEY for real trading.',
-          },
-        };
+        const userId = request.user?.id;
+        if (!userId) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+          });
+        }
+        try {
+          const broker = getBrokerForUser(userId);
+          const order = await broker.submitOrder({
+            symbol: orderReq.symbol!,
+            qty: orderReq.qty as number | undefined,
+            notional: orderReq.notional,
+            side: orderReq.side!,
+            type: orderReq.type!,
+            timeInForce: (orderReq.timeInForce as 'day' | 'gtc' | 'ioc' | 'fok' | 'opg' | 'cls' | undefined) ?? 'day',
+            limitPrice: orderReq.limitPrice,
+            stopPrice: orderReq.stopPrice,
+            trailPercent: orderReq.trailPercent,
+            trailPrice: orderReq.trailPrice,
+            extendedHours: orderReq.extendedHours,
+            clientOrderId: orderReq.clientOrderId,
+          });
+          reply.header('X-Data-Source', 'simulated');
+          return {
+            success: true,
+            data: {
+              order,
+              broker: 'simulated',
+              paperTrading: true,
+              message: 'Order submitted to internal simulated broker (Supabase-persisted, live quotes).',
+            },
+          };
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Order rejected';
+          logger.warn({ err }, '[Trading Orders] Simulated broker rejected order');
+          return reply.status(400).send({
+            success: false,
+            error: { code: 'ORDER_REJECTED', message: msg },
+          });
+        }
       }
 
       const payload: Record<string, unknown> = {
@@ -844,16 +933,25 @@ export async function tradingRoutes(fastify: FastifyInstance, _opts: RouteContex
 
       if (cancelAll === 'true') {
         if (!configured) {
-          let canceled = 0;
-          for (const order of demoOrders.values()) {
-            if (!['filled', 'canceled', 'expired'].includes(order.status)) {
-              order.status = 'canceled';
-              order.canceledAt = new Date().toISOString();
-              order.updatedAt = new Date().toISOString();
-              canceled++;
-            }
+          const userId = request.user?.id;
+          if (!userId) {
+            return reply.status(401).send({
+              success: false,
+              error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+            });
           }
-          return { success: true, data: { canceled } };
+          try {
+            const broker = getBrokerForUser(userId);
+            const canceled = await broker.cancelAllOrders();
+            reply.header('X-Data-Source', 'simulated');
+            return { success: true, data: { canceled } };
+          } catch (err) {
+            logger.error({ err }, '[Trading Orders] Simulated cancel-all error');
+            return reply.status(502).send({
+              success: false,
+              error: { code: 'BROKER_ERROR', message: 'Failed to cancel orders' },
+            });
+          }
         }
         try {
           const { default: axios } = await import('axios');
@@ -885,17 +983,31 @@ export async function tradingRoutes(fastify: FastifyInstance, _opts: RouteContex
       }
 
       if (!configured) {
-        const order = demoOrders.get(id);
-        if (order && !['filled', 'canceled', 'expired'].includes(order.status)) {
-          order.status = 'canceled';
-          order.canceledAt = new Date().toISOString();
-          order.updatedAt = new Date().toISOString();
-          return { success: true, data: { canceled: true, orderId: id } };
+        const userId = request.user?.id;
+        if (!userId) {
+          return reply.status(401).send({
+            success: false,
+            error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+          });
         }
-        return reply.status(404).send({
-          success: false,
-          error: { code: 'NOT_FOUND', message: 'Order not found' },
-        });
+        try {
+          const broker = getBrokerForUser(userId);
+          const ok = await broker.cancelOrder(id);
+          if (ok) {
+            reply.header('X-Data-Source', 'simulated');
+            return { success: true, data: { canceled: true, orderId: id } };
+          }
+          return reply.status(404).send({
+            success: false,
+            error: { code: 'NOT_FOUND', message: 'Order not found or not cancelable' },
+          });
+        } catch (err) {
+          logger.error({ err }, '[Trading Orders] Simulated cancel error');
+          return reply.status(502).send({
+            success: false,
+            error: { code: 'BROKER_ERROR', message: 'Failed to cancel order' },
+          });
+        }
       }
 
       try {

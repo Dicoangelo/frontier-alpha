@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ArrowLeft } from 'lucide-react';
+import { Check, ArrowLeft, Mail, Info } from 'lucide-react';
 import { api } from '@/api/client';
 import { useAuthStore } from '@/stores/authStore';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useToast } from '@/hooks/useToast';
+import { useStripeStatus } from '@/hooks/useIntegrationsHealth';
+
+const NOTIFY_EMAIL = 'dico@metaventionsai.com';
 
 interface PlanConfig {
   name: string;
@@ -73,7 +76,9 @@ export function Pricing() {
   const { user } = useAuthStore();
   const { plan: currentPlan } = useSubscription();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const { toastError } = useToast();
+  const { toastError, toastInfo } = useToast();
+  const stripeStatus = useStripeStatus();
+  const stripeDegraded = stripeStatus === 'degraded';
 
   const handleCheckout = async (plan: PlanConfig) => {
     if (!plan.priceId) return;
@@ -99,10 +104,45 @@ export function Pricing() {
     }
   };
 
+  const buildNotifyHref = (planName: string) => {
+    const subject = encodeURIComponent(`FrontierAlpha ${planName} — Notify Me`);
+    const body = encodeURIComponent(
+      `I'd like to be notified when the ${planName} plan opens.`,
+    );
+    return `mailto:${NOTIFY_EMAIL}?subject=${subject}&body=${body}`;
+  };
+
+  const handleNotifyClick = (planName: string) => {
+    toastInfo('Stripe checkout not yet enabled', {
+      message: `Drop your email to be first in line for ${planName}.`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-theme grid-bg">
       {/* Sovereign bar */}
       <div className="sovereign-bar fixed top-0 left-0 right-0 z-50" />
+
+      {/* ── Stripe degraded banner ───────────────────────────────────────── */}
+      {stripeDegraded && (
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20">
+          <div
+            role="status"
+            aria-live="polite"
+            className="glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-4 flex items-start gap-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)]"
+          >
+            <Info className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent)]" aria-hidden="true" />
+            <div className="flex-1">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)]">
+                Billing · Coming Soon
+              </p>
+              <p className="text-sm mt-1 text-theme-secondary">
+                Stripe is being wired in. Tier signup opens Q3.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative isolate overflow-hidden">
@@ -220,6 +260,18 @@ export function Pricing() {
                   >
                     Free Forever
                   </button>
+                ) : stripeDegraded ? (
+                  <a
+                    href={buildNotifyHref(plan.name)}
+                    onClick={() => handleNotifyClick(plan.name)}
+                    aria-label={`Get notified when ${plan.name} opens`}
+                    className={`w-full py-3 px-4 rounded-sm glass-slab text-theme mono text-[10px] font-bold tracking-[0.3em] uppercase animate-press animate-lift hover:border-[color:var(--color-border-hover)] inline-flex items-center justify-center gap-2 ${
+                      plan.highlighted ? 'border-sovereign' : ''
+                    }`}
+                  >
+                    <Mail className="w-3.5 h-3.5" aria-hidden="true" />
+                    Get Notified
+                  </a>
                 ) : plan.highlighted ? (
                   <button
                     onClick={() => handleCheckout(plan)}

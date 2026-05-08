@@ -372,16 +372,32 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
     }
 
     // --- ML Sentiment endpoint ---------------------------------------------
+    // Tier 1: dedicated FinBERT/Python service via ML_SENTIMENT_ENDPOINT
+    // Tier 2: DeepSeek/OpenAI sentiment classification (cheaper, no Python)
+    // Tier 3: keyword lexicon fallback (always available)
     if (has('ML_SENTIMENT_ENDPOINT')) {
       integrations.mlSentiment = {
         status: 'live',
         via: 'ML_SENTIMENT_ENDPOINT',
+        mode: 'finbert',
+      };
+    } else if (has('DEEPSEEK_API_KEY')) {
+      integrations.mlSentiment = {
+        status: 'live',
+        via: 'DEEPSEEK_API_KEY',
+        mode: 'llm-classification',
+      };
+    } else if (has('OPENAI_API_KEY')) {
+      integrations.mlSentiment = {
+        status: 'live',
+        via: 'OPENAI_API_KEY',
+        mode: 'llm-classification',
       };
     } else {
       integrations.mlSentiment = {
         status: 'degraded',
         via: null,
-        reason: 'ML_SENTIMENT_ENDPOINT not set',
+        reason: 'No ML endpoint or LLM key',
         fallback: 'lexicon-based sentiment scoring',
       };
     }

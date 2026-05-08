@@ -10,6 +10,7 @@ import { Spinner } from '@/components/shared/Spinner';
 import { SkeletonSettingsPage } from '@/components/shared/Skeleton';
 import { NotificationSettings } from '@/components/notifications/NotificationSettings';
 import { APIKeys } from '@/components/settings/APIKeys';
+import { BrokerSection } from '@/components/settings/BrokerSection';
 import { useToast } from '@/hooks/useToast';
 
 interface UserSettings {
@@ -327,6 +328,17 @@ export function Settings() {
             </div>
           </div>
         </div>
+      </SectionShell>
+
+      {/* Broker — delay 175ms */}
+      <SectionShell
+        kicker="Execution"
+        title="Broker"
+        description="Connect your Alpaca account or use the internal simulated broker"
+        icon={<Shield className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />}
+        delay={175}
+      >
+        <BrokerSection />
       </SectionShell>
 
       {/* Notifications — delay 200ms */}

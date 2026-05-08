@@ -122,10 +122,12 @@ npm run ml:start         # uvicorn on port 8000
 
 ## Current State
 
-- **Version:** 1.2.2 (server `package.json`) — bumped 2026-05-08 for comp-customer webhook guard
+- **Version:** 1.2.4 (server `package.json`) — bumped 2026-05-08 for VITE env-newline fix + Terms/Privacy pages
 - **Phase 1:** Complete — all 4 weeks shipped (Feb–Mar 2026)
 - **UI polish wave:** Complete — 35 files across 5 rounds, PRs #3 + #4, v1.1.0 (2026-05-07). Frontier Alpha's visual language now aligns with `metaventionsai.com`, `careers.metaventionsai.com`, `friendlyface.metaventionsai.com`. See `DESIGN-SYSTEM.md` §12 for the canonical pattern register.
 - **Backend integration wave:** Complete — 12 of 14 integrations live (verified by `/api/v1/health/integrations` v1.2.3). Stripe billing (live + comp guard), DeepSeek explainer, Resend email (welcome + subscription-confirmed + alert-fired + weekly-digest), VAPID web push, internal SimulatedBroker, per-user Alpaca connect (AES-256-GCM at rest), weekly digest cron with real portfolio metrics. Two integrations remain degraded by design or backlog: Vercel serverless cannot host long-lived WebSockets (Railway covers that tier), and Upstash Redis rate-limiter signup is deferred.
+- **Legal:** `/terms` and `/privacy` static routes (added v1.2.4). Linked from Login page footer (target=_blank) and Landing page footer.
+- **Env hygiene:** `client/src/api/websocket.ts::getWebSocketUrl()` `.trim()`s every env read. Trailing-newline regression (`echo | vercel env add`) is now defended at the read site, not just the write site.
 - **Production URL:** https://frontier-alpha.metaventionsai.com
 - **Deployment:** Two-tier — Vercel (SPA + REST, auto-deploy disabled, deploy manually) + Railway (always-on Fastify + Polygon WebSocket, `frontier-alpha-api`)
 - **Tests:** 54 test files (server + client), 265 tests passing (84 server + 181 client)

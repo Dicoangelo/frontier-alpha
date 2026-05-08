@@ -18,7 +18,7 @@
 <img src="https://img.shields.io/badge/Files-242+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Files" />
 <img src="https://img.shields.io/badge/Endpoints-107-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Endpoints" />
 <img src="https://img.shields.io/badge/Factors-76-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Factors" />
-<img src="https://img.shields.io/badge/Version-1.2.2-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
+<img src="https://img.shields.io/badge/Version-1.2.4-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
 
 <br/><br/>
 
@@ -359,8 +359,8 @@ ML_RETRAIN_INTERVAL=30
 <br/><sub><b>Landing — mobile</b><br/>Family-aligned with metaventionsai.com</sub>
 </td>
 <td width="50%" align="center">
-<img src="screenshots/v122-05-pricing-mobile.png" width="60%" alt="Pricing — mobile"/>
-<br/><sub><b>Pricing — mobile</b><br/>Sovereign-bar 3px top rail on every modal/page</sub>
+<img src="screenshots/v124-login.png" width="100%" alt="Login — desktop with Terms/Privacy links"/>
+<br/><sub><b>Login — desktop</b><br/>Terms of Service and Privacy Policy linked (target=_blank)</sub>
 </td>
 </tr>
 </table>

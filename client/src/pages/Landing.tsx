@@ -1,9 +1,11 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HeroEnhanced } from '@/components/landing/HeroEnhanced';
-import { HowItWorks } from '@/components/landing/HowItWorks';
-import { TrustComparison } from '@/components/landing/TrustComparison';
-import { DemoPreview } from '@/components/landing/DemoPreview';
+
+// Below-the-fold sections lazy-load so the hero ships in the smallest bundle.
+const DemoPreview = lazy(() => import('@/components/landing/DemoPreview').then(m => ({ default: m.DemoPreview })));
+const HowItWorks = lazy(() => import('@/components/landing/HowItWorks').then(m => ({ default: m.HowItWorks })));
+const TrustComparison = lazy(() => import('@/components/landing/TrustComparison').then(m => ({ default: m.TrustComparison })));
 
 const MAG7_SYMBOLS = 'AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA';
 
@@ -103,12 +105,14 @@ export function Landing() {
 
       {demoSymbols && (
         <div ref={demoRef}>
-          <DemoPreview
-            symbols={demoSymbols}
-            onSignup={handleSignup}
-            onSignin={handleSignin}
-            onClear={handleClearDemo}
-          />
+          <Suspense fallback={<div className="min-h-[400px]" aria-hidden="true" />}>
+            <DemoPreview
+              symbols={demoSymbols}
+              onSignup={handleSignup}
+              onSignin={handleSignin}
+              onClear={handleClearDemo}
+            />
+          </Suspense>
         </div>
       )}
 
@@ -173,9 +177,13 @@ export function Landing() {
         </div>
       </section>
 
-      <HowItWorks onCTAClick={handleAnalyze} />
+      <Suspense fallback={<div className="min-h-[600px]" aria-hidden="true" />}>
+        <HowItWorks onCTAClick={handleAnalyze} />
+      </Suspense>
 
-      <TrustComparison />
+      <Suspense fallback={<div className="min-h-[600px]" aria-hidden="true" />}>
+        <TrustComparison />
+      </Suspense>
 
       <footer className="mt-auto border-t border-[var(--color-border-light)] py-6 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2026-05-08
+
+### Weekly digest — real metrics
+
+Replaced the stubbed portfolio numbers in the Monday-morning digest with live values
+from `portfolioService` + `marketDataProvider`. Each per-position 7-day return is computed
+against an actual prior close (Alpha Vantage TIME_SERIES_DAILY_ADJUSTED, Supabase-cached)
+and the largest dollar swing is surfaced as the "because" line on the top-mover card.
+
+- **Added** `src/notifications/digest-metrics.ts` — `computeWeeklyMetrics(userId)` returns
+  portfolio value, 7-day delta, top mover, and worst mover, or `null` when data is too
+  thin to render a meaningful digest.
+- **Changed** `src/routes/digest.ts` — wires real metrics into `renderWeeklyDigest`,
+  skips users whose portfolio cannot be resolved instead of sending a zeroed-out email.
+- **Failure posture** — per-symbol fetch errors are logged and skipped; one bad ticker
+  no longer poisons the run.
+
+---
+
 ## [1.2.0] - 2026-05-08
 
 ### Backend integration wave — 9 of 11 integrations live, two-tier deployment

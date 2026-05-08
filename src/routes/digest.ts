@@ -11,9 +11,9 @@
  * the welcome and subscription-confirmed flows. Failures per-user are
  * logged but non-fatal so a single bad address does not poison the run.
  *
- * Portfolio metrics (delta, top mover, worst mover) are stubbed for
- * v1.3.0 — see TODO markers below. The render shape is locked in so a
- * follow-up sprint can plug real numbers without changing the route.
+ * Portfolio metrics (delta, top mover, worst mover) are computed by
+ * `computeWeeklyMetrics` against a 7-day window. Per-symbol fetch failures
+ * are logged and skipped so a single bad ticker does not poison the run.
  */
 
 import type { FastifyInstance } from 'fastify';
@@ -157,6 +157,7 @@ export async function digestRoutes(fastify: FastifyInstance, _opts: RouteContext
       '../notifications/email-templates/index.js'
     );
     const { getAlertDelivery } = await import('../notifications/AlertDelivery.js');
+    const { computeWeeklyMetrics } = await import('../notifications/digest-metrics.js');
     const delivery = getAlertDelivery();
 
     let sent = 0;
@@ -184,18 +185,24 @@ export async function digestRoutes(fastify: FastifyInstance, _opts: RouteContext
           meta?.name ||
           email.split('@')[0];
 
-        // TODO real metrics in v1.3.1 — wire portfolioService.getPortfolio +
-        // 7-day delta + per-position return aggregation. Stubbed here so the
-        // template render is end-to-end exercised in v1.3.0 and operators can
-        // verify provider delivery before the metrics layer ships.
+        // Real metrics — null means we could not resolve enough data
+        // (no portfolio row, or every per-symbol fetch failed). Skip the
+        // recipient instead of sending a zeroed-out digest that would
+        // look broken.
+        const metrics = await computeWeeklyMetrics(sub.user_id);
+        if (!metrics) {
+          skipped += 1;
+          continue;
+        }
+
         const payload = renderWeeklyDigest({
           displayName,
           dateRange,
-          portfolioValue: 0,
-          portfolioDelta: 0,
-          portfolioDeltaPct: 0,
-          topMover: { symbol: '—', pct: 0, because: 'Metrics ship in v1.3.1' },
-          worstMover: { symbol: '—', pct: 0 },
+          portfolioValue: metrics.portfolioValue,
+          portfolioDelta: metrics.portfolioDelta,
+          portfolioDeltaPct: metrics.portfolioDeltaPct,
+          topMover: metrics.topMover,
+          worstMover: metrics.worstMover,
           dashboardUrl,
         });
 

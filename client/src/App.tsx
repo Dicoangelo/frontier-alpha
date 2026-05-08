@@ -30,6 +30,8 @@ const Social = lazy(() => import('@/pages/Social').then(m => ({ default: m.Socia
 const Tax = lazy(() => import('@/pages/Tax').then(m => ({ default: m.Tax })));
 const SharedPortfolio = lazy(() => import('@/pages/SharedPortfolio'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
+const BillingSuccess = lazy(() => import('@/pages/BillingSuccess'));
+const BillingCanceled = lazy(() => import('@/pages/BillingCanceled'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -299,6 +301,27 @@ function AppRoutes() {
         path="/pricing"
         element={
           <Pricing />
+        }
+      />
+      {/* Stripe checkout return flow — user is authenticated post-checkout */}
+      <Route
+        path="/billing/success"
+        element={
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <BillingSuccess />
+            </ErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/billing/canceled"
+        element={
+          <ProtectedRoute>
+            <ErrorBoundary>
+              <BillingCanceled />
+            </ErrorBoundary>
+          </ProtectedRoute>
         }
       />
       {/* Public route for shared portfolios - no auth required */}

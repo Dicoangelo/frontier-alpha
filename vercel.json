@@ -12,6 +12,9 @@
     { "source": "/api/(.*)", "destination": "/api/fastify" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
+  "crons": [
+    { "path": "/api/v1/digest/run", "schedule": "0 13 * * 1" }
+  ],
   "headers": [
     {
       "source": "/api/(.*)",

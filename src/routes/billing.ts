@@ -48,6 +48,19 @@ export async function billingRoutes(fastify: FastifyInstance, _opts: RouteContex
       const user = request.user!;
       const { priceId, successUrl, cancelUrl } = request.body || {};
 
+      // Defense-in-depth: even if the client tries to checkout, server refuses
+      // unless BILLING_ENABLED=true is explicitly set. Default-off prevents
+      // accidental live charges during dev / staging.
+      if ((process.env.BILLING_ENABLED ?? '').toLowerCase() !== 'true') {
+        return reply.status(503).send({
+          success: false,
+          error: {
+            code: 'BILLING_DISABLED',
+            message: 'Billing is not yet enabled for this environment.',
+          },
+        });
+      }
+
       if (!priceId) {
         return reply.status(400).send({
           success: false,

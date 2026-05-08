@@ -267,17 +267,29 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
     }
 
     // --- Stripe -------------------------------------------------------------
-    if (has('STRIPE_SECRET_KEY')) {
-      integrations.stripe = {
-        status: 'live',
-        via: 'STRIPE_SECRET_KEY',
-      };
-    } else {
+    // BILLING_ENABLED gate: even when the Stripe key is wired, billing is OFF
+    // by default (BILLING_ENABLED must be explicitly 'true' to enable
+    // checkout). Triggers the Pricing page graceful-degrade UI ("Get Notified"
+    // mailto fallback) so accidental live charges aren't possible during dev.
+    const billingEnabled = (env.BILLING_ENABLED ?? '').toLowerCase() === 'true';
+    if (!has('STRIPE_SECRET_KEY')) {
       integrations.stripe = {
         status: 'degraded',
         via: null,
         reason: 'STRIPE_SECRET_KEY not set',
         impact: 'checkout endpoint returns 503',
+      };
+    } else if (!billingEnabled) {
+      integrations.stripe = {
+        status: 'degraded',
+        via: 'STRIPE_SECRET_KEY',
+        reason: 'BILLING_ENABLED is not set to "true"',
+        impact: 'Pricing CTAs fall back to mailto; live charges blocked',
+      };
+    } else {
+      integrations.stripe = {
+        status: 'live',
+        via: 'STRIPE_SECRET_KEY',
       };
     }
 

@@ -26,6 +26,7 @@ import {
   useConnectBroker,
   useQuote,
 } from '@/hooks/useTrading';
+import { useAlpacaStatus } from '@/hooks/useIntegrationsHealth';
 
 // ─── Sparkline mini-chart ────────────────────────────────────────────────────
 function Sparkline({ symbol }: { symbol: string }) {
@@ -110,6 +111,8 @@ export default function Trading() {
     paperTrading,
     isLoading,
   } = useTrading();
+  const alpacaStatus = useAlpacaStatus();
+  const alpacaDegraded = alpacaStatus === 'degraded';
 
   const { data: positionsData, isLoading: positionsLoading, refetch: refetchPositions } = useBrokerPositions();
   const { data: marketClock } = useMarketClock();
@@ -149,6 +152,27 @@ export default function Trading() {
             Execute orders and manage your positions
           </p>
         </div>
+
+        {/* Alpaca degraded banner (informational, not error) */}
+        {alpacaDegraded && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="glass-slab-floating relative overflow-hidden mb-6 rounded-xl pl-5 pr-4 py-4 flex items-start gap-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)] animate-fade-in-up"
+            style={{ animationDelay: '20ms', animationFillMode: 'both' }}
+          >
+            <Info className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent)]" aria-hidden="true" />
+            <div className="flex-1">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)]">
+                Trading · Read-Only Demo Mode
+              </p>
+              <p className="text-sm mt-1 text-theme-secondary">
+                Live broker connection (Alpaca) not yet configured. Order tickets are
+                visualized but not submitted.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Connection Status Banner */}
         <div
@@ -246,12 +270,28 @@ export default function Trading() {
             className="lg:col-span-2 animate-fade-in-up"
             style={{ animationDelay: '150ms', animationFillMode: 'both' }}
           >
-            <TradeExecutor
-              defaultSymbol={selectedSymbol}
-              onOrderSubmitted={() => {
-                refetchPositions();
-              }}
-            />
+            {alpacaDegraded ? (
+              <fieldset
+                disabled
+                aria-disabled="true"
+                title="Alpaca broker not yet configured — order submission is disabled"
+                className="border-0 p-0 m-0 min-w-0 [&_button[type=submit]]:cursor-not-allowed [&_button[type=submit]]:opacity-60"
+              >
+                <TradeExecutor
+                  defaultSymbol={selectedSymbol}
+                  onOrderSubmitted={() => {
+                    refetchPositions();
+                  }}
+                />
+              </fieldset>
+            ) : (
+              <TradeExecutor
+                defaultSymbol={selectedSymbol}
+                onOrderSubmitted={() => {
+                  refetchPositions();
+                }}
+              />
+            )}
           </div>
 
           {/* Sidebar */}

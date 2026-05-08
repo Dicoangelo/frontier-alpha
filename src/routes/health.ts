@@ -1,6 +1,10 @@
 import type { FastifyInstance } from 'fastify';
 import { metrics } from '../observability/metrics.js';
 import { logger } from '../observability/logger.js';
+import type {
+  IntegrationHealthEntry,
+  IntegrationsHealthResponse,
+} from '../types/index.js';
 
 interface RouteContext {
   server: { version: string };
@@ -148,5 +152,253 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
   fastify.get('/api/v1/metrics', async (_request, reply) => {
     reply.type('text/plain; version=0.0.4; charset=utf-8');
     return metrics.toPrometheus();
+  });
+
+  // GET /api/v1/health/integrations — read-only wiring status for every
+  // external integration. Pure env inspection (no network calls, no
+  // side effects). Always returns 200 — degraded is informational.
+  fastify.get('/api/v1/health/integrations', async (_request, reply) => {
+    const env = process.env;
+    const has = (name: string): boolean => Boolean(env[name] && env[name]!.length > 0);
+
+    const integrations: Record<string, IntegrationHealthEntry> = {};
+
+    // --- Supabase (database + RLS) -----------------------------------------
+    // Mirrors checkDatabase() above: service key OR anon key gates access.
+    const supabaseKeyVar = has('SUPABASE_SERVICE_KEY')
+      ? 'SUPABASE_SERVICE_KEY'
+      : has('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+        ? 'NEXT_PUBLIC_SUPABASE_ANON_KEY'
+        : null;
+    const supabaseUrlPresent = has('NEXT_PUBLIC_SUPABASE_URL');
+    if (supabaseKeyVar && supabaseUrlPresent) {
+      integrations.supabase = {
+        status: 'live',
+        via: supabaseKeyVar,
+      };
+    } else {
+      integrations.supabase = {
+        status: 'degraded',
+        via: null,
+        reason: !supabaseUrlPresent
+          ? 'NEXT_PUBLIC_SUPABASE_URL not set'
+          : 'No Supabase key (SUPABASE_SERVICE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY) set',
+        impact: 'database reads/writes unavailable; RLS-gated endpoints return 503',
+      };
+    }
+
+    // --- Polygon (REST) -----------------------------------------------------
+    if (has('POLYGON_API_KEY')) {
+      integrations.polygon = {
+        status: 'live',
+        via: 'POLYGON_API_KEY',
+        mode: 'rest',
+      };
+    } else {
+      integrations.polygon = {
+        status: 'degraded',
+        via: null,
+        reason: 'POLYGON_API_KEY not set',
+        fallback: 'mock quotes (dev only)',
+      };
+    }
+
+    // --- Polygon WebSocket --------------------------------------------------
+    // Vercel serverless runtimes cannot host long-lived WS connections,
+    // so this is structurally degraded on Vercel regardless of key presence.
+    if (env.VERCEL) {
+      integrations.polygonWebSocket = {
+        status: 'degraded',
+        reason: 'Vercel serverless cannot host long-lived WS',
+        fallback: 'rest polling + mock stream',
+      };
+    } else if (has('POLYGON_API_KEY')) {
+      integrations.polygonWebSocket = {
+        status: 'live',
+        via: 'POLYGON_API_KEY',
+        mode: 'websocket',
+      };
+    } else {
+      integrations.polygonWebSocket = {
+        status: 'degraded',
+        via: null,
+        reason: 'POLYGON_API_KEY not set',
+        fallback: 'mock stream',
+      };
+    }
+
+    // --- Alpha Vantage ------------------------------------------------------
+    if (has('ALPHA_VANTAGE_API_KEY')) {
+      integrations.alphaVantage = {
+        status: 'live',
+        via: 'ALPHA_VANTAGE_API_KEY',
+      };
+    } else {
+      integrations.alphaVantage = {
+        status: 'degraded',
+        via: null,
+        reason: 'ALPHA_VANTAGE_API_KEY not set',
+        fallback: 'polygon-only fundamentals (where available)',
+      };
+    }
+
+    // --- LLM Explainer ------------------------------------------------------
+    // Mirrors ExplanationService.resolveLLMProvider(): DeepSeek preferred,
+    // OpenAI second, template fallback last.
+    if (has('DEEPSEEK_API_KEY')) {
+      integrations.llmExplainer = {
+        status: 'live',
+        via: 'DEEPSEEK_API_KEY',
+        provider: 'deepseek',
+      };
+    } else if (has('OPENAI_API_KEY')) {
+      integrations.llmExplainer = {
+        status: 'live',
+        via: 'OPENAI_API_KEY',
+        provider: 'openai',
+      };
+    } else {
+      integrations.llmExplainer = {
+        status: 'degraded',
+        via: null,
+        reason: 'Neither DEEPSEEK_API_KEY nor OPENAI_API_KEY set',
+        fallback: 'template',
+      };
+    }
+
+    // --- Stripe -------------------------------------------------------------
+    if (has('STRIPE_SECRET_KEY')) {
+      integrations.stripe = {
+        status: 'live',
+        via: 'STRIPE_SECRET_KEY',
+      };
+    } else {
+      integrations.stripe = {
+        status: 'degraded',
+        via: null,
+        reason: 'STRIPE_SECRET_KEY not set',
+        impact: 'checkout endpoint returns 503',
+      };
+    }
+
+    // --- Alpaca (broker) ----------------------------------------------------
+    // Both API key + secret required. Defaults to paper trading per
+    // ALPACA_PAPER_TRADING (default 'true').
+    const alpacaKey = has('ALPACA_API_KEY');
+    const alpacaSecret = has('ALPACA_API_SECRET');
+    const alpacaPaper = (env.ALPACA_PAPER_TRADING ?? 'true') !== 'false';
+    if (alpacaKey && alpacaSecret) {
+      integrations.alpaca = {
+        status: 'live',
+        via: 'ALPACA_API_KEY',
+        mode: alpacaPaper ? 'paper' : 'live',
+      };
+    } else {
+      integrations.alpaca = {
+        status: 'degraded',
+        via: null,
+        reason: !alpacaKey
+          ? 'ALPACA_API_KEY not set'
+          : 'ALPACA_API_SECRET not set',
+        impact: 'live and paper trading endpoints return 503',
+      };
+    }
+
+    // --- VAPID Web Push -----------------------------------------------------
+    const vapidPub = has('VAPID_PUBLIC_KEY');
+    const vapidPriv = has('VAPID_PRIVATE_KEY');
+    if (vapidPub && vapidPriv) {
+      integrations.vapidPush = {
+        status: 'live',
+        via: 'VAPID_PUBLIC_KEY+VAPID_PRIVATE_KEY',
+      };
+    } else {
+      integrations.vapidPush = {
+        status: 'degraded',
+        via: null,
+        reason: !vapidPub && !vapidPriv
+          ? 'VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY not set'
+          : !vapidPub
+            ? 'VAPID_PUBLIC_KEY not set'
+            : 'VAPID_PRIVATE_KEY not set',
+        fallback: 'SSE-only delivery (no native push notifications)',
+      };
+    }
+
+    // --- Email delivery -----------------------------------------------------
+    // AlertDelivery: provider defaults to 'console' when EMAIL_PROVIDER unset.
+    // Treat 'console' (or unset) as degraded — it doesn't actually send mail.
+    const emailProvider = env.EMAIL_PROVIDER;
+    if (has('EMAIL_API_KEY') && emailProvider && emailProvider !== 'console') {
+      integrations.emailDelivery = {
+        status: 'live',
+        via: 'EMAIL_API_KEY',
+        provider: emailProvider,
+      };
+    } else {
+      integrations.emailDelivery = {
+        status: 'degraded',
+        via: null,
+        provider: emailProvider || 'console',
+        reason: !has('EMAIL_API_KEY')
+          ? 'EMAIL_API_KEY not set'
+          : 'EMAIL_PROVIDER unset or set to "console"',
+        fallback: 'log-to-console (no real mail sent)',
+      };
+    }
+
+    // --- Rate limiter (Redis) ----------------------------------------------
+    // Either REDIS_URL (self-hosted) or UPSTASH_REDIS_REST_URL (serverless)
+    // satisfies the rate limiter. In-memory fallback resets per cold start.
+    const redisVar = has('REDIS_URL')
+      ? 'REDIS_URL'
+      : has('UPSTASH_REDIS_REST_URL')
+        ? 'UPSTASH_REDIS_REST_URL'
+        : null;
+    if (redisVar) {
+      integrations.rateLimiter = {
+        status: 'live',
+        via: redisVar,
+      };
+    } else {
+      integrations.rateLimiter = {
+        status: 'degraded',
+        via: null,
+        reason: 'Neither REDIS_URL nor UPSTASH_REDIS_REST_URL set',
+        fallback: 'in-memory (resets per cold start)',
+      };
+    }
+
+    // --- ML Sentiment endpoint ---------------------------------------------
+    if (has('ML_SENTIMENT_ENDPOINT')) {
+      integrations.mlSentiment = {
+        status: 'live',
+        via: 'ML_SENTIMENT_ENDPOINT',
+      };
+    } else {
+      integrations.mlSentiment = {
+        status: 'degraded',
+        via: null,
+        reason: 'ML_SENTIMENT_ENDPOINT not set',
+        fallback: 'lexicon-based sentiment scoring',
+      };
+    }
+
+    // --- Summary -----------------------------------------------------------
+    const entries = Object.values(integrations);
+    const live = entries.filter((e) => e.status === 'live').length;
+    const degraded = entries.filter((e) => e.status === 'degraded').length;
+
+    const response: IntegrationsHealthResponse = {
+      checkedAt: new Date().toISOString(),
+      integrations,
+      summary: {
+        live,
+        degraded,
+        total: entries.length,
+      },
+    };
+
+    return reply.status(200).send(response);
   });
 }

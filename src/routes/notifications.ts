@@ -37,6 +37,34 @@ interface SendBody {
 }
 
 export async function notificationsRoutes(fastify: FastifyInstance, _opts: RouteContext) {
+  // GET /api/v1/notifications/vapid-public-key
+  // Public endpoint — returns the VAPID public key so the browser can pass it
+  // to pushManager.subscribe(). Safe to expose; the public key is meant for
+  // the client by design. No auth required.
+  fastify.get<{ Reply: APIResponse<unknown> }>(
+    '/api/v1/notifications/vapid-public-key',
+    async (request, reply) => {
+      const start = Date.now();
+      const publicKey = process.env.VAPID_PUBLIC_KEY || '';
+
+      if (!publicKey) {
+        return reply.status(503).send({
+          success: false,
+          error: {
+            code: 'VAPID_NOT_CONFIGURED',
+            message: 'VAPID public key is not configured on the server',
+          },
+        });
+      }
+
+      return {
+        success: true,
+        data: { publicKey },
+        meta: { timestamp: new Date(), requestId: request.id, latencyMs: Date.now() - start },
+      };
+    }
+  );
+
   // POST /api/v1/notifications/subscribe
   fastify.post<{ Body: SubscribeBody; Reply: APIResponse<unknown> }>(
     '/api/v1/notifications/subscribe',

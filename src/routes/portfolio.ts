@@ -26,6 +26,81 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
     async (request, reply) => {
       const start = Date.now();
 
+      // ─── Welcome email on first auth-gated API call ─────────────────
+      // Fire-and-forget: render + send the welcome email exactly once per
+      // user, stamping `welcomed_at` so it never re-fires. The IIFE below
+      // returns void so the email round-trip never blocks the response,
+      // and any failure is swallowed (logged but non-fatal) — matching the
+      // PR #18 subscription-confirmed pattern in `src/routes/billing.ts`.
+      if (request.user?.id) {
+        const userId = request.user.id;
+        const userEmail = request.user.email;
+        void (async () => {
+          try {
+            const { data: profile } = await supabaseAdmin
+              .from('frontier_profiles')
+              .select('display_name, welcomed_at')
+              .eq('user_id', userId)
+              .maybeSingle();
+
+            const profileRow = profile as
+              | { display_name?: string | null; welcomed_at?: string | null }
+              | null;
+
+            if (profileRow?.welcomed_at || !userEmail) {
+              return;
+            }
+
+            // Pull metadata-derived display name as a fallback when the
+            // user has not yet customized their frontier profile.
+            const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+            const meta = authUser?.user?.user_metadata as
+              | { full_name?: string; name?: string }
+              | undefined;
+            const displayName =
+              profileRow?.display_name ||
+              meta?.full_name ||
+              meta?.name ||
+              userEmail.split('@')[0];
+
+            const frontendUrl =
+              process.env.FRONTEND_URL || 'https://frontier-alpha.metaventionsai.com';
+            const dashboardUrl = `${frontendUrl}/dashboard`;
+
+            const { renderWelcome } = await import(
+              '../notifications/email-templates/index.js'
+            );
+            const { getAlertDelivery } = await import(
+              '../notifications/AlertDelivery.js'
+            );
+
+            const payload = renderWelcome({ displayName, dashboardUrl });
+
+            await getAlertDelivery().sendEmail({
+              to: userEmail,
+              subject: payload.subject,
+              html: payload.html,
+              text: payload.text,
+            });
+
+            // Stamp welcomed_at idempotently — upsert covers the case where
+            // no row exists yet (frontier_profiles is created lazily).
+            await supabaseAdmin
+              .from('frontier_profiles')
+              .upsert(
+                {
+                  user_id: userId,
+                  welcomed_at: new Date().toISOString(),
+                  display_name: profileRow?.display_name ?? null,
+                },
+                { onConflict: 'user_id' }
+              );
+          } catch (err) {
+            logger.warn({ err, userId }, 'Welcome email failed (non-fatal)');
+          }
+        })();
+      }
+
       // If using database and user is authenticated
       if (server.useDatabase && request.user) {
         const dbPortfolio = await portfolioService.getPortfolio(request.user.id);

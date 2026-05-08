@@ -58,9 +58,11 @@ import { backtestRoutes } from './routes/backtest.js';
 import { cacheRoutes } from './routes/cache.js';
 import { sentimentRoutes } from './routes/sentiment.js';
 import { brokerRoutes } from './routes/broker.js';
+import { brokerConnectRoutes } from './routes/broker-connect.js';
 import { secRoutes } from './routes/sec.js';
 import { websocketRoutes } from './routes/websocket.js';
 import { errorsRoutes } from './routes/errors.js';
+import { digestRoutes } from './routes/digest.js';
 
 const pkg = JSON.parse(
   readFileSync(new URL('../package.json', import.meta.url), 'utf-8')
@@ -214,8 +216,10 @@ export async function buildApp(
   app.register(cacheRoutes, ctx);
   app.register(sentimentRoutes, ctx);
   app.register(brokerRoutes, ctx);
+  app.register(brokerConnectRoutes, ctx);
   app.register(secRoutes, ctx);
   app.register(errorsRoutes, ctx);
+  app.register(digestRoutes, ctx);
   if (websockets) {
     app.register(websocketRoutes, ctx);
   }

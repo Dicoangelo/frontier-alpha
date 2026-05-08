@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useDeferredValue } from 'react';
+import { useState, useEffect, useMemo, useDeferredValue, useCallback } from 'react';
 import {
   BarChart3,
   Activity,
@@ -13,10 +13,13 @@ import {
   Settings,
   Shield,
   CheckCircle2,
+  Sparkles,
   X,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/shared/Button';
 import { Badge } from '@/components/shared/Badge';
+import { toast } from '@/components/shared/Toast';
 import { TradeExecutor } from '@/components/trading/TradeExecutor';
 import { PriceChart } from '@/components/trading/PriceChart';
 import {
@@ -27,6 +30,47 @@ import {
   useQuote,
 } from '@/hooks/useTrading';
 import { useAlpacaStatus } from '@/hooks/useIntegrationsHealth';
+import { api } from '@/api/client';
+
+// ─── Active broker mode (read raw integrations payload for `mode`) ──────────
+// The shared `useAlpacaStatus()` selector returns only the status flag —
+// it strips the `mode` field. We fetch the raw integrations payload here on
+// a distinct cache key so we can render the simulated/paper/live broker chip
+// + banner without colliding with the existing health hook's cached shape.
+type AlpacaBrokerMode = 'simulated' | 'paper' | 'live' | 'unknown';
+type AlpacaIntegration = {
+  status?: 'live' | 'degraded';
+  mode?: AlpacaBrokerMode;
+  via?: string | null;
+  provider?: string;
+  reason?: string;
+};
+
+function useAlpacaBrokerMode(): AlpacaBrokerMode {
+  const { data } = useQuery<AlpacaBrokerMode>({
+    queryKey: ['health', 'integrations', 'raw-alpaca-mode'],
+    queryFn: async () => {
+      try {
+        const payload = (await api.get('/health/integrations')) as
+          | { integrations?: { alpaca?: AlpacaIntegration } }
+          | undefined;
+        const m = payload?.integrations?.alpaca?.mode;
+        if (m === 'simulated' || m === 'paper' || m === 'live') return m;
+        return 'unknown';
+      } catch {
+        return 'unknown';
+      }
+    },
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
+  });
+  return data ?? 'unknown';
+}
+
+const PAPER_INTRO_FLAG = 'paper_trading_intro_shown';
 
 // ─── Sparkline mini-chart ────────────────────────────────────────────────────
 function Sparkline({ symbol }: { symbol: string }) {
@@ -112,7 +156,12 @@ export default function Trading() {
     isLoading,
   } = useTrading();
   const alpacaStatus = useAlpacaStatus();
+  const alpacaBrokerMode = useAlpacaBrokerMode();
+  // Trading is "live-capable" whenever the integrations endpoint reports
+  // status:'live' — that covers both the real Alpaca adapter AND the
+  // internal SimulatedBroker. Buy/Sell stay enabled in both cases.
   const alpacaDegraded = alpacaStatus === 'degraded';
+  const isSimulated = alpacaStatus === 'live' && alpacaBrokerMode === 'simulated';
 
   const { data: positionsData, isLoading: positionsLoading, refetch: refetchPositions } = useBrokerPositions();
   const { data: marketClock } = useMarketClock();
@@ -130,6 +179,40 @@ export default function Trading() {
     }
   };
 
+  // First-touch educational toast — only fires the first time a user submits
+  // an order against the SimulatedBroker. Gated by localStorage so we don't
+  // nag returning users.
+  const handleOrderSubmittedFromExecutor = useCallback(() => {
+    refetchPositions();
+    if (isSimulated && typeof window !== 'undefined') {
+      try {
+        if (!window.localStorage.getItem(PAPER_INTRO_FLAG)) {
+          toast.info(
+            'Paper trading active',
+            'Orders fill against live quotes, positions are saved, but no real money moves. Switch to live trading via Settings → Broker.'
+          );
+          window.localStorage.setItem(PAPER_INTRO_FLAG, '1');
+        }
+      } catch {
+        // localStorage can throw in private mode / iframes — fail silent.
+      }
+    }
+  }, [refetchPositions, isSimulated]);
+
+  // Header chip label for the active broker.
+  let brokerChipLabel = 'OFFLINE';
+  if (alpacaStatus === 'live') {
+    if (alpacaBrokerMode === 'simulated') {
+      brokerChipLabel = 'SIMULATED · LIVE QUOTES';
+    } else if (alpacaBrokerMode === 'paper') {
+      brokerChipLabel = 'ALPACA · PAPER';
+    } else if (alpacaBrokerMode === 'live') {
+      brokerChipLabel = 'ALPACA · LIVE';
+    } else {
+      brokerChipLabel = 'ALPACA';
+    }
+  }
+
   if (isLoading) {
     return <TradingSkeleton />;
   }
@@ -145,16 +228,39 @@ export default function Trading() {
           <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
             Execution · Trading
           </p>
-          <h1 className="text-2xl lg:text-3xl font-bold text-theme">
-            <span className="text-gradient-brand">Trade</span>
-          </h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-2xl lg:text-3xl font-bold text-theme">
+              <span className="text-gradient-brand">Trade</span>
+            </h1>
+            {/* Active broker chip — sovereign-gradient outline pill for
+                simulated, neutral outline for paper/live, muted for offline. */}
+            <span
+              role="status"
+              aria-label={`Active broker: ${brokerChipLabel}`}
+              className={`mono text-[10px] tracking-[0.3em] uppercase px-2.5 py-1 rounded-full border animate-fade-in ${
+                isSimulated
+                  ? 'border-[color-mix(in_srgb,var(--color-accent)_55%,transparent)] text-gradient-brand bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)] shadow-[0_0_18px_-6px_rgba(123,44,255,0.55)]'
+                  : alpacaStatus === 'live'
+                    ? 'border-[var(--color-border)] text-theme-secondary bg-[var(--color-bg-tertiary)]'
+                    : 'border-[var(--color-border)] text-theme-muted bg-[var(--color-bg-tertiary)]'
+              }`}
+            >
+              [{brokerChipLabel}]
+            </span>
+          </div>
           <p className="text-sm text-theme-secondary mt-1">
-            Execute orders and manage your positions
+            {isSimulated
+              ? 'Live Polygon quotes, simulated fills, Supabase-persisted positions.'
+              : 'Execute orders and manage your positions'}
           </p>
         </div>
 
-        {/* Alpaca degraded banner (informational, not error) */}
-        {alpacaDegraded && (
+        {/* Broker-mode banner — three branches:
+            1. simulated  → Frontier Alpha paper trading (sovereign rail)
+            2. live       → real Alpaca connected (handled below in the
+                            connection-status banner; nothing here)
+            3. degraded   → no broker wired at all (legacy READ-ONLY DEMO) */}
+        {alpacaDegraded ? (
           <div
             role="status"
             aria-live="polite"
@@ -172,7 +278,24 @@ export default function Trading() {
               </p>
             </div>
           </div>
-        )}
+        ) : isSimulated ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="glass-slab-floating relative overflow-hidden mb-6 rounded-xl pl-5 pr-4 py-4 flex items-start gap-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)] animate-fade-in-up"
+            style={{ animationDelay: '20ms', animationFillMode: 'both' }}
+          >
+            <Sparkles className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent)]" aria-hidden="true" />
+            <div className="flex-1">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)]">
+                Paper Trading · Frontier Alpha Engine
+              </p>
+              <p className="text-sm mt-1 text-theme-secondary">
+                Live Polygon quotes · Supabase-persisted · $100K starting cash
+              </p>
+            </div>
+          </div>
+        ) : null}
 
         {/* Connection Status Banner */}
         <div
@@ -279,17 +402,16 @@ export default function Trading() {
               >
                 <TradeExecutor
                   defaultSymbol={selectedSymbol}
-                  onOrderSubmitted={() => {
-                    refetchPositions();
-                  }}
+                  onOrderSubmitted={handleOrderSubmittedFromExecutor}
                 />
               </fieldset>
             ) : (
+              // status === 'live' (covers BOTH real Alpaca and the internal
+              // SimulatedBroker). Buy/Sell render normally — the simulated
+              // broker fills against live Polygon quotes server-side.
               <TradeExecutor
                 defaultSymbol={selectedSymbol}
-                onOrderSubmitted={() => {
-                  refetchPositions();
-                }}
+                onOrderSubmitted={handleOrderSubmittedFromExecutor}
               />
             )}
           </div>

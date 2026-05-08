@@ -12,6 +12,7 @@ import { Sparkles, TrendingUp, Shield, Target, Info } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import { useToast } from '@/hooks/useToast';
 import { Spinner } from '@/components/shared/Spinner';
+import { UpgradeGate } from '@/components/shared/UpgradeGate';
 import { MonteCarloChart } from '@/components/charts/MonteCarloChart';
 
 type OptimizationObjective = 'max_sharpe' | 'min_volatility' | 'risk_parity' | 'target_volatility';
@@ -71,6 +72,18 @@ const objectives: { value: OptimizationObjective; label: string; description: st
 ];
 
 export function Optimize() {
+  return (
+    <UpgradeGate
+      requiredPlan="pro"
+      title="Portfolio Optimizer"
+      description="Monte Carlo optimization across 10,000+ paths — max Sharpe, min variance, risk parity, and target volatility — is part of the Pro Plan. Upgrade to run solver-grade weight allocation on your portfolio."
+    >
+      <OptimizeContent />
+    </UpgradeGate>
+  );
+}
+
+function OptimizeContent() {
   const [selectedObjective, setSelectedObjective] = useState<OptimizationObjective>('max_sharpe');
   const [targetVol, setTargetVol] = useState('0.15');
   const [maxWeight, setMaxWeight] = useState('0.25');

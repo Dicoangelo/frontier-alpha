@@ -281,9 +281,12 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
       };
     }
 
-    // --- Alpaca (broker) ----------------------------------------------------
-    // Both API key + secret required. Defaults to paper trading per
-    // ALPACA_PAPER_TRADING (default 'true').
+    // --- Alpaca / SimulatedBroker (broker) ---------------------------------
+    // When ALPACA_API_KEY + ALPACA_API_SECRET are both set we route trading
+    // through AlpacaAdapter. Otherwise the internal SimulatedBroker takes
+    // over: live Polygon quote stream for fills, Supabase-persisted accounts /
+    // orders / positions. Both modes report `status: 'live'` because a real
+    // broker is wired either way.
     const alpacaKey = has('ALPACA_API_KEY');
     const alpacaSecret = has('ALPACA_API_SECRET');
     const alpacaPaper = (env.ALPACA_PAPER_TRADING ?? 'true') !== 'false';
@@ -295,12 +298,11 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
       };
     } else {
       integrations.alpaca = {
-        status: 'degraded',
+        status: 'live',
         via: null,
-        reason: !alpacaKey
-          ? 'ALPACA_API_KEY not set'
-          : 'ALPACA_API_SECRET not set',
-        impact: 'live and paper trading endpoints return 503',
+        mode: 'simulated',
+        provider: 'frontier-alpha-internal',
+        reason: 'Internal simulated broker (live quotes, Supabase-persisted positions)',
       };
     }
 

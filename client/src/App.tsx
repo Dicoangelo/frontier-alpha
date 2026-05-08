@@ -7,6 +7,8 @@ import { Layout } from '@/components/layout/Layout';
 import { Landing } from '@/pages/Landing';
 import { Login } from '@/pages/Login';
 import { ResetPassword } from '@/pages/ResetPassword';
+import { Terms } from '@/pages/Terms';
+import { Privacy } from '@/pages/Privacy';
 import { Spinner } from '@/components/shared/Spinner';
 import { ToastContainer } from '@/components/shared/Toast';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -107,6 +109,8 @@ function AppRoutes() {
         path="/reset-password"
         element={<ResetPassword />}
       />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
       <Route
         path="/dashboard"
         element={

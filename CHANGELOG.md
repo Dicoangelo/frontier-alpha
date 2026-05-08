@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.4] - 2026-05-08
 
-### Fix: WebSocket Offline · Data Stale + Stripe checkout failure
+### Fix: WebSocket Offline · Data Stale + Stripe checkout failure + Terms/Privacy
 
 Both regressions traced to the same root cause — every `VITE_*` env on Vercel
 carried a literal `\n` because earlier sessions used `echo | vercel env add`.
@@ -30,6 +30,15 @@ Fixes:
 - **Out of scope (transient):** Supabase rate-limited /auth/recover with 429
   after multiple forgot-password attempts. Resolves itself in ~30 min; not a
   code bug.
+
+### Added: Terms of Service + Privacy Policy
+
+- New `/terms` and `/privacy` routes (`client/src/pages/Terms.tsx`,
+  `Privacy.tsx`) following the family aesthetic — sovereign-bar, halo gradient
+  title, glass surfaces.
+- Login footer text now wraps "Terms of Service" and "Privacy Policy" in
+  links that open in a new tab.
+- Landing footer adds Terms and Privacy entries next to Sign In / Documentation / API.
 
 ---
 

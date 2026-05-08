@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.3] - 2026-05-08
+
+### Health endpoint surfaces v1.2.x integrations
+
+Production diagnostic now reflects what actually shipped. `GET /api/v1/health/integrations`
+adds three new entries and trims a stale env newline that was leaking into the
+provider field.
+
+- **Added** `connectAlpaca` entry — round-trip probes `BROKER_CRED_ENC_KEY` via
+  `isCryptoReady()` so a malformed key surfaces here instead of waiting for the
+  first user to hit `POST /api/v1/broker/connect`.
+- **Added** `weeklyDigestCron` entry — surfaces `CRON_SECRET` presence so
+  operators know whether the Monday 13:00 UTC Vercel cron can authorize.
+- **Added** `compGuard` entry — informational status that the comp-customer
+  webhook protection is wired (always live, code-only).
+- **Fixed** `provider: "resend\n"` — env values from `vercel env add` can carry
+  trailing newlines, so the email entry now `.trim()`s the provider before
+  echoing it.
+
+Total integrations surfaced: 13 (was 11). Frontier Alpha v1.2.x feature wiring
+is now fully observable from a single endpoint.
+
+---
+
 ## [1.2.2] - 2026-05-08
 
 ### Comp customer guard — billing webhooks cannot clobber comp rows

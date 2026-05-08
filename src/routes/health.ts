@@ -343,17 +343,21 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
     // AlertDelivery: provider defaults to 'console' when EMAIL_PROVIDER unset.
     // Treat 'console' (or unset) as degraded — it doesn't actually send mail.
     const emailProvider = env.EMAIL_PROVIDER;
-    if (has('EMAIL_API_KEY') && emailProvider && emailProvider !== 'console') {
+    // Trim the env value — Vercel CLI occasionally injects trailing newlines
+    // when env vars are added via `echo | vercel env add`, and surfacing
+    // "resend\n" via the JSON makes the health probe look broken.
+    const emailProviderClean = emailProvider?.trim();
+    if (has('EMAIL_API_KEY') && emailProviderClean && emailProviderClean !== 'console') {
       integrations.emailDelivery = {
         status: 'live',
         via: 'EMAIL_API_KEY',
-        provider: emailProvider,
+        provider: emailProviderClean,
       };
     } else {
       integrations.emailDelivery = {
         status: 'degraded',
         via: null,
-        provider: emailProvider || 'console',
+        provider: emailProviderClean || 'console',
         reason: !has('EMAIL_API_KEY')
           ? 'EMAIL_API_KEY not set'
           : 'EMAIL_PROVIDER unset or set to "console"',
@@ -382,6 +386,70 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
         fallback: 'in-memory (resets per cold start)',
       };
     }
+
+    // --- Connect Alpaca encryption (Pro+ feature) --------------------------
+    // BROKER_CRED_ENC_KEY is a 64-char hex (32 byte AES-256 key). Without it,
+    // POST /api/v1/broker/connect returns 503 because we refuse to persist
+    // plaintext credentials. The probe round-trips an encrypt/decrypt to
+    // catch malformed keys early instead of waiting for first user attempt.
+    const brokerEncKey = env.BROKER_CRED_ENC_KEY;
+    let cryptoReady = false;
+    if (brokerEncKey && brokerEncKey.trim().length === 64) {
+      try {
+        const { isCryptoReady } = await import('../lib/crypto.js');
+        cryptoReady = isCryptoReady();
+      } catch {
+        cryptoReady = false;
+      }
+    }
+    if (cryptoReady) {
+      integrations.connectAlpaca = {
+        status: 'live',
+        via: 'BROKER_CRED_ENC_KEY',
+        provider: 'AES-256-GCM at rest',
+      };
+    } else {
+      integrations.connectAlpaca = {
+        status: 'degraded',
+        via: null,
+        reason: !brokerEncKey
+          ? 'BROKER_CRED_ENC_KEY not set'
+          : 'BROKER_CRED_ENC_KEY malformed (must be 64-char hex / 32 bytes)',
+        fallback: 'POST /api/v1/broker/connect returns 503',
+      };
+    }
+
+    // --- Weekly digest cron ------------------------------------------------
+    // Vercel cron hits /api/v1/digest/run on Mondays 13:00 UTC. CRON_SECRET
+    // gates the endpoint — without it the endpoint 503s and the cron silently
+    // fails. Surface here so operators see at a glance whether the schedule
+    // can actually authorize.
+    if (has('CRON_SECRET')) {
+      integrations.weeklyDigestCron = {
+        status: 'live',
+        via: 'CRON_SECRET',
+        provider: 'vercel-cron',
+        mode: 'mon-13-00-utc',
+      };
+    } else {
+      integrations.weeklyDigestCron = {
+        status: 'degraded',
+        via: null,
+        reason: 'CRON_SECRET not set',
+        fallback: 'Vercel cron will fire but endpoint returns 503',
+      };
+    }
+
+    // --- Comp-customer guard (always live, code-only) ----------------------
+    // Stripe webhook branches and POST /billing/checkout refuse to clobber
+    // rows whose stripe_customer_id starts with `comp_`. No env var, but
+    // surfacing the guard makes the protection visible in /health output.
+    integrations.compGuard = {
+      status: 'live',
+      via: null,
+      provider: 'code-level',
+      mode: 'comp_* sentinel ids immune to webhooks',
+    };
 
     // --- ML Sentiment endpoint ---------------------------------------------
     // Tier 1: dedicated FinBERT/Python service via ML_SENTIMENT_ENDPOINT

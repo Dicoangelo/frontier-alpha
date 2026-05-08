@@ -177,6 +177,18 @@ export class AlertDelivery {
   }
 
   /**
+   * Send a raw transactional email through the configured provider.
+   * Used by transactional flows (welcome, subscription-confirmed, weekly-digest)
+   * that build their own subject/html/text via the email-templates renderers.
+   *
+   * Returns the provider response shape (success + optional messageId / error)
+   * so callers can log delivery status without parsing into AlertPayload first.
+   */
+  async sendEmail(payload: EmailPayload): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    return this.provider.send(payload);
+  }
+
+  /**
    * Send a single alert notification via all enabled channels (email + push).
    */
   async sendAlert(
@@ -548,4 +560,27 @@ View all alerts: ${this.appUrl}/alerts
 Manage preferences: ${this.appUrl}/settings/notifications
 `.trim();
   }
+}
+
+// ============================================================================
+// SINGLETON ACCESSOR
+// ============================================================================
+
+/**
+ * Lazy singleton — instantiated on first call so env vars are read at runtime
+ * (not at import time, which would break in Vercel serverless cold starts
+ * before env injection). Safe for transactional email sends from any route.
+ */
+let _alertDelivery: AlertDelivery | null = null;
+
+export function getAlertDelivery(): AlertDelivery {
+  if (!_alertDelivery) {
+    _alertDelivery = new AlertDelivery({
+      provider: (process.env.EMAIL_PROVIDER as 'resend' | 'sendgrid' | 'console') || 'console',
+      apiKey: process.env.EMAIL_API_KEY,
+      fromEmail: process.env.EMAIL_FROM,
+      appUrl: process.env.NEXT_PUBLIC_APP_URL,
+    });
+  }
+  return _alertDelivery;
 }

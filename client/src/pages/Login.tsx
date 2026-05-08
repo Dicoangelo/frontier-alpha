@@ -43,7 +43,24 @@ export function Login() {
         </div>
 
         <p className="text-center text-[9px] text-[var(--color-text-muted)] mt-6 mono tracking-[0.2em] uppercase">
-          By signing in, you agree to our Terms of Service and Privacy Policy
+          By signing in, you agree to our{' '}
+          <a
+            href="/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-[var(--color-accent)] transition-colors"
+          >
+            Terms of Service
+          </a>
+          {' '}and{' '}
+          <a
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-[var(--color-accent)] transition-colors"
+          >
+            Privacy Policy
+          </a>
         </p>
       </div>
     </div>

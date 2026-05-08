@@ -211,6 +211,22 @@ export function Landing() {
             >
               API
             </a>
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary)] mono tracking-[0.2em] uppercase transition-colors"
+            >
+              Terms
+            </a>
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary)] mono tracking-[0.2em] uppercase transition-colors"
+            >
+              Privacy
+            </a>
           </nav>
         </div>
       </footer>

@@ -670,15 +670,41 @@ export class AlpacaAdapter extends BrokerAdapter {
 export type BrokerKind = 'alpaca' | 'simulated' | 'mock';
 
 /**
- * Identifies which broker the factory will return for the current process.
- * Pure env inspection — no instantiation, no I/O. Used by the health
- * endpoint to label the Alpaca integration as `live (simulated)` vs `live`.
+ * Process-level broker resolution — pure env inspection, no I/O.
+ * Used by the health endpoint to label the Alpaca integration.
  */
 export function resolveBrokerKind(): BrokerKind {
   const k = process.env.ALPACA_API_KEY;
   const s = process.env.ALPACA_API_SECRET;
   if (k && s) return 'alpaca';
   return 'simulated';
+}
+
+/**
+ * User-scoped broker resolution — checks per-user `user_broker_credentials`
+ * first, falls back to global env, then SimulatedBroker. Async because it
+ * hits Supabase. Used by route handlers that route through `getBrokerForUser`.
+ */
+export async function resolveBrokerKindForUser(userId: string): Promise<{
+  kind: BrokerKind;
+  source: 'user' | 'env' | 'simulated';
+}> {
+  try {
+    const { supabaseAdmin } = await import('../lib/supabase.js');
+    const { data } = await supabaseAdmin
+      .from('user_broker_credentials')
+      .select('broker, status')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle();
+    if (data?.broker === 'alpaca') return { kind: 'alpaca', source: 'user' };
+  } catch {
+    // RLS / table-missing — fall through to env path
+  }
+  if (process.env.ALPACA_API_KEY && process.env.ALPACA_API_SECRET) {
+    return { kind: 'alpaca', source: 'env' };
+  }
+  return { kind: 'simulated', source: 'simulated' };
 }
 
 export function createBroker(
@@ -722,6 +748,54 @@ export function getBrokerForUser(userId: string): BrokerAdapter {
       paperTrading: process.env.ALPACA_PAPER_TRADING !== 'false',
     });
   }
+  return createBroker('simulated', { userId });
+}
+
+/**
+ * Async variant — respects per-user `user_broker_credentials`. When the user
+ * has connected their own Alpaca account (via Settings → Broker), this routes
+ * through their personal keys; otherwise falls back to the env-global Alpaca
+ * key, otherwise SimulatedBroker.
+ *
+ * Routes that handle user-scoped trading should prefer this over the sync
+ * `getBrokerForUser` so connected Alpaca accounts take effect.
+ */
+export async function getBrokerForUserAsync(userId: string): Promise<BrokerAdapter> {
+  const { kind, source } = await resolveBrokerKindForUser(userId);
+
+  if (kind === 'alpaca' && source === 'user') {
+    try {
+      const [{ supabaseAdmin }, { decrypt }] = await Promise.all([
+        import('../lib/supabase.js'),
+        import('../lib/crypto.js'),
+      ]);
+      const { data } = await supabaseAdmin
+        .from('user_broker_credentials')
+        .select('api_key_enc, api_secret_enc, is_paper')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .maybeSingle();
+      if (data?.api_key_enc && data?.api_secret_enc) {
+        return createBroker('alpaca', {
+          apiKey: decrypt(data.api_key_enc),
+          apiSecret: decrypt(data.api_secret_enc),
+          paperTrading: data.is_paper !== false,
+        });
+      }
+    } catch (err) {
+      // Decrypt failed (likely missing / rotated key). Fall through to next tier.
+      logger.warn({ err, userId }, 'Failed to decrypt user broker creds; falling back');
+    }
+  }
+
+  if (kind === 'alpaca') {
+    return createBroker('alpaca', {
+      apiKey: process.env.ALPACA_API_KEY,
+      apiSecret: process.env.ALPACA_API_SECRET,
+      paperTrading: process.env.ALPACA_PAPER_TRADING !== 'false',
+    });
+  }
+
   return createBroker('simulated', { userId });
 }
 

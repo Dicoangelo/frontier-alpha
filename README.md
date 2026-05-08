@@ -200,7 +200,7 @@ Client config:
 
 <br/>
 
-### Backend Integrations (10 of 11 live)
+### Backend Integrations (12 of 14 live — verified by `/api/v1/health/integrations`)
 
 | Integration | Status | Provider |
 |:------------|:------:|:---------|
@@ -231,7 +231,7 @@ Diagnostic endpoint: `GET /api/v1/health/integrations`
 Every subsystem is a **module** — swap implementations with a config change, zero code changes.
 
 ```
-75+ modules · 107 API routes (26 modules) · 265 tests · 22 subsystems · 13 migrations · 10/11 integrations live · Two-tier deploy
+75+ modules · 107 API routes (26 modules) · 265 tests · 22 subsystems · 13 migrations · 12/14 integrations live · Two-tier deploy
 ```
 
 | Subsystem | Module | Ships with | Extend |
@@ -579,7 +579,7 @@ The client opens at `http://localhost:5173` and the API at `http://localhost:300
 | Endpoint | Method | Description |
 |:---------|:------:|:------------|
 | `/api/v1/health` | GET | Health check |
-| `/api/v1/health/integrations` | GET | Integration diagnostic (10 of 11 live) |
+| `/api/v1/health/integrations` | GET | Integration diagnostic (12 of 14 live — Vercel WS + Upstash deferred) |
 | `/api/openapi` | GET | OpenAPI specification |
 | `/api/v1/quotes/:symbol` | GET | Real-time quote |
 | `/api/v1/portfolio/factors/:symbols` | GET | Factor exposures |

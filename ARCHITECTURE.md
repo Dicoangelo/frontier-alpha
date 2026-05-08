@@ -86,7 +86,7 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 
 ## Backend Integrations
 
-**Status as of v1.2.2 (2026-05-08):** 10 of 11 integrations are live in production. Diagnostic endpoint: `GET /api/v1/health/integrations`.
+**Status as of v1.2.3 (2026-05-08):** 12 of 14 integrations are live in production. Diagnostic endpoint: `GET /api/v1/health/integrations` — surfaces all 14 entries including Connect Alpaca crypto probe, weekly digest cron auth, and comp-customer guard. Two remain degraded: Vercel WS (by design — Railway covers that tier) and Upstash rate-limiter (deferred).
 
 | Integration | Status | Provider | Wired by |
 |-------------|--------|----------|----------|
@@ -478,7 +478,7 @@ Commands: `npm run test:unit` (server), `npm run test:all` (server + client), `c
 | Supabase migrations | "10" | **14** | supabase/migrations/ glob (added 3 paper-trading tables) |
 | Server .ts files | — | **79** | src/ glob |
 | Component .tsx files | "68+" | **~95** | client/src/components/ glob |
-| Backend integrations live | 10 of 11 | **10 of 11** | `/api/v1/health/integrations` (Connect Alpaca + weekly digest cron added v1.2.0–v1.2.1) |
+| Backend integrations live | 12 of 14 | **12 of 14** | `/api/v1/health/integrations` (Connect Alpaca + weekly digest cron + comp guard surfaced v1.2.3) |
 | Deployment tiers | 2 | **2** | Vercel (SPA + REST) + Railway (WS + REST) |
 
 ---

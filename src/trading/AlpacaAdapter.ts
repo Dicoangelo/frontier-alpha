@@ -26,6 +26,7 @@ import {
   type Asset,
   MockBrokerAdapter,
 } from './BrokerAdapter.js';
+import { SimulatedBroker } from './SimulatedBroker.js';
 
 // ============================================================================
 // Constants
@@ -666,9 +667,23 @@ export class AlpacaAdapter extends BrokerAdapter {
 // Factory Function
 // ============================================================================
 
+export type BrokerKind = 'alpaca' | 'simulated' | 'mock';
+
+/**
+ * Identifies which broker the factory will return for the current process.
+ * Pure env inspection — no instantiation, no I/O. Used by the health
+ * endpoint to label the Alpaca integration as `live (simulated)` vs `live`.
+ */
+export function resolveBrokerKind(): BrokerKind {
+  const k = process.env.ALPACA_API_KEY;
+  const s = process.env.ALPACA_API_SECRET;
+  if (k && s) return 'alpaca';
+  return 'simulated';
+}
+
 export function createBroker(
-  type: 'alpaca' | 'mock' = 'mock',
-  config?: Partial<BrokerConfig>
+  type: BrokerKind = 'simulated',
+  config?: Partial<BrokerConfig> & { userId?: string }
 ): BrokerAdapter {
   const fullConfig: BrokerConfig = {
     apiKey: config?.apiKey || process.env.ALPACA_API_KEY || '',
@@ -681,16 +696,47 @@ export function createBroker(
     return new AlpacaAdapter(fullConfig);
   }
 
-  // Fall back to mock broker
+  if (type === 'simulated' && config?.userId) {
+    return new SimulatedBroker({ ...fullConfig, userId: config.userId });
+  }
+
+  // Fall back to mock broker (used only for non-user-scoped callers — e.g.
+  // server-internal jobs that need a broker shape without a JWT). Real users
+  // hit getBrokerForUser() which routes to SimulatedBroker.
   return new MockBrokerAdapter(fullConfig);
 }
 
+/**
+ * User-scoped broker selector — returns Alpaca when ALPACA_API_KEY is set,
+ * otherwise SimulatedBroker (Supabase-persisted, live Polygon quotes).
+ *
+ * Always allocates a fresh adapter — SimulatedBroker is per-user and the
+ * Alpaca adapter is cheap to construct (no connection pool).
+ */
+export function getBrokerForUser(userId: string): BrokerAdapter {
+  const kind = resolveBrokerKind();
+  if (kind === 'alpaca') {
+    return createBroker('alpaca', {
+      apiKey: process.env.ALPACA_API_KEY,
+      apiSecret: process.env.ALPACA_API_SECRET,
+      paperTrading: process.env.ALPACA_PAPER_TRADING !== 'false',
+    });
+  }
+  return createBroker('simulated', { userId });
+}
+
 // ============================================================================
-// Broker Manager Singleton
+// Broker Manager Singleton (non-user-scoped)
 // ============================================================================
 
 let _broker: BrokerAdapter | null = null;
 
+/**
+ * Singleton broker for non-user-scoped callers. Returns AlpacaAdapter when
+ * keys are configured; otherwise falls back to MockBrokerAdapter — note this
+ * is NOT the SimulatedBroker (which requires a userId). Per-user trading
+ * surfaces should call `getBrokerForUser(userId)` instead.
+ */
 export function getBroker(): BrokerAdapter {
   if (!_broker) {
     const alpacaKey = process.env.ALPACA_API_KEY;
@@ -703,6 +749,8 @@ export function getBroker(): BrokerAdapter {
         paperTrading: process.env.ALPACA_PAPER_TRADING !== 'false',
       });
     } else {
+      // No userId available at the singleton level — fall back to the in-memory
+      // mock so callers like backtest harnesses don't blow up.
       _broker = createBroker('mock');
     }
   }

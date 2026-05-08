@@ -18,7 +18,7 @@
 <img src="https://img.shields.io/badge/Files-242+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Files" />
 <img src="https://img.shields.io/badge/Endpoints-48-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Endpoints" />
 <img src="https://img.shields.io/badge/Factors-76-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Factors" />
-<img src="https://img.shields.io/badge/Version-1.1.0-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
+<img src="https://img.shields.io/badge/Version-1.2.0-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
 
 <br/><br/>
 
@@ -27,7 +27,7 @@
 <img src="https://img.shields.io/badge/Fastify-4.x-000000?style=for-the-badge&logo=fastify&logoColor=white&labelColor=0d1117" alt="Fastify" />
 <img src="https://img.shields.io/badge/Vite-7.x-646CFF?style=for-the-badge&logo=vite&logoColor=white&labelColor=0d1117" alt="Vite" />
 <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white&labelColor=0d1117" alt="Supabase" />
-<img src="https://img.shields.io/badge/GPT--4o-Explainer-412991?style=for-the-badge&logo=openai&logoColor=white&labelColor=0d1117" alt="GPT-4o" />
+<img src="https://img.shields.io/badge/DeepSeek-Explainer-9945FF?style=for-the-badge&logoColor=white&labelColor=0d1117" alt="DeepSeek" />
 
 <br/>
 
@@ -144,25 +144,106 @@ flowchart TB
 
 <br/>
 
+## Two-Tier Deployment
+
+<div align="center">
+
+*Two runtimes, one codebase — Vercel hosts the SPA + REST surface, Railway hosts the WebSocket gateway because serverless can't keep long-lived connections alive.*
+
+```mermaid
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#00d9ff', 'primaryTextColor': '#fff', 'primaryBorderColor': '#00d9ff', 'lineColor': '#00d9ff', 'secondaryColor': '#1a1a2e', 'tertiaryColor': '#0d1117', 'clusterBkg': '#0d1117', 'clusterBorder': '#00d9ff'}}}%%
+flowchart LR
+    USER(("INVESTOR"))
+
+    subgraph VERCEL["VERCEL — Serverless"]
+        SPA["React 19 SPA<br/>━━━━━━━━━━<br/>frontier-alpha.<br/>metaventionsai.com"]
+        REST["Fastify REST<br/>━━━━━━━━━━<br/>buildApp() in<br/>api/fastify.ts"]
+    end
+
+    subgraph RAILWAY["RAILWAY — Always-on Node"]
+        FASTIFY["Standalone Fastify<br/>━━━━━━━━━━<br/>api.frontier-alpha.<br/>metaventionsai.com"]
+        WS["Polygon WebSocket<br/>━━━━━━━━━━<br/>Real-time quote<br/>fan-out"]
+    end
+
+    subgraph SHARED["SHARED — Same Codebase"]
+        SRC["src/app.ts<br/>buildApp()"]
+        ROUTES["src/routes/*.ts<br/>19 modules"]
+    end
+
+    USER -->|"HTTPS"| SPA
+    SPA -->|"REST same-origin<br/>VITE_API_URL=''"| REST
+    SPA -->|"WSS<br/>VITE_WS_URL"| WS
+    WS --> FASTIFY
+    REST -.->|"imports"| SRC
+    FASTIFY -.->|"imports"| SRC
+    SRC --> ROUTES
+
+    style VERCEL fill:#1a1a2e,stroke:#00d9ff,stroke-width:2px
+    style RAILWAY fill:#1a1a2e,stroke:#9945ff,stroke-width:2px
+    style SHARED fill:#16213e,stroke:#ffd700,stroke-width:2px
+    style USER fill:#00d9ff,stroke:#fff,stroke-width:2px,color:#0d1117
+```
+
+</div>
+
+### Production URLs
+
+| Surface | URL | Runtime | Notes |
+|:--------|:----|:-------:|:------|
+| **SPA + REST API** | [`frontier-alpha.metaventionsai.com`](https://frontier-alpha.metaventionsai.com) | Vercel | Apex domain — serves the React SPA and same-origin Fastify REST via `api/fastify.ts` catch-all |
+| **WebSocket + REST** | `frontier-alpha-api-production.up.railway.app` | Railway | Always-on Fastify with `@fastify/websocket` — hosts Polygon WS fan-out |
+| **API subdomain** | `api.frontier-alpha.metaventionsai.com` | Railway | Custom domain, TLS provisioning in progress |
+
+Client config:
+- `VITE_API_URL=''` — same-origin REST (Vercel)
+- `VITE_WS_URL=wss://frontier-alpha-api-production.up.railway.app/ws/quotes` — Railway WebSocket
+
+<br/>
+
+### Backend Integrations (9 of 11 live)
+
+| Integration | Status | Provider |
+|:------------|:------:|:---------|
+| **Supabase auth + RLS** | ✅ Live | service-role JWT |
+| **Polygon REST** | ✅ Live | Polygon.io |
+| **Polygon WebSocket** | ✅ Live (Railway-hosted) | Polygon.io |
+| **Alpha Vantage** | ✅ Live | Alpha Vantage |
+| **LLM explainer** | ✅ Live | DeepSeek (preferred) / OpenAI fallback |
+| **Stripe billing** | ✅ Live | Pro $29 + Enterprise $99 |
+| **Paper trading** | ✅ Live | Internal SimulatedBroker (Supabase + Polygon WS) |
+| **VAPID web push** | ✅ Live | self-generated keys |
+| **Email** | ✅ Live | Resend |
+| **ML sentiment** | ✅ Live | DeepSeek llm-classification |
+| **Rate limiter** | ⚠️ in-memory fallback | Upstash deferred |
+
+Diagnostic endpoint: `GET /api/v1/health/integrations`
+
+<br/>
+
+<img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="100%"/>
+
+<br/>
+
 ## Modular Architecture
 
 Every subsystem is a **module** — swap implementations with a config change, zero code changes.
 
 ```
-75+ modules · 67 API routes · 205 tests · 22 subsystems · 10 migrations · Pluggable everything
+75+ modules · 81+ API routes · 265 tests · 22 subsystems · 14 migrations · 9/11 integrations live · Two-tier deploy
 ```
 
 | Subsystem | Module | Ships with | Extend |
 |-----------|--------|------------|--------|
 | **Factor Analysis** | `FactorEngine` | 76 factors across 6 categories (momentum, value, quality, volatility, size, sentiment), Fama-French + custom | Custom factor plugins via `factors/` |
 | **CVRF Intelligence** | `CVRFManager` | Belief updater, concept extractor, episode manager, persistent storage, conviction tracking | Custom belief models via `cvrf/` |
-| **Cognitive Explainer** | `ExplanationService` | GPT-4o + template dual-mode, confidence scores, source attribution | Any OpenAI-compatible LLM |
+| **Cognitive Explainer** | `ExplanationService` | DeepSeek (primary) + OpenAI (fallback) + template, confidence scores, source attribution | Any OpenAI-compatible LLM |
 | **Portfolio Optimization** | `PortfolioOptimizer` | Monte Carlo simulation, max Sharpe, min variance, risk parity, CVRF-weighted | Custom objective functions |
 | **Backtesting** | `WalkForwardEngine` | Walk-forward engine, CVRF integration, historical data loader, episode replay | Custom strategies via `backtest/` |
 | **Earnings Oracle** | `EarningsOracle` | Calendar, consensus estimates, beat rates, expected moves, historical reactions | Custom data sources |
 | **Risk System** | `RiskAlertSystem` | 11 alert types (drawdown, volatility, concentration, factor drift, stop loss, take profit + 5 more) | Custom alert types |
 | **Market Data** | `MarketDataProvider` | Polygon.io (WebSocket streaming), Alpha Vantage (fundamentals), Ken French Library | Any data provider |
-| **Trading** | `BrokerAdapter` | Alpaca (paper + live), order management, preview, market clock, position tracking | Any broker API |
+| **Trading** | `BrokerAdapter` | Internal SimulatedBroker (paper trading on Polygon WS + Supabase), order management, preview, market clock, position tracking | Any broker API |
+| **Billing** | `StripeService` | Stripe checkout, customer portal, webhook, Pro $29 + Enterprise $99 tiers, idempotent product registration | Any payment provider |
 | **Options** | `GreeksCalculator` | Implied volatility surface, Greeks calculation, strategy builder, chain analysis | Custom pricing models |
 | **ML Engine** | `NeuralFactorModel` | Regime detection, factor attribution, neural models, training pipeline | Custom models via `ml/` |
 | **Tax Optimization** | `TaxLotTracker` | Lot tracking, loss harvesting, wash sale detection, efficient rebalancer, reporting | Custom tax rules |
@@ -361,15 +442,18 @@ ML_RETRAIN_INTERVAL=30
 | Layer | Component | Description | Tech | Status |
 |:-----:|:----------|:------------|:-----|:------:|
 | **Interface** | 58 Components | Portfolio, Factors, Earnings, CVRF, Risk, Options, Charts | React 19, Tailwind | `Production` |
-| **Intelligence** | Factor Engine | 80+ factor exposures across 6 categories | TypeScript | `v1.1.0` |
-| **Intelligence** | CVRF Manager | Episodic learning with belief persistence | TypeScript, Supabase | `v1.1.0` |
-| **Intelligence** | Earnings Oracle | Forecasts, beat rates, expected moves | TypeScript | `v1.1.0` |
-| **Intelligence** | Cognitive Explainer | GPT-4o + template dual-mode explanations | OpenAI, TypeScript | `v1.1.0` |
-| **Compute** | Portfolio Optimizer | Monte Carlo, max Sharpe, min variance, risk parity | TypeScript | `v1.1.0` |
-| **Compute** | Walk-Forward Backtest | CVRF-integrated historical replay | TypeScript | `v1.1.0` |
-| **Compute** | Risk Alert System | 11 alert types, real-time monitoring | TypeScript | `v1.1.0` |
-| **Data** | Supabase | PostgreSQL + RLS, real-time subscriptions | Supabase | `Active` |
-| **Data** | Polygon.io | WebSocket real-time market data | REST + WS | `Active` |
+| **Intelligence** | Factor Engine | 80+ factor exposures across 6 categories | TypeScript | `v1.2.0` |
+| **Intelligence** | CVRF Manager | Episodic learning with belief persistence | TypeScript, Supabase | `v1.2.0` |
+| **Intelligence** | Earnings Oracle | Forecasts, beat rates, expected moves | TypeScript | `v1.2.0` |
+| **Intelligence** | Cognitive Explainer | DeepSeek (preferred) + OpenAI fallback + template | DeepSeek, OpenAI | `v1.2.0` |
+| **Compute** | Portfolio Optimizer | Monte Carlo, max Sharpe, min variance, risk parity | TypeScript | `v1.2.0` |
+| **Compute** | Walk-Forward Backtest | CVRF-integrated historical replay | TypeScript | `v1.2.0` |
+| **Compute** | Risk Alert System | 11 alert types, real-time monitoring | TypeScript | `v1.2.0` |
+| **Compute** | Paper Trading | Internal SimulatedBroker on Polygon WS + Supabase | TypeScript | `v1.2.0` |
+| **Compute** | Stripe Billing | Pro $29 + Enterprise $99 with checkout + portal | Stripe | `v1.2.0` |
+| **Data** | Supabase | PostgreSQL + RLS, real-time subscriptions, paper-trading tables | Supabase | `Active` |
+| **Data** | Polygon REST | Snapshots, history, fundamentals | REST | `Active` |
+| **Data** | Polygon WebSocket | Real-time quotes (Railway-hosted) | WS | `Active` |
 | **Data** | Alpha Vantage | Fundamentals, earnings, Ken French Library | REST | `Active` |
 
 <br/>
@@ -459,19 +543,22 @@ The client opens at `http://localhost:5173` and the API at `http://localhost:300
 
 <div align="center">
 
-*Production API at `https://frontier-alpha.metaventionsai.com`*
+*Production REST API at `https://frontier-alpha.metaventionsai.com` (Vercel) — WebSocket at `wss://frontier-alpha-api-production.up.railway.app/ws/quotes` (Railway)*
 
 </div>
 
 | Endpoint | Method | Description |
 |:---------|:------:|:------------|
 | `/api/v1/health` | GET | Health check |
+| `/api/v1/health/integrations` | GET | Integration diagnostic (9 of 11 live) |
 | `/api/openapi` | GET | OpenAPI specification |
 | `/api/v1/quotes/:symbol` | GET | Real-time quote |
 | `/api/v1/portfolio/factors/:symbols` | GET | Factor exposures |
-| `/api/v1/portfolio/optimize` | POST | Portfolio optimization |
+| `/api/v1/portfolio/optimize` | POST | Portfolio optimization (Pro gated) |
 | `/api/v1/earnings/forecast/:symbol` | GET | Earnings forecast |
-| `/api/v1/cvrf/beliefs` | GET | Current CVRF beliefs |
+| `/api/v1/cvrf/beliefs` | GET | Current CVRF beliefs (Pro gated) |
+| `/api/v1/billing/checkout` | POST | Stripe checkout session |
+| `/ws/quotes` | WSS | Polygon real-time quote stream (Railway) |
 
 <details>
 <summary><b>Example Requests</b> (click to expand)</summary>
@@ -549,8 +636,10 @@ npm run ml:start         # Optional Python ML engine (port 8000)
 | **Database** | Supabase (PostgreSQL), Row Level Security, real-time subscriptions |
 | **Market Data** | Polygon.io (real-time quotes), Alpha Vantage (fundamentals + earnings) |
 | **Academic Data** | Ken French Library (academic factor returns) |
-| **AI** | GPT-4o (cognitive explanations) |
-| **Infrastructure** | Vercel (serverless + static), Docker, Railway, Sentry |
+| **AI** | DeepSeek (primary explainer + sentiment), OpenAI GPT-4o (fallback) |
+| **Billing** | Stripe (Pro $29, Enterprise $99) — checkout, customer portal, webhook |
+| **Email** | Resend (transactional) |
+| **Infrastructure** | Vercel (SPA + REST), Railway (WebSocket + REST), Docker, Sentry |
 | **Testing** | Vitest (205 tests), Testing Library, MSW (Mock Service Worker) |
 | **PWA** | Service Worker, Web Push API, offline caching |
 
@@ -573,17 +662,22 @@ npm run ml:start         # Optional Python ML engine (port 8000)
 - [x] Factor Engine (76 factors across 6 categories)
 - [x] Portfolio Optimizer (Monte Carlo, max Sharpe, min variance, risk parity)
 - [x] CVRF Intelligence (episodic learning, belief persistence)
-- [x] Cognitive Explainer (GPT-4o + template dual-mode)
+- [x] Cognitive Explainer (DeepSeek primary + OpenAI fallback + template) ✅ v1.2.0
 - [x] Earnings Oracle (calendar, forecasts, historical reactions)
 - [x] Walk-Forward Backtest (CVRF-integrated historical replay)
 - [x] Risk Alert System (11 alert types, real-time monitoring)
 - [x] Push Notifications (browser push for risk + earnings events)
 - [x] PWA Support (installable, offline caching)
-- [x] Real-time Streaming (WebSocket → SSE → Polling fallback)
+- [x] Real-time Streaming (Polygon WebSocket on Railway, fan-out to client) ✅ v1.2.0
 - [x] Options Chain Analysis
 - [x] Supabase Auth + RLS
 - [x] Vercel Deployment + CI/CD
 - [x] UI family-aesthetic polish — 35 files across 5 rounds (PRs #3 + #4, v1.1.0)
+- [x] Stripe Live Billing — Pro $29 + Enterprise $99 + checkout return flow ✅ v1.2.0
+- [x] Internal Paper Trading — SimulatedBroker on Polygon WS + 3 Supabase tables ✅ v1.2.0
+- [x] Two-tier Deployment — Vercel SPA + REST + Railway WebSocket ✅ v1.2.0
+- [x] Subscription gating (UpgradeGate on Optimize + CVRF) ✅ v1.2.0
+- [x] Demo workflow — landing → signup → dashboard handoff ✅ v1.2.0
 
 <div align="center">
 

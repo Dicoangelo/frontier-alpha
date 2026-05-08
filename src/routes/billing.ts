@@ -38,6 +38,33 @@ function getPlanFromPriceId(priceId: string): 'pro' | 'enterprise' {
   return 'pro';
 }
 
+/**
+ * Comp customers (founder, lifetime grants, free Pro routes) are seeded with
+ * sentinel IDs starting with `comp_` so that no legitimate Stripe event can
+ * ever match them on stripe_customer_id (real Stripe IDs are `cus_...`).
+ *
+ * `isCompCustomerByUserId` is the userId-keyed check used at the top of the
+ * checkout flow and the checkout.session.completed webhook branch — both
+ * paths key on user_id, not stripe_customer_id, so they need an explicit
+ * lookup to refuse to overwrite a comp row.
+ */
+const COMP_PREFIX = 'comp_';
+
+async function isCompCustomerByUserId(userId: string): Promise<boolean> {
+  const { data } = await supabaseAdmin
+    .from('frontier_subscriptions')
+    .select('stripe_customer_id, stripe_subscription_id')
+    .eq('user_id', userId)
+    .maybeSingle();
+  const row = data as
+    | { stripe_customer_id?: string | null; stripe_subscription_id?: string | null }
+    | null;
+  return Boolean(
+    row?.stripe_customer_id?.startsWith(COMP_PREFIX) ||
+      row?.stripe_subscription_id?.startsWith(COMP_PREFIX),
+  );
+}
+
 export async function billingRoutes(fastify: FastifyInstance, _opts: RouteContext) {
   // POST /api/v1/billing/checkout — create Stripe Checkout Session
   fastify.post<{ Body: CheckoutBody; Reply: APIResponse<unknown> }>(
@@ -65,6 +92,20 @@ export async function billingRoutes(fastify: FastifyInstance, _opts: RouteContex
         return reply.status(400).send({
           success: false,
           error: { code: 'VALIDATION_ERROR', message: 'priceId is required' },
+        });
+      }
+
+      // Refuse to start a Stripe checkout for comp/founder accounts. Their
+      // entitlement is granted directly in the DB and a real subscription
+      // would clobber the comp_ sentinel IDs the webhook layer relies on.
+      if (await isCompCustomerByUserId(user.id)) {
+        return reply.status(409).send({
+          success: false,
+          error: {
+            code: 'COMP_ACCOUNT',
+            message:
+              'This account already has a complimentary subscription. Contact support to change billing.',
+          },
         });
       }
 
@@ -248,6 +289,17 @@ export async function billingRoutes(fastify: FastifyInstance, _opts: RouteContex
             const userId = session.metadata?.userId;
             if (!userId || !session.subscription) break;
 
+            // Comp accounts must never be overwritten by a Stripe checkout
+            // — if a session somehow lands with a comp user's id, log and
+            // 200 the webhook so Stripe doesn't retry, but skip the upsert.
+            if (await isCompCustomerByUserId(userId)) {
+              logger.warn(
+                { userId, sessionId: session.id },
+                'Skipping checkout.session.completed upsert for comp account',
+              );
+              break;
+            }
+
             const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
             const priceId = subscription.items.data[0]?.price?.id || '';
             const plan = getPlanFromPriceId(priceId);
@@ -332,6 +384,10 @@ export async function billingRoutes(fastify: FastifyInstance, _opts: RouteContex
                     ? 'trialing'
                     : 'active';
 
+            // Defense-in-depth: comp rows carry sentinel `comp_*` customer
+            // IDs that real Stripe events can never match (real IDs start
+            // with `cus_`). The explicit not-like clause keeps the guard
+            // load-bearing even if comp ID format ever changes.
             await supabaseAdmin
               .from('frontier_subscriptions')
               .update({
@@ -342,7 +398,8 @@ export async function billingRoutes(fastify: FastifyInstance, _opts: RouteContex
                   (subscription as unknown as { current_period_end: number }).current_period_end * 1000
                 ).toISOString(),
               })
-              .eq('stripe_customer_id', customerId);
+              .eq('stripe_customer_id', customerId)
+              .not('stripe_customer_id', 'like', `${COMP_PREFIX}%`);
             break;
           }
 
@@ -358,7 +415,8 @@ export async function billingRoutes(fastify: FastifyInstance, _opts: RouteContex
                 stripe_subscription_id: null,
                 current_period_end: null,
               })
-              .eq('stripe_customer_id', customerId);
+              .eq('stripe_customer_id', customerId)
+              .not('stripe_customer_id', 'like', `${COMP_PREFIX}%`);
             break;
           }
 
@@ -369,7 +427,8 @@ export async function billingRoutes(fastify: FastifyInstance, _opts: RouteContex
             await supabaseAdmin
               .from('frontier_subscriptions')
               .update({ status: 'past_due' })
-              .eq('stripe_customer_id', customerId);
+              .eq('stripe_customer_id', customerId)
+              .not('stripe_customer_id', 'like', `${COMP_PREFIX}%`);
             break;
           }
 

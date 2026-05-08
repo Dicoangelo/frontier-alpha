@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.2] - 2026-05-08
+
+### Comp customer guard — billing webhooks cannot clobber comp rows
+
+Comp/founder accounts are seeded with sentinel `comp_*` IDs in
+`stripe_customer_id` and `stripe_subscription_id`. Real Stripe customer IDs
+are `cus_*` so the formats can never collide, but this release makes the
+protection explicit at every mutation site:
+
+- **Added** `isCompCustomerByUserId()` helper + `COMP_PREFIX` sentinel in
+  `src/routes/billing.ts`.
+- **Changed** `POST /api/v1/billing/checkout` — refuses to create a Stripe
+  Checkout Session for a user whose subscription row carries comp IDs (409
+  `COMP_ACCOUNT`).
+- **Changed** `checkout.session.completed` webhook — skips the upsert and
+  logs `Skipping checkout.session.completed upsert for comp account` when
+  the inbound `metadata.userId` belongs to a comp account.
+- **Changed** `customer.subscription.updated`, `customer.subscription.deleted`,
+  and `invoice.payment_failed` webhook branches — added explicit
+  `.not('stripe_customer_id', 'like', 'comp_%')` clause as defense-in-depth.
+
+---
+
 ## [1.2.1] - 2026-05-08
 
 ### Weekly digest — real metrics

@@ -252,6 +252,10 @@ export async function billingRoutes(fastify: FastifyInstance, _opts: RouteContex
             const priceId = subscription.items.data[0]?.price?.id || '';
             const plan = getPlanFromPriceId(priceId);
 
+            const periodEndIso = new Date(
+              (subscription as unknown as { current_period_end: number }).current_period_end * 1000
+            ).toISOString();
+
             await supabaseAdmin
               .from('frontier_subscriptions')
               .upsert(
@@ -261,12 +265,54 @@ export async function billingRoutes(fastify: FastifyInstance, _opts: RouteContex
                   stripe_subscription_id: subscription.id,
                   plan,
                   status: 'active',
-                  current_period_end: new Date(
-                    (subscription as unknown as { current_period_end: number }).current_period_end * 1000
-                  ).toISOString(),
+                  current_period_end: periodEndIso,
                 },
                 { onConflict: 'user_id' }
               );
+
+            // Send subscription-confirmation email — non-fatal if it fails so
+            // the webhook still 200s and Stripe doesn't retry.
+            try {
+              const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+              const email = authUser?.user?.email;
+              if (email) {
+                const { data: profile } = await supabaseAdmin
+                  .from('frontier_profiles')
+                  .select('display_name')
+                  .eq('user_id', userId)
+                  .maybeSingle();
+
+                const displayName =
+                  (profile as { display_name?: string } | null)?.display_name ||
+                  (authUser?.user?.user_metadata as { full_name?: string; name?: string } | undefined)?.full_name ||
+                  (authUser?.user?.user_metadata as { full_name?: string; name?: string } | undefined)?.name ||
+                  email.split('@')[0];
+
+                const frontendUrl = process.env.FRONTEND_URL || 'https://frontier-alpha.metaventionsai.com';
+                const portalUrl = `${frontendUrl}/settings/billing`;
+
+                const { renderSubscriptionConfirmed } = await import(
+                  '../notifications/email-templates/index.js'
+                );
+                const { getAlertDelivery } = await import('../notifications/AlertDelivery.js');
+
+                const payload = renderSubscriptionConfirmed({
+                  displayName,
+                  plan: plan as 'pro' | 'enterprise',
+                  nextBillingDate: periodEndIso,
+                  portalUrl,
+                });
+
+                await getAlertDelivery().sendEmail({
+                  to: email,
+                  subject: payload.subject,
+                  html: payload.html,
+                  text: payload.text,
+                });
+              }
+            } catch (err) {
+              logger.warn({ err, userId }, 'Failed to send subscription confirmation email');
+            }
             break;
           }
 

@@ -7,6 +7,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-05-08
+
+### Backend integration wave — 9 of 11 integrations live, two-tier deployment
+
+This release closes the live-services gap. Stripe billing, DeepSeek explanation, Resend email,
+VAPID web push, and an internal SimulatedBroker all moved from "wired-but-dormant" to
+production-active. A second deployment tier (Railway) was introduced to host the long-lived
+Polygon WebSocket that Vercel's serverless runtime cannot keep open. PRs #10–#13.
+
+### Added
+
+- **SimulatedBroker** — internal paper trading engine. Fills against the live Polygon WebSocket
+  (Railway tier) and persists into Supabase tables `paper_accounts`, `paper_orders`,
+  `paper_positions` with RLS. Replaces the read-only demo path; no external broker dependency.
+- **Stripe live billing** — Pro ($29/mo) and Enterprise ($99/mo) products created via the Stripe
+  API with stable `lookup_keys`, idempotent provisioning script (`scripts/create-stripe-products.mjs`),
+  webhook endpoint registered, signing secret wired. Subscription state flows through
+  `useSubscription` and `UpgradeGate`.
+- **DeepSeek V4 explainer** — preferred LLM provider for `ExplanationService`. OpenAI remains
+  supported as a fallback. Selection is provider-agnostic: `DeepSeek > OpenAI > template`.
+- **Resend email** — alerts and transactional sends. Four new templates: welcome, alert digest,
+  billing receipt, billing failure.
+- **VAPID web push** — keys self-generated; both server (`PushService`) and client (subscription
+  flow) wired end-to-end.
+- **Railway deployment tier** — second runtime at `frontier-alpha-api-production.up.railway.app`
+  hosting the standalone Fastify build with WebSocket support. Custom subdomain
+  `api.frontier-alpha.metaventionsai.com` pending TLS provisioning. Same codebase, different
+  runtime mode (long-lived vs serverless).
+- **Two-tier deployment architecture** — Vercel hosts the SPA + REST API; Railway hosts
+  long-lived WebSocket. Client uses `VITE_WS_URL` to point at Railway and `VITE_API_URL=''` for
+  same-origin REST.
+- **Subscription gating UI** — `UpgradeGate` component + `useSubscription` hook lock Pro features
+  behind active subscription state.
+- **Stripe checkout return flow** — `BillingSuccess` and `BillingCanceled` pages handle the
+  Stripe-hosted checkout redirect handoff.
+- **`/api/v1/health/integrations`** — diagnostic endpoint reporting per-integration status
+  (live / unwired / degraded).
+- **Operational scripts** — `scripts/wire-production-env.sh`, `scripts/wire-deepseek.sh`,
+  `scripts/wire-vapid.sh`, `scripts/wire-stripe-webhook.mjs`, `scripts/create-stripe-products.mjs`.
+
+### Changed
+
+- **`ExplanationService`** — provider-agnostic. Resolution order: DeepSeek → OpenAI → template.
+  Previously OpenAI-only.
+- **`SentimentAnalyzer`** — three-tier resolution. FinBERT → LLM (DeepSeek) → keyword fallback.
+  With `DEEPSEEK_API_KEY` set, the service moves out of the previous degraded keyword-only mode
+  into `llm-classification` mode.
+- **Trading page banner** — `READ-ONLY DEMO MODE` replaced with `PAPER TRADING · Frontier Alpha
+  Engine`. Reflects the SimulatedBroker now backing live order flow.
+- **Demo workflow** — landing → signup → dashboard handoff now preserves preview symbols across
+  the auth boundary.
+
+### Fixed
+
+- **Vercel client missed Supabase env** — the client wasn't reading `VITE_*`-prefixed Supabase
+  variables. Realigned env names and verified through the Vercel build pipeline.
+- **Graceful degradation** — UI now degrades cleanly when an integration is unwired
+  (no console flooding, contained error UI). Confirmed against the
+  `/api/v1/health/integrations` matrix.
+
+### Pending
+
+- **Upstash Redis** — still pending. Free signup not yet completed. Rate limiter falls back to
+  in-memory (single-instance correct, multi-instance soft).
+
+**Production:** https://frontier-alpha.metaventionsai.com (Vercel) +
+https://frontier-alpha-api-production.up.railway.app (Railway, custom subdomain pending TLS).
+Deployed 2026-05-08.
+
+---
+
 ## [1.1.0] - 2026-05-07
 
 ### UI: family-aesthetic polish across 35 files

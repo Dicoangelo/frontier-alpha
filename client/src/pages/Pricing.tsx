@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Check, ArrowLeft, Mail, Info } from 'lucide-react';
 import { api } from '@/api/client';
 import { useAuthStore } from '@/stores/authStore';
@@ -73,12 +73,30 @@ const PLANS: PlanConfig[] = [
 
 export function Pricing() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuthStore();
   const { plan: currentPlan } = useSubscription();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const { toastError, toastInfo } = useToast();
   const stripeStatus = useStripeStatus();
   const stripeDegraded = stripeStatus === 'degraded';
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Scroll the targeted plan card into view when arriving from an upgrade gate
+  // (e.g. /pricing?plan=pro). Runs once on mount.
+  useEffect(() => {
+    const requested = searchParams.get('plan');
+    if (!requested) return;
+    const target = ['pro', 'enterprise'].includes(requested.toLowerCase())
+      ? requested.charAt(0).toUpperCase() + requested.slice(1).toLowerCase()
+      : null;
+    if (!target) return;
+    // Defer until the page paints, then smoothly scroll the card into view.
+    const id = window.setTimeout(() => {
+      cardRefs.current[target]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 120);
+    return () => window.clearTimeout(id);
+  }, [searchParams]);
 
   const handleCheckout = async (plan: PlanConfig) => {
     if (!plan.priceId) return;
@@ -91,8 +109,11 @@ export function Pricing() {
     setLoadingPlan(plan.name);
 
     try {
+      const origin = window.location.origin;
       const response = await api.post('/billing/checkout', {
         priceId: plan.priceId,
+        successUrl: `${origin}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${origin}/billing/canceled`,
       }) as { data: { url: string } };
 
       if (response.data?.url) {
@@ -194,7 +215,10 @@ export function Pricing() {
             return (
               <div
                 key={plan.name}
-                className={`${cardSurface} rounded-2xl p-6 sm:p-8 flex flex-col relative animate-enter`}
+                ref={(el) => {
+                  cardRefs.current[plan.name] = el;
+                }}
+                className={`${cardSurface} rounded-2xl p-6 sm:p-8 flex flex-col relative animate-enter scroll-mt-24`}
               >
                 {plan.highlighted && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-[image:var(--gradient-sovereign)] text-white text-[10px] mono tracking-[0.3em] uppercase rounded-full shadow-[0_4px_20px_rgba(123,44,255,0.45)]">

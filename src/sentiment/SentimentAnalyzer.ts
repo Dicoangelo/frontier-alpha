@@ -93,17 +93,27 @@ export class SentimentAnalyzer {
    * Analyze sentiment of a single text
    */
   async analyze(text: string): Promise<SentimentScore> {
-    // Try ML endpoint first (FinBERT)
+    // Tier 1: Dedicated ML endpoint (FinBERT, if wired)
     if (this.mlEndpoint) {
       try {
         const mlResult = await this.callFinBERT(text);
         if (mlResult) return mlResult;
       } catch (e) {
-        logger.warn({ err: e }, 'FinBERT fallback to keyword analysis');
+        logger.warn({ err: e }, 'FinBERT fallback to LLM');
       }
     }
 
-    // Fallback: Keyword-based analysis
+    // Tier 2: DeepSeek/OpenAI sentiment classification (cheaper than running FinBERT)
+    if (process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY) {
+      try {
+        const llmResult = await this.callLLMSentiment(text);
+        if (llmResult) return llmResult;
+      } catch (e) {
+        logger.warn({ err: e }, 'LLM sentiment fallback to keyword');
+      }
+    }
+
+    // Tier 3: Keyword analysis (always available)
     return this.keywordAnalysis(text);
   }
 
@@ -261,6 +271,82 @@ export class SentimentAnalyzer {
   // ============================================================================
   // PRIVATE METHODS
   // ============================================================================
+
+  /**
+   * Tier-2 sentiment via DeepSeek/OpenAI. Both providers expose the same
+   * /v1/chat/completions schema, so the fetch shape is identical.
+   * Mirrors ExplanationService.resolveLLMProvider() — DeepSeek preferred when both keys present.
+   */
+  private async callLLMSentiment(text: string): Promise<SentimentScore | null> {
+    const provider = process.env.DEEPSEEK_API_KEY
+      ? {
+          key: process.env.DEEPSEEK_API_KEY,
+          base: 'https://api.deepseek.com/v1',
+          model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
+        }
+      : process.env.OPENAI_API_KEY
+        ? {
+            key: process.env.OPENAI_API_KEY,
+            base: 'https://api.openai.com/v1',
+            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+          }
+        : null;
+
+    if (!provider) return null;
+
+    try {
+      const response = await fetch(`${provider.base}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${provider.key}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: provider.model,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You are a financial sentiment classifier. Respond with ONLY a JSON object: ' +
+                '{"label":"positive"|"neutral"|"negative","confidence":0..1,"scores":{"positive":0..1,"neutral":0..1,"negative":0..1}}. ' +
+                'No prose, no markdown.',
+            },
+            { role: 'user', content: text.slice(0, 2000) },
+          ],
+          temperature: 0.2,
+          max_tokens: 120,
+        }),
+      });
+
+      if (!response.ok) return null;
+
+      const data = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+      const raw = data.choices?.[0]?.message?.content?.trim() ?? '';
+      // Strip optional markdown fences
+      const json = raw.replace(/^```(?:json)?\s*|```$/gm, '').trim();
+      const parsed = JSON.parse(json) as {
+        label: string;
+        confidence: number;
+        scores?: { positive: number; neutral: number; negative: number };
+      };
+
+      const label = (['positive', 'neutral', 'negative'] as const).includes(parsed.label as never)
+        ? (parsed.label as SentimentLabel)
+        : 'neutral';
+
+      return {
+        label,
+        confidence: Math.max(0, Math.min(1, parsed.confidence)),
+        scores: parsed.scores || {
+          positive: label === 'positive' ? parsed.confidence : 0.1,
+          neutral: label === 'neutral' ? parsed.confidence : 0.1,
+          negative: label === 'negative' ? parsed.confidence : 0.1,
+        },
+      };
+    } catch {
+      return null;
+    }
+  }
 
   private async callFinBERT(text: string): Promise<SentimentScore | null> {
     if (!this.mlEndpoint) return null;

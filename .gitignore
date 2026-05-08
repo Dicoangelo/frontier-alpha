@@ -34,3 +34,6 @@ coverage/
 # Ralph TUI
 .ralph-tui/
 .claude/
+
+# VAPID keys (web push) — generated locally, never commit
+scripts/.vapid-keys.json

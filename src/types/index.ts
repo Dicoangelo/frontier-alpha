@@ -167,3 +167,40 @@ export interface APIResponse<T> {
   error?: { code: string; message: string; details?: Record<string, unknown> };
   meta?: { timestamp: Date; requestId: string; latencyMs: number };
 }
+
+// ============================================================================
+// INTEGRATION HEALTH (ops diagnostic — see /api/v1/health/integrations)
+// ============================================================================
+
+export type IntegrationStatus = 'live' | 'degraded';
+
+/**
+ * Wiring status of a single external integration.
+ *
+ * - `status: 'live'` → required env var(s) present (presence-only check,
+ *   no network calls).
+ * - `status: 'degraded'` → env not set; `reason` always populated, plus
+ *   `fallback` (when traffic still serves) or `impact` (when it does not).
+ *
+ * `via` lists the env var name(s) that gate the integration so ops can
+ * trace the wiring without exposing actual secret values.
+ */
+export interface IntegrationHealthEntry {
+  status: IntegrationStatus;
+  via?: string | null;
+  mode?: string;
+  provider?: string;
+  reason?: string;
+  fallback?: string;
+  impact?: string;
+}
+
+export interface IntegrationsHealthResponse {
+  checkedAt: string;
+  integrations: Record<string, IntegrationHealthEntry>;
+  summary: {
+    live: number;
+    degraded: number;
+    total: number;
+  };
+}

@@ -6,13 +6,14 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Bell, Filter, RefreshCw, ShieldAlert } from 'lucide-react';
+import { Bell, Filter, RefreshCw, ShieldAlert, Mail } from 'lucide-react';
 import { AlertList } from '@/components/alerts/AlertCard';
 import { FactorDriftAlert } from '@/components/alerts/FactorDriftAlert';
 import { SECFilingAlert } from '@/components/alerts/SECFilingAlert';
 import { SkeletonCard } from '@/components/shared/Skeleton';
 import { DataLoadError, EmptyAlerts } from '@/components/shared/EmptyState';
 import { api } from '@/api/client';
+import { useEmailDeliveryStatus } from '@/hooks/useIntegrationsHealth';
 import type { RiskAlert } from '@/types';
 
 interface FactorExposure {
@@ -33,6 +34,9 @@ export function Alerts() {
   const [showAcknowledged, setShowAcknowledged] = useState(false);
   const [factorExposures, setFactorExposures] = useState<FactorExposure[]>([]);
   const [portfolioSymbols, setPortfolioSymbols] = useState<string[]>([]);
+  const [emailChannel, setEmailChannel] = useState(false);
+  const emailStatus = useEmailDeliveryStatus();
+  const emailDegraded = emailStatus === 'degraded';
 
   const loadAlerts = useCallback(async () => {
     setIsLoading(true);
@@ -312,6 +316,36 @@ export function Alerts() {
             Show acknowledged
           </span>
         </label>
+
+        {/* Notification channel — Email (kept enabled even when delivery offline) */}
+        <div className="flex items-center gap-2">
+          <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
+            Channels
+          </span>
+          <label className="inline-flex items-center gap-2 cursor-pointer min-h-[36px] animate-press">
+            <input
+              type="checkbox"
+              checked={emailChannel}
+              onChange={(e) => setEmailChannel(e.target.checked)}
+              aria-describedby={emailDegraded ? 'alerts-email-offline' : undefined}
+              className="w-4 h-4 rounded-sm border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 transition-[border-color,box-shadow] duration-200 accent-[var(--color-accent)]"
+            />
+            <span className="inline-flex items-center gap-1.5 mono text-[10px] tracking-[0.3em] uppercase text-theme-secondary">
+              <Mail className="w-3.5 h-3.5" aria-hidden="true" />
+              Email
+            </span>
+          </label>
+          {emailDegraded && (
+            <span
+              id="alerts-email-offline"
+              role="status"
+              className="inline-flex items-center gap-1.5 mono text-[10px] tracking-[0.25em] uppercase px-2 py-0.5 rounded-full text-[var(--color-warning)]"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--color-warning) 12%, transparent)' }}
+            >
+              Email Offline · Saved alerts only fire in-app
+            </span>
+          )}
+        </div>
 
         {severityFilter !== 'all' && (
           <button

@@ -80,18 +80,31 @@ class QuoteStreamClient {
   }
 
   /**
-   * Build WebSocket URL from environment
+   * Build WebSocket URL from environment.
+   *
+   * Defense: Vercel env values occasionally carry stray whitespace / trailing
+   * newlines (echo-pipe artifact). A literal "\n" is *truthy* in JS, so an
+   * unsanitized env will short-circuit the precedence chain and produce a
+   * malformed URL like "\n/ws/quotes". Trimming on read makes the precedence
+   * deterministic regardless of how the env got set.
+   *
+   * Precedence: VITE_API_URL → VITE_WS_URL → same-host dev fallback.
+   * VITE_API_URL='' (empty, intentional for same-origin REST on Vercel)
+   * falls through to VITE_WS_URL because empty string is falsy after trim.
    */
   private getWebSocketUrl(): string | null {
-    const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_WS_URL;
+    const trim = (v: string | undefined): string => (v ?? '').trim();
+    const apiUrl = trim(import.meta.env.VITE_API_URL) || trim(import.meta.env.VITE_WS_URL);
     if (!apiUrl) {
       // Default to same host in dev (Fastify server on port 3000)
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const port = import.meta.env.VITE_SERVER_PORT || '3000';
+      const port = trim(import.meta.env.VITE_SERVER_PORT) || '3000';
       return `${protocol}//${window.location.hostname}:${port}/ws/quotes`;
     }
-    // Convert http(s) URL to ws(s)
-    return apiUrl.replace(/^http/, 'ws') + '/ws/quotes';
+    // Convert http(s) URL to ws(s) and avoid double-appending /ws/quotes if
+    // the env already includes the path.
+    const wsBase = apiUrl.replace(/^http/, 'ws').replace(/\/+$/, '');
+    return wsBase.endsWith('/ws/quotes') ? wsBase : `${wsBase}/ws/quotes`;
   }
 
   /**

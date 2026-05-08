@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.4] - 2026-05-08
+
+### Fix: WebSocket Offline · Data Stale + Stripe checkout failure
+
+Both regressions traced to the same root cause — every `VITE_*` env on Vercel
+carried a literal `\n` because earlier sessions used `echo | vercel env add`.
+A literal `\n` is *truthy* in JavaScript, so:
+
+- `VITE_API_URL="\n"` short-circuited the WS URL precedence, building
+  `"\n/ws/quotes"` → invalid → fell all the way to polling → "Offline · Data Stale"
+- `VITE_STRIPE_PRO_PRICE_ID="price_...\n"` got baked into the SPA bundle, so
+  the checkout POST sent a price ID with a trailing newline → Stripe rejected
+  it → checkout silently failed
+
+Fixes:
+- **Reset all 7 `VITE_*` envs** on Vercel cleanly via `printf` (no trailing newline)
+- **Defense-in-depth** in `client/src/api/websocket.ts::getWebSocketUrl()` — now
+  `.trim()`s every env read so a future env mishap can't recreate this. Also
+  guards against double-appending `/ws/quotes` if the env already includes the
+  path.
+- **Out of scope (transient):** Supabase rate-limited /auth/recover with 429
+  after multiple forgot-password attempts. Resolves itself in ~30 min; not a
+  code bug.
+
+---
+
 ## [1.2.3] - 2026-05-08
 
 ### Health endpoint surfaces v1.2.x integrations

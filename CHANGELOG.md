@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.5] - 2026-05-08
+
+### Rate limiter goes durable on Supabase — no Upstash needed
+
+Replaced the in-memory rate limiter with a Supabase-backed counter so limits
+survive Vercel cold starts without adding a new vendor. At Frontier Alpha's
+scale, Postgres handles the load just fine; the third-party Redis dependency
+isn't worth the ops cost.
+
+- **Added** `frontier_rate_limits` table + `rate_limit_check(text,int,int)`
+  Postgres RPC that does an atomic UPSERT (window-rolls when expired,
+  increments otherwise) in a single round-trip.
+- **Added** `rate_limit_cleanup()` housekeeping function — call from a cron
+  if the table grows long-tail.
+- **Changed** `src/middleware/rateLimiter.ts` — new `SupabaseRateLimiterStore`
+  class wraps the RPC, falls back to the in-memory store on RPC error so a
+  Postgres blip cannot wedge the API. Mode auto-selects based on
+  `SUPABASE_SERVICE_KEY` presence.
+- **Changed** `/api/v1/health/integrations.rateLimiter` — reports
+  `provider: 'supabase-postgres'`, `mode: 'rate_limit_check RPC'` when
+  Supabase is the active store.
+- **Result** — 13 of 14 integrations live (only Vercel WS by-design remains
+  degraded). No Upstash signup required.
+
+---
+
 ## [1.2.4] - 2026-05-08
 
 ### Fix: WebSocket Offline · Data Stale + Stripe checkout failure + Terms/Privacy

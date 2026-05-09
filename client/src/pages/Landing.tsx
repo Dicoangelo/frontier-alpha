@@ -117,7 +117,7 @@ export function Landing() {
       )}
 
       {/* ── Analyze your portfolio (preserved from v1) ───────────────────── */}
-      <section className="relative px-4 sm:px-6 py-10 sm:py-14 border-t border-[var(--color-border-light)]">
+      <section className="relative px-4 sm:px-6 py-6 sm:py-8 border-t border-[var(--color-border-light)]">
         <div className="w-full max-w-6xl mx-auto">
          <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">

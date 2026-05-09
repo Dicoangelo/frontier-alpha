@@ -262,11 +262,15 @@ export function ML() {
       </div>
 
       {/* ── Stats Bar ───────────────────────────────────────────────────── */}
+      {/* US-002: ML inference is not yet wired (v1.4). Render preview at
+          opacity-60 with a forced banner so the user sees the feature without
+          mistaking the metrics for theirs. */}
       <section
-        className="animate-fade-in-up"
+        className="animate-fade-in-up opacity-60"
         style={{ animationDelay: '80ms', animationFillMode: 'both' }}
+        aria-label="ML demo preview"
       >
-        <p className={kickerClass}>Snapshot · Live</p>
+        <p className={kickerClass}>Snapshot · Demo Preview</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-stagger">
           <MetricCard
             label="Current Regime"
@@ -299,7 +303,7 @@ export function ML() {
       </section>
 
       {/* ── Three-section grid: Regime | Models | Attribution ───────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-stagger">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-stagger opacity-60" aria-label="ML demo preview">
         {/* Regime Section */}
         <div className="lg:col-span-4 animate-enter">
           <RegimeDetector regime={regime} />

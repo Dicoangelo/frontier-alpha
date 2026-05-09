@@ -11,7 +11,9 @@ import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { DataLoadError, EmptyState } from '@/components/shared/EmptyState';
 import { useUpcomingEarnings, useEarningsForecast, useRefreshForecast } from '@/hooks/useEarnings';
 
-const DEMO_SYMBOLS = ['NVDA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'TSLA', 'JPM', 'V', 'JNJ'];
+// US-002: removed DEMO_SYMBOLS fallback. We never seed AAPL/MSFT/NVDA
+// earnings for an account with zero positions — the empty-state below
+// already explains the situation.
 
 export function Earnings() {
   const queryClient = useQueryClient();
@@ -25,10 +27,10 @@ export function Earnings() {
     retry: false,
   });
 
-  // Use portfolio symbols if available, otherwise use demo symbols
+  // Use portfolio symbols only — empty array surfaces the empty-state
+  // panel further down. No fabricated demo symbols.
   const symbols = useMemo(() => {
-    const portfolioSymbols = portfolio?.positions?.map(p => p.symbol) || [];
-    return portfolioSymbols.length > 0 ? portfolioSymbols : DEMO_SYMBOLS;
+    return portfolio?.positions?.map(p => p.symbol) || [];
   }, [portfolio]);
 
   // Get upcoming earnings

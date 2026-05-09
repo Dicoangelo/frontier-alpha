@@ -54,64 +54,62 @@ export function Alerts() {
     } catch (error) {
       console.error('Failed to load alerts:', error);
       setLoadError('Failed to load alerts');
-      // Use demo alerts for testing
-      setAlerts(getDemoAlerts());
-      setUsingDemoAlerts(true);
+      // US-002: don't seed mock NVDA / MSFT alerts on a new account.
+      // The "All Clear" panel below renders correctly with an empty list.
+      setAlerts([]);
+      setUsingDemoAlerts(false);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Load factor exposures from portfolio
+  // Load factor exposures from portfolio.
+  //
+  // US-002: when the user has zero positions, we no longer seed
+  // ['AAPL','MSFT','NVDA',...] as fake symbols and we no longer fabricate
+  // factor exposures. The corresponding cards must hide entirely so the
+  // page never displays "Critical · Momentum drift on NVDA" for a brand
+  // new account that has no holdings.
   const loadFactorExposures = useCallback(async () => {
     try {
       const portfolioRes = await api.get('/portfolio');
       const positions = portfolioRes.data?.positions || [];
       const symbols = positions.map((p: { symbol: string }) => p.symbol);
 
-      // Set portfolio symbols for SEC filing alerts. When the user has no
-      // positions we seed defaults so the SEC card still has something to show
-      // — flag this as demo data for the banner.
-      if (symbols.length > 0) {
-        setPortfolioSymbols(symbols);
+      if (symbols.length === 0) {
+        setPortfolioSymbols([]);
+        setFactorExposures([]);
         setUsingDemoFactors(false);
-      } else {
-        setPortfolioSymbols(['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN']);
-        setUsingDemoFactors(true);
+        return;
       }
 
-      if (symbols.length > 0) {
-        const factorRes = await api.get(`/portfolio/factors/${symbols.join(',')}`);
-        const factorData = factorRes.data || {};
-        // Aggregate factors across positions
-        const factorMap = new Map<string, number>();
-        for (const symbol of symbols) {
-          const symbolFactors = factorData[symbol] || [];
-          for (const f of symbolFactors) {
-            const current = factorMap.get(f.factor) || 0;
-            factorMap.set(f.factor, current + f.exposure / symbols.length);
-          }
+      setPortfolioSymbols(symbols);
+      setUsingDemoFactors(false);
+
+      const factorRes = await api.get(`/portfolio/factors/${symbols.join(',')}`);
+      const factorData = factorRes.data || {};
+      // Aggregate factors across positions
+      const factorMap = new Map<string, number>();
+      for (const symbol of symbols) {
+        const symbolFactors = factorData[symbol] || [];
+        for (const f of symbolFactors) {
+          const current = factorMap.get(f.factor) || 0;
+          factorMap.set(f.factor, current + f.exposure / symbols.length);
         }
-        setFactorExposures(
-          Array.from(factorMap.entries()).map(([factor, exposure]) => ({
-            factor,
-            exposure,
-          }))
-        );
       }
+      setFactorExposures(
+        Array.from(factorMap.entries()).map(([factor, exposure]) => ({
+          factor,
+          exposure,
+        }))
+      );
     } catch (error) {
       console.error('Failed to load factor exposures:', error);
-      // Use demo symbols
-      setPortfolioSymbols(['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN']);
-      // Use demo exposures
-      setFactorExposures([
-        { factor: 'momentum_12m', exposure: 0.85 },
-        { factor: 'value', exposure: -0.28 },
-        { factor: 'low_vol', exposure: -0.42 },
-        { factor: 'roe', exposure: 0.62 },
-        { factor: 'market', exposure: 1.15 },
-      ]);
-      setUsingDemoFactors(true);
+      // API failure with unknown portfolio state: don't synthesize symbols
+      // or exposures. The factor-drift and SEC filings cards will hide.
+      setPortfolioSymbols([]);
+      setFactorExposures([]);
+      setUsingDemoFactors(false);
     }
   }, []);
 
@@ -378,26 +376,46 @@ export function Alerts() {
       </div>
 
       {/* ── Factor Drift Monitor ────────────────────────────────────────── */}
-      <div
-        className="animate-fade-in-up"
-        style={{ animationDelay: '150ms', animationFillMode: 'both' }}
-      >
-        <FactorDriftAlert
-          exposures={factorExposures}
-          onAlertGenerated={handleFactorDriftAlerts}
-        />
-      </div>
+      {/* US-002: factor drift cards only render when there are real factor
+          exposures from the user's portfolio. A brand new account renders
+          neither this nor the SEC filings — we don't want a Critical-badge
+          drift alert for a portfolio that doesn't exist. */}
+      {factorExposures.length > 0 && (
+        <div
+          className="animate-fade-in-up"
+          style={{ animationDelay: '150ms', animationFillMode: 'both' }}
+        >
+          <FactorDriftAlert
+            exposures={factorExposures}
+            onAlertGenerated={handleFactorDriftAlerts}
+          />
+        </div>
+      )}
 
       {/* ── SEC Filing Alerts ───────────────────────────────────────────── */}
-      <div
-        className="animate-fade-in-up"
-        style={{ animationDelay: '200ms', animationFillMode: 'both' }}
-      >
-        <SECFilingAlert
-          symbols={portfolioSymbols}
-          maxAlerts={5}
-        />
-      </div>
+      {portfolioSymbols.length > 0 ? (
+        <div
+          className="animate-fade-in-up"
+          style={{ animationDelay: '200ms', animationFillMode: 'both' }}
+        >
+          <SECFilingAlert
+            symbols={portfolioSymbols}
+            maxAlerts={5}
+          />
+        </div>
+      ) : (
+        <div
+          className="glass-slab rounded-2xl p-10 text-center animate-fade-in-up"
+          style={{ animationDelay: '200ms', animationFillMode: 'both' }}
+        >
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">SEC Filings · Awaiting Positions</p>
+          <h3 className="text-lg font-bold text-theme mt-2">No filings to monitor</h3>
+          <p className="text-sm text-theme-secondary mt-2 max-w-md mx-auto leading-relaxed">
+            Add positions to your portfolio to surface 8-K, 10-K, 10-Q, and insider Form 4
+            filings for the companies you hold.
+          </p>
+        </div>
+      )}
 
       {/* ── Alert List ──────────────────────────────────────────────────── */}
       <div
@@ -497,53 +515,6 @@ function SeverityTile({
   );
 }
 
-// Demo alerts for development/testing
-function getDemoAlerts(): RiskAlert[] {
-  return [
-    {
-      id: 'alert-1',
-      type: 'drawdown',
-      severity: 'critical',
-      title: 'Portfolio Drawdown Alert',
-      message: 'Your portfolio has declined 8.5% from its peak. Consider reducing risk exposure or adding protective positions.',
-      timestamp: new Date(Date.now() - 1800000),
-      acknowledged: false,
-    },
-    {
-      id: 'alert-2',
-      type: 'concentration',
-      severity: 'high',
-      title: 'Position Concentration Risk',
-      message: 'NVDA represents 28% of your portfolio. This exceeds the recommended 20% single-position limit.',
-      timestamp: new Date(Date.now() - 3600000),
-      acknowledged: false,
-    },
-    {
-      id: 'alert-3',
-      type: 'earnings',
-      severity: 'medium',
-      title: 'Upcoming Earnings: NVDA',
-      message: 'NVDA reports earnings in 3 days. Expected move is 8.2%. Consider your risk management strategy.',
-      timestamp: new Date(Date.now() - 7200000),
-      acknowledged: false,
-    },
-    {
-      id: 'alert-4',
-      type: 'volatility_spike',
-      severity: 'high',
-      title: 'Volatility Spike Detected',
-      message: 'Market volatility (VIX) has increased 25% today. Your portfolio beta of 1.3 amplifies this risk.',
-      timestamp: new Date(Date.now() - 10800000),
-      acknowledged: false,
-    },
-    {
-      id: 'alert-5',
-      type: 'factor_drift',
-      severity: 'low',
-      title: 'Factor Drift: Momentum',
-      message: 'Your momentum exposure has drifted from target (0.5 → 0.8). Consider rebalancing if intentional tilt change.',
-      timestamp: new Date(Date.now() - 86400000),
-      acknowledged: false,
-    },
-  ];
-}
+// US-002: getDemoAlerts() removed. The page no longer seeds NVDA / MSFT
+// drift / earnings alerts when the API fails or the user has no positions.
+// The "All Clear" panel handles the empty case directly.

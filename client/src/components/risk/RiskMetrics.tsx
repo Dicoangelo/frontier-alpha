@@ -4,6 +4,7 @@ import { Badge } from '@/components/shared/Badge';
 import { HelpTooltip } from '@/components/help';
 import { Shield, TrendingDown, Activity, Target, BarChart2 } from 'lucide-react';
 import type { RiskMetrics as RiskMetricsType } from '@/types';
+import type { DataSource } from '@/lib/dataSource';
 
 // Configurable thresholds object — single source of truth per US-019
 export const RISK_THRESHOLDS = {
@@ -15,9 +16,16 @@ export const RISK_THRESHOLDS = {
 } as const;
 
 interface RiskMetricsProps {
-  metrics: RiskMetricsType;
+  /**
+   * US-002: numeric props now come through a `DataSource<T>` so the empty
+   * branch can render `—` placeholders rather than synthesizing zeros that
+   * read as if they were the user's real metrics.
+   */
+  metrics: DataSource<RiskMetricsType>;
   benchmark?: { sharpeRatio?: number; volatility?: number; maxDrawdown?: number };
 }
+
+const EMPTY_PLACEHOLDER = '—';
 
 function getSharpeLabel(value: number): { variant: 'success' | 'warning' | 'danger' | 'info'; text: string; color: string } {
   if (value >= RISK_THRESHOLDS.sharpe.green) return { variant: 'success', text: value >= 2.0 ? 'Excellent' : 'Good', color: 'var(--color-positive)' };
@@ -50,11 +58,40 @@ function getVarLabel(value: number): { variant: 'success' | 'warning' | 'danger'
 }
 
 export function RiskMetrics({ metrics, benchmark }: RiskMetricsProps) {
-  const volInfo = getVolatilityLabel(metrics.volatility);
-  const sharpeInfo = getSharpeLabel(metrics.sharpeRatio);
-  const drawdownInfo = getDrawdownLabel(metrics.maxDrawdown);
-  const betaInfo = getBetaLabel(metrics.beta);
-  const varInfo = getVarLabel(metrics.var95);
+  // Empty state — render dashes everywhere instead of synthesizing zeros that
+  // read as if the user actually has a 0% drawdown / 0 sharpe portfolio.
+  if (metrics.kind === 'empty') {
+    return (
+      <Card title="Risk Metrics">
+        <div className="grid grid-cols-2 gap-4">
+          {[
+            { icon: <Target className="w-5 h-5 text-[var(--color-text-muted)]" />, label: 'Sharpe Ratio' },
+            { icon: <Activity className="w-5 h-5 text-[var(--color-text-muted)]" />, label: 'Volatility (Ann.)' },
+            { icon: <TrendingDown className="w-5 h-5 text-[var(--color-text-muted)]" />, label: 'Max Drawdown' },
+            { icon: <Shield className="w-5 h-5 text-[var(--color-text-muted)]" />, label: 'VaR (95%)' },
+            { icon: <BarChart2 className="w-5 h-5 text-[var(--color-text-muted)]" />, label: 'Beta' },
+            { icon: <Shield className="w-5 h-5 text-[var(--color-text-muted)]" />, label: 'CVaR (95%)' },
+          ].map((m) => (
+            <MetricCard
+              key={m.label}
+              icon={m.icon}
+              label={m.label}
+              value={EMPTY_PLACEHOLDER}
+              badge={{ variant: 'info', text: 'No data', color: 'var(--color-text-muted)' }}
+              tooltip="Add positions to compute this metric."
+            />
+          ))}
+        </div>
+      </Card>
+    );
+  }
+
+  const m = metrics.value;
+  const volInfo = getVolatilityLabel(m.volatility);
+  const sharpeInfo = getSharpeLabel(m.sharpeRatio);
+  const drawdownInfo = getDrawdownLabel(m.maxDrawdown);
+  const betaInfo = getBetaLabel(m.beta);
+  const varInfo = getVarLabel(m.var95);
 
   return (
     <Card title="Risk Metrics">
@@ -62,7 +99,7 @@ export function RiskMetrics({ metrics, benchmark }: RiskMetricsProps) {
         <MetricCard
           icon={<Target className="w-5 h-5" style={{ color: sharpeInfo.color }} />}
           label="Sharpe Ratio"
-          value={metrics.sharpeRatio.toFixed(2)}
+          value={m.sharpeRatio.toFixed(2)}
           badge={sharpeInfo}
           helpKey="sharpeRatio"
           tooltip={`Risk-adjusted return. >= ${RISK_THRESHOLDS.sharpe.green} is good, >= ${RISK_THRESHOLDS.sharpe.yellow} is adequate, below ${RISK_THRESHOLDS.sharpe.yellow} is poor.`}
@@ -73,7 +110,7 @@ export function RiskMetrics({ metrics, benchmark }: RiskMetricsProps) {
         <MetricCard
           icon={<Activity className="w-5 h-5" style={{ color: volInfo.color }} />}
           label="Volatility (Ann.)"
-          value={`${(metrics.volatility * 100).toFixed(1)}%`}
+          value={`${(m.volatility * 100).toFixed(1)}%`}
           badge={volInfo}
           helpKey="volatility"
           tooltip={`${volInfo.context}. <= ${RISK_THRESHOLDS.volatility.green * 100}% is low, <= ${RISK_THRESHOLDS.volatility.yellow * 100}% is elevated, above ${RISK_THRESHOLDS.volatility.yellow * 100}% is high.`}
@@ -84,7 +121,7 @@ export function RiskMetrics({ metrics, benchmark }: RiskMetricsProps) {
         <MetricCard
           icon={<TrendingDown className="w-5 h-5" style={{ color: drawdownInfo.color }} />}
           label="Max Drawdown"
-          value={`${(metrics.maxDrawdown * 100).toFixed(1)}%`}
+          value={`${(m.maxDrawdown * 100).toFixed(1)}%`}
           badge={drawdownInfo}
           helpKey="maxDrawdown"
           tooltip={`The largest peak-to-trough decline. >= ${RISK_THRESHOLDS.drawdown.green * 100}% is healthy, >= ${RISK_THRESHOLDS.drawdown.yellow * 100}% warrants attention, below is critical.`}
@@ -95,7 +132,7 @@ export function RiskMetrics({ metrics, benchmark }: RiskMetricsProps) {
         <MetricCard
           icon={<Shield className="w-5 h-5" style={{ color: varInfo.color }} />}
           label="VaR (95%)"
-          value={`${(metrics.var95 * 100).toFixed(1)}%`}
+          value={`${(m.var95 * 100).toFixed(1)}%`}
           badge={varInfo}
           helpKey="var95"
           tooltip={`Daily Value at Risk. <= ${RISK_THRESHOLDS.var95.green * 100}% is low risk, <= ${RISK_THRESHOLDS.var95.yellow * 100}% is moderate, above is high risk.`}
@@ -105,7 +142,7 @@ export function RiskMetrics({ metrics, benchmark }: RiskMetricsProps) {
         <MetricCard
           icon={<BarChart2 className="w-5 h-5" style={{ color: betaInfo.color }} />}
           label="Beta"
-          value={metrics.beta.toFixed(2)}
+          value={m.beta.toFixed(2)}
           badge={betaInfo}
           helpKey="beta"
           tooltip={`Market sensitivity. ${RISK_THRESHOLDS.beta.greenMin}–${RISK_THRESHOLDS.beta.greenMax} is neutral (market-like), above is aggressive, below is defensive.`}
@@ -115,7 +152,7 @@ export function RiskMetrics({ metrics, benchmark }: RiskMetricsProps) {
         <MetricCard
           icon={<Shield className="w-5 h-5 text-[var(--color-text-muted)]" />}
           label="CVaR (95%)"
-          value={`${(metrics.cvar95 * 100).toFixed(1)}%`}
+          value={`${(m.cvar95 * 100).toFixed(1)}%`}
           badge={{ variant: 'info', text: 'Daily', color: 'var(--color-info)' }}
           helpKey="cvar95"
           tooltip="Conditional Value at Risk — the average loss in the worst 5% of scenarios. Always higher than VaR."

@@ -15,6 +15,7 @@ import { EmptyPortfolio, DataLoadError } from '@/components/shared/EmptyState';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { MarketStatusStrip } from '@/components/dashboard/MarketStatusStrip';
 import { DashZone } from '@/components/dashboard/DashZone';
+import { getDisplayName } from '@/lib/getDisplayName';
 
 // Types
 interface Position {
@@ -79,13 +80,6 @@ function getGreeting(): string {
   if (hour < 12) return 'Good morning';
   if (hour < 17) return 'Good afternoon';
   return 'Good evening';
-}
-
-function getDisplayName(email: string | undefined | null): string {
-  if (!email) return 'Investor';
-  const local = email.split('@')[0];
-  // Capitalize first letter
-  return local.charAt(0).toUpperCase() + local.slice(1);
 }
 
 // API functions

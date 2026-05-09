@@ -12,6 +12,7 @@
 
 import { Activity, TrendingUp, Target, Clock, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
+import { MockDataBanner } from '@/components/shared/MockDataBanner';
 import { RegimeDetector, REGIME_CONFIG } from '@/components/ml/RegimeDetector';
 import type { RegimeState } from '@/components/ml/RegimeDetector';
 import { ModelVersions } from '@/components/ml/ModelVersions';
@@ -226,6 +227,8 @@ export function ML() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
+      <MockDataBanner force pageKey="ml" />
+
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div
         className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 animate-fade-in-up"

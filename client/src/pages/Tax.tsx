@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
 import { ScrollableTable } from '@/components/shared/ScrollableTable';
+import { MockDataBanner } from '@/components/shared/MockDataBanner';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -725,6 +726,8 @@ export function Tax() {
 
   return (
     <div className="space-y-6">
+      <MockDataBanner force pageKey="tax" />
+
       {/* Header */}
       <div
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up"

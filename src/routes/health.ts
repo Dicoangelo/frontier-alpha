@@ -453,10 +453,20 @@ async function probeWeeklyDigestCron(serverPort?: number): Promise<Partial<Integ
   }
   // Resolve a base URL we can hit. In production this is FRONTEND_URL (the
   // Vercel app); locally we hit the in-process port.
+  // BUG fix v1.3.1: Number(undefined) → NaN, NaN passes through `??` because
+  // it's not null/undefined. Result was `http://127.0.0.1:NaN/...` which
+  // failed URL parsing. Fall back to a real number.
   const explicit = process.env.HEALTH_PROBE_BASE_URL?.trim();
   const frontend = process.env.FRONTEND_URL?.trim();
-  const port = serverPort ?? Number(process.env.PORT) ?? 3000;
-  const base = explicit || frontend || `http://127.0.0.1:${port}`;
+  // Vercel auto-injects VERCEL_URL (e.g. "frontier-alpha-xyz.vercel.app").
+  // Use it when running in Vercel serverless with no FRONTEND_URL configured.
+  const vercelUrl = process.env.VERCEL_URL?.trim();
+  const portRaw = serverPort ?? Number(process.env.PORT);
+  const port = Number.isFinite(portRaw) ? portRaw : 3000;
+  const base =
+    explicit ||
+    frontend ||
+    (vercelUrl ? `https://${vercelUrl}` : `http://127.0.0.1:${port}`);
   try {
     const resp = await fetchWithTimeout(
       `${base.replace(/\/$/, '')}/api/v1/digest/run?key=${encodeURIComponent(cronSecret)}`,

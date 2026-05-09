@@ -13,12 +13,12 @@
 
 <br/>
 
-<img src="https://img.shields.io/badge/Tests-740-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Tests" />
+<img src="https://img.shields.io/badge/Tests-765-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Tests" />
 <img src="https://img.shields.io/badge/Lines-62,000+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Lines" />
 <img src="https://img.shields.io/badge/Files-242+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Files" />
-<img src="https://img.shields.io/badge/Endpoints-107-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Endpoints" />
+<img src="https://img.shields.io/badge/Endpoints-112-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Endpoints" />
 <img src="https://img.shields.io/badge/Factors-76-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Factors" />
-<img src="https://img.shields.io/badge/Version-1.2.5-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
+<img src="https://img.shields.io/badge/Version-1.3.0-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
 
 <br/><br/>
 

@@ -13,7 +13,8 @@
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "crons": [
-    { "path": "/api/v1/digest/run", "schedule": "0 13 * * 1" }
+    { "path": "/api/v1/digest/run", "schedule": "0 13 * * 1" },
+    { "path": "/api/v1/digest/health-summary", "schedule": "0 13 * * 0" }
   ],
   "headers": [
     {

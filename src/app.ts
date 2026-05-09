@@ -63,6 +63,11 @@ import { secRoutes } from './routes/sec.js';
 import { websocketRoutes } from './routes/websocket.js';
 import { errorsRoutes } from './routes/errors.js';
 import { digestRoutes } from './routes/digest.js';
+import { healthErrorsRoutes } from './routes/health-errors.js';
+import { healthSummaryRoutes } from './routes/health-summary.js';
+import { syntheticMonitorRoutes } from './routes/synthetic-monitor.js';
+import { errorCounter } from './observability/ErrorCounter.js';
+import { installRequestTracing } from './observability/RequestTracing.js';
 
 const pkg = JSON.parse(
   readFileSync(new URL('../package.json', import.meta.url), 'utf-8')
@@ -196,7 +201,18 @@ export async function buildApp(
       url: request.url,
       err: error,
     }, 'request error');
+    // US-008: feed the in-process error counter. We bucket by the route
+    // pattern (`request.routeOptions.url`) when available so dynamic
+    // params like `:symbols` collapse into a single bucket; falls back to
+    // the raw url only when Fastify hasn't matched a route.
+    const route = request.routeOptions?.url ?? request.url;
+    errorCounter.increment(request.method, route, error);
   });
+
+  // US-008: thread X-Request-Id from server back to the client so console
+  // logs and Sentry events on either side can be cross-correlated.
+  installRequestTracing(app);
+  errorCounter.start();
 
   // --- Global rate limiter (skip health + websocket) ------------------------
   app.addHook('onRequest', async (request, reply) => {
@@ -233,6 +249,9 @@ export async function buildApp(
   app.register(secRoutes, ctx);
   app.register(errorsRoutes, ctx);
   app.register(digestRoutes, ctx);
+  app.register(healthErrorsRoutes, ctx);
+  app.register(healthSummaryRoutes, ctx);
+  app.register(syntheticMonitorRoutes, ctx);
   if (websockets) {
     app.register(websocketRoutes, ctx);
   }

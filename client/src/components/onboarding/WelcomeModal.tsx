@@ -33,6 +33,25 @@ const features = [
 ];
 
 const ANALYZE_SYMBOLS_KEY = 'analyze_symbols';
+const ONBOARDED_KEY = 'frontier:onboarded';
+
+function markOnboarded(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(ONBOARDED_KEY, '1');
+  } catch {
+    // Storage unavailable — fail quietly
+  }
+}
+
+function isOnboardedFlagSet(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.localStorage.getItem(ONBOARDED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 function readDemoSymbols(): string[] {
   if (typeof window === 'undefined') return [];
@@ -64,14 +83,23 @@ export function WelcomeModal({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  // Hard short-circuit — if a previous session already dismissed this modal,
+  // never re-render it even if the parent provider tries to re-open it.
+  if (!isOpen || isOnboardedFlagSet()) return null;
+
+  const handleClose = () => {
+    markOnboarded();
+    onClose();
+  };
 
   const handleStartTour = () => {
+    markOnboarded();
     onClose();
     onStartTour();
   };
 
   const handleTryDemo = () => {
+    markOnboarded();
     onClose();
     onTryDemo();
   };
@@ -97,7 +125,7 @@ export function WelcomeModal({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
-        onClick={onClose}
+        onClick={handleClose}
         aria-hidden="true"
       />
 
@@ -111,42 +139,42 @@ export function WelcomeModal({
         {/* Sovereign top rail */}
         <div className="sovereign-bar absolute top-0 left-0 right-0" />
 
-        {/* Close button */}
+        {/* Close button — 44x44 touch target, always visible top-right */}
         <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-white/80 hover:text-white rounded-lg transition-colors animate-press z-10"
+          type="button"
+          onClick={handleClose}
+          className="absolute top-3 right-3 inline-flex items-center justify-center w-11 h-11 rounded-lg bg-black/30 hover:bg-black/45 text-white/90 hover:text-white border border-white/15 hover:border-white/30 transition-colors animate-press z-20 backdrop-blur-sm"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {/* Header — sovereign gradient field */}
+        {/* Header — softer halo gradient (was sovereign magenta-cyan) */}
         <div
-          className="relative px-8 py-10 text-white overflow-hidden"
-          style={{ background: 'var(--gradient-sovereign)' }}
+          className="relative px-8 py-10 overflow-hidden bg-[image:var(--gradient-halo)]"
         >
           <div
             aria-hidden="true"
-            className="absolute inset-0 opacity-40 pointer-events-none"
+            className="absolute inset-0 opacity-30 pointer-events-none"
             style={{
               background:
-                'radial-gradient(circle at 20% 0%, rgba(255,255,255,0.4), transparent 60%)',
+                'radial-gradient(circle at 20% 0%, rgba(255,255,255,0.35), transparent 65%)',
             }}
           />
           <div className="relative">
-            <p className="text-[10px] mono tracking-[0.3em] uppercase text-white/80 mb-3">
+            <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted mb-3">
               ONBOARDING · Welcome
             </p>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[image:var(--gradient-sovereign)] rounded-xl flex items-center justify-center text-white shadow-[0_10px_30px_-12px_rgba(123,44,255,0.6)]">
                 <TrendingUp className="w-6 h-6" />
               </div>
-              <span className="text-lg font-semibold">Frontier Alpha</span>
+              <span className="text-lg font-semibold text-theme">Frontier Alpha</span>
             </div>
-            <h1 className="text-2xl font-bold mb-2">
+            <h1 className="text-2xl font-bold mb-2 text-theme">
               Institutional-grade intelligence
             </h1>
-            <p className="text-white/90 leading-relaxed">
+            <p className="text-theme-secondary leading-relaxed">
               See what the quants see. Understand what they will not explain.
             </p>
           </div>
@@ -235,9 +263,12 @@ export function WelcomeModal({
             ))}
           </div>
 
-          {/* Actions */}
+          {/* Actions — primary CTA is "Try with Demo Portfolio".
+              "Take a Quick Tour" is secondary glass.
+              "Skip for now" is demoted to a text link. */}
           <div className="space-y-3">
             <button
+              type="button"
               onClick={handleTryDemo}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[image:var(--gradient-sovereign)] text-white font-medium animate-press animate-lift shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:brightness-110 hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)]"
             >
@@ -245,17 +276,21 @@ export function WelcomeModal({
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={handleStartTour}
               className="glass-slab w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-theme animate-press animate-lift hover:border-[color:var(--color-border-hover)]"
             >
               Take a Quick Tour
             </button>
-            <button
-              onClick={onClose}
-              className="w-full text-sm text-theme-muted hover:text-theme py-2 animate-press"
-            >
-              Skip for now
-            </button>
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="text-sm text-theme-muted hover:text-theme underline underline-offset-4 decoration-dotted decoration-theme-muted/50 hover:decoration-theme/70 py-1 px-2 animate-press"
+              >
+                Skip for now
+              </button>
+            </div>
           </div>
         </div>
       </div>

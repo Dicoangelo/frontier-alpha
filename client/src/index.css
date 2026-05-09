@@ -56,6 +56,7 @@
     --brand-teal: #00FFC6;
     --brand-gold: #D7B26D;
     --gradient-sovereign: linear-gradient(90deg, #FF3DF2 0%, #7B2CFF 50%, #18E6FF 100%);
+    --gradient-halo: linear-gradient(135deg, rgba(0, 255, 198, 0.18) 0%, rgba(24, 230, 255, 0.14) 50%, rgba(90, 167, 255, 0.18) 100%);
     /* Legacy alias */
     --color-brand-teal: #00FFC6;
 
@@ -133,6 +134,7 @@
     --brand-teal: #00FFC6;
     --brand-gold: #D7B26D;
     --gradient-sovereign: linear-gradient(90deg, #FF3DF2 0%, #7B2CFF 50%, #18E6FF 100%);
+    --gradient-halo: linear-gradient(135deg, rgba(0, 255, 198, 0.22) 0%, rgba(24, 230, 255, 0.18) 50%, rgba(90, 167, 255, 0.22) 100%);
     /* Legacy alias */
     --color-brand-teal: #00FFC6;
 

@@ -2,6 +2,7 @@ import axios, { AxiosError } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 import { useDataSourceStore } from '@/stores/dataSourceStore';
 import { setMockMode } from '@/components/shared/MockDataBanner';
+import { supabase } from '@/lib/supabase';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -13,9 +14,23 @@ export const api = axios.create({
   timeout: 30000, // 30 second timeout
 });
 
-// Add auth token to requests
-api.interceptors.request.use((config) => {
-  const session = useAuthStore.getState().session;
+// Add auth token to requests.
+//
+// Race fix: on first paint, components may fire requests before the auth store
+// has hydrated from Supabase, causing 401s on `/portfolio` etc. If the store
+// is empty but Supabase has a persisted session, fall back to the SDK to
+// fetch the live session synchronously (Supabase JS caches it locally).
+api.interceptors.request.use(async (config) => {
+  let session = useAuthStore.getState().session;
+  if (!session?.access_token) {
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) session = data.session;
+    } catch {
+      // Network or SDK error — proceed without a token. The request will 401
+      // and the page will surface its empty / error state.
+    }
+  }
   if (session?.access_token) {
     config.headers.Authorization = `Bearer ${session.access_token}`;
   }

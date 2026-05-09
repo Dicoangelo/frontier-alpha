@@ -8,6 +8,15 @@ export default defineConfig({
     // Include patterns
     include: ['tests/**/*.test.ts', 'src/**/*.test.ts'],
 
+    // Exclude paths — `.graveyard/` holds archived tests for tests written
+    // against pre-v1.2.0 handler shapes that were unified into Fastify routes.
+    // See tests/.graveyard/*/MANIFEST.md per dead-code-policy.
+    exclude: [
+      '**/node_modules/**',
+      '**/.graveyard/**',
+      'tests/.graveyard/**',
+    ],
+
     // Setup files
     setupFiles: ['./tests/setup.ts'],
 

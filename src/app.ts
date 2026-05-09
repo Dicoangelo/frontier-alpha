@@ -98,6 +98,14 @@ export interface AppServer {
   harvestingScanner: HarvestingScanner;
   washSaleDetector: WashSaleDetector;
   taxReportGenerator: TaxReportGenerator;
+  /**
+   * Whether to read/write portfolios from Supabase. True whenever the service
+   * key is wired (production, staging, any environment with a real DB).
+   * `routes/portfolio.ts`, `routes/ml.ts`, `routes/tax.ts` gate on this.
+   */
+  useDatabase: boolean;
+  /** In-memory portfolio fallback for environments without a DB (tests, demos). */
+  currentPortfolio: unknown;
 }
 
 export async function buildApp(
@@ -139,6 +147,11 @@ export async function buildApp(
     harvestingScanner,
     washSaleDetector,
     taxReportGenerator,
+    // DB-backed routes (portfolio, ml, tax) gate on this. Whenever the service
+    // key is present we are talking to a real Supabase instance and should
+    // read/write durable rows instead of returning the in-memory placeholder.
+    useDatabase: Boolean(process.env.SUPABASE_SERVICE_KEY),
+    currentPortfolio: null,
   };
 
   const app = Fastify({ logger: enableLogger });

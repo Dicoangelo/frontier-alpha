@@ -98,8 +98,12 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   }, []);
 
   return (
-    <aside className="fixed left-0 top-16 bottom-0 w-64 glass-slab overflow-y-auto">
-      <nav className="p-4 pb-32 space-y-6">
+    // `flex flex-col` keeps the DQ Score footer pinned below the nav in the
+    // normal flow; previously it was `absolute bottom-0` and overlapped the
+    // bottom Account links once the nav grew tall enough (e.g. after the
+    // v1.2.6 Backtest entry was added).
+    <aside className="fixed left-0 top-16 bottom-0 w-64 glass-slab overflow-y-auto flex flex-col">
+      <nav className="p-4 space-y-6 flex-1">
         {navSections.map((section) => (
           <div key={section.label} className="space-y-1">
             <p className="px-4 pb-1 mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
@@ -131,7 +135,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-theme glass-slab">
+      <div className="p-4 border-t border-theme glass-slab">
         <div className="p-3 rounded-sm bg-[image:var(--gradient-sovereign)] text-white animate-press animate-lift shadow-[0_4px_20px_rgba(123,44,255,0.3)] hover:brightness-110 transition-[filter] duration-200 cursor-default">
           <p className="text-[10px] font-bold mono tracking-[0.3em] uppercase">DQ Score: 0.88</p>
           <p className="text-[10px] mono mt-1 opacity-80">Powered by 80+ factors</p>

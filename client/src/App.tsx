@@ -235,9 +235,11 @@ function AppRoutes() {
         path="/cvrf"
         element={
           <ProtectedRoute>
-            <ErrorBoundary>
-              <CVRF />
-            </ErrorBoundary>
+            <Layout>
+              <ErrorBoundary>
+                <CVRF />
+              </ErrorBoundary>
+            </Layout>
           </ProtectedRoute>
         }
       />

@@ -67,14 +67,9 @@ const EMPTY_PORTFOLIO: Portfolio = {
 
 const EMPTY_FACTORS: FactorExposure[] = [];
 
-const EMPTY_METRICS: RiskMetricsData = {
-  sharpeRatio: 0,
-  volatility: 0,
-  maxDrawdown: 0,
-  beta: 0,
-  var95: 0,
-  cvar95: 0,
-};
+// EMPTY_METRICS removed v1.3.2 — calculateMetrics() now returns null when
+// data is too sparse, and the caller wraps in EMPTY (DataSource discriminated
+// union) instead of seeding zeros that looked real to the user.
 
 // Greeting based on time of day
 function getGreeting(): string {
@@ -170,21 +165,33 @@ async function fetchFactors(symbols: string[]): Promise<FactorExposure[]> {
   }
 }
 
-function calculateMetrics(portfolio: Portfolio, factors: FactorExposure[]): RiskMetricsData {
+/**
+ * Compute Risk Metrics, or `null` when factor data is too sparse to derive
+ * an honest answer. v1.3.2: previously fell back to vol=0.18 / beta=1.0
+ * defaults when factors were missing — that surfaced "Sharpe 0.28 ·
+ * Drawdown -27%" looking like real numbers for a fresh single-position
+ * account whose factors hadn't been computed yet. Now the caller wraps the
+ * result in `EMPTY` instead, and the RiskMetrics component shows its
+ * insufficient-data placeholder.
+ */
+function calculateMetrics(portfolio: Portfolio, factors: FactorExposure[]): RiskMetricsData | null {
   // Calculate metrics from portfolio and factors
   const positions = portfolio.positions;
 
   if (positions.length === 0) {
-    return EMPTY_METRICS;
+    return null;
   }
 
-  // Beta: weighted average of position betas (use market factor if available)
+  // Need both market AND volatility factors to compute honest metrics.
+  // Without them we'd be inventing values — show the empty state instead.
   const marketFactor = factors.find(f => f.factor === 'market');
-  const beta = marketFactor?.exposure || 1.0;
-
-  // Volatility: use volatility factor or estimate from positions
   const volFactor = factors.find(f => f.factor === 'volatility');
-  const volatility = volFactor?.contribution || 0.18;  // Default 18%
+  if (!marketFactor || !volFactor) {
+    return null;
+  }
+
+  const beta = marketFactor.exposure;
+  const volatility = volFactor.contribution;
 
   // Sharpe ratio estimate
   const expectedReturn = 0.10 + (beta - 1) * 0.05;  // Simple CAPM estimate
@@ -378,15 +385,14 @@ export function Dashboard() {
       const factorData = await fetchFactors(symbols);
       setFactors(factorData);
 
-      // Calculate metrics — wrap as `empty` when there are no positions,
-      // otherwise `real`. Synthesizing zeros into the components has been
-      // the source of every "Sharpe 1.00 / Drawdown -27%" leak.
-      if (portfolioData.positions.length === 0) {
-        setMetrics(EMPTY);
-      } else {
-        const metricsData = calculateMetrics(portfolioData, factorData);
-        setMetrics(wrapReal(metricsData));
-      }
+      // Calculate metrics — wrap as `empty` when there are no positions
+      // OR when factor data is too sparse to derive honest values.
+      // calculateMetrics now returns null in both cases (v1.3.2). Otherwise
+      // wrap as `real`. Synthesizing zeros / CAPM defaults into the
+      // components has been the source of every "Sharpe 0.28 / Drawdown
+      // -27%" leak on fresh accounts.
+      const metricsData = calculateMetrics(portfolioData, factorData);
+      setMetrics(metricsData ? wrapReal(metricsData) : EMPTY);
 
       // Generate insight
       const insightText = generateInsight(factorData);

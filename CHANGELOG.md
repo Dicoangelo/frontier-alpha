@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.4] - 2026-05-09
+
+### Server-Side Factor History (DASH3-005 follow-up, closes "wait til tomorrow" gap)
+
+- `feat(factors): server-derived current + prior snapshot for FactorDeltas`
+- New endpoint: `GET /api/v1/portfolio/factors/history/:symbols?window=1d|5d`
+  - Returns both the current factor snapshot and a window-prior snapshot in one round trip
+  - Prior snapshot is computed by truncating the same Price[] series the current snapshot uses (see `src/factors/historySlice.ts`); the price series is already the source of truth, so no `frontier_factor_snapshots` table is needed
+  - Response shape: `{ current, prior, window, asOfDate, priorDate }`
+  - Macro and fundamental factors are NOT sliced (they reflect latest reads only); for 1d/5d windows that is an acceptable simplification because day-to-day exposure motion is price-driven
+- New `src/factors/historySlice.ts` with 12 unit tests covering identity slice, end-truncation, short-series drop, immutability, and `lastBarDate` ISO formatting
+- New `tests/e2e/factors-history.test.ts` with 5 surface tests plus the corresponding MSW handler in `tests/setup/msw-handlers.ts`
+- Client: `factorsApi.getFactorsHistory(symbols, window)` plus `useFactorsHistory(symbols, window)` React Query hook (auth-gated identically to `useFactors`)
+- `useFactorDeltas` rewired with explicit Strategy 1 (server) then Strategy 2 (localStorage) then Strategy 3 (empty) priority chain. The localStorage baseline still rotates per UTC day so it remains a working offline fallback if the server endpoint degrades
+- Hook test suite gains 2 composition tests pinning the `aggregateExposures(prior)` plus `computeDeltas(current, agg)` chain so a future refactor cannot silently re-order the steps
+- `schemas/arch.json` regenerated: portfolio.ts route module 11 to 12 endpoints, server endpoints 112 to 113
+
+### Why this matters
+
+The original DASH3-005 (v1.3.3) computed deltas client-side from a localStorage baseline that took one full UTC day to accumulate. New users saw an empty FactorDeltas card on day one. With the server endpoint, the prior snapshot is derived retroactively from the same historical price series the current snapshot already uses, so the card has a real day-1 delta with no waiting.
+
+---
+
 ## [1.3.3] - 2026-05-09
 
 ### Legacy PRD Wave Closed — DASH3-005 + TOKEN-007

@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-05-09T20:04:58.971Z",
-  "headSha": "07e0f2d417c6a5154be988528be9d9e616b48a01",
-  "version": "1.3.3",
+  "generatedAt": "2026-05-09T20:37:32.561Z",
+  "headSha": "f225a1aaa77299f95aa90ea3489a678ee25d2fa7",
+  "version": "1.3.4",
   "server": {
-    "tsFiles": 125,
-    "tsNonTestFiles": 122,
-    "inSourceTestFiles": 3,
+    "tsFiles": 127,
+    "tsNonTestFiles": 123,
+    "inSourceTestFiles": 4,
     "routeModules": 30,
-    "endpoints": 112,
+    "endpoints": 113,
     "migrations": 13,
     "vercelApiFiles": 4,
-    "testFiles": 39
+    "testFiles": 40
   },
   "client": {
     "pages": 24,
@@ -119,7 +119,7 @@
     },
     {
       "module": "portfolio.ts",
-      "endpoints": 11
+      "endpoints": 12
     },
     {
       "module": "quotes.ts",

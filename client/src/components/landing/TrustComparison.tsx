@@ -212,7 +212,7 @@ export function TrustComparison({ className = '' }: TrustComparisonProps) {
   return (
     <section
       aria-labelledby="why-frontier-alpha-heading"
-      className={`relative isolate overflow-hidden py-12 sm:py-16 lg:py-20 px-4 sm:px-6 ${className}`}
+      className={`relative isolate overflow-hidden py-10 sm:py-12 lg:py-14 px-4 sm:px-6 ${className}`}
     >
       {/* Inlined marquee keyframes — frontier-alpha index.css does not declare these */}
       <style>{`
@@ -307,7 +307,7 @@ export function TrustComparison({ className = '' }: TrustComparisonProps) {
       {/* ── Animated metric pillars ─────────────────────────────────── */}
       <div
         ref={pillarsRef}
-        className="relative max-w-6xl mx-auto mt-14 sm:mt-16 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 animate-stagger"
+        className="relative max-w-6xl mx-auto mt-8 sm:mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 animate-stagger"
       >
         {METRIC_PILLARS.map((pillar) => (
           <MetricPillarTile
@@ -320,7 +320,7 @@ export function TrustComparison({ className = '' }: TrustComparisonProps) {
       </div>
 
       {/* ── vs-Traditional comparison row ───────────────────────────── */}
-      <div className="relative max-w-6xl mx-auto mt-16 sm:mt-20">
+      <div className="relative max-w-6xl mx-auto mt-10 sm:mt-12">
         <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Traditional (left) */}
           <article
@@ -392,7 +392,7 @@ export function TrustComparison({ className = '' }: TrustComparisonProps) {
 
       {/* ── Data-source marquee ─────────────────────────────────────── */}
       <div
-        className="relative mt-16 sm:mt-20"
+        className="relative mt-10 sm:mt-12"
         aria-label="Live data sources powering Frontier Alpha"
       >
         <div className="sovereign-bar w-full opacity-70" aria-hidden="true" />
@@ -405,7 +405,7 @@ export function TrustComparison({ className = '' }: TrustComparisonProps) {
       </div>
 
       {/* ── Institutional-grade trust pill ──────────────────────────── */}
-      <div className="relative max-w-6xl mx-auto mt-12 sm:mt-14 flex justify-center">
+      <div className="relative max-w-6xl mx-auto mt-8 sm:mt-10 flex justify-center">
         <span
           className="glass-gold inline-flex items-center gap-3 px-5 py-3 rounded-full mono text-[10px] sm:text-[11px] tracking-[0.4em] uppercase"
           style={{ color: 'var(--brand-gold)' }}

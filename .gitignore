@@ -37,3 +37,10 @@ coverage/
 
 # VAPID keys (web push) — generated locally, never commit
 scripts/.vapid-keys.json
+
+# Playwright (TOKEN-007 visual regression run-time outputs only — baselines
+# in tests/visual/baseline/ ARE git-tracked)
+playwright-report/
+test-results/
+tests/visual/test-results/
+tests/visual/playwright-report/

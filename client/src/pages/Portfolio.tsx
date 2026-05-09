@@ -786,7 +786,7 @@ export function Portfolio() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh} className="min-h-full">
-      {content}
+      <div data-testid="visual-portfolio-ready">{content}</div>
     </PullToRefresh>
   );
 }

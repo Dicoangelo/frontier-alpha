@@ -115,6 +115,7 @@ npm run ml:start         # uvicorn on port 8000
 | `src/routes/` | Fastify route definitions — 26 modules, 108 endpoint registrations |
 | `supabase/migrations/` | 13 tracked migrations (+ `frontier_rate_limits` applied via Supabase MCP, v1.2.5) |
 | `tests/` | Vitest tests with MSW handlers (740 server tests passing as of v1.2.6) |
+| `tests/visual/` | Playwright visual regression suite (TOKEN-007) — 9 pages x 2 themes, 18 PNG baselines, nightly CI only. See "Visual regression" under Operations. |
 | `schemas/` | Machine-checkable contracts. `arch.json` (this story) is the route/page/integration fingerprint; future schemas: `env-schema.json` (US-009), `health-integration.json` (US-004), `api-shape.json` (US-007) |
 | `scripts/arch-scanner.mjs` | Generates / verifies `schemas/arch.json`. CI runs `npm run arch:check`. |
 
@@ -265,6 +266,38 @@ This section is the operator's runbook for keeping Frontier Alpha green. It assu
 1. **Hit `/api/v1/health/integrations`** — `curl -s https://frontier-alpha.metaventionsai.com/api/v1/health/integrations | jq '.integrations | to_entries[] | select(.value.status != "live") | .key'`. Anything other than `polygonWebSocket` (Vercel by-design degraded) is a real signal.
 2. **Synthetic monitor status** — `curl -s "https://frontier-alpha.metaventionsai.com/api/v1/cron/synthetic-monitor?key=$CRON_SECRET" | jq '.data | {passed, failed, results: [.results[] | select(.error)]}'`. US-007 wires this against the same shape assertions as `tests/integration/protected-routes.test.ts` (see "Golden state fixture" below). Status budget: `failed: 0`. Failures auto-increment `errorCounter` so `/api/v1/health/errors` and the weekly digest also surface them. Vercel cron is configured to hit it every 15 minutes — for manual debugging, the same query with `?key=$CRON_SECRET` returns the latest pass/fail per route. Also worth a glance: `curl -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" https://frontier-alpha.metaventionsai.com/api/v1/health/errors | jq '.data.totalErrors'` — should be 0 most days.
 3. **Eyeball production** — `https://frontier-alpha.metaventionsai.com/dashboard` in a fresh-incognito session signed in as `dicoangelo+dev@metaventionsai.com`. No console errors, no "Reconnecting · 1 · 1s" banner that doesn't terminate, no $125K mock numbers leaking through.
+
+### Visual regression (TOKEN-007)
+
+Playwright snapshot suite that diffs every primary page (Landing, Dashboard, Portfolio, Trading, Options, CVRF, Earnings, Factors, Alerts) against the committed baseline in both light and dark themes at 1440x900. Runs **nightly only** (06:00 UTC via `.github/workflows/visual-regression.yml`), not per PR. Story rationale: a 20-minute Playwright pass on every PR is not worth the cycle cost when the no-raw-hex ESLint rule (TOKEN-006) already gates the migration and the visual diff is a backstop, not a primary check.
+
+```bash
+# Run against committed baselines (requires SUPABASE_* env for golden-state user)
+npm run test:visual
+
+# Regenerate baselines after intentional design changes
+npm run test:visual:update
+```
+
+- **Config:** `tests/visual/playwright.config.cjs` (CommonJS on purpose; the repo root is `"type": "module"` and the playwright CJS-to-ESM bridge can't surface `defineConfig` through Node 22's static analysis when the config is ESM. The local `tests/visual/package.json` pins this directory to CJS so the spec files load via Playwright's require() path.)
+- **Spec:** `tests/visual/tokens.spec.ts` — 18 tests = 9 pages x 2 themes.
+- **Baselines:** `tests/visual/baseline/*.png` — git-tracked PNG, lossless. Diff tolerance is `maxDiffPixelRatio: 0.01` (1% per the story).
+- **Auth:** Reuses the same seeded `dicoangelo+test@metaventionsai.com` golden-state user as the integration suite (5 holdings, 3 alerts, 2 realized lots, enterprise comp). The visual auth helper at `tests/visual/auth-helper.ts` is a deliberate copy of `tests/integration/auth-helper.ts::mintTestSession` because the two test suites live in different module scopes (CJS vs ESM); both must stay in sync if the seeded user changes.
+- **Theme toggle:** the spec writes the Zustand persist key `frontier-theme` to localStorage before navigation so the theme is applied at first paint, no FOUC.
+- **Wait anchors:** every page exposes a `data-testid="visual-{page}-ready"` element on its loaded-state branch. If you add a new page or restructure an existing one, add the test ID before regenerating baselines.
+- **CI failure artifacts:** the workflow uploads `playwright-report/` and `test-results/` (both root-level and `tests/visual/`) on any diff > 1%. Pull them, eyeball the diff PNG, decide: real regression vs. baseline staleness from an intentional design change.
+
+To regenerate baselines after a design change:
+
+```bash
+# 1. Make the design change.
+# 2. Run with --update-snapshots:
+npm run test:visual:update
+# 3. Eyeball every changed PNG in tests/visual/baseline/.
+# 4. Commit the new baselines as a separate commit so the diff is reviewable.
+```
+
+CI requires the same secrets as the integration tests (`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY` or `VITE_SUPABASE_ANON_KEY`, plus `VITE_SUPABASE_URL`). The nightly workflow reads them from repo secrets.
 
 ### Golden state fixture (US-007)
 

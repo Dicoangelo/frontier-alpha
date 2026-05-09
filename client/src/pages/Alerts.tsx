@@ -233,7 +233,7 @@ export function Alerts() {
   const showMockBanner = usingDemoAlerts || usingDemoFactors;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto" data-testid="visual-alerts-ready">
       {showMockBanner && <MockDataBanner force pageKey="alerts" />}
       {errorBanner}
 

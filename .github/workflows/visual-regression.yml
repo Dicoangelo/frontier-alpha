@@ -1,0 +1,85 @@
+name: Visual Regression (Nightly)
+
+# TOKEN-007: snapshot every primary page in light + dark themes against the
+# committed baselines in tests/visual/baseline/. Runs nightly, NOT per-PR —
+# the story completion note explicitly defers to a nightly cron because a
+# 20-minute Playwright pass on every PR is not worth the cycle cost when
+# the no-raw-hex ESLint rule (TOKEN-006) already gates the migration.
+#
+# Triggers:
+#   - 06:00 UTC nightly (02:00 ET) — run when nobody is shipping
+#   - workflow_dispatch — manual reruns after a baseline update
+#
+# Required repo secrets:
+#   - VITE_SUPABASE_URL
+#   - VITE_SUPABASE_ANON_KEY
+#   - SUPABASE_URL
+#   - SUPABASE_SERVICE_KEY
+#   - SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY — auth-helper accepts either)
+#
+# Failure artifacts:
+#   On any diff > 1% per channel, the playwright-report and test-results
+#   directories upload as artifacts so the operator can pull the actual
+#   diff PNGs and decide: real regression vs. baseline staleness.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  visual-regression:
+    name: Snapshot diff (chromium 1440x900)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install client dependencies
+        run: cd client && npm ci
+
+      - name: Install Playwright (chromium only)
+        run: npx playwright install --with-deps chromium
+
+      - name: Run visual regression suite (config: tests/visual/playwright.config.cjs)
+        run: npm run test:visual
+        env:
+          CI: 'true'
+          NODE_ENV: 'test'
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            tests/visual/playwright-report/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload diff images on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: |
+            test-results/
+            tests/visual/test-results/
+          retention-days: 14
+          if-no-files-found: ignore

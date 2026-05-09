@@ -218,7 +218,7 @@ export default function Trading() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
+    <div className="min-h-screen bg-[var(--color-bg)]" data-testid="visual-trading-ready">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div

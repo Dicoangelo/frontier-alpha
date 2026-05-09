@@ -1,0 +1,7 @@
+{
+  "name": "frontier-alpha-visual-regression",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "TOKEN-007 visual regression suite. Forces CommonJS resolution for .ts test files in this directory only. Without this, .ts files inherit `type: module` from the repo root, which makes Playwright's CJS-to-ESM bridge for @playwright/test unable to expose named exports (defineConfig/test/expect) through Node 22's static analysis. The config (.cjs) and the spec (.ts) both resolve as CJS under this scope and load via Playwright's require() path."
+}

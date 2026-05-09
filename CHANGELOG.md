@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.3] - 2026-05-09
+
+### Legacy PRD Wave Closed — DASH3-005 + TOKEN-007
+
+Two pre-v1.2.6 deferred stories picked up after the v1.3.0 reliability wave unblocked their prerequisites. Both shipped via parallel agents with no overlap.
+
+- **DASH3-005 — Cognitive Insight v2 (factor-change surfacing)**
+  - `68e80a3` feat(DASH3-005): Cognitive Insight v2 factor-deltas surfacing
+  - New `client/src/hooks/useFactorDeltas.ts` + `factorDeltas.helpers.ts` + 21 unit tests
+  - New `client/src/components/explainer/FactorDeltas.tsx` rendered as sibling to CognitiveInsight on Dashboard
+  - Computes deltas client-side from existing factor exposures + localStorage baseline (no new ML endpoint required); falls back to `kind: 'empty'` until baseline accumulates
+  - Reuses DataSource discriminated union from US-002, Sparkline component from existing UI, no new npm dependencies
+  - `data-testid="visual-dashboard-ready"` added for TOKEN-007 wait anchor
+
+- **TOKEN-007 — Visual regression infrastructure**
+  - `8887c14` feat(TOKEN-007): visual regression infra, Playwright + nightly CI
+  - `b1a717a` test(TOKEN-007): visual regression baselines, Landing light + dark
+  - `1127359` fix(TOKEN-007): valid YAML for nightly workflow step name
+  - `tests/visual/playwright.config.cjs` + `tests/visual/tokens.spec.ts` (18 tests = 9 pages x 2 themes)
+  - `.github/workflows/visual-regression.yml` runs nightly at 06:00 UTC, NOT per-PR (per original deferral guidance)
+  - `data-testid="visual-{page}-ready"` anchors added across Landing, Portfolio, Trading, Options, CVRF, Earnings, Factors, Alerts (Dashboard had its anchor added by DASH3-005)
+  - 2 of 18 baselines committed (Landing light + dark); the remaining 16 need `npm run test:visual:update` run once with operator credentials (`SUPABASE_URL` + `SUPABASE_SERVICE_KEY` + `SUPABASE_ANON_KEY`) to seed the golden-state user and capture
+  - `chromium`-only, `maxDiffPixelRatio: 0.01`, on-failure CI uploads `playwright-report/` + `test-results/` artifacts
+
+**Legacy PRD inventory after this wave:**
+- `prd-dashboard-v3.json`: 7 of 8 done (DASH3-006 personalization deferred until 2nd active user)
+- `prd-mobile-portfolio.json`: 6 of 7 done (MOBILE-004 swipe actions deferred until 2nd active user)
+- `prd-motion-system.json`: archived to `.prd-archive/` (7 of 7 complete)
+- `prd-token-migration.json`: 7 of 7 done
+
+---
+
+## [1.3.2] - 2026-05-09
+
+### Risk Metrics Empty State (sparse-factor leak closed)
+
+- `3ce23ee` fix(dashboard): Risk Metrics empty when factor data sparse
+- `c1302eb` audit: v1.3.2 dashboard with Risk Metrics empty state
+- `client/src/pages/Dashboard.tsx::calculateMetrics()` returns `null` when `positions.length === 0` OR market/volatility factors not yet computed; caller wraps `null` in `EMPTY` DataSource so the existing `kind === 'empty'` branch renders clean placeholders ("Add positions to compute this metric")
+- Removed unused `EMPTY_METRICS` zero-seed object that was the source of the prior derived-defaults leak (Sharpe 0.28, Vol 18%, Drawdown -27% looked real but were CAPM stand-ins)
+
+## [1.3.1] - 2026-05-09
+
+### Auth-chain hotfixes (post-v1.3.0 walkthrough)
+
+- Three sites used `localStorage.getItem('supabase_token')` (wrong key); all replaced with `supabase.auth.getSession()` or `useAuthStore.getState().session`
+- Dashboard portfolio fetch was returning the API envelope as Portfolio; now unwraps `json.data || json.portfolio || json`
+- `Number(undefined)` produces `NaN` and `NaN ?? fallback` does NOT fall through; replaced with `Number.isFinite(portRaw) ? portRaw : 3000` in health probe URL builder
+- `digest/run` route added `?probe=true` short-circuit because Vercel rewrites `HEAD` to `GET` on `/api/(.*)` catch-all routes (broke health probe gate-only pattern)
+- `JSON.stringify(undefined)` returns `undefined`; ErrorCounter raw string capture now uses `JSON.stringify(error) ?? String(error)`
+- `useNotifications.ts` subscription helpers swapped to live session reads
+
 ## [1.3.0] - 2026-05-09
 
 ### End-User Reliability Wave — 9 user stories shipped via 3 waves of parallel agents

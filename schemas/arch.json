@@ -1,20 +1,20 @@
 {
-  "generatedAt": "2026-05-09T07:23:27.527Z",
-  "headSha": "83f0425ed611dddfff123c749d2fe880b00ebc99",
+  "generatedAt": "2026-05-09T08:28:58.495Z",
+  "headSha": "875a8023bb192b33895fa41e39fc88bdd203d0f5",
   "version": "1.2.6",
   "server": {
-    "tsFiles": 119,
-    "tsNonTestFiles": 116,
+    "tsFiles": 125,
+    "tsNonTestFiles": 122,
     "inSourceTestFiles": 3,
-    "routeModules": 29,
-    "endpoints": 111,
+    "routeModules": 30,
+    "endpoints": 112,
     "migrations": 13,
     "vercelApiFiles": 4,
-    "testFiles": 37
+    "testFiles": 38
   },
   "client": {
     "pages": 24,
-    "components": 111,
+    "components": 112,
     "stores": 6,
     "hooks": 13,
     "apiModules": 7,
@@ -68,6 +68,10 @@
     {
       "module": "cache.ts",
       "endpoints": 3
+    },
+    {
+      "module": "cron-warm-cache.ts",
+      "endpoints": 1
     },
     {
       "module": "cvrf.ts",

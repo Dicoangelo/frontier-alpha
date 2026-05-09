@@ -14,7 +14,8 @@
   ],
   "crons": [
     { "path": "/api/v1/digest/run", "schedule": "0 13 * * 1" },
-    { "path": "/api/v1/digest/health-summary", "schedule": "0 13 * * 0" }
+    { "path": "/api/v1/digest/health-summary", "schedule": "0 13 * * 0" },
+    { "path": "/api/v1/cron/warm-cache", "schedule": "0 * * * *" }
   ],
   "headers": [
     {

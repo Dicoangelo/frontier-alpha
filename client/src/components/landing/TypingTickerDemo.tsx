@@ -130,7 +130,7 @@ export function TypingTickerDemo() {
         >
           <span className="text-[var(--color-accent-secondary)] mono text-[10px] tracking-[0.3em] uppercase mr-2">
             Because
-          </span>
+          </span>{' '}
           {scene.because.replace(/^because\s/i, '')}
         </p>
       </div>

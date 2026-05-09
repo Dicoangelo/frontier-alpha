@@ -63,8 +63,25 @@ api.interceptors.response.use(
     return response.data;
   },
   (error) => {
-    // Log API errors but don't auto-logout (let components handle auth errors gracefully)
-    console.error('API Error:', error.response?.data || error.message);
+    // US-008: surface the X-Request-Id on errors so console + server logs
+    // + Sentry events can be cross-referenced. Header is lower-case on the
+    // axios side (Node + browser both normalize). Falls through silently
+    // when the header is missing (e.g. CORS preflight, network error).
+    const requestId =
+      error.response?.headers?.['x-request-id'] ||
+      error.response?.headers?.['X-Request-Id'];
+    const url = error.config?.url;
+    const method = error.config?.method?.toUpperCase();
+    const status = error.response?.status;
+    const message = error.response?.data || error.message;
+    if (requestId) {
+      console.error(
+        `API Error [${method} ${url}] status=${status} requestId=${requestId}`,
+        message
+      );
+    } else {
+      console.error('API Error:', message);
+    }
     return Promise.reject(error);
   }
 );

@@ -14,4 +14,10 @@ export {
   type SubscriptionConfirmedData,
 } from './subscription-confirmed.js';
 export { renderWeeklyDigest, type WeeklyDigestData } from './weekly-digest.js';
+export {
+  renderWeeklyHealthDigest,
+  type WeeklyHealthDigestData,
+  type RouteErrorSummary,
+  type IntegrationStatusEntry,
+} from './weekly-health-digest.js';
 export { renderWelcome, type WelcomeData } from './welcome.js';

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.5] - 2026-05-08
 
-### Rate limiter goes durable on Supabase — no Upstash needed
+### Rate limiter goes durable on Supabase + IP extractor fix — no Upstash needed
 
 Replaced the in-memory rate limiter with a Supabase-backed counter so limits
 survive Vercel cold starts without adding a new vendor. At Frontier Alpha's
@@ -28,6 +28,11 @@ isn't worth the ops cost.
 - **Changed** `/api/v1/health/integrations.rateLimiter` — reports
   `provider: 'supabase-postgres'`, `mode: 'rate_limit_check RPC'` when
   Supabase is the active store.
+- **Fixed** `getClientIp()` was reading `x-forwarded-for[0]` which on Vercel
+  silently rotated to a PoP IP (216.73.162.x range) instead of the real
+  client IP — every request looked like a fresh client and never hit limits.
+  New extractor prefers `x-vercel-forwarded-for` → `cf-connecting-ip` →
+  `x-real-ip` → XFF → `request.ip`.
 - **Result** — 13 of 14 integrations live (only Vercel WS by-design remains
   degraded). No Upstash signup required.
 

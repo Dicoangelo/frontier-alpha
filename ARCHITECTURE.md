@@ -86,7 +86,7 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 
 ## Backend Integrations
 
-**Status as of v1.2.4 (2026-05-08):** 12 of 14 integrations are live in production. Diagnostic endpoint: `GET /api/v1/health/integrations` — surfaces all 14 entries including Connect Alpaca crypto probe, weekly digest cron auth, and comp-customer guard. Two remain degraded: Vercel WS (by design — Railway covers that tier) and Upstash rate-limiter (deferred). v1.2.4 also restored WebSocket connectivity and Stripe checkout after a trailing-newline regression in seven `VITE_*` Vercel env vars.
+**Status as of v1.2.5 (2026-05-08):** 13 of 14 integrations are live in production. Diagnostic endpoint: `GET /api/v1/health/integrations`. Only `polygonWebSocket` remains degraded, by design — Vercel serverless cannot host long-lived WebSockets, so Railway covers that tier. v1.2.5 added a durable Supabase-backed rate limiter (`rate_limit_check` RPC) that survives Vercel cold starts, eliminating the need for Upstash Redis at current scale.
 
 | Integration | Status | Provider | Wired by |
 |-------------|--------|----------|----------|
@@ -104,7 +104,7 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 | ML sentiment | ✅ live | DeepSeek llm-classification | shared LLM client |
 | Rate limiter | ⚠️ in-memory fallback | Upstash deferred | `src/lib/rateLimiter.ts` |
 
-### New in v1.2.0 → v1.2.4
+### New in v1.2.0 → v1.2.5
 
 **v1.2.0:**
 - 4 wire-* scripts under `scripts/`: `wire-production-env.sh`, `wire-deepseek.sh`, `wire-vapid.sh`, `wire-stripe-webhook.mjs`
@@ -129,6 +129,9 @@ Node.js runtime: v20 (server/production), v25 (local dev).
 
 **v1.2.4:**
 - Trailing-newline regression in seven `VITE_*` Vercel envs caused two user-facing failures: WebSocket fell to polling and showed `Offline · Data Stale`, and Stripe checkout silently rejected price IDs with embedded newlines. Reset all envs cleanly via `printf` and added `.trim()` defense in `client/src/api/websocket.ts::getWebSocketUrl()`. Also adds `/terms` and `/privacy` static routes linked from Login page footer (target=_blank) and Landing page footer.
+
+**v1.2.5:**
+- Durable Supabase-backed rate limiter replaces in-memory Map. New `frontier_rate_limits` table + `rate_limit_check(text,int,int)` Postgres RPC does an atomic UPSERT (window-rolls when expired, increments otherwise) in a single round-trip. New `SupabaseRateLimiterStore` class wraps the RPC, falls back to the in-memory store on RPC error so a Postgres blip cannot wedge the API. Mode auto-selects on `SUPABASE_SERVICE_KEY` presence. Health endpoint reports `provider: 'supabase-postgres', mode: 'rate_limit_check RPC'`. Eliminates need for Upstash Redis at current scale.
 
 ---
 
@@ -473,7 +476,7 @@ Commands: `npm run test:unit` (server), `npm run test:all` (server + client), `c
 
 | Metric | Claimed | Verified | Evidence |
 |--------|---------|----------|----------|
-| Version (package.json) | 1.2.4 | 1.2.4 | package.json (v1.2.4 bump 2026-05-08, VITE env-newline fix + Terms/Privacy) |
+| Version (package.json) | 1.2.5 | 1.2.5 | package.json (v1.2.5 bump 2026-05-08, Supabase rate limiter) |
 | Factor count | "80+" | **76** | src/factors/FactorEngine.ts:22–126 |
 | Fastify endpoints | "107" | **107** | `grep -c` on src/routes/*.ts |
 | Vercel API files | — | **10** | api/ glob (post-consolidation) |
@@ -484,7 +487,7 @@ Commands: `npm run test:unit` (server), `npm run test:all` (server + client), `c
 | Supabase migrations | "10" | **14** | supabase/migrations/ glob (added 3 paper-trading tables) |
 | Server .ts files | — | **79** | src/ glob |
 | Component .tsx files | "68+" | **~95** | client/src/components/ glob |
-| Backend integrations live | 12 of 14 | **12 of 14** | `/api/v1/health/integrations` (Connect Alpaca + weekly digest cron + comp guard surfaced v1.2.3) |
+| Backend integrations live | 13 of 14 | **13 of 14** | `/api/v1/health/integrations` (Supabase rate limiter v1.2.5; only Vercel WS by-design remains degraded) |
 | Deployment tiers | 2 | **2** | Vercel (SPA + REST) + Railway (WS + REST) |
 
 ---

@@ -184,21 +184,39 @@ export interface APIResponse<T> {
 // INTEGRATION HEALTH (ops diagnostic — see /api/v1/health/integrations)
 // ============================================================================
 
-export type IntegrationStatus = 'live' | 'degraded';
+export type IntegrationStatus = 'live' | 'degraded' | 'offline';
 
 /**
- * Wiring status of a single external integration.
+ * Standardized result shape for every integration probe (US-004, P1).
  *
- * - `status: 'live'` → required env var(s) present (presence-only check,
- *   no network calls).
- * - `status: 'degraded'` → env not set; `reason` always populated, plus
- *   `fallback` (when traffic still serves) or `impact` (when it does not).
+ * Every probe — Polygon, Alpha Vantage, Stripe, Resend, Supabase, Connect Alpaca,
+ * weekly digest cron, polygonWebSocket — returns this exact shape. Alerting,
+ * runbooks, and downstream tooling read identical fields across all entries.
  *
- * `via` lists the env var name(s) that gate the integration so ops can
- * trace the wiring without exposing actual secret values.
+ * Required fields:
+ * - `status`: `'live'` (probe succeeded) | `'degraded'` (probe ran but flagged
+ *   sub-optimal — e.g. by-design fallback, rate-limited but recoverable) |
+ *   `'offline'` (probe failed or unreachable).
+ * - `latencyMs`: wall-clock latency of the probe call in milliseconds. `0` when
+ *   no upstream call was made (env-gated `degraded` and code-only entries).
+ * - `lastError`: last upstream error message string, or `null` on success.
+ * - `lastSuccessAt`: ISO8601 timestamp of last `'live'` probe, or `null`.
+ * - `ttlSeconds`: how long this probe result is cached in process memory.
+ *
+ * Optional context fields (carried over from v1.2.x):
+ * - `via`: env var name(s) gating the integration (no secret values).
+ * - `provider`: the underlying provider name (e.g. `'deepseek'`, `'resend'`).
+ * - `mode`: operational mode (e.g. `'paper'`, `'live'`, `'rest'`, `'websocket'`).
+ * - `reason`: when `degraded`/`offline`, why.
+ * - `fallback`: when `degraded`, what the system serves instead.
+ * - `impact`: when `degraded`/`offline`, what user-visible behavior fails.
  */
 export interface IntegrationHealthEntry {
   status: IntegrationStatus;
+  latencyMs: number;
+  lastError: string | null;
+  lastSuccessAt: string | null;
+  ttlSeconds: number;
   via?: string | null;
   mode?: string;
   provider?: string;
@@ -213,6 +231,7 @@ export interface IntegrationsHealthResponse {
   summary: {
     live: number;
     degraded: number;
+    offline: number;
     total: number;
   };
 }

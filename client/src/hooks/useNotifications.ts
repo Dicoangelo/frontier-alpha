@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface NotificationState {
   permission: NotificationPermission;
@@ -178,7 +179,9 @@ export function useNotifications() {
 // Helper to send subscription to server
 async function sendSubscriptionToServer(subscription: PushSubscription): Promise<void> {
   try {
-    const token = localStorage.getItem('supabase_token');
+    // v1.3.1: Supabase JS doesn't store under 'supabase_token' — read live session.
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token ?? '';
     await fetch('/api/v1/notifications/subscribe', {
       method: 'POST',
       headers: {
@@ -197,7 +200,9 @@ async function sendSubscriptionToServer(subscription: PushSubscription): Promise
 // Helper to remove subscription from server
 async function removeSubscriptionFromServer(subscription: PushSubscription): Promise<void> {
   try {
-    const token = localStorage.getItem('supabase_token');
+    // v1.3.1: Supabase JS doesn't store under 'supabase_token' — read live session.
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token ?? '';
     await fetch('/api/v1/notifications/unsubscribe', {
       method: 'POST',
       headers: {

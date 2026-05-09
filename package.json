@@ -25,7 +25,9 @@
     "db:migrate": "cd supabase && supabase db push",
     "db:reset": "cd supabase && supabase db reset",
     "arch:scan": "node scripts/arch-scanner.mjs",
-    "arch:check": "node scripts/arch-scanner.mjs --check"
+    "arch:check": "node scripts/arch-scanner.mjs --check",
+    "env:audit": "node scripts/audit-env.mjs",
+    "env:audit:schema": "node scripts/audit-env.mjs --schema-only"
   },
   "keywords": [
     "fintech",

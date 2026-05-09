@@ -1,0 +1,433 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://frontier-alpha.metaventionsai.com/schemas/env-schema.json",
+  "title": "Frontier Alpha Environment Variable Contract",
+  "description": "Machine-checkable contract for every env var referenced by frontier-alpha. New env in code without an entry here makes CI fail (US-009). Audit script reads this to validate Vercel + Railway env values for whitespace, length, and regex compliance.",
+  "version": "1.0.0",
+  "lastFullAudit": "2026-05-09",
+  "vars": [
+    {
+      "name": "SUPABASE_URL",
+      "required": true,
+      "regex": "^https://[a-z0-9-]+\\.supabase\\.co/?$",
+      "sourceUrl": "https://supabase.com/dashboard/project/_/settings/api",
+      "lastVerified": "2026-05-09",
+      "description": "Supabase project URL (server-side)."
+    },
+    {
+      "name": "SUPABASE_SERVICE_KEY",
+      "required": true,
+      "regex": "^eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$",
+      "sourceUrl": "https://supabase.com/dashboard/project/_/settings/api",
+      "lastVerified": "2026-05-09",
+      "description": "Supabase service-role JWT (server only — never ship to client)."
+    },
+    {
+      "name": "SUPABASE_ANON_KEY",
+      "required": false,
+      "regex": "^eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$",
+      "sourceUrl": "https://supabase.com/dashboard/project/_/settings/api",
+      "lastVerified": "2026-05-09",
+      "description": "Supabase public anon JWT. Server may not always read it — VITE_SUPABASE_ANON_KEY is the client-facing copy."
+    },
+    {
+      "name": "POLYGON_API_KEY",
+      "required": true,
+      "length": 32,
+      "regex": "^[A-Za-z0-9_]{32}$",
+      "sourceUrl": "https://polygon.io/dashboard/api-keys",
+      "lastVerified": "2026-05-09",
+      "description": "Polygon REST + WebSocket API key. EXACTLY 32 chars — v1.2.6 incident: echo|vercel env add truncated to 30 chars and silently 401'd for weeks. Always rotate via printf, not echo."
+    },
+    {
+      "name": "ALPHA_VANTAGE_API_KEY",
+      "required": true,
+      "regex": "^[A-Z0-9]{8,32}$",
+      "sourceUrl": "https://www.alphavantage.co/support/#api-key",
+      "lastVerified": "2026-05-09",
+      "description": "Alpha Vantage fallback for quote / history. Free-tier 25 req/day."
+    },
+    {
+      "name": "DEEPSEEK_API_KEY",
+      "required": true,
+      "regex": "^sk-[A-Za-z0-9]+$",
+      "sourceUrl": "https://platform.deepseek.com/api_keys",
+      "lastVerified": "2026-05-09",
+      "description": "DeepSeek primary cognitive explainer key."
+    },
+    {
+      "name": "DEEPSEEK_MODEL",
+      "required": false,
+      "regex": "^deepseek-[a-z0-9-]+$",
+      "sourceUrl": "https://platform.deepseek.com/docs",
+      "lastVerified": "2026-05-09",
+      "description": "Optional DeepSeek model override; defaults to deepseek-chat in code."
+    },
+    {
+      "name": "OPENAI_API_KEY",
+      "required": true,
+      "regex": "^sk-[A-Za-z0-9_-]+$",
+      "sourceUrl": "https://platform.openai.com/api-keys",
+      "lastVerified": "2026-05-09",
+      "description": "OpenAI fallback explainer key (GPT-4o)."
+    },
+    {
+      "name": "OPENAI_MODEL",
+      "required": false,
+      "sourceUrl": "https://platform.openai.com/docs/models",
+      "lastVerified": "2026-05-09",
+      "description": "Optional OpenAI model override; defaults to gpt-4o in code."
+    },
+    {
+      "name": "STRIPE_SECRET_KEY",
+      "required": true,
+      "regex": "^sk_(test|live)_[A-Za-z0-9]+$",
+      "sourceUrl": "https://dashboard.stripe.com/apikeys",
+      "lastVerified": "2026-05-09",
+      "description": "Stripe secret key. MUST start with sk_ — sk_live_ for prod, sk_test_ for staging."
+    },
+    {
+      "name": "STRIPE_WEBHOOK_SECRET",
+      "required": true,
+      "regex": "^whsec_[A-Za-z0-9]+$",
+      "sourceUrl": "https://dashboard.stripe.com/webhooks",
+      "lastVerified": "2026-05-09",
+      "description": "Stripe webhook signing secret. Required to verify billing events."
+    },
+    {
+      "name": "STRIPE_PRO_PRICE_ID",
+      "required": false,
+      "regex": "^price_[A-Za-z0-9]+$",
+      "sourceUrl": "https://dashboard.stripe.com/products",
+      "lastVerified": "2026-05-09",
+      "description": "Stripe Price ID for the Pro tier. Server-side billing route reads this."
+    },
+    {
+      "name": "STRIPE_ENTERPRISE_PRICE_ID",
+      "required": false,
+      "regex": "^price_[A-Za-z0-9]+$",
+      "sourceUrl": "https://dashboard.stripe.com/products",
+      "lastVerified": "2026-05-09",
+      "description": "Stripe Price ID for the Enterprise tier. Server-side billing route reads this."
+    },
+    {
+      "name": "EMAIL_API_KEY",
+      "required": true,
+      "regex": "^re_[A-Za-z0-9_]+$",
+      "sourceUrl": "https://resend.com/api-keys",
+      "lastVerified": "2026-05-09",
+      "description": "Resend (or compatible) email API key. Resend keys begin with re_."
+    },
+    {
+      "name": "EMAIL_PROVIDER",
+      "required": true,
+      "regex": "^(resend|sendgrid|postmark|smtp)$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Provider routing for transactional email. Resend in production today."
+    },
+    {
+      "name": "EMAIL_FROM",
+      "required": true,
+      "regex": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Sender email address used by Resend transactional sends. PRD US-009 also lists this as RESEND_FROM_EMAIL — code uses EMAIL_FROM."
+    },
+    {
+      "name": "RESEND_FROM_EMAIL",
+      "required": false,
+      "regex": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Alias for EMAIL_FROM listed in v1.3.0 PRD; either value is accepted by Resend integration."
+    },
+    {
+      "name": "BROKER_CRED_ENC_KEY",
+      "required": true,
+      "length": 64,
+      "regex": "^[a-f0-9]{64}$",
+      "sourceUrl": "internal — generate with: openssl rand -hex 32",
+      "lastVerified": "2026-05-09",
+      "description": "AES-256-GCM master key for encrypting per-user broker credentials at rest. EXACTLY 64 hex chars."
+    },
+    {
+      "name": "CRON_SECRET",
+      "required": true,
+      "length": 64,
+      "regex": "^[a-f0-9]{64}$",
+      "sourceUrl": "internal — generate with: openssl rand -hex 32",
+      "lastVerified": "2026-05-09",
+      "description": "Shared secret for Vercel cron + synthetic monitor + digest invocations. EXACTLY 64 hex chars."
+    },
+    {
+      "name": "VAPID_PUBLIC_KEY",
+      "required": true,
+      "regex": "^[A-Za-z0-9_-]{86,88}$",
+      "sourceUrl": "internal — regenerate via scripts/wire-vapid.sh",
+      "lastVerified": "2026-05-09",
+      "description": "Web Push VAPID public key (P-256, 65-byte uncompressed → ~87 base64url chars). Pair with VAPID_PRIVATE_KEY."
+    },
+    {
+      "name": "VAPID_PRIVATE_KEY",
+      "required": true,
+      "regex": "^[A-Za-z0-9_-]{42,44}$",
+      "sourceUrl": "internal — regenerate via scripts/wire-vapid.sh",
+      "lastVerified": "2026-05-09",
+      "description": "Web Push VAPID private key (P-256 D scalar, 32 bytes → ~43 base64url chars). Pair with VAPID_PUBLIC_KEY."
+    },
+    {
+      "name": "WEB_PUSH_SUBJECT",
+      "required": false,
+      "regex": "^(mailto:|https?://)",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Web Push contact (mailto: or https:) used by the VAPID subscriber field."
+    },
+    {
+      "name": "BILLING_ENABLED",
+      "required": false,
+      "regex": "^(true|false)$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Boolean flag — when 'true', Stripe checkout flows mount; when 'false' or unset, billing is paused."
+    },
+    {
+      "name": "FRONTEND_URL",
+      "required": true,
+      "regex": "^https?://[^\\s]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Public origin used by Stripe redirects, password-reset links, and email templates. https://frontier-alpha.metaventionsai.com in prod."
+    },
+    {
+      "name": "ALPACA_API_KEY",
+      "required": false,
+      "regex": "^[A-Z0-9]{16,32}$",
+      "sourceUrl": "https://app.alpaca.markets/paper/dashboard/overview",
+      "lastVerified": "2026-05-09",
+      "description": "Optional global Alpaca API key (most users connect their own via OAuth-equivalent flow)."
+    },
+    {
+      "name": "ALPACA_API_SECRET",
+      "required": false,
+      "sourceUrl": "https://app.alpaca.markets/paper/dashboard/overview",
+      "lastVerified": "2026-05-09",
+      "description": "Optional global Alpaca API secret. Pairs with ALPACA_API_KEY."
+    },
+    {
+      "name": "ALPACA_PAPER_TRADING",
+      "required": false,
+      "regex": "^(true|false)$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Force paper trading for the global Alpaca client when set to 'true'."
+    },
+    {
+      "name": "ML_SENTIMENT_ENDPOINT",
+      "required": false,
+      "regex": "^https?://[^\\s]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Optional Python ML sentiment service endpoint."
+    },
+    {
+      "name": "REDIS_URL",
+      "required": false,
+      "regex": "^redis(s)?://[^\\s]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Optional Redis URL — currently unused in prod (Supabase-backed rate limiter is primary). Reserved for future Upstash upgrade."
+    },
+    {
+      "name": "PORT",
+      "required": false,
+      "regex": "^[0-9]{2,5}$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Optional server port override. Vercel + Railway set this automatically."
+    },
+    {
+      "name": "NODE_ENV",
+      "required": false,
+      "regex": "^(development|production|test)$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Standard Node runtime environment selector."
+    },
+    {
+      "name": "VERCEL",
+      "required": false,
+      "regex": "^1$",
+      "sourceUrl": "internal — Vercel sets this automatically",
+      "lastVerified": "2026-05-09",
+      "description": "Set to '1' by Vercel runtime; used to fork code paths between Vercel serverless and standalone Fastify."
+    },
+    {
+      "name": "LOG_LEVEL",
+      "required": false,
+      "regex": "^(trace|debug|info|warn|error|fatal|silent)$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Pino log level override. Defaults to info in production."
+    },
+    {
+      "name": "NEXT_PUBLIC_APP_URL",
+      "required": false,
+      "regex": "^https?://[^\\s]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Legacy Next-prefixed copy of the app URL; some shared utilities still read it."
+    },
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_URL",
+      "required": false,
+      "regex": "^https://[a-z0-9-]+\\.supabase\\.co/?$",
+      "sourceUrl": "https://supabase.com/dashboard/project/_/settings/api",
+      "lastVerified": "2026-05-09",
+      "description": "Legacy Next-prefixed Supabase URL retained for backward-compat shims."
+    },
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "required": false,
+      "regex": "^eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$",
+      "sourceUrl": "https://supabase.com/dashboard/project/_/settings/api",
+      "lastVerified": "2026-05-09",
+      "description": "Legacy Next-prefixed Supabase anon key retained for backward-compat shims."
+    },
+    {
+      "name": "TEST_API_URL",
+      "required": false,
+      "regex": "^https?://[^\\s]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Test-only API base URL used by integration smoke tests (US-007)."
+    },
+    {
+      "name": "WEBHOOK_URL",
+      "required": false,
+      "regex": "^https?://[^\\s]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Script-only webhook registration target used by scripts/wire-stripe-webhook.mjs."
+    },
+    {
+      "name": "VITE_SUPABASE_URL",
+      "required": true,
+      "regex": "^https://[a-z0-9-]+\\.supabase\\.co/?$",
+      "sourceUrl": "https://supabase.com/dashboard/project/_/settings/api",
+      "lastVerified": "2026-05-09",
+      "description": "Client-side Supabase project URL injected at build time. Trim before use — \\n is truthy in JS."
+    },
+    {
+      "name": "VITE_SUPABASE_ANON_KEY",
+      "required": true,
+      "regex": "^eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$",
+      "sourceUrl": "https://supabase.com/dashboard/project/_/settings/api",
+      "lastVerified": "2026-05-09",
+      "description": "Client-side Supabase anon JWT injected at build time."
+    },
+    {
+      "name": "VITE_API_URL",
+      "required": true,
+      "regex": "^https?://[^\\s]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "REST API origin baked into the SPA bundle. Must NOT have trailing whitespace — feedback_vercel_env_newline.md."
+    },
+    {
+      "name": "VITE_WS_URL",
+      "required": true,
+      "regex": "^wss?://[^\\s]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "WebSocket origin for live quotes (Railway-hosted in prod). Trim before use."
+    },
+    {
+      "name": "VITE_VAPID_PUBLIC_KEY",
+      "required": true,
+      "regex": "^[A-Za-z0-9_-]{86,88}$",
+      "sourceUrl": "internal — paired with VAPID_PUBLIC_KEY",
+      "lastVerified": "2026-05-09",
+      "description": "Client-side mirror of VAPID_PUBLIC_KEY for Web Push subscription."
+    },
+    {
+      "name": "VITE_STRIPE_PRO_PRICE_ID",
+      "required": false,
+      "regex": "^price_[A-Za-z0-9]+$",
+      "sourceUrl": "https://dashboard.stripe.com/products",
+      "lastVerified": "2026-05-09",
+      "description": "Pro Price ID baked into the SPA for Stripe checkout."
+    },
+    {
+      "name": "VITE_STRIPE_ENTERPRISE_PRICE_ID",
+      "required": false,
+      "regex": "^price_[A-Za-z0-9]+$",
+      "sourceUrl": "https://dashboard.stripe.com/products",
+      "lastVerified": "2026-05-09",
+      "description": "Enterprise Price ID baked into the SPA for Stripe checkout."
+    },
+    {
+      "name": "VITE_APP_VERSION",
+      "required": false,
+      "regex": "^\\d+\\.\\d+\\.\\d+",
+      "sourceUrl": "internal — sourced from package.json at build time",
+      "lastVerified": "2026-05-09",
+      "description": "Optional semver string injected into the SPA for the version footer."
+    },
+    {
+      "name": "VITE_SENTRY_DSN",
+      "required": false,
+      "regex": "^https://[^\\s]+@[^\\s]+\\.ingest\\.sentry\\.io/[0-9]+$",
+      "sourceUrl": "https://sentry.io/settings/",
+      "lastVerified": "2026-05-09",
+      "description": "Optional client Sentry DSN. Audited in US-008."
+    },
+    {
+      "name": "VITE_SERVER_PORT",
+      "required": false,
+      "regex": "^[0-9]{2,5}$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Optional dev-only override telling the SPA which port the local Fastify server listens on."
+    },
+    {
+      "name": "VERCEL_GIT_COMMIT_SHA",
+      "required": false,
+      "regex": "^[a-f0-9]{7,40}$",
+      "sourceUrl": "internal — Vercel sets this automatically on deploy",
+      "lastVerified": "2026-05-09",
+      "description": "Vercel-injected build SHA. Read by US-008 health-summary for tagging error events."
+    },
+    {
+      "name": "RAILWAY_DEPLOYMENT_ID",
+      "required": false,
+      "sourceUrl": "internal — Railway sets this automatically on deploy",
+      "lastVerified": "2026-05-09",
+      "description": "Railway-injected deployment id. Read by US-008 health-summary for cross-tier tagging."
+    },
+    {
+      "name": "SENTRY_DSN",
+      "required": false,
+      "regex": "^https://[^\\s]+@[^\\s]+\\.ingest\\.sentry\\.io/[0-9]+$",
+      "sourceUrl": "https://sentry.io/settings/",
+      "lastVerified": "2026-05-09",
+      "description": "Server-side Sentry DSN. Audited in US-008. Optional — when unset, the in-process error counter is the sole source."
+    },
+    {
+      "name": "HEALTH_PROBE_BASE_URL",
+      "required": false,
+      "regex": "^https?://[^\\s]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-09",
+      "description": "Optional override telling the integrations health probe which API base URL to call instead of localhost. Used in US-004 staging diagnostics."
+    }
+  ],
+  "ignoredEnvNames": [
+    "DEV",
+    "PROD",
+    "MODE",
+    "BASE_URL",
+    "SSR"
+  ]
+}

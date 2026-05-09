@@ -17,6 +17,7 @@
  */
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/client';
+import { useAuthStore } from '@/stores/authStore';
 
 export type IntegrationStatus = 'live' | 'degraded';
 
@@ -77,6 +78,12 @@ function normalise(raw: unknown): IntegrationsHealthResponse {
  * useIntegrationsHealth — once-per-session cached fetch with optimistic fallback.
  */
 export function useIntegrationsHealth(): IntegrationsHealthResponse {
+  // US-003: hold the request until the auth store has finished its
+  // initial Supabase session-load. The endpoint is open-readable but the
+  // axios interceptor + page consumers expect a Bearer when the user is
+  // signed in; firing before hydration produces 401 noise on cold loads.
+  const isReady = useAuthStore((s) => s.isReady);
+
   const { data } = useQuery<IntegrationsHealthResponse>({
     queryKey: ['health', 'integrations'],
     queryFn: async () => {
@@ -89,6 +96,7 @@ export function useIntegrationsHealth(): IntegrationsHealthResponse {
         return OPTIMISTIC_DEFAULT;
       }
     },
+    enabled: isReady,
     // Once per app mount: long staleTime, no refetch on window focus.
     staleTime: Infinity,
     gcTime: Infinity,

@@ -12,6 +12,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, getErrorMessage } from '@/api/client';
 import { toast } from '@/components/shared/Toast';
+import { useAuthStore } from '@/stores/authStore';
+
+/**
+ * US-003 auth gate — every read-side trading query is Bearer-protected,
+ * so we must hold the request until the auth store has finished its
+ * initial Supabase session-load.
+ */
+function useAuthGate(): boolean {
+  const isReady = useAuthStore((s) => s.isReady);
+  const session = useAuthStore((s) => s.session);
+  return isReady && !!session?.access_token;
+}
 
 // ============================================================================
 // Types
@@ -129,6 +141,7 @@ export interface OrderValidation {
 // ============================================================================
 
 export function useBrokerAccount() {
+  const authReady = useAuthGate();
   return useQuery({
     queryKey: ['trading', 'account'],
     queryFn: async () => {
@@ -140,6 +153,7 @@ export function useBrokerAccount() {
         paperTrading: boolean;
       };
     },
+    enabled: authReady,
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
   });
@@ -150,6 +164,7 @@ export function useBrokerAccount() {
 // ============================================================================
 
 export function useBrokerPositions() {
+  const authReady = useAuthGate();
   return useQuery({
     queryKey: ['trading', 'positions'],
     queryFn: async () => {
@@ -162,6 +177,7 @@ export function useBrokerPositions() {
         paperTrading: boolean;
       };
     },
+    enabled: authReady,
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
   });
@@ -172,6 +188,7 @@ export function useBrokerPositions() {
 // ============================================================================
 
 export function useBrokerOrders(options?: { status?: string }) {
+  const authReady = useAuthGate();
   return useQuery({
     queryKey: ['trading', 'orders', options?.status],
     queryFn: async () => {
@@ -188,6 +205,7 @@ export function useBrokerOrders(options?: { status?: string }) {
         paperTrading: boolean;
       };
     },
+    enabled: authReady,
     staleTime: 10 * 1000,
     refetchInterval: 30 * 1000,
   });
@@ -284,6 +302,7 @@ export function useOrderPreview() {
 // ============================================================================
 
 export function useQuote(symbol: string) {
+  const authReady = useAuthGate();
   return useQuery({
     queryKey: ['trading', 'quote', symbol],
     queryFn: async () => {
@@ -291,20 +310,21 @@ export function useQuote(symbol: string) {
       const data = response.data as { quotes: Record<string, Quote> };
       return data.quotes[symbol.toUpperCase()];
     },
-    enabled: !!symbol,
+    enabled: authReady && !!symbol,
     staleTime: 5 * 1000,
     refetchInterval: 10 * 1000,
   });
 }
 
 export function useQuotes(symbols: string[]) {
+  const authReady = useAuthGate();
   return useQuery({
     queryKey: ['trading', 'quotes', symbols.sort().join(',')],
     queryFn: async () => {
       const response = await api.get(`/trading/quote?symbols=${symbols.join(',')}`);
       return response.data as { quotes: Record<string, Quote>; source: string };
     },
-    enabled: symbols.length > 0,
+    enabled: authReady && symbols.length > 0,
     staleTime: 5 * 1000,
     refetchInterval: 10 * 1000,
   });
@@ -315,12 +335,14 @@ export function useQuotes(symbols: string[]) {
 // ============================================================================
 
 export function useMarketClock() {
+  const authReady = useAuthGate();
   return useQuery({
     queryKey: ['trading', 'clock'],
     queryFn: async () => {
       const response = await api.get('/trading/clock');
       return response.data as MarketClock & { source: string };
     },
+    enabled: authReady,
     staleTime: 60 * 1000,
     refetchInterval: 60 * 1000,
   });

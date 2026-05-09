@@ -110,8 +110,11 @@ async function fetchPortfolio(): Promise<Portfolio | null> {
       throw new Error(`Portfolio fetch failed: ${response.status}`);
     }
 
-    const data = await response.json();
-    return data.portfolio || data;
+    const json = await response.json();
+    // Server returns { success, data: { positions, cash, totalValue, ... }, meta }
+    // — unwrap the envelope. Falls back to .portfolio (legacy shape) or the raw
+    // body so callers and tests stay tolerant.
+    return (json.data || json.portfolio || json) as Portfolio;
   } catch (error) {
     console.error('Failed to fetch portfolio:', error);
     return getDemoPortfolio();

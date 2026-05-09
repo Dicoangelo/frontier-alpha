@@ -13,6 +13,7 @@ import { Spinner } from '@/components/shared/Spinner';
 import { ToastContainer } from '@/components/shared/Toast';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { OnboardingProvider } from '@/components/onboarding';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 // Lazy load heavy pages for better initial load performance
 const Dashboard = lazy(() => import('@/pages/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -44,28 +45,15 @@ const queryClient = new QueryClient({
   },
 });
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, initialized, loading } = useAuthStore();
-
-  if (!initialized || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner className="w-8 h-8" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/landing" replace />;
-  }
-
-  return <>{children}</>;
-}
+// `<ProtectedRoute>` lives in `components/auth/ProtectedRoute.tsx` (US-003).
+// It gates on `authStore.isReady` so children NEVER mount before the
+// initial Supabase session-load resolves.
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, initialized, loading } = useAuthStore();
+  const isReady = useAuthStore((state) => state.isReady);
+  const session = useAuthStore((state) => state.session);
 
-  if (!initialized || loading) {
+  if (!isReady) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Spinner className="w-8 h-8" />
@@ -73,7 +61,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (user) {
+  if (session) {
     return <Navigate to="/dashboard" replace />;
   }
 

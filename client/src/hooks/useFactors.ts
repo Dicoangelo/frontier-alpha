@@ -1,12 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { factorsApi, groupByCategory } from '@/api/factors';
 import { toast } from '@/components/shared/Toast';
+import { useAuthStore } from '@/stores/authStore';
 
 export function useFactors(symbols: string[]) {
+  // US-003: gate on auth readiness so the request doesn't race with
+  // Supabase session hydration on cold load. Without this, /factors
+  // returns 401 → the page falls into its empty branch even though the
+  // user is signed in.
+  const isReady = useAuthStore((s) => s.isReady);
+  const session = useAuthStore((s) => s.session);
+  const authReady = isReady && !!session?.access_token;
+
   return useQuery({
     queryKey: ['factors', symbols.sort().join(',')],
     queryFn: () => factorsApi.getFactors(symbols),
-    enabled: symbols.length > 0,
+    enabled: authReady && symbols.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   });

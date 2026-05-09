@@ -7,6 +7,19 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cvrfApi } from '@/api/cvrf';
 import { toast } from '@/components/shared/Toast';
+import { useAuthStore } from '@/stores/authStore';
+
+/**
+ * US-003: every Bearer-gated useQuery is gated on auth readiness so the
+ * fan-out doesn't fire pre-hydration (which produced 401 → mock-data on
+ * cold loads). Returns `true` only when the auth store has finished its
+ * initial Supabase session-load AND we hold an access_token.
+ */
+function useAuthGate(): boolean {
+  const isReady = useAuthStore((s) => s.isReady);
+  const session = useAuthStore((s) => s.session);
+  return isReady && !!session?.access_token;
+}
 
 // ============================================================================
 // QUERY KEYS
@@ -29,9 +42,11 @@ export const cvrfKeys = {
  * Get current CVRF belief state
  */
 export function useCVRFBeliefs() {
+  const enabled = useAuthGate();
   return useQuery({
     queryKey: cvrfKeys.beliefs(),
     queryFn: cvrfApi.getBeliefs,
+    enabled,
     staleTime: 30 * 1000, // 30 seconds
     refetchOnWindowFocus: true,
   });
@@ -41,9 +56,11 @@ export function useCVRFBeliefs() {
  * Get CVRF optimization constraints
  */
 export function useCVRFConstraints() {
+  const enabled = useAuthGate();
   return useQuery({
     queryKey: cvrfKeys.constraints(),
     queryFn: cvrfApi.getConstraints,
+    enabled,
     staleTime: 30 * 1000,
   });
 }
@@ -56,9 +73,11 @@ export function useCVRFConstraints() {
  * Get all CVRF episodes (active + completed)
  */
 export function useCVRFEpisodes() {
+  const enabled = useAuthGate();
   return useQuery({
     queryKey: cvrfKeys.episodes(),
     queryFn: () => cvrfApi.getEpisodes(),
+    enabled,
     staleTime: 10 * 1000, // 10 seconds
     refetchOnWindowFocus: true,
   });
@@ -68,10 +87,12 @@ export function useCVRFEpisodes() {
  * Get CVRF episodes with pagination (for timeline / infinite scroll)
  */
 export function useCVRFEpisodesPaginated(pageSize = 50) {
+  const enabled = useAuthGate();
   return useInfiniteQuery({
     queryKey: [...cvrfKeys.episodes(), 'paginated', pageSize],
     queryFn: ({ pageParam = 0 }) =>
       cvrfApi.getEpisodes({ limit: pageSize, offset: pageParam }),
+    enabled,
     initialPageParam: 0,
     getNextPageParam: (lastPage) =>
       lastPage.pagination.hasMore
@@ -148,9 +169,11 @@ export function useRecordDecision() {
  * Get CVRF cycle history
  */
 export function useCVRFHistory() {
+  const enabled = useAuthGate();
   return useQuery({
     queryKey: cvrfKeys.history(),
     queryFn: cvrfApi.getCycleHistory,
+    enabled,
     staleTime: 30 * 1000,
   });
 }
@@ -159,9 +182,11 @@ export function useCVRFHistory() {
  * Get CVRF system statistics
  */
 export function useCVRFStats() {
+  const enabled = useAuthGate();
   return useQuery({
     queryKey: cvrfKeys.stats(),
     queryFn: cvrfApi.getStats,
+    enabled,
     staleTime: 30 * 1000,
     refetchOnWindowFocus: true,
   });

@@ -1,33 +1,48 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { earningsApi } from '@/api/earnings';
 import { toast } from '@/components/shared/Toast';
+import { useAuthStore } from '@/stores/authStore';
 import type { EarningsImpactForecast } from '@/types';
 
+/**
+ * US-003 auth gate. Returns true only when the auth store has fully
+ * hydrated AND we hold an access_token. Every Bearer-protected useQuery
+ * below ANDs this with its own input-presence guard.
+ */
+function useAuthGate(): boolean {
+  const isReady = useAuthStore((s) => s.isReady);
+  const session = useAuthStore((s) => s.session);
+  return isReady && !!session?.access_token;
+}
+
 export function useUpcomingEarnings(symbols: string[], daysAhead: number = 30) {
+  const authReady = useAuthGate();
   return useQuery({
     queryKey: ['earnings', 'upcoming', symbols.sort().join(','), daysAhead],
     queryFn: () => earningsApi.getUpcoming(symbols, daysAhead),
-    enabled: symbols.length > 0,
+    enabled: authReady && symbols.length > 0,
     staleTime: 60 * 60 * 1000, // 1 hour - earnings dates don't change often
     refetchOnWindowFocus: false,
   });
 }
 
 export function useEarningsForecast(symbol: string | null) {
+  const authReady = useAuthGate();
   return useQuery({
     queryKey: ['earnings', 'forecast', symbol],
     queryFn: () => earningsApi.getForecast(symbol!),
-    enabled: !!symbol,
+    enabled: authReady && !!symbol,
     staleTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false,
   });
 }
 
 export function useEarningsHistory(symbol: string | null, limit: number = 8) {
+  const authReady = useAuthGate();
   return useQuery({
     queryKey: ['earnings', 'history', symbol, limit],
     queryFn: () => earningsApi.getHistory(symbol!, limit),
-    enabled: !!symbol,
+    enabled: authReady && !!symbol,
     staleTime: 24 * 60 * 60 * 1000, // 24 hours - historical data doesn't change
   });
 }

@@ -150,13 +150,13 @@ The v1.2.6 wave closed visible bugs but exposed deeper structural issues that v1
 
 ## Auth Lifecycle
 
-> **Status:** documented contract. US-003 in v1.3.0 PRD will harden the implementation against the contract (currently the `loading`/`unauthed` split is not exhaustively guarded — protected pages can briefly fire requests before `initialized = true`).
+> **Status:** documented AND enforced (US-003, v1.3.0). The contract below is now the implementation. `<ProtectedRoute>` is extracted to `client/src/components/auth/ProtectedRoute.tsx` and gates strictly on `authStore.isReady`. The axios response interceptor refreshes-and-replays on 401 once before surfacing the error. Every Bearer-protected hook in `client/src/hooks/` ANDs its existing `enabled` predicate with auth readiness so requests don't race hydration.
 
 ### State machine
 
 ```
                            ┌────────────────┐
-                           │ uninitialized  │   no Supabase call yet
+                           │ uninitialized  │   isReady = false, no Supabase call yet
                            └───────┬────────┘
                                    │ initialize()
                                    ▼
@@ -166,7 +166,7 @@ The v1.2.6 wave closed visible bugs but exposed deeper structural issues that v1
                        session │        │ no session
                                ▼        ▼
                      ┌──────────┐    ┌──────────┐
-                     │  authed  │    │ unauthed │
+                     │  authed  │    │ unauthed │   isReady flips true here
                      └────┬─────┘    └────┬─────┘
                           │               │
                   401 or  │               │ login()
@@ -175,7 +175,7 @@ The v1.2.6 wave closed visible bugs but exposed deeper structural issues that v1
                   ┌────────────┐
                   │  expired   │  exp <= now()
                   └─────┬──────┘
-                        │ refreshSession()
+                        │ refreshSession() (axios 401 interceptor)
                         ▼
                   ┌────────────┐
                   │ refreshing │
@@ -187,41 +187,50 @@ The v1.2.6 wave closed visible bugs but exposed deeper structural issues that v1
 
 ### State predicates
 
+`authStore` owns `user`, `session`, `loading`, `initialized`, `isReady`, `subscription`.
+
 | State | Predicate | Notes |
 |---|---|---|
-| `uninitialized` | `!initialized && !loading` | Pre-mount of `AppRoutes`. |
-| `loading` | `loading === true` (and `!initialized`) | `initialize()` running. |
-| `authed` | `initialized && session?.access_token && !isExpired(session)` | Session present and unexpired. |
-| `unauthed` | `initialized && !session` | Resolved-as-null session. |
-| `expired` | `initialized && session?.access_token && isExpired(session)` | Token past expiry; refresh required. |
-| `refreshing` | Awaiting `supabase.auth.refreshSession()` | Should hold incoming requests until resolved (US-003 work). |
+| `uninitialized` | `!isReady && !initialized` | Pre-mount of `AppRoutes`. |
+| `loading` | `!isReady && loading === true` | `initialize()` running; `getSession()` in flight. |
+| `authed` | `isReady && session?.access_token && !isExpired(session)` | Session present and unexpired. |
+| `unauthed` | `isReady && !session` | Resolved-as-null session — explicit, NOT racy. |
+| `expired` | `isReady && session?.access_token && isExpired(session)` | Token past expiry; the axios response interceptor will refresh-and-replay on the first 401. |
+| `refreshing` | Awaiting `supabase.auth.refreshSession()` | Driven by the axios 401 interceptor; idempotent at the Supabase SDK layer (concurrent calls coalesce). One per-request replay flag (`_us003RefreshAttempt`) prevents loops. |
 
-`isExpired(session)` = `session.expires_at * 1000 < Date.now() - 60_000` (60-second skew tolerance).
+`isExpired(session)` ≈ `session.expires_at * 1000 < Date.now() - 60_000` (60-second skew tolerance). Note: in practice the client doesn't pre-check expiry — it lets the server return 401 and the interceptor replays.
+
+`isReady` flips to `true` exactly once per session — when the initial `getSession()` resolves (success OR null) AND on every subsequent `onAuthStateChange()` event (login, logout, token refresh, recovery). It NEVER flips back to false after init.
 
 ### Allowed component renders per state
 
-| State | Allowed render | Forbidden render |
-|---|---|---|
-| `uninitialized` | nothing (mount only) | any data fetch |
-| `loading` | full-screen `<Spinner />` (Layout-less) | protected children, redirect |
-| `authed` | Layout + ErrorBoundary + page | landing/login routes |
-| `unauthed` | redirect to `/landing` | protected children |
-| `expired` | hold render; trigger refresh | data fetch |
-| `refreshing` | hold incoming requests until resolved | new requests racing |
+| State | `<ProtectedRoute>` renders | `<PublicRoute>` renders | Bearer-gated `useQuery` fires? |
+|---|---|---|---|
+| `uninitialized` | nothing — gated above | nothing — gated above | NO (`enabled: false`) |
+| `loading` | full-screen `<Spinner />` (Layout-less) | full-screen `<Spinner />` | NO (`enabled: false`) |
+| `authed` | Layout + ErrorBoundary + page | redirect to `/dashboard` | YES (`enabled: true`) |
+| `unauthed` | redirect to `/landing` | child page (Login/Landing) | NO (no session, gate false) |
+| `expired` | Layout (children mount, request 401s, interceptor refreshes) | n/a | YES — but auto-replayed on refresh |
+| `refreshing` | Layout (request held in axios interceptor) | n/a | YES — request held until refresh resolves |
+
+The `expired → refreshing → authed` round trip is invisible to the page tree. The component never re-renders during it; the failed request is held in the interceptor, the new token is patched into the request config, and the same promise resolves with the 200 response. No UI flicker.
 
 ### Implementation references
 
 | File | Role |
 |---|---|
-| `client/src/stores/authStore.ts` | Zustand store; owns `user`, `session`, `loading`, `initialized`, `subscription`. |
-| `client/src/lib/supabase.ts` | Wraps `@supabase/supabase-js`. Exposes `getSession()`, `signIn()`, `signOut()`, `onAuthStateChange()`. |
-| `client/src/api/client.ts` | Axios instance. Request interceptor injects `Authorization: Bearer <access_token>`; falls back to direct Supabase session read if authStore not yet hydrated (`9a47e1f`, v1.2.6). US-003 will add explicit 401-then-refresh-then-replay. |
-| `client/src/App.tsx` | `<ProtectedRoute>` + `<PublicRoute>` gates. Today they render `<Spinner />` while `!initialized || loading`. |
+| `client/src/stores/authStore.ts` | Zustand store. Owns `isReady` (US-003). Set on `getSession()` resolution AND on every `onAuthStateChange()` event. |
+| `client/src/lib/supabase.ts` | Wraps `@supabase/supabase-js`. Exposes `getSession()`, `signIn()`, `signOut()`, `onAuthStateChange()`. `autoRefreshToken: true`. |
+| `client/src/api/client.ts` | Axios instance. **Request** interceptor injects `Authorization: Bearer <access_token>` and falls back to a direct Supabase session read if authStore is empty (v1.2.6 `9a47e1f`). **Response** interceptor (US-003): on 401, calls `supabase.auth.refreshSession()`, stamps the request config with a one-shot `_us003RefreshAttempt` flag, and replays the original request once with the new token. Never loops. |
+| `client/src/components/auth/ProtectedRoute.tsx` | Extracted gate (US-003). Renders children ONLY when `isReady && session`. Spinner while `!isReady`. Redirects to `/landing` when `isReady && !session`. |
+| `client/src/App.tsx` | Imports `<ProtectedRoute>` from `components/auth/`. `<PublicRoute>` is still inline (mirror of ProtectedRoute logic for `/landing` + `/login`, redirects to `/dashboard` when authed). |
+| `client/src/hooks/*` | Every Bearer-protected `useQuery` ANDs `enabled` with `isReady && !!session?.access_token`. Hooks audited: `useCVRF` (5 queries), `useFactors`, `useEarnings` (3 queries), `useTrading` (6 queries), `useIntegrationsHealth`. `useIsMobile` / `useStagger` / `useToast` don't fetch — left untouched. |
 
-### Known gaps closed by US-003
+### Acceptance verification (US-003)
 
-- `ProtectedRoute` short-circuits on `loading || !initialized`, so the contract's `uninitialized → loading → authed` is honored — but data-fetching hooks beneath it are NOT all gated on `useAuthStore(s => s.initialized)`, which is why some pages fire a request that races with auth hydration. US-003 introduces an `isReady` flag and `enabled: useAuthStore(s => s.isReady)` on every protected hook.
-- No automatic 401-replay-with-refresh — `9a47e1f` adds the Supabase fallback header read but not the refresh-and-retry leg. US-003 closes this.
+- Cold-reload `/dashboard`, `/portfolio`, `/cvrf`, `/factors` 5 times each as `dicoangelo+dev@metaventionsai.com`. **Budget: 0 of the first 5 requests per page return 401.** Network traces in `.audit-2026-05-08/walkthrough/v130/us003-{page}-network.png`.
+- Type-level: `cd client && npx tsc --noEmit` passes.
+- The pre-existing v1.2.6 fallback (axios request interceptor reading Supabase session when authStore is empty) is preserved — US-003 only ADDS the response-side 401 replay, doesn't remove the v1.2.6 belt.
 
 ---
 

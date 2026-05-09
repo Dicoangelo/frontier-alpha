@@ -15,6 +15,22 @@ interface AuthState {
   loading: boolean;
   error: string | null;
   initialized: boolean;
+  /**
+   * Auth-lifecycle gate (US-003).
+   *
+   * Flips to `true` exactly once per session — when the initial Supabase
+   * `getSession()` call resolves (whether to a session or to null) AND on
+   * every subsequent `onAuthStateChange()` event so that login / logout /
+   * token refresh keep the flag truthy.
+   *
+   * Consumers (`<ProtectedRoute>` + every `useQuery({ enabled })` on a
+   * Bearer-gated endpoint) MUST gate on this so requests don't race ahead
+   * of the auth-store hydration. Without it, the first paint of
+   * `/portfolio` etc. fires fetches before the access_token is in scope
+   * and the server returns 401, which then falls through to mock-data
+   * fallback even when the user is genuinely signed in.
+   */
+  isReady: boolean;
 
   // Actions
   initialize: () => Promise<void>;
@@ -34,6 +50,7 @@ export const useAuthStore = create<AuthState>()(
       loading: false,
       error: null,
       initialized: false,
+      isReady: false,
 
       initialize: async () => {
         if (get().initialized) return;
@@ -48,24 +65,34 @@ export const useAuthStore = create<AuthState>()(
               session,
               user: session.user,
               initialized: true,
+              isReady: true,
               loading: false,
             });
             // Fetch subscription in background
             get().fetchSubscription();
           } else {
-            set({ initialized: true, loading: false });
+            // Resolved-as-null is a terminal state too — flip isReady so
+            // gated hooks can decide (skip fetch when no session) instead
+            // of staying parked on the loading branch forever.
+            set({ initialized: true, isReady: true, loading: false });
           }
 
-          // Listen for auth changes
+          // Listen for auth changes (login, logout, token refresh, recovery).
+          // Every transition keeps `isReady = true` so post-init flows never
+          // regress to the pre-hydration branch.
           onAuthStateChange((session) => {
             set({
               session,
               user: session?.user || null,
+              isReady: true,
             });
           });
         } catch (error) {
           console.error('Auth initialization error:', error);
-          set({ initialized: true, loading: false });
+          // Still flip isReady so the UI can render the unauthed branch
+          // and not hang on the spinner. Gated hooks read both isReady AND
+          // !!session, so an error path = unauthed = no requests fired.
+          set({ initialized: true, isReady: true, loading: false });
         }
       },
 

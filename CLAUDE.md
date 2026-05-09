@@ -263,8 +263,32 @@ This section is the operator's runbook for keeping Frontier Alpha green. It assu
 ### Daily check (5-minute ritual)
 
 1. **Hit `/api/v1/health/integrations`** — `curl -s https://frontier-alpha.metaventionsai.com/api/v1/health/integrations | jq '.integrations | to_entries[] | select(.value.status != "live") | .key'`. Anything other than `polygonWebSocket` (Vercel by-design degraded) is a real signal.
-2. **Synthetic monitor status** — `/api/v1/cron/synthetic-monitor` is registered as a stub (US-008); US-007 will fill it with the smoke-test runner and a 15-min Vercel cron. Until then, manually `curl` `/api/v1/portfolio`, `/api/v1/cvrf/stats`, `/api/v1/quotes/AAPL/history?days=7` with a real Bearer token. Status code budget: 0 non-2xx. Also worth a glance: `curl -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" https://frontier-alpha.metaventionsai.com/api/v1/health/errors | jq '.data.totalErrors'` — should be 0 most days.
+2. **Synthetic monitor status** — `curl -s "https://frontier-alpha.metaventionsai.com/api/v1/cron/synthetic-monitor?key=$CRON_SECRET" | jq '.data | {passed, failed, results: [.results[] | select(.error)]}'`. US-007 wires this against the same shape assertions as `tests/integration/protected-routes.test.ts` (see "Golden state fixture" below). Status budget: `failed: 0`. Failures auto-increment `errorCounter` so `/api/v1/health/errors` and the weekly digest also surface them. Vercel cron is configured to hit it every 15 minutes — for manual debugging, the same query with `?key=$CRON_SECRET` returns the latest pass/fail per route. Also worth a glance: `curl -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" https://frontier-alpha.metaventionsai.com/api/v1/health/errors | jq '.data.totalErrors'` — should be 0 most days.
 3. **Eyeball production** — `https://frontier-alpha.metaventionsai.com/dashboard` in a fresh-incognito session signed in as `dicoangelo+dev@metaventionsai.com`. No console errors, no "Reconnecting · 1 · 1s" banner that doesn't terminate, no $125K mock numbers leaking through.
+
+### Golden state fixture (US-007)
+
+The integration smoke suite (`tests/integration/protected-routes.test.ts`), the production synthetic monitor (`src/routes/synthetic-monitor.ts`), and any sales/support repro flow all key off **one canonical seeded test user**:
+
+- **Email:** `dicoangelo+test@metaventionsai.com` (distinct from `+dev` used for manual walkthroughs).
+- **Password:** `frontier-alpha-test-2026!` (sentinel value — change in `tests/integration/auth-helper.ts` if rotation is needed).
+- **Plan:** Enterprise comp (sentinel `stripe_customer_id = 'comp_test_user'`, write-protected from all four billing webhook branches via `feedback_comp_customer_guard` in `src/routes/billing.ts`).
+- **Holdings:** 5 positions — NVDA (25 sh @ $480.50), AAPL (50 sh @ $175.25), MSFT (30 sh @ $378.10), GOOGL (40 sh @ $140.75), AMZN (35 sh @ $178.40).
+- **Cash:** $25,000.
+- **Realized lots:** 2 in `frontier_tax_events` for the current tax year — one realized gain on NVDA, one realized loss on AAPL.
+- **Alerts:** 3 rules in `frontier_risk_alerts` — NVDA concentration (high), 7d drawdown (medium), NVDA earnings approaching (info).
+
+**To seed manually** (e.g., before a sales screenshot session or to repro a customer bug):
+
+```bash
+# From project root, with .env loaded (SUPABASE_URL + SUPABASE_SERVICE_KEY + SUPABASE_ANON_KEY)
+INTEGRATION=true npx vitest run tests/integration --reporter=basic
+# OR programmatically: import { mintTestSession, seedGoldenState } from 'tests/integration/auth-helper.ts'
+```
+
+The fixture is **idempotent** (delete-then-insert keyed on user_id), so running twice yields the same state. The integration suite seeds in `beforeAll` and clears in `afterAll`. The SQL fallback at `tests/fixtures/golden-state.sql` documents the schema-level contract for operators piping through `psql` directly. **Both must stay in sync** — if you change one, change the other.
+
+**Why this exists:** before US-007, every smoke test, sales screenshot, and support repro invented its own fixture. Now there's one canonical state, machine-checkable schemas (`schemas/api-shape.json`) for what the protected routes return against it, and the same assertions run in CI (`npm run test:integration`) AND production (`/api/v1/cron/synthetic-monitor`).
 
 ### Weekly check
 

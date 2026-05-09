@@ -1,0 +1,363 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://frontier-alpha.metaventionsai.com/schemas/api-shape.json",
+  "title": "FrontierAlphaProtectedRouteShapes",
+  "description": "Per-route response-shape contracts for every authenticated endpoint exercised by the integration smoke suite (US-007) AND the production synthetic monitor (US-008). Schema is keyed by route key (string), so test code can iterate routes and look up the matching shape. Source of truth for `tests/integration/protected-routes.test.ts` and `src/routes/synthetic-monitor.ts`.",
+  "type": "object",
+  "additionalProperties": false,
+  "definitions": {
+    "MetaEnvelope": {
+      "type": "object",
+      "description": "Standard meta block returned alongside every successful response.",
+      "additionalProperties": true,
+      "properties": {
+        "timestamp": { "type": ["string", "object"] },
+        "requestId": { "type": ["string", "number"] },
+        "latencyMs": { "type": "number", "minimum": 0 },
+        "skipped": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "properties": {
+    "portfolio": {
+      "type": "object",
+      "description": "GET /api/v1/portfolio — golden state has 5 positions + $25K cash.",
+      "required": ["success", "data"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": {
+          "type": "object",
+          "required": ["positions", "cash", "totalValue"],
+          "additionalProperties": true,
+          "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "currency": { "type": "string" },
+            "positions": {
+              "type": "array",
+              "minItems": 5,
+              "maxItems": 5,
+              "items": {
+                "type": "object",
+                "required": ["symbol", "shares", "currentPrice"],
+                "properties": {
+                  "id": { "type": "string" },
+                  "symbol": { "type": "string", "minLength": 1 },
+                  "shares": { "type": "number", "exclusiveMinimum": 0 },
+                  "weight": { "type": "number" },
+                  "costBasis": { "type": "number" },
+                  "currentPrice": { "type": "number" },
+                  "unrealizedPnL": { "type": "number" }
+                }
+              }
+            },
+            "cash": { "type": "number", "minimum": 0 },
+            "totalValue": { "type": "number", "minimum": 0 }
+          }
+        },
+        "meta": { "$ref": "#/definitions/MetaEnvelope" }
+      }
+    },
+
+    "portfolioFactors": {
+      "type": "object",
+      "description": "GET /api/v1/portfolio/factors/AAPL,NVDA — 200 with `data` map AND optional `meta.skipped` per US-001 v1.2.6 resilience.",
+      "required": ["success", "data"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": { "type": "object" },
+        "meta": { "$ref": "#/definitions/MetaEnvelope" }
+      }
+    },
+
+    "quotesHistory": {
+      "type": "object",
+      "description": "GET /api/v1/quotes/AAPL/history?days=7 — closes array length 5–7.",
+      "required": ["success", "data"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": {
+          "type": "object",
+          "required": ["symbol", "closes", "timestamps"],
+          "properties": {
+            "symbol": { "type": "string", "minLength": 1 },
+            "closes": {
+              "type": "array",
+              "minItems": 5,
+              "maxItems": 7,
+              "items": { "type": "number" }
+            },
+            "timestamps": {
+              "type": "array",
+              "minItems": 5,
+              "maxItems": 7,
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "cvrfBeliefs": {
+      "type": "object",
+      "description": "GET /api/v1/cvrf/beliefs — beliefs object with at minimum a factorWeights map.",
+      "required": ["success", "data"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": {
+          "type": "object",
+          "required": ["factorWeights"],
+          "additionalProperties": true,
+          "properties": {
+            "factorWeights": { "type": "object" },
+            "factorConfidences": { "type": "object" }
+          }
+        }
+      }
+    },
+
+    "cvrfStats": {
+      "type": "object",
+      "description": "GET /api/v1/cvrf/stats — must surface data.factors.factorWeights as an object (catches v1.2.2 shape regression where it was renamed `weights`).",
+      "required": ["success", "data"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": {
+          "type": "object",
+          "required": ["factors"],
+          "additionalProperties": true,
+          "properties": {
+            "episodes": { "type": "object" },
+            "cvrf": { "type": "object" },
+            "beliefs": { "type": "object" },
+            "factors": {
+              "type": "object",
+              "required": ["factorWeights"],
+              "additionalProperties": true,
+              "properties": {
+                "totalFactors": { "type": "number" },
+                "factorWeights": {
+                  "type": "object",
+                  "description": "Map<factorName, weight>. Renaming this to `weights` is a known regression class — schema enforces the canonical key."
+                },
+                "factorConfidences": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "healthIntegrations": {
+      "type": "object",
+      "description": "GET /api/v1/health/integrations — every entry follows the IntegrationHealthEntry shape from schemas/health-integration.json (US-004).",
+      "required": ["success", "data"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": {
+          "type": "object",
+          "required": ["checkedAt", "integrations", "summary"],
+          "additionalProperties": true,
+          "properties": {
+            "checkedAt": { "type": "string" },
+            "integrations": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": { "type": "string", "enum": ["live", "degraded", "offline"] },
+                  "latencyMs": { "type": "number" },
+                  "lastError": { "type": ["string", "null"] },
+                  "lastSuccessAt": { "type": ["string", "null"] },
+                  "ttlSeconds": { "type": "integer" }
+                }
+              }
+            },
+            "summary": {
+              "type": "object",
+              "properties": {
+                "live": { "type": "integer" },
+                "degraded": { "type": "integer" },
+                "offline": { "type": "integer" },
+                "total": { "type": "integer" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "billingSubscription": {
+      "type": "object",
+      "description": "GET /api/v1/billing/subscription — fixture user is enterprise comp.",
+      "required": ["success", "data"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": {
+          "type": "object",
+          "required": ["plan"],
+          "additionalProperties": true,
+          "properties": {
+            "plan": { "type": "string", "enum": ["enterprise"] },
+            "status": { "type": "string" },
+            "current_period_end": { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+
+    "brokerStatus": {
+      "type": "object",
+      "description": "GET /api/v1/broker/status — broker string (simulated | alpaca).",
+      "required": ["success", "data"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": {
+          "type": "object",
+          "required": ["broker"],
+          "additionalProperties": true,
+          "properties": {
+            "broker": { "type": "string", "minLength": 1 },
+            "source": { "type": "string" },
+            "isPaper": { "type": "boolean" }
+          }
+        }
+      }
+    },
+
+    "alerts": {
+      "type": "object",
+      "description": "GET /api/v1/alerts — fixture seeds exactly 3 risk-alert rules.",
+      "required": ["success", "data"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["id", "alert_type", "severity"],
+            "additionalProperties": true,
+            "properties": {
+              "id": { "type": "string" },
+              "alert_type": { "type": "string" },
+              "severity": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "earningsUpcoming": {
+      "type": "object",
+      "description": "GET /api/v1/earnings/upcoming — list of upcoming earnings events (may be empty).",
+      "required": ["success", "data"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": { "type": "array" }
+      }
+    },
+
+    "digestRun": {
+      "type": "object",
+      "description": "GET /api/v1/digest/run?key=$CRON_SECRET — cron-gated, returns send/fail/skip counts.",
+      "required": ["success", "data"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": {
+          "type": "object",
+          "required": ["sent", "failed", "skipped", "total"],
+          "additionalProperties": true,
+          "properties": {
+            "sent": { "type": "integer", "minimum": 0 },
+            "failed": { "type": "integer", "minimum": 0 },
+            "skipped": { "type": "integer", "minimum": 0 },
+            "total": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+
+    "healthErrors": {
+      "type": "object",
+      "description": "GET /api/v1/health/errors — service-role gated. Returns rolling 1h error counter snapshot.",
+      "required": ["success", "data"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": {
+          "type": "object",
+          "required": ["windowStartedAt", "totalErrors", "routes"],
+          "additionalProperties": true,
+          "properties": {
+            "windowStartedAt": { "type": "string" },
+            "totalErrors": { "type": "integer", "minimum": 0 },
+            "routes": { "type": "array" }
+          }
+        }
+      }
+    },
+
+    "warmCache": {
+      "type": "object",
+      "description": "GET /api/v1/cron/warm-cache?key=$CRON_SECRET — US-006 prewarm trigger. Note: route ships in US-006; smoke skips with informative message until route is registered.",
+      "required": ["success"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+
+    "syntheticMonitor": {
+      "type": "object",
+      "description": "GET /api/v1/cron/synthetic-monitor?key=$CRON_SECRET — runs the smoke assertions in production. Returns aggregated pass/fail.",
+      "required": ["success", "data"],
+      "additionalProperties": true,
+      "properties": {
+        "success": { "const": true },
+        "data": {
+          "type": "object",
+          "required": ["passed", "failed", "results"],
+          "additionalProperties": true,
+          "properties": {
+            "passed": { "type": "integer", "minimum": 0 },
+            "failed": { "type": "integer", "minimum": 0 },
+            "totalLatencyMs": { "type": "number", "minimum": 0 },
+            "results": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["route", "status", "latencyMs", "schemaValid"],
+                "additionalProperties": true,
+                "properties": {
+                  "route": { "type": "string" },
+                  "status": { "type": "integer" },
+                  "latencyMs": { "type": "number" },
+                  "schemaValid": { "type": "boolean" },
+                  "error": { "type": ["string", "null"] }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+name: Integration Smoke Tests
+
+# Runs the US-007 protected-routes smoke suite against the production
+# deploy after a successful release. Mirrors the synthetic monitor cron
+# so test failures and prod incidents share assertions (P3).
+#
+# Triggers:
+#   - Manual dispatch (operator-driven, e.g. post-deploy verification)
+#   - Daily schedule at 13:00 UTC (catches drift outside the 15-min cron)
+#
+# Required secrets (set in repo settings):
+#   - SUPABASE_URL
+#   - SUPABASE_SERVICE_KEY
+#   - SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY)
+#   - CRON_SECRET
+#   - INTEGRATION_BASE_URL (defaults to production if unset)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 13 * * *'
+
+jobs:
+  integration-smoke:
+    name: Protected-routes smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run integration smoke suite
+        run: npm run test:integration
+        env:
+          INTEGRATION: 'true'
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          INTEGRATION_BASE_URL: ${{ secrets.INTEGRATION_BASE_URL || 'https://frontier-alpha.metaventionsai.com' }}
+          NODE_ENV: 'test'

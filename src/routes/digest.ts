@@ -27,6 +27,15 @@ interface RouteContext {
 
 interface DigestRunQuery {
   key?: string;
+  /**
+   * Health-probe flag. When `?probe=true` is set AND the auth gate passes,
+   * return 200 immediately without running the digest. Used by
+   * `/api/v1/health/integrations` to verify the gate is reachable + the
+   * CRON_SECRET is correct without triggering real emails. Vercel-injected
+   * `HEAD` requests get rewritten to `GET`, so we can't rely on method-based
+   * detection.
+   */
+  probe?: string;
 }
 
 interface DigestRunResult {
@@ -108,6 +117,21 @@ export async function digestRoutes(fastify: FastifyInstance, _opts: RouteContext
             'Invalid or missing cron key (provide ?key={CRON_SECRET} or Authorization: Bearer {CRON_SECRET})',
         },
       });
+    }
+
+    // Probe mode — gate passed, return 200 without running the digest. Used
+    // by health-integration probes; cron firings (?probe absent) proceed as
+    // normal.
+    if (request.query.probe === 'true' || request.query.probe === '1') {
+      return {
+        success: true,
+        data: { sent: 0, failed: 0, skipped: 0, total: 0 },
+        meta: {
+          timestamp: new Date(),
+          requestId: request.id,
+          latencyMs: Date.now() - start,
+        },
+      };
     }
 
     // ─── Pull recipient list ───────────────────────────────────────

@@ -64,6 +64,13 @@ export class DataNotAvailableError extends Error {
 export class MarketDataProvider {
   private config: DataProviderConfig;
   private priceCache: Map<string, { prices: Price[]; timestamp: number }> = new Map();
+  /**
+   * In-flight promise dedup — when N parallel callers (e.g. dashboard
+   * sparklines) ask for the same symbol's history simultaneously, only one
+   * upstream Polygon/AV call goes out. Saves the free-tier rate limit and
+   * eliminates "5 of 5 symbols 502'd in parallel" UX on first paint.
+   */
+  private inflightHistoricalPrices: Map<string, Promise<Price[]>> = new Map();
   private quoteCache: Map<string, { quote: Quote; timestamp: number }> = new Map();
   private useSupabaseCache: boolean = !!process.env.SUPABASE_SERVICE_KEY;
 
@@ -303,6 +310,30 @@ export class MarketDataProvider {
         return cached.prices.slice(-days);
       }
     }
+
+    // In-flight dedup — if another caller is already fetching this symbol,
+    // join their promise instead of firing a duplicate upstream request.
+    // The key includes `days` because callers can request different windows.
+    const inflightKey = `${upperSymbol}:${days}`;
+    const existing = this.inflightHistoricalPrices.get(inflightKey);
+    if (existing) return existing;
+
+    const fetcher = this.doFetchHistoricalPrices(upperSymbol, days, now);
+    this.inflightHistoricalPrices.set(inflightKey, fetcher);
+    try {
+      return await fetcher;
+    } finally {
+      // Clear the slot so the NEXT request after this one cleanly hits cache
+      // (or refetches if the cache TTL expires).
+      this.inflightHistoricalPrices.delete(inflightKey);
+    }
+  }
+
+  private async doFetchHistoricalPrices(
+    upperSymbol: string,
+    days: number,
+    now: number,
+  ): Promise<Price[]> {
 
     // Check Supabase for cached historical prices
     if (this.useSupabaseCache) {

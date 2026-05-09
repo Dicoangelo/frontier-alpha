@@ -188,7 +188,7 @@ function BeliefDiffPanel({ selected }: { selected: TimelineNode | null }) {
   const diffs: BeliefDiff[] = useMemo(() => {
     if (!beliefs || !cycle) return [];
 
-    const factors = Object.entries(beliefs.factorWeights);
+    const factors = Object.entries(beliefs.factorWeights ?? {});
     const result: BeliefDiff[] = [];
 
     for (const [factor, weight] of factors) {

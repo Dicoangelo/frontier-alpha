@@ -10,6 +10,7 @@
  */
 
 import { CVRFDashboard } from '@/components/cvrf';
+import { SectionErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { UpgradeGate } from '@/components/shared/UpgradeGate';
 
 export function CVRF() {
@@ -59,7 +60,12 @@ export function CVRF() {
             title="Episodic Belief Learning"
             description="The CVRF dashboard exposes live belief updates, confidence decay, and per-episode factor signal — included in the Pro Plan. Upgrade to watch the system learn."
           >
-            <CVRFDashboard />
+            {/* Page-level boundary: if the dashboard root somehow throws,
+                show the localized rail instead of the full-screen
+                "Something went wrong" ErrorBoundary at the App layer. */}
+            <SectionErrorBoundary sectionName="CVRF Dashboard">
+              <CVRFDashboard />
+            </SectionErrorBoundary>
           </UpgradeGate>
         </div>
       </section>

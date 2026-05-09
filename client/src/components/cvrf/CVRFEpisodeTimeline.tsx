@@ -176,8 +176,11 @@ export function CVRFEpisodeTimeline() {
   const currentEpisode = firstPage?.current;
   const totalEpisodes = firstPage?.totalEpisodes ?? 0;
 
-  // Flatten completed episodes from all pages
-  const allCompleted = data.pages.flatMap((page) => page.completed);
+  // Flatten completed episodes from all pages — guard against pages where
+  // `completed` is undefined (server can omit the field entirely on cold
+  // start). flatMap of `undefined` would inject `undefined` slots and
+  // crash EpisodeCard downstream.
+  const allCompleted = data.pages.flatMap((page) => page?.completed ?? []);
 
   const hasEpisodes = currentEpisode || allCompleted.length > 0;
 

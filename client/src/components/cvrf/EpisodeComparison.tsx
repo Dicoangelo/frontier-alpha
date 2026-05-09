@@ -103,8 +103,8 @@ export function EpisodeComparisonView() {
   const [episodeA, setEpisodeA] = useState<CVRFEpisode | null>(null);
   const [episodeB, setEpisodeB] = useState<CVRFEpisode | null>(null);
 
-  const completedEpisodes = (episodesData?.completed || []).filter(
-    (e) => e.status === 'completed'
+  const completedEpisodes = (episodesData?.completed ?? []).filter(
+    (e) => e?.status === 'completed'
   );
 
   if (completedEpisodes.length < 2) {

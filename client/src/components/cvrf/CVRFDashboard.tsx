@@ -12,6 +12,7 @@ import { RefreshCw, Brain, AlertTriangle } from 'lucide-react';
 import { useCVRFDashboard } from '@/hooks/useCVRF';
 import { SkeletonCVRFPage } from '@/components/shared/LoadingSkeleton';
 import { DataLoadError } from '@/components/shared/EmptyState';
+import { SectionErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { CVRFStatsCard } from './CVRFStatsCard';
 import { CVRFBeliefDisplay } from './CVRFBeliefDisplay';
 import { CVRFEpisodeControls } from './CVRFEpisodeControls';
@@ -86,21 +87,31 @@ export function CVRFDashboard() {
         </div>
       )}
 
-      {/* Main Content */}
+      {/* Main Content — each row is wrapped in a SectionErrorBoundary so a
+          single child failure (e.g. malformed API payload) shows a localized
+          error rail instead of taking down the whole CVRF page. */}
       {!hasNoData && <div className="space-y-6 animate-stagger">
         {/* Row 1: Performance Chart (Full Width) */}
-        <EpisodePerformanceChart />
+        <SectionErrorBoundary sectionName="Episode Performance">
+          <EpisodePerformanceChart />
+        </SectionErrorBoundary>
 
         {/* Row 2: Belief Constellation (Full Width) */}
-        <BeliefConstellation />
+        <SectionErrorBoundary sectionName="Belief Constellation">
+          <BeliefConstellation />
+        </SectionErrorBoundary>
 
         {/* Row 3: Factor Heatmap + Regime Timeline */}
         <div className="grid grid-cols-12 gap-6">
           <div className="col-span-12 lg:col-span-8 animate-enter">
-            <FactorWeightHeatmap />
+            <SectionErrorBoundary sectionName="Factor Heatmap">
+              <FactorWeightHeatmap />
+            </SectionErrorBoundary>
           </div>
           <div className="col-span-12 lg:col-span-4 animate-enter">
-            <RegimeTimeline />
+            <SectionErrorBoundary sectionName="Regime Timeline">
+              <RegimeTimeline />
+            </SectionErrorBoundary>
           </div>
         </div>
 
@@ -108,30 +119,46 @@ export function CVRFDashboard() {
         <div className="grid grid-cols-12 gap-6">
           {/* Left Column - Controls & Timeline */}
           <div className="col-span-12 lg:col-span-4 space-y-6 animate-enter">
-            <CVRFEpisodeControls />
-            <CVRFEpisodeTimeline />
+            <SectionErrorBoundary sectionName="Episode Controls">
+              <CVRFEpisodeControls />
+            </SectionErrorBoundary>
+            <SectionErrorBoundary sectionName="Episode Timeline">
+              <CVRFEpisodeTimeline />
+            </SectionErrorBoundary>
           </div>
 
           {/* Middle Column - Stats & Beliefs */}
           <div className="col-span-12 lg:col-span-4 space-y-6 animate-enter">
-            <CVRFStatsCard />
-            <CVRFBeliefDisplay />
+            <SectionErrorBoundary sectionName="CVRF Stats">
+              <CVRFStatsCard />
+            </SectionErrorBoundary>
+            <SectionErrorBoundary sectionName="Belief Display">
+              <CVRFBeliefDisplay />
+            </SectionErrorBoundary>
           </div>
 
           {/* Right Column - Cycle History */}
           <div className="col-span-12 lg:col-span-4 animate-enter">
-            <CVRFCycleHistory />
+            <SectionErrorBoundary sectionName="Cycle History">
+              <CVRFCycleHistory />
+            </SectionErrorBoundary>
           </div>
         </div>
 
         {/* Row 5: Conviction Timeline (Full Width) */}
-        <ConvictionTimeline />
+        <SectionErrorBoundary sectionName="Conviction Timeline">
+          <ConvictionTimeline />
+        </SectionErrorBoundary>
 
         {/* Row 6: Meta-Prompt (Full Width) */}
-        <MetaPromptCard />
+        <SectionErrorBoundary sectionName="Meta-Prompt">
+          <MetaPromptCard />
+        </SectionErrorBoundary>
 
         {/* Row 7: Episode Comparison (Full Width) */}
-        <EpisodeComparisonView />
+        <SectionErrorBoundary sectionName="Episode Comparison">
+          <EpisodeComparisonView />
+        </SectionErrorBoundary>
       </div>}
 
       {/* Footer — research credits */}

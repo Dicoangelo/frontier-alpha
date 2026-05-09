@@ -109,18 +109,25 @@ export function CVRFStatsCard() {
         </div>
       </div>
 
-      {/* Factor Weights */}
+      {/* Factor Weights — guard against partial server payloads where
+          `stats.factors.weights` may be undefined for fresh accounts. */}
       <div className="mt-4 pt-4 border-t border-[var(--color-border-light)]">
         <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">Factor Weights</p>
         <div className="flex flex-wrap gap-2">
-          {Object.entries(stats.factors.weights).map(([factor, weight]) => (
-            <span
-              key={factor}
-              className="px-2 py-1 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)] text-xs rounded-full mono tracking-[0.05em] tabular-nums"
-            >
-              {factor}: {weight}
+          {Object.entries(stats.factors?.weights ?? {}).length === 0 ? (
+            <span className="text-xs text-theme-muted">
+              No factor weights yet — complete a CVRF cycle to populate.
             </span>
-          ))}
+          ) : (
+            Object.entries(stats.factors?.weights ?? {}).map(([factor, weight]) => (
+              <span
+                key={factor}
+                className="px-2 py-1 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)] text-xs rounded-full mono tracking-[0.05em] tabular-nums"
+              >
+                {factor}: {weight}
+              </span>
+            ))
+          )}
         </div>
       </div>
     </div>

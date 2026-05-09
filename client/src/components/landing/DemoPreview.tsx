@@ -52,7 +52,12 @@ function buildReading(symbol: string): SymbolReading {
   );
   const top = [...factors].sort((a, b) => b.score - a.score)[0];
   const regime = REGIMES[seed % REGIMES.length];
-  const tplIdx = (seed >> 5) % BECAUSE_TEMPLATES.length;
+  // `seed` is unsigned 32-bit, but `>>` is *signed* — any seed >= 2^31
+  // produces a negative shifted value, and `negative % 5` in JS returns a
+  // negative index, which makes `BECAUSE_TEMPLATES[idx]` return undefined
+  // and the next call crash with "y[p] is not a function". Use `>>>` to
+  // keep the shift unsigned.
+  const tplIdx = (seed >>> 5) % BECAUSE_TEMPLATES.length;
   const because = BECAUSE_TEMPLATES[tplIdx](symbol, top.label);
   return { symbol, conviction, regime, factors, because };
 }

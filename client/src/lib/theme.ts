@@ -210,12 +210,31 @@ export function gaugeColor(value: number): string {
 }
 
 // ─── Recharts Shared Styles ──────────────────────────────────────────
-// Reuse across all Recharts <Tooltip contentStyle={...} /> instances
+// Reuse across all Recharts <Tooltip contentStyle={...} /> instances.
+// `color` is set explicitly because Recharts otherwise inherits from a
+// neutral default that disappears against the dark surface in dark mode
+// (was rendering black-on-dark in dark mode previously).
 export const rechartsTooltipStyle: React.CSSProperties = {
-  backgroundColor: 'var(--color-bg, #fff)',
+  backgroundColor: 'var(--color-bg-secondary, var(--color-bg, #fff))',
   border: '1px solid var(--color-border)',
   borderRadius: '8px',
   fontSize: '12px',
+  color: 'var(--color-text)',
+  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+};
+
+// Recharts <Tooltip> draws individual entries via separate <li> nodes that
+// inherit color from their inline-styled wrapper, NOT from `contentStyle`.
+// Pass these to `itemStyle` and `labelStyle` so the per-entry text is
+// readable in both themes.
+export const rechartsTooltipItemStyle: React.CSSProperties = {
+  color: 'var(--color-text)',
+};
+
+export const rechartsTooltipLabelStyle: React.CSSProperties = {
+  color: 'var(--color-text-muted)',
+  fontSize: '11px',
+  marginBottom: '4px',
 };
 
 // ─── Full Theme Export ────────────────────────────────────────────────

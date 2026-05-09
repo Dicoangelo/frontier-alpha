@@ -13,6 +13,7 @@
 import type { Price, Quote, Asset } from '../types/index.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { logger } from '../lib/logger.js';
+import { marketDataCache, type CompositeCache } from './cache/index.js';
 import WebSocket from 'ws';
 import Redis, { type Redis as RedisClient } from 'ioredis';
 
@@ -63,12 +64,21 @@ export class DataNotAvailableError extends Error {
 
 export class MarketDataProvider {
   private config: DataProviderConfig;
-  private priceCache: Map<string, { prices: Price[]; timestamp: number }> = new Map();
+  /**
+   * Historical price cache (US-006). Memory + Supabase composite, with
+   * counter telemetry rolled up via `getCacheTelemetry()`. Replaces the
+   * v1.2.x `priceCache: Map` + ad-hoc Supabase read path.
+   */
+  private historicalPriceCache: CompositeCache;
   /**
    * In-flight promise dedup — when N parallel callers (e.g. dashboard
    * sparklines) ask for the same symbol's history simultaneously, only one
    * upstream Polygon/AV call goes out. Saves the free-tier rate limit and
    * eliminates "5 of 5 symbols 502'd in parallel" UX on first paint.
+   *
+   * NOTE: kept separate from the cache layer because request coalescing is
+   * a different concern from caching. Two callers with no cache entry both
+   * need to wait on the SAME upstream fetch; that's not what a cache does.
    */
   private inflightHistoricalPrices: Map<string, Promise<Price[]>> = new Map();
   private quoteCache: Map<string, { quote: Quote; timestamp: number }> = new Map();
@@ -92,6 +102,11 @@ export class MarketDataProvider {
       allowMockFallback: process.env.NODE_ENV !== 'production',
       ...config,
     };
+
+    // Default to the process-wide cache singleton. Tests can override by
+    // assigning to `historicalPriceCache` directly after construction
+    // (kept on the instance, not a global, so the class stays unit-testable).
+    this.historicalPriceCache = marketDataCache;
 
     // Initialize Redis connection (dev + production, with graceful fallback)
     const redisUrl = config.redisUrl || process.env.REDIS_URL;
@@ -300,25 +315,21 @@ export class MarketDataProvider {
     days: number = 252
   ): Promise<Price[]> {
     const upperSymbol = symbol.toUpperCase();
-    const now = Date.now();
 
-    // Check memory cache first
-    const cached = this.priceCache.get(upperSymbol);
-    if (cached && (now - cached.timestamp) < 3600 * 1000) {  // 1 hour cache
-      // Return subset if we have enough data
-      if (cached.prices.length >= days) {
-        return cached.prices.slice(-days);
-      }
-    }
+    // Cache layer (Memory -> Supabase) handles read-side hierarchy + counters.
+    const cached = await this.historicalPriceCache.getPrices(upperSymbol, days);
+    if (cached) return cached;
 
     // In-flight dedup — if another caller is already fetching this symbol,
     // join their promise instead of firing a duplicate upstream request.
     // The key includes `days` because callers can request different windows.
+    // This stays separate from the cache layer because request coalescing
+    // and caching are different concerns.
     const inflightKey = `${upperSymbol}:${days}`;
     const existing = this.inflightHistoricalPrices.get(inflightKey);
     if (existing) return existing;
 
-    const fetcher = this.doFetchHistoricalPrices(upperSymbol, days, now);
+    const fetcher = this.doFetchHistoricalPrices(upperSymbol, days);
     this.inflightHistoricalPrices.set(inflightKey, fetcher);
     try {
       return await fetcher;
@@ -332,47 +343,17 @@ export class MarketDataProvider {
   private async doFetchHistoricalPrices(
     upperSymbol: string,
     days: number,
-    now: number,
   ): Promise<Price[]> {
-
-    // Check Supabase for cached historical prices
-    if (this.useSupabaseCache) {
-      try {
-        const { data: cachedPrices } = await supabaseAdmin
-          .from('frontier_historical_prices')
-          .select('*')
-          .eq('symbol', upperSymbol)
-          .order('date', { ascending: true })
-          .limit(days);
-
-        if (cachedPrices && cachedPrices.length >= days * 0.9) {  // Accept 90% coverage
-          const prices: Price[] = cachedPrices.map(p => ({
-            symbol: upperSymbol,
-            timestamp: new Date(p.date),
-            open: p.open,
-            high: p.high,
-            low: p.low,
-            close: p.adjusted_close,  // Use adjusted close for factor calculations
-            volume: p.volume,
-          }));
-          this.priceCache.set(upperSymbol, { prices, timestamp: now });
-          return prices;
-        }
-      } catch (e) {
-        logger.warn({ err: e, symbol: upperSymbol }, 'Supabase historical prices error');
-      }
-    }
-
     // Provider chain — try Polygon REST first (higher rate limits, no daily
     // cap on the free tier), fall back to Alpha Vantage when Polygon errors
     // or is not configured. Alpha Vantage free tier is 25 req/day so we
-    // hammer Polygon first to preserve the AV quota.
+    // hammer Polygon first to preserve the AV quota. Successful upstream
+    // fetches write through both cache layers via `setPrices()`.
     if (this.config.polygonApiKey) {
       try {
         const prices = await this.fetchPolygonPrices(upperSymbol, days);
         if (prices.length > 0) {
-          this.priceCache.set(upperSymbol, { prices, timestamp: now });
-          await this.cacheHistoricalPricesToSupabase(upperSymbol, prices);
+          await this.historicalPriceCache.setPrices(upperSymbol, prices, days);
           return prices;
         }
       } catch (e) {
@@ -384,9 +365,7 @@ export class MarketDataProvider {
       try {
         const prices = await this.fetchAlphaVantagePrices(upperSymbol, days);
         if (prices.length > 0) {
-          this.priceCache.set(upperSymbol, { prices, timestamp: now });
-          // Cache to Supabase for future requests
-          await this.cacheHistoricalPricesToSupabase(upperSymbol, prices);
+          await this.historicalPriceCache.setPrices(upperSymbol, prices, days);
           return prices;
         }
       } catch (e) {
@@ -405,36 +384,6 @@ export class MarketDataProvider {
     // DEVELOPMENT ONLY: Generate mock prices
     logger.warn({ symbol: upperSymbol }, 'Using mock prices (dev fallback)');
     return this.generateMockPrices(upperSymbol, days);
-  }
-
-  /**
-   * Cache historical prices to Supabase for faster future access
-   */
-  private async cacheHistoricalPricesToSupabase(symbol: string, prices: Price[]): Promise<void> {
-    if (!this.useSupabaseCache || prices.length === 0) return;
-
-    try {
-      // Upsert prices in batches
-      const batchSize = 100;
-      for (let i = 0; i < prices.length; i += batchSize) {
-        const batch = prices.slice(i, i + batchSize).map(p => ({
-          symbol,
-          date: p.timestamp.toISOString().split('T')[0],
-          open: p.open,
-          high: p.high,
-          low: p.low,
-          close: p.close,
-          adjusted_close: p.close,  // Alpha Vantage already returns adjusted
-          volume: p.volume,
-        }));
-
-        await supabaseAdmin
-          .from('frontier_historical_prices')
-          .upsert(batch, { onConflict: 'symbol,date' });
-      }
-    } catch (e) {
-      logger.warn({ err: e }, 'Failed to cache historical prices to Supabase');
-    }
   }
 
   /**

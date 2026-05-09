@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Plus, Zap, ArrowRightLeft } from 'lucide-react';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useAuthStore } from '@/stores/authStore';
+import { supabase } from '@/lib/supabase';
 import { PortfolioOverview } from '@/components/portfolio/PortfolioOverview';
 import { PositionList } from '@/components/portfolio/PositionList';
 import { FactorExposures } from '@/components/factors/FactorExposures';
@@ -84,9 +85,16 @@ function getGreeting(): string {
 }
 
 // API functions
+//
+// v1.3.0: previously read `localStorage.getItem('supabase_token')` which is
+// the WRONG key — Supabase JS stores the token under `sb-{projectRef}-auth-token`.
+// Result: every authed user got a 401 and fell back to demo data, masking
+// the real portfolio. Read the live session via the supabase SDK instead;
+// it's already cached locally so this is a synchronous-feeling call.
 async function fetchPortfolio(): Promise<Portfolio | null> {
   try {
-    const token = localStorage.getItem('supabase_token');
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
     const response = await fetch('/api/v1/portfolio', {
       headers: {
         'Authorization': token ? `Bearer ${token}` : '',

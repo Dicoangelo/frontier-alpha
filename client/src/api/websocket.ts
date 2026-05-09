@@ -1,7 +1,15 @@
 type MessageHandler = (data: unknown) => void;
 
-export type ConnectionState = 'connected' | 'reconnecting' | 'disconnected';
+export type ConnectionState = 'connected' | 'reconnecting' | 'disconnected' | 'offline';
 export type TransportType = 'websocket' | 'sse' | 'polling' | null;
+
+/**
+ * US-006: After this many consecutive failed reconnect attempts, the WS layer
+ * gives up on the WebSocket transport for the rest of the session and
+ * surfaces a terminal "offline" banner. The fallback chain (SSE → polling)
+ * keeps quote data flowing so the rest of the app stays usable.
+ */
+const MAX_WS_RECONNECTS_BEFORE_OFFLINE = 3;
 
 /**
  * Real-time quote client.
@@ -30,6 +38,14 @@ class QuoteStreamClient {
   private isConnected = false;
   private _connectionState: ConnectionState = 'disconnected';
   private transport: TransportType = null;
+
+  // US-006: WS-specific failure tracking. After N WS handshake/close failures
+  // we abandon WebSocket for the rest of the session and switch to the SSE /
+  // polling fallback chain — banner enters terminal 'offline' state instead
+  // of looping "Reconnecting · N · Ns" forever.
+  private wsFailureCount = 0;
+  private wsAbandoned = false;
+  private lastCloseCode: number | null = null;
 
   // US-028: Heartbeat state
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
@@ -67,6 +83,17 @@ class QuoteStreamClient {
    */
   connect() {
     if (this.isConnected) return;
+
+    // US-006: If WS has been abandoned for the session, skip straight to the
+    // fallback chain. This is the "polling is the live transport" reality.
+    if (this.wsAbandoned) {
+      if (typeof EventSource !== 'undefined') {
+        this.connectSSE();
+      } else {
+        this.startPolling();
+      }
+      return;
+    }
 
     // Try WebSocket first (connects to Fastify server)
     const wsUrl = this.getWebSocketUrl();
@@ -119,6 +146,9 @@ class QuoteStreamClient {
         this.isConnected = true;
         this.setConnectionState('connected');
         this.reconnectAttempts = 0;
+        // US-006: Successful upgrade — reset WS failure counter so a single
+        // mid-session blip doesn't accelerate us into 'offline' state.
+        this.wsFailureCount = 0;
         this.notifyHandlers('connected', { connected: true });
 
         // Re-subscribe all tracked symbols after reconnect (US-028: AC#3)
@@ -144,10 +174,26 @@ class QuoteStreamClient {
         }
       };
 
-      this.ws.onclose = () => {
+      this.ws.onclose = (event) => {
         this.isConnected = false;
         this.ws = null;
         this.stopHeartbeat();
+        this.lastCloseCode = event?.code ?? null;
+        this.wsFailureCount++;
+
+        // US-006: Log close code at most once per failure burst so we don't
+        // spam the console with the same 1006 forever.
+        if (this.wsFailureCount <= MAX_WS_RECONNECTS_BEFORE_OFFLINE) {
+          console.warn(
+            `[wsClient] WebSocket closed (code=${event?.code ?? 'n/a'}, reason=${event?.reason || 'none'}, attempt=${this.wsFailureCount}/${MAX_WS_RECONNECTS_BEFORE_OFFLINE})`,
+          );
+        }
+
+        if (this.wsFailureCount >= MAX_WS_RECONNECTS_BEFORE_OFFLINE) {
+          this.abandonWebSocket();
+          return;
+        }
+
         this.setConnectionState('reconnecting');
         this.notifyHandlers('connected', { connected: false });
         this.attemptReconnect();
@@ -160,7 +206,7 @@ class QuoteStreamClient {
         this.transport = null;
         this.stopHeartbeat();
 
-        // Fall back to SSE
+        // Fall back to SSE — onclose will run too and increment counters.
         if (typeof EventSource !== 'undefined') {
           this.connectSSE();
         } else {
@@ -359,7 +405,55 @@ class QuoteStreamClient {
     return this.baseReconnectDelay * Math.pow(2, attempt) * (0.5 + Math.random() * 0.5);
   }
 
+  /**
+   * US-006: Terminal state. Called after MAX_WS_RECONNECTS_BEFORE_OFFLINE
+   * consecutive WS handshake/close failures. We mark WS as abandoned for
+   * this session, surface the 'offline' connection state to the banner, and
+   * pivot to the SSE/polling fallback so quotes keep flowing.
+   *
+   * Once 'offline' we do NOT retry the WebSocket until the page reloads.
+   * One log line per session, never a stuck "Reconnecting" spinner.
+   */
+  private abandonWebSocket() {
+    if (this.wsAbandoned) return;
+    this.wsAbandoned = true;
+    this.transport = null;
+
+    console.warn(
+      `[wsClient] WebSocket abandoned for session after ${this.wsFailureCount} failed attempts (last close code=${this.lastCloseCode ?? 'n/a'}). Falling back to SSE/polling.`,
+    );
+
+    // Cancel any pending reconnect timer.
+    if (this.reconnectTimer !== null) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    this.pendingReconnectAt = null;
+
+    // Surface the terminal banner state. The component reads `transport=null`
+    // along with `state='offline'` to render the "Live feed offline · using
+    // polling fallback" copy.
+    this._connectionState = 'offline';
+    this.notifyHandlers('connectionState', {
+      state: this._connectionState,
+      transport: this.transport,
+      closeCode: this.lastCloseCode,
+    });
+    this.notifyHandlers('connected', { connected: false });
+
+    // Kick the fallback chain so the rest of the app keeps getting quotes.
+    if (typeof EventSource !== 'undefined' && this.subscribedSymbols.length > 0) {
+      this.connectSSE();
+    } else if (this.subscribedSymbols.length > 0) {
+      this.startPolling();
+    }
+  }
+
   private attemptReconnect() {
+    if (this.wsAbandoned) {
+      // Defensive: if something queued a reconnect after we abandoned, no-op.
+      return;
+    }
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       this.setConnectionState('disconnected');
       this.transport = null;
@@ -476,6 +570,16 @@ class QuoteStreamClient {
   get nextRetryMs(): number | null {
     if (this.pendingReconnectAt === null) return null;
     return Math.max(0, this.pendingReconnectAt - Date.now());
+  }
+
+  /** US-006: Last WebSocket close code observed this session (or null). */
+  get closeCode(): number | null {
+    return this.lastCloseCode;
+  }
+
+  /** US-006: True once WS has been abandoned for the rest of the session. */
+  get isWsAbandoned(): boolean {
+    return this.wsAbandoned;
   }
 }
 

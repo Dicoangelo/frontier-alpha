@@ -4,7 +4,12 @@ import { wsClient, type ConnectionState, type TransportType } from '@/api/websoc
 
 /**
  * Visual indicator + banner for WebSocket connection state.
- * Green dot = connected, yellow = reconnecting, red = disconnected.
+ * - connected: hidden
+ * - reconnecting: yellow banner with attempt + countdown
+ * - offline (US-006): red banner, "Live feed offline · using polling fallback",
+ *   no animation. Terminal — does not flicker back to "Reconnecting".
+ * - disconnected: red banner, "Offline · Data Stale"
+ *
  * US-028: Shows transport type (WS/SSE/Poll) and reconnect countdown.
  */
 export function ConnectionStatus() {
@@ -26,11 +31,13 @@ export function ConnectionStatus() {
       if (payload.attempt !== undefined) setAttempt(payload.attempt);
       if (payload.nextRetryMs !== undefined) setCountdownMs(payload.nextRetryMs);
       else if (payload.state === 'connected') setCountdownMs(null);
+      else if (payload.state === 'offline') setCountdownMs(null);
     });
   }, []);
 
-  // Countdown ticker
+  // Countdown ticker (only relevant while reconnecting)
   useEffect(() => {
+    if (state !== 'reconnecting') return;
     if (countdownMs === null || countdownMs <= 0) return;
 
     const interval = setInterval(() => {
@@ -44,7 +51,7 @@ export function ConnectionStatus() {
     }, 500);
 
     return () => clearInterval(interval);
-  }, [countdownMs]);
+  }, [countdownMs, state]);
 
   if (state === 'connected') return null;
 
@@ -52,6 +59,11 @@ export function ConnectionStatus() {
   const countdownSec = countdownMs !== null ? Math.ceil(countdownMs / 1000) : null;
 
   const isReconnecting = state === 'reconnecting';
+  const isOffline = state === 'offline';
+
+  // 'offline' (terminal) and 'disconnected' both render red. 'offline' uses a
+  // static dot (no pulse) to communicate "this is a settled state, not a
+  // transient one we're working on".
   const railClass = isReconnecting
     ? 'before:bg-[var(--color-warning)]'
     : 'before:bg-[var(--color-negative)]';
@@ -63,12 +75,13 @@ export function ConnectionStatus() {
     : 'shadow-[0_18px_60px_-20px_rgba(239,68,68,0.45)]';
   const dotClass = isReconnecting
     ? 'bg-[var(--color-warning)] animate-pulse-subtle'
-    : 'bg-[var(--color-negative)]';
+    : 'bg-[var(--color-negative)]'; // offline: no animation, terminal state
 
   return (
     <div
       role="status"
       aria-live="polite"
+      data-connection-state={state}
       className={`
         glass-slab-floating fixed top-20 right-4 z-40
         rounded-full pl-4 pr-3 py-2 flex items-center gap-2
@@ -89,6 +102,13 @@ export function ConnectionStatus() {
             {attempt > 0 && ` · ${attempt}`}
             {countdownSec !== null && countdownSec > 0 && ` · ${countdownSec}s`}
             {transportLabel && <span className="ml-1 opacity-70">· {transportLabel}</span>}
+          </span>
+        </>
+      ) : isOffline ? (
+        <>
+          <WifiOff className="w-3.5 h-3.5" aria-hidden="true" />
+          <span className="mono text-[10px] tracking-[0.25em] uppercase font-medium">
+            Live Feed Offline · Polling Fallback
           </span>
         </>
       ) : (
@@ -124,6 +144,7 @@ export function ConnectionDot() {
     connected: 'bg-[var(--color-positive)]',
     reconnecting: 'bg-[var(--color-warning)] animate-pulse-subtle',
     disconnected: 'bg-[var(--color-danger)]',
+    offline: 'bg-[var(--color-negative)]',
   };
 
   const transportLabel = transport === 'websocket' ? 'WS' : transport === 'sse' ? 'SSE' : transport === 'polling' ? 'Poll' : '';
@@ -131,6 +152,7 @@ export function ConnectionDot() {
     connected: `Live feed connected${transportLabel ? ` (${transportLabel})` : ''}`,
     reconnecting: 'Reconnecting to live feed',
     disconnected: 'Live feed disconnected',
+    offline: 'Live feed offline (using polling fallback)',
   };
 
   return (

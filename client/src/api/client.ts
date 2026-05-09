@@ -1,8 +1,21 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 import { useDataSourceStore } from '@/stores/dataSourceStore';
 import { setMockMode } from '@/components/shared/MockDataBanner';
 import { supabase } from '@/lib/supabase';
+
+/**
+ * Replay-attempt flag carried on the per-request axios config (US-003).
+ *
+ * The 401 response interceptor reads this BEFORE attempting `refreshSession`
+ * + replay. If a request has already been replayed once and still 401s, we
+ * surface the error and let the caller drop to its empty / unauthed state
+ * instead of looping the refresh-replay forever (which would chew through
+ * Supabase refresh-token rotation budget and lock the user out).
+ */
+type RetriableConfig = InternalAxiosRequestConfig & {
+  _us003RefreshAttempt?: boolean;
+};
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -62,17 +75,63 @@ api.interceptors.response.use(
 
     return response.data;
   },
-  (error) => {
+  async (error: AxiosError) => {
+    const status = error.response?.status;
+    const config = error.config as RetriableConfig | undefined;
+
+    // US-003: 401 retry-with-refresh.
+    //
+    // Race we're closing: a stale access_token (background-tab clock skew,
+    // network sleep, Supabase autoRefreshToken hadn't fired yet) returns
+    // 401. Old behavior dropped to mock-data fallback. New behavior:
+    //
+    //   1. Refresh the session via Supabase (uses the refresh_token).
+    //   2. Stamp the request with `_us003RefreshAttempt = true` so we
+    //      can't infinite-loop if the refresh succeeded but the token
+    //      still 401s (server-side issue, not auth-state issue).
+    //   3. Replay the original request with the new Bearer.
+    //
+    // The replay flag is carried on the per-request axios config, NOT a
+    // module-level singleton — concurrent failed requests each get their
+    // own one-shot retry. The refresh itself is idempotent at the
+    // Supabase layer; multiple concurrent calls coalesce on the SDK side.
+    if (
+      status === 401 &&
+      config &&
+      !config._us003RefreshAttempt &&
+      // Don't try to refresh the auth/login endpoints themselves.
+      !config.url?.includes('/auth/')
+    ) {
+      try {
+        const { data, error: refreshError } = await supabase.auth.refreshSession();
+        if (!refreshError && data.session?.access_token) {
+          // Persist the new session so subsequent requests pick it up
+          // through the request interceptor without another fallback hop.
+          useAuthStore.setState({
+            session: data.session,
+            user: data.session.user,
+            isReady: true,
+          });
+          config._us003RefreshAttempt = true;
+          config.headers = config.headers ?? {};
+          config.headers.Authorization = `Bearer ${data.session.access_token}`;
+          return api.request(config);
+        }
+      } catch {
+        // Refresh path itself errored — fall through to the standard
+        // error log + reject. Caller will surface unauthed state.
+      }
+    }
+
     // US-008: surface the X-Request-Id on errors so console + server logs
     // + Sentry events can be cross-referenced. Header is lower-case on the
     // axios side (Node + browser both normalize). Falls through silently
     // when the header is missing (e.g. CORS preflight, network error).
     const requestId =
-      error.response?.headers?.['x-request-id'] ||
-      error.response?.headers?.['X-Request-Id'];
+      (error.response?.headers as Record<string, string> | undefined)?.['x-request-id'] ||
+      (error.response?.headers as Record<string, string> | undefined)?.['X-Request-Id'];
     const url = error.config?.url;
     const method = error.config?.method?.toUpperCase();
-    const status = error.response?.status;
     const message = error.response?.data || error.message;
     if (requestId) {
       console.error(

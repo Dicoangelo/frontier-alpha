@@ -10,6 +10,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Receipt,
   Scissors,
@@ -27,6 +28,8 @@ import {
 import { Button } from '@/components/shared/Button';
 import { ScrollableTable } from '@/components/shared/ScrollableTable';
 import { MockDataBanner } from '@/components/shared/MockDataBanner';
+import { portfolioApi } from '@/api/portfolio';
+import { type DataSource, EMPTY, wrapReal, wrapDemo, isReal } from '@/lib/dataSource';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -712,10 +715,108 @@ function ReportSection({ rows, summary }: { rows: ReportRow[]; summary: TaxSumma
   );
 }
 
+// ── Empty Summary (US-002) ─────────────────────────────────────
+//
+// When the user has zero realized gains, replace the synthesized
+// $9,189.48 / $2,148.72 numbers with an explicit $0 set so the page
+// stops *looking* like the user has filed taxes through us.
+
+const EMPTY_SUMMARY: TaxSummaryData = {
+  taxYear: new Date().getFullYear(),
+  shortTermGains: 0,
+  shortTermLosses: 0,
+  longTermGains: 0,
+  longTermLosses: 0,
+  netShortTerm: 0,
+  netLongTerm: 0,
+  totalRealizedGain: 0,
+  estimatedTaxLiability: 0,
+  harvestingSavings: 0,
+  washSaleAdjustment: 0,
+};
+
+function EmptyTaxSummary({ year }: { year: number }) {
+  return (
+    <div className="space-y-6">
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-stagger animate-fade-in-up"
+        style={{ animationDelay: '0ms', animationFillMode: 'both' }}
+      >
+        <MetricCard
+          label="YTD Realized Gains"
+          value="$0.00"
+          subtext="No realized gains yet"
+          icon={TrendingUp}
+        />
+        <MetricCard
+          label="Estimated Tax Liability"
+          value="$0.00"
+          subtext="Nothing realized to tax"
+          icon={DollarSign}
+        />
+        <MetricCard
+          label="Harvesting Savings"
+          value="$0.00"
+          subtext="No loss positions yet"
+          icon={Scissors}
+        />
+        <MetricCard
+          label="Wash Sale Adjustments"
+          value="$0.00"
+          subtext="No violations detected"
+          icon={AlertTriangle}
+        />
+      </div>
+
+      <section
+        className="glass-slab-floating relative overflow-hidden rounded-2xl p-6 sm:p-8 before:content-[''] before:absolute before:left-0 before:top-0 before:right-0 before:h-[3px] before:bg-[image:var(--gradient-sovereign)] animate-fade-in-up"
+        style={{ animationDelay: '50ms', animationFillMode: 'both' }}
+      >
+        <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">{year} · No Realized Activity</p>
+        <h2 className="text-lg font-bold text-theme mt-2">Tax dashboard is quiet</h2>
+        <p className="text-sm text-theme-secondary mt-2 max-w-2xl leading-relaxed">
+          You haven&apos;t closed any lots yet, so there&apos;s nothing to harvest, no wash
+          sales to flag, and no realized gain to estimate liability against. Once you sell a
+          position or take a partial profit, this page will populate with your real numbers.
+        </p>
+      </section>
+    </div>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────────
 
 export function Tax() {
   const [activeTab, setActiveTab] = useState<TaxTab>('summary');
+
+  // Pull the current portfolio so we can decide whether to show real-zero
+  // ($0 / "no realized activity") or the demo fixture. Realized lots aren't
+  // exposed via the portfolio endpoint yet, so today the heuristic is:
+  // if the user has positions, show the demo fixture as a preview. If they
+  // have zero positions, render the real-zero empty state. Either way,
+  // never invent realized-gain numbers for a brand new account.
+  const { data: portfolio } = useQuery({
+    queryKey: ['portfolio'],
+    queryFn: portfolioApi.getPortfolio,
+    retry: false,
+  });
+
+  const summarySource: DataSource<TaxSummaryData> = useMemo(() => {
+    if (!portfolio) return EMPTY;
+    if (!portfolio.positions || portfolio.positions.length === 0) {
+      return wrapReal(EMPTY_SUMMARY);
+    }
+    // User has positions but realized lots aren't wired to the API yet.
+    // Render the existing fixture as a clearly-banner-marked demo.
+    return wrapDemo(MOCK_SUMMARY);
+  }, [portfolio]);
+
+  const showDemoBanner = summarySource.kind === 'demo';
+  const activeSummary: TaxSummaryData = isReal(summarySource)
+    ? summarySource.value
+    : summarySource.kind === 'demo'
+      ? summarySource.value
+      : EMPTY_SUMMARY;
 
   const tabs: { id: TaxTab; label: string; icon: typeof Receipt }[] = [
     { id: 'summary', label: 'Summary', icon: Receipt },
@@ -726,7 +827,7 @@ export function Tax() {
 
   return (
     <div className="space-y-6">
-      <MockDataBanner force pageKey="tax" />
+      {showDemoBanner && <MockDataBanner force pageKey="tax" />}
 
       {/* Header */}
       <div
@@ -747,7 +848,7 @@ export function Tax() {
         <div className="glass-slab-floating rounded-xl px-4 py-2.5 flex items-center gap-2">
           <DollarSign className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
           <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Tax Year</span>
-          <strong className="mono tabular-nums text-sm font-bold text-theme">{MOCK_SUMMARY.taxYear}</strong>
+          <strong className="mono tabular-nums text-sm font-bold text-theme">{activeSummary.taxYear}</strong>
         </div>
       </div>
 
@@ -789,11 +890,67 @@ export function Tax() {
         className="animate-fade-in-up"
         style={{ animationDelay: '100ms', animationFillMode: 'both' }}
       >
-        {activeTab === 'summary' && <SummarySection data={MOCK_SUMMARY} />}
-        {activeTab === 'harvest' && <HarvestSection opportunities={MOCK_HARVEST_OPPORTUNITIES} />}
-        {activeTab === 'wash_sales' && <WashSalesSection violations={MOCK_WASH_SALES} />}
-        {activeTab === 'report' && <ReportSection rows={MOCK_REPORT_ROWS} summary={MOCK_SUMMARY} />}
+        {activeTab === 'summary' && (
+          isReal(summarySource)
+            ? <EmptyTaxSummary year={activeSummary.taxYear} />
+            : <SummarySection data={activeSummary} />
+        )}
+        {activeTab === 'harvest' && (
+          isReal(summarySource)
+            ? <EmptyHarvestSection />
+            : <HarvestSection opportunities={MOCK_HARVEST_OPPORTUNITIES} />
+        )}
+        {activeTab === 'wash_sales' && (
+          isReal(summarySource)
+            ? <EmptyWashSalesSection />
+            : <WashSalesSection violations={MOCK_WASH_SALES} />
+        )}
+        {activeTab === 'report' && (
+          isReal(summarySource)
+            ? <EmptyReportSection year={activeSummary.taxYear} />
+            : <ReportSection rows={MOCK_REPORT_ROWS} summary={activeSummary} />
+        )}
       </div>
+    </div>
+  );
+}
+
+function EmptyHarvestSection() {
+  return (
+    <div className="glass-slab rounded-2xl p-10 text-center animate-fade-in-up">
+      <Scissors className="w-10 h-10 mx-auto mb-4 text-theme-muted" aria-hidden="true" />
+      <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Harvest · Empty</p>
+      <h3 className="text-lg font-bold text-theme mt-2">No loss positions yet</h3>
+      <p className="text-sm text-theme-secondary mt-2 max-w-md mx-auto leading-relaxed">
+        Harvesting opportunities surface when you hold positions trading below cost basis.
+      </p>
+    </div>
+  );
+}
+
+function EmptyWashSalesSection() {
+  return (
+    <div className="glass-slab rounded-2xl p-10 text-center animate-fade-in-up">
+      <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-theme-muted" aria-hidden="true" />
+      <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Wash Sales · All Clear</p>
+      <h3 className="text-lg font-bold text-theme mt-2">No violations detected</h3>
+      <p className="text-sm text-theme-secondary mt-2 max-w-md mx-auto leading-relaxed">
+        Wash sale tracking activates after you close lots at a loss. Nothing to flag yet.
+      </p>
+    </div>
+  );
+}
+
+function EmptyReportSection({ year }: { year: number }) {
+  return (
+    <div className="glass-slab rounded-2xl p-10 text-center animate-fade-in-up">
+      <FileText className="w-10 h-10 mx-auto mb-4 text-theme-muted" aria-hidden="true" />
+      <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">{year} · No Transactions</p>
+      <h3 className="text-lg font-bold text-theme mt-2">No realized transactions to report</h3>
+      <p className="text-sm text-theme-secondary mt-2 max-w-md mx-auto leading-relaxed">
+        Once you close a position, the Form 8949 / Schedule D report will be available
+        for download in CSV or JSON.
+      </p>
     </div>
   );
 }

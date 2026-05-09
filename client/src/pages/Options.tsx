@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { SkeletonOptionsPage } from '@/components/shared/Skeleton';
 import {
   TrendingUp,
@@ -18,9 +19,13 @@ import {
   BarChart3,
   Target,
   RefreshCw,
+  Plug,
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
 import { MockDataBanner } from '@/components/shared/MockDataBanner';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { portfolioApi } from '@/api/portfolio';
+import { useNavigate } from 'react-router-dom';
 import {
   UNDERLYING_PRICE,
   UNDERLYING_SYMBOL,
@@ -80,8 +85,19 @@ function MetricCard({ label, value, subtitle, icon, color = 'text-[var(--color-t
 // ── Main Page ───────────────────────────────────────────────────
 
 export function Options() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabId>('chain');
   const [isLoading, setIsLoading] = useState(true);
+
+  // US-002: detect whether the user has any positions wired. Without one,
+  // we render an explicit empty state instead of a chain of mock 1.00/1.00
+  // strikes for AAPL — those numbers read as live to a brand new account.
+  const { data: portfolio } = useQuery({
+    queryKey: ['portfolio'],
+    queryFn: portfolioApi.getPortfolio,
+    retry: false,
+  });
+  const hasPositions = (portfolio?.positions?.length ?? 0) > 0;
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 600);
@@ -89,6 +105,36 @@ export function Options() {
   }, []);
 
   if (isLoading) return <SkeletonOptionsPage />;
+
+  if (!hasPositions) {
+    return (
+      <div className="space-y-6">
+        <div
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up"
+          style={{ animationDelay: '0ms', animationFillMode: 'both' }}
+        >
+          <div>
+            <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
+              Execution · Options
+            </p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-theme">
+              <span className="text-gradient-brand">Options</span>
+            </h1>
+            <p className="text-sm text-theme-secondary mt-1">
+              Chain, Greeks, volatility surface &amp; strategy analysis
+            </p>
+          </div>
+        </div>
+        <EmptyState
+          icon={<Plug className="w-8 h-8" />}
+          kicker="Options · Awaiting Position"
+          title="Connect a position to see the live chain"
+          description="The options chain, Greeks heatmap, and vol surface populate from a real underlying. Add at least one equity position to your portfolio first."
+          action={{ label: 'Add Position', onClick: () => navigate('/portfolio') }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

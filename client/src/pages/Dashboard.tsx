@@ -16,6 +16,7 @@ import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { MarketStatusStrip } from '@/components/dashboard/MarketStatusStrip';
 import { DashZone } from '@/components/dashboard/DashZone';
 import { getDisplayName } from '@/lib/getDisplayName';
+import { type DataSource, EMPTY, wrapReal } from '@/lib/dataSource';
 
 // Types
 interface Position {
@@ -289,7 +290,7 @@ export function Dashboard() {
   const user = useAuthStore((s) => s.user);
   const [portfolio, setPortfolio] = useState<Portfolio>(EMPTY_PORTFOLIO);
   const [factors, setFactors] = useState<FactorExposure[]>(EMPTY_FACTORS);
-  const [metrics, setMetrics] = useState<RiskMetricsData>(EMPTY_METRICS);
+  const [metrics, setMetrics] = useState<DataSource<RiskMetricsData>>(EMPTY);
   const [insight, setInsight] = useState<string>('Loading portfolio data...');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -363,9 +364,15 @@ export function Dashboard() {
       const factorData = await fetchFactors(symbols);
       setFactors(factorData);
 
-      // Calculate metrics
-      const metricsData = calculateMetrics(portfolioData, factorData);
-      setMetrics(metricsData);
+      // Calculate metrics — wrap as `empty` when there are no positions,
+      // otherwise `real`. Synthesizing zeros into the components has been
+      // the source of every "Sharpe 1.00 / Drawdown -27%" leak.
+      if (portfolioData.positions.length === 0) {
+        setMetrics(EMPTY);
+      } else {
+        const metricsData = calculateMetrics(portfolioData, factorData);
+        setMetrics(wrapReal(metricsData));
+      }
 
       // Generate insight
       const insightText = generateInsight(factorData);
@@ -375,6 +382,7 @@ export function Dashboard() {
       // Fall back to demo data
       setPortfolio(getDemoPortfolio());
       setFactors(getDemoFactors());
+      setMetrics(EMPTY);
     } finally {
       setIsLoading(false);
       // Trigger fade-in after a tick to allow DOM paint

@@ -1,0 +1,246 @@
+{
+  "generatedAt": "2026-05-09T05:45:46.551Z",
+  "headSha": "197f9d51fce48999366050a33df5a9ed8d4fdd78",
+  "version": "1.2.6",
+  "server": {
+    "tsFiles": 113,
+    "tsNonTestFiles": 110,
+    "inSourceTestFiles": 3,
+    "routeModules": 26,
+    "endpoints": 108,
+    "migrations": 13,
+    "vercelApiFiles": 4,
+    "testFiles": 36
+  },
+  "client": {
+    "pages": 24,
+    "components": 110,
+    "stores": 6,
+    "hooks": 13,
+    "apiModules": 7,
+    "appRoutes": 26
+  },
+  "integrations": [
+    "alpaca",
+    "alphaVantage",
+    "compGuard",
+    "connectAlpaca",
+    "emailDelivery",
+    "llmExplainer",
+    "mlSentiment",
+    "polygon",
+    "polygonWebSocket",
+    "rateLimiter",
+    "stripe",
+    "supabase",
+    "vapidPush",
+    "weeklyDigestCron"
+  ],
+  "routes": [
+    {
+      "module": "alerts.ts",
+      "endpoints": 7
+    },
+    {
+      "module": "api-keys.ts",
+      "endpoints": 3
+    },
+    {
+      "module": "auth.ts",
+      "endpoints": 5
+    },
+    {
+      "module": "backtest.ts",
+      "endpoints": 1
+    },
+    {
+      "module": "billing.ts",
+      "endpoints": 3
+    },
+    {
+      "module": "broker-connect.ts",
+      "endpoints": 3
+    },
+    {
+      "module": "broker.ts",
+      "endpoints": 3
+    },
+    {
+      "module": "cache.ts",
+      "endpoints": 3
+    },
+    {
+      "module": "cvrf.ts",
+      "endpoints": 14
+    },
+    {
+      "module": "digest.ts",
+      "endpoints": 1
+    },
+    {
+      "module": "earnings.ts",
+      "endpoints": 4
+    },
+    {
+      "module": "errors.ts",
+      "endpoints": 1
+    },
+    {
+      "module": "explain.ts",
+      "endpoints": 3
+    },
+    {
+      "module": "health.ts",
+      "endpoints": 5
+    },
+    {
+      "module": "ml.ts",
+      "endpoints": 3
+    },
+    {
+      "module": "notifications.ts",
+      "endpoints": 4
+    },
+    {
+      "module": "options.ts",
+      "endpoints": 6
+    },
+    {
+      "module": "portfolio.ts",
+      "endpoints": 11
+    },
+    {
+      "module": "quotes.ts",
+      "endpoints": 3
+    },
+    {
+      "module": "sec.ts",
+      "endpoints": 2
+    },
+    {
+      "module": "sentiment.ts",
+      "endpoints": 1
+    },
+    {
+      "module": "settings.ts",
+      "endpoints": 4
+    },
+    {
+      "module": "social.ts",
+      "endpoints": 3
+    },
+    {
+      "module": "tax.ts",
+      "endpoints": 5
+    },
+    {
+      "module": "trading.ts",
+      "endpoints": 9
+    },
+    {
+      "module": "websocket.ts",
+      "endpoints": 1
+    }
+  ],
+  "migrations": [
+    "001_initial_schema.sql",
+    "002_portfolio_sharing.sql",
+    "003_cvrf_tables.sql",
+    "004_push_subscriptions.sql",
+    "005_api_keys.sql",
+    "011_subscriptions.sql",
+    "20260208_indexes.sql",
+    "20260209_ml_models.sql",
+    "20260209_shared_portfolios.sql",
+    "20260209_social_profiles.sql",
+    "20260209_tax_lots.sql",
+    "20260508_add_welcomed_at.sql",
+    "20260508_paper_trading.sql"
+  ],
+  "pages": [
+    "Alerts",
+    "Backtest",
+    "BillingCanceled",
+    "BillingSuccess",
+    "CVRF",
+    "Dashboard",
+    "Earnings",
+    "Factors",
+    "Help",
+    "Landing",
+    "Login",
+    "ML",
+    "Optimize",
+    "Options",
+    "Portfolio",
+    "Pricing",
+    "Privacy",
+    "ResetPassword",
+    "Settings",
+    "SharedPortfolio",
+    "Social",
+    "Tax",
+    "Terms",
+    "Trading"
+  ],
+  "appRoutePaths": [
+    "*",
+    "/",
+    "/alerts",
+    "/backtest",
+    "/billing/canceled",
+    "/billing/success",
+    "/cvrf",
+    "/dashboard",
+    "/earnings",
+    "/factors",
+    "/help",
+    "/landing",
+    "/login",
+    "/ml",
+    "/optimize",
+    "/options",
+    "/portfolio",
+    "/pricing",
+    "/privacy",
+    "/reset-password",
+    "/settings",
+    "/shared/:token",
+    "/social",
+    "/tax",
+    "/terms",
+    "/trade"
+  ],
+  "stores": [
+    "alertsStore",
+    "authStore",
+    "dataSourceStore",
+    "portfolioStore",
+    "quotesStore",
+    "themeStore"
+  ],
+  "hooks": [
+    "useCVRF",
+    "useDataFreshness",
+    "useEarnings",
+    "useFactors",
+    "useIntegrationsHealth",
+    "useIsMobile",
+    "useKeyboardShortcuts",
+    "useNotifications",
+    "useQuotes",
+    "useStagger",
+    "useSubscription",
+    "useToast",
+    "useTrading"
+  ],
+  "apiModulesList": [
+    "client",
+    "cvrf",
+    "earnings",
+    "factors",
+    "portfolio",
+    "quotes",
+    "websocket"
+  ]
+}

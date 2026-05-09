@@ -23,7 +23,9 @@
     "ml:start": "cd ml && uvicorn main:app --reload --port 8000",
     "download-ken-french": "tsx scripts/download-ken-french.ts",
     "db:migrate": "cd supabase && supabase db push",
-    "db:reset": "cd supabase && supabase db reset"
+    "db:reset": "cd supabase && supabase db reset",
+    "arch:scan": "node scripts/arch-scanner.mjs",
+    "arch:check": "node scripts/arch-scanner.mjs --check"
   },
   "keywords": [
     "fintech",

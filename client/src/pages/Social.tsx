@@ -23,6 +23,7 @@ import {
   Star,
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
+import { MockDataBanner } from '@/components/shared/MockDataBanner';
 
 const kickerClass =
   'text-[10px] mono tracking-[0.3em] uppercase text-theme-muted';
@@ -518,6 +519,8 @@ export function Social() {
 
   return (
     <div className="space-y-6">
+      <MockDataBanner force pageKey="social" />
+
       {/* Header — SOC-002: staggered entry animation delay 0ms, family pattern */}
       <header
         className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 animate-fade-in-up"

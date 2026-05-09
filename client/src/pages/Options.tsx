@@ -20,6 +20,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/shared/Button';
+import { MockDataBanner } from '@/components/shared/MockDataBanner';
 import {
   UNDERLYING_PRICE,
   UNDERLYING_SYMBOL,
@@ -91,6 +92,8 @@ export function Options() {
 
   return (
     <div className="space-y-6">
+      <MockDataBanner force pageKey="options" />
+
       {/* Header */}
       <div
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up"

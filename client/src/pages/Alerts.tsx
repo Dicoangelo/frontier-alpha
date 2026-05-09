@@ -12,6 +12,7 @@ import { FactorDriftAlert } from '@/components/alerts/FactorDriftAlert';
 import { SECFilingAlert } from '@/components/alerts/SECFilingAlert';
 import { SkeletonCard } from '@/components/shared/Skeleton';
 import { DataLoadError, EmptyAlerts } from '@/components/shared/EmptyState';
+import { MockDataBanner } from '@/components/shared/MockDataBanner';
 import { api } from '@/api/client';
 import { useEmailDeliveryStatus } from '@/hooks/useIntegrationsHealth';
 import type { RiskAlert } from '@/types';
@@ -35,6 +36,10 @@ export function Alerts() {
   const [factorExposures, setFactorExposures] = useState<FactorExposure[]>([]);
   const [portfolioSymbols, setPortfolioSymbols] = useState<string[]>([]);
   const [emailChannel, setEmailChannel] = useState(false);
+  // US-007: track whether any panel on the page is showing fallback demo data
+  // (alert API failed, or factor exposures API failed and we seeded demos).
+  const [usingDemoAlerts, setUsingDemoAlerts] = useState(false);
+  const [usingDemoFactors, setUsingDemoFactors] = useState(false);
   const emailStatus = useEmailDeliveryStatus();
   const emailDegraded = emailStatus === 'degraded';
 
@@ -45,11 +50,13 @@ export function Alerts() {
       const response = await api.get('/alerts');
       const alertsData = response.data?.alerts || response.data || [];
       setAlerts(alertsData);
+      setUsingDemoAlerts(false);
     } catch (error) {
       console.error('Failed to load alerts:', error);
       setLoadError('Failed to load alerts');
       // Use demo alerts for testing
       setAlerts(getDemoAlerts());
+      setUsingDemoAlerts(true);
     } finally {
       setIsLoading(false);
     }
@@ -62,8 +69,16 @@ export function Alerts() {
       const positions = portfolioRes.data?.positions || [];
       const symbols = positions.map((p: { symbol: string }) => p.symbol);
 
-      // Set portfolio symbols for SEC filing alerts
-      setPortfolioSymbols(symbols.length > 0 ? symbols : ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN']);
+      // Set portfolio symbols for SEC filing alerts. When the user has no
+      // positions we seed defaults so the SEC card still has something to show
+      // — flag this as demo data for the banner.
+      if (symbols.length > 0) {
+        setPortfolioSymbols(symbols);
+        setUsingDemoFactors(false);
+      } else {
+        setPortfolioSymbols(['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN']);
+        setUsingDemoFactors(true);
+      }
 
       if (symbols.length > 0) {
         const factorRes = await api.get(`/portfolio/factors/${symbols.join(',')}`);
@@ -96,6 +111,7 @@ export function Alerts() {
         { factor: 'roe', exposure: 0.62 },
         { factor: 'market', exposure: 1.15 },
       ]);
+      setUsingDemoFactors(true);
     }
   }, []);
 
@@ -216,8 +232,11 @@ export function Alerts() {
     </div>
   ) : null;
 
+  const showMockBanner = usingDemoAlerts || usingDemoFactors;
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
+      {showMockBanner && <MockDataBanner force pageKey="alerts" />}
       {errorBanner}
 
       {/* ── Header ──────────────────────────────────────────────────────── */}

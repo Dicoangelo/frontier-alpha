@@ -120,7 +120,7 @@ export function HowItWorks({ onCTAClick }: HowItWorksProps): React.JSX.Element {
       ref={sectionRef}
       id="how-it-works"
       aria-labelledby={headingId}
-      className="relative isolate overflow-hidden py-12 sm:py-16 lg:py-20 px-4 sm:px-6"
+      className="relative isolate overflow-hidden py-10 sm:py-12 lg:py-14 px-4 sm:px-6"
     >
       {/* Inline scoped keyframes — defined here so this component is self-contained */}
       <style>{`
@@ -189,7 +189,7 @@ export function HowItWorks({ onCTAClick }: HowItWorksProps): React.JSX.Element {
         </header>
 
         {/* ── Step cards row ─────────────────────────────────────────── */}
-        <div className="relative mt-12 sm:mt-16">
+        <div className="relative mt-8 sm:mt-10">
           {/* Connecting line — visible on lg+, runs through the cards' midline */}
           <ConnectingLine visible={sectionInView} />
 
@@ -244,7 +244,7 @@ export function HowItWorks({ onCTAClick }: HowItWorksProps): React.JSX.Element {
         {/* ── Bottom CTA strip ───────────────────────────────────────── */}
         <div
           className={
-            'mt-12 sm:mt-16 glass-slab-floating rounded-2xl p-6 sm:p-8 ' +
+            'mt-8 sm:mt-10 glass-slab-floating rounded-2xl p-6 sm:p-8 ' +
             'flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-8 ' +
             (sectionInView ? 'animate-fade-in-up' : 'opacity-0')
           }

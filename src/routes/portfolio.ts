@@ -340,13 +340,33 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
 
       try {
         const prices = new Map<string, Price[]>();
+        const skipped: string[] = [];
         // Request 300 days to ensure enough data for momentum calculations (need 252 + 21 + buffer)
         for (const symbol of [...symbols, 'SPY']) {
-          const symbolPrices = await server.dataProvider.getHistoricalPrices(symbol, 300);
-          prices.set(symbol, symbolPrices);
+          try {
+            const symbolPrices = await server.dataProvider.getHistoricalPrices(symbol, 300);
+            prices.set(symbol, symbolPrices);
+          } catch (err) {
+            logger.warn({ err, symbol }, 'factors: skipping symbol');
+            skipped.push(symbol);
+          }
         }
 
-        const exposures = await server.factorEngine.calculateExposures(symbols, prices);
+        // If every symbol failed (including SPY benchmark), return 500
+        if (prices.size === 0) {
+          return reply.status(500).send({
+            success: false,
+            error: {
+              code: 'NO_FACTOR_DATA',
+              message: 'All symbol fetches failed',
+              skipped,
+            },
+          });
+        }
+
+        // Only compute exposures for symbols that successfully fetched prices
+        const resolvedSymbols = symbols.filter((s) => prices.has(s));
+        const exposures = await server.factorEngine.calculateExposures(resolvedSymbols, prices);
 
         return {
           success: true,
@@ -355,6 +375,7 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
             timestamp: new Date(),
             requestId: request.id,
             latencyMs: Date.now() - start,
+            ...(skipped.length > 0 ? { skipped } : {}),
           },
         };
       } catch (error) {

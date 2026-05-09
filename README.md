@@ -222,6 +222,18 @@ Diagnostic endpoint: `GET /api/v1/health/integrations`
 
 <br/>
 
+### When you outgrow the Polygon free tier
+
+Frontier Alpha runs on Polygon's **free tier (5 requests/min)** by default. The cache layer (`src/data/cache/` — Memory + Supabase composite) and the boot-time + hourly cache warmer (`src/data/CacheWarmer.ts`) are designed to keep solo-user dashboard loads inside that ceiling. When you cross any of these thresholds, upgrade:
+
+- A second active user joins (the warmer already keeps the top-held symbols hot, but parallel synchronous traffic from two dashboards exhausts the 5/min budget on cold paths)
+- `/api/v1/health/errors` shows sustained 429s on Polygon endpoints
+- The cache miss ratio (`getCacheTelemetry().total.misses / total`) stays > 50% across a normal trading day
+
+**Upgrade path:** [Polygon Starter — $29/mo, 100 requests/min](https://polygon.io/pricing). No code change required; the rate-limit headroom alone fixes it. The env var stays `POLYGON_API_KEY`. Rotate the key with `printf "%s" "$NEW_KEY" | vercel env add POLYGON_API_KEY production --force` (the `printf` part matters — `echo` truncates the trailing char; see `~/.local-notes/memory/feedback_polygon_key_truncation.md`).
+
+<br/>
+
 <img src="https://user-images.githubusercontent.com/74038190/212284115-f47cd8ff-2ffb-4b04-b5bf-4d1c14c0247f.gif" width="100%"/>
 
 <br/>

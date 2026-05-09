@@ -357,21 +357,21 @@ ML_RETRAIN_INTERVAL=30
 <table>
 <tr>
 <td width="50%" align="center">
-<img src="screenshots/v122-01-landing-hero.png" width="100%" alt="Landing hero — desktop"/>
-<br/><sub><b>Landing — desktop hero</b><br/>Sovereign gradient title · Live factor radar</sub>
+<img src="screenshots/v133-01-landing-hero.png" width="100%" alt="Landing hero — desktop"/>
+<br/><sub><b>Landing — desktop hero</b><br/>Sovereign gradient title · Live factor radar · v1.3.3</sub>
 </td>
 <td width="50%" align="center">
-<img src="screenshots/v122-03-pricing.png" width="100%" alt="Pricing — desktop"/>
+<img src="screenshots/v133-03-pricing.png" width="100%" alt="Pricing — desktop"/>
 <br/><sub><b>Pricing — Free / Pro / Enterprise</b><br/>Stripe live billing wired</sub>
 </td>
 </tr>
 <tr>
 <td width="50%" align="center">
-<img src="screenshots/v122-04-landing-mobile.png" width="60%" alt="Landing — mobile"/>
+<img src="screenshots/v133-04-landing-mobile.png" width="60%" alt="Landing — mobile"/>
 <br/><sub><b>Landing — mobile</b><br/>Family-aligned with metaventionsai.com</sub>
 </td>
 <td width="50%" align="center">
-<img src="screenshots/v124-login.png" width="100%" alt="Login — desktop with Terms/Privacy links"/>
+<img src="screenshots/v133-06-login.png" width="100%" alt="Login — desktop with Terms/Privacy links"/>
 <br/><sub><b>Login — desktop</b><br/>Terms of Service and Privacy Policy linked (target=_blank)</sub>
 </td>
 </tr>

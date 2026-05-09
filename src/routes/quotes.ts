@@ -1,9 +1,13 @@
 import type { FastifyInstance } from 'fastify';
-import type { APIResponse, Quote } from '../types/index.js';
+import { logger } from '../observability/logger.js';
+import type { APIResponse, Price, Quote } from '../types/index.js';
 
 interface RouteContext {
   server: {
-    dataProvider: { getQuote(symbol: string): Promise<Quote | null> };
+    dataProvider: {
+      getQuote(symbol: string): Promise<Quote | null>;
+      getHistoricalPrices(symbol: string, days: number): Promise<Price[]>;
+    };
   };
 }
 
@@ -45,6 +49,57 @@ export async function quotesRoutes(fastify: FastifyInstance, opts: RouteContext)
           count: quotes.length,
         },
       });
+    }
+  );
+
+  // GET /api/v1/quotes/:symbol/history?days=7
+  // Returns the last N daily closes for a symbol — used by HoldingsTable sparkline.
+  fastify.get<{
+    Params: { symbol: string };
+    Querystring: { days?: string };
+    Reply: APIResponse<{ symbol: string; closes: number[]; timestamps: string[] }>;
+  }>(
+    '/api/v1/quotes/:symbol/history',
+    async (request, reply) => {
+      const start = Date.now();
+      const { symbol } = request.params;
+      const daysParam = Number(request.query.days);
+      const days = Number.isFinite(daysParam) && daysParam > 0 && daysParam <= 365
+        ? Math.floor(daysParam)
+        : 7;
+
+      try {
+        const prices = await server.dataProvider.getHistoricalPrices(symbol, days);
+        if (!prices || prices.length === 0) {
+          return reply.status(404).send({
+            success: false,
+            error: { code: 'NOT_FOUND', message: `No historical prices for ${symbol}` },
+          });
+        }
+
+        // Trim to requested window (provider may return more than asked)
+        const window = prices.slice(-days);
+        const closes = window.map((p) => p.close);
+        const timestamps = window.map((p) =>
+          p.timestamp instanceof Date ? p.timestamp.toISOString() : String(p.timestamp)
+        );
+
+        return {
+          success: true,
+          data: { symbol: symbol.toUpperCase(), closes, timestamps },
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      } catch (err) {
+        logger.warn({ err, symbol, days }, 'quotes/history: fetch failed');
+        return reply.status(502).send({
+          success: false,
+          error: { code: 'UPSTREAM_ERROR', message: `Failed to fetch history for ${symbol}` },
+        });
+      }
     }
   );
 

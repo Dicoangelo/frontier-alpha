@@ -14,6 +14,7 @@ import {
   Receipt,
   Settings,
   HelpCircle,
+  LineChart,
 } from 'lucide-react';
 import { useState } from 'react';
 import { BottomSheet } from '@/components/shared/BottomSheet';
@@ -30,6 +31,7 @@ const morePages = [
   { name: 'Earnings', icon: Calendar, href: '/earnings' },
   { name: 'Optimize', icon: Sparkles, href: '/optimize' },
   { name: 'ML', icon: Cpu, href: '/ml' },
+  { name: 'Backtest', icon: LineChart, href: '/backtest' },
   { name: 'Options', icon: Sigma, href: '/options' },
   { name: 'Tax', icon: Receipt, href: '/tax' },
   { name: 'Social', icon: Users, href: '/social' },

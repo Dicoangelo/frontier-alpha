@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.6] - 2026-05-08
+
+### End-user walkthrough fixes — 9 user stories shipped via parallel agents
+
+Walked the production app as fresh enterprise dev account
+(`dicoangelo+dev@metaventionsai.com`), captured 20 screenshots into
+`.audit-2026-05-08/walkthrough/`, and shipped the resulting fix queue
+through ralph-tui PRD `tasks/prd-v1.2.6-walkthrough-fixes.md` with 8
+parallel agent sessions across 2 waves.
+
+**P0 fixes (caught during the walkthrough itself, before the PRD):**
+- `5277a74` `fix(portfolio): wire useDatabase + currentPortfolio in AppServer` —
+  every authed `GET /api/v1/portfolio` returned 404 because `server.useDatabase`
+  was never declared on `AppServer`. Now reads `Boolean(SUPABASE_SERVICE_KEY)`.
+- `70e67c7` `fix(portfolio): React error #310 — move hooks above early returns` —
+  `useMemo`/`useCountUp` lived below an `if (isLoading) return ...`. Loading→loaded
+  transition tripped React's hook-order check.
+
+**Wave 1 (5 parallel agents):**
+- `06d89ae` `fix(factors): per-symbol resilience in /portfolio/factors handler (US-001)`
+  — bad ticker no longer 500s the whole batch
+- `d5a1749` `fix(display-name): strip +suffix aliases from email greeting (US-003)` —
+  greeting now reads "Dicoangelo" not "Dicoangelo+dev"
+- `e48d965` `feat(nav): add Backtest entry to sidebar Intelligence group (US-004)` —
+  Backtest reachable from sidebar (was orphaned at `/backtest`)
+- `1b04a65` `fix(onboarding): soften welcome modal + persist dismissal (US-008)` —
+  halo gradient instead of saturated sovereign, 44x44 close X, localStorage-backed
+  dismissal
+- `ee86990` `feat(dashboard): real 7D sparkline + change in HoldingsTable (US-009)`
+  — replaced seeded-PRNG mock sparkline with real 7-day prices via
+  `getHistoricalPrices`; new `quotesApi.getHistoricalPrices` route +
+  client module
+
+**Wave 2 (3 parallel agents):**
+- `fb3aed5` `fix(ws): repair Railway handshake (US-006)` — root cause was
+  `@fastify/websocket@^10` v8 API mismatch on Railway (`connection.socket.on`
+  was undefined). Server-side shim handles both v7 and v8+ shapes; client-side
+  defense-in-depth abandons WS after 3 failed reconnects so the banner enters
+  a terminal "Live Feed Offline · Polling Fallback" state instead of looping
+  "Reconnecting · 1 · 1s" forever
+- `fd10c4c` `fix(dashboard): empty state when no positions (US-005)` —
+  authenticated users with zero positions now see `<EmptyPortfolio>` instead
+  of a fake $125K demo. Public landing flow unchanged
+- `4bf26ee` `fix(mock-data): MockDataBanner across Tax/ML/Alerts/Social/Options (US-007)`
+  — every page that displays demo / placeholder data now shows a dismissible
+  banner. `MockDataBanner` gained `force`, `pageKey`, `dismissible`, `message`
+  props with per-page localStorage persistence
+- `791292f` `fix(cvrf): repair page crash on fresh user (US-002)` — root cause
+  was a client/server API shape mismatch on `/api/v1/cvrf/stats` (server
+  returns `factorWeights`, client typed as `weights`). Added 3 normalizer
+  functions in `client/src/api/cvrf.ts` + defensive null-coalescing across 9
+  CVRF components + page-level `SectionErrorBoundary`
+
+**Net:** 11 commits, 0 known production crashes, mock-data-leak fully closed.
+Audit + screenshots captured in `.audit-2026-05-08/walkthrough/AUDIT.md`.
+
+---
+
 ## [1.2.5] - 2026-05-08
 
 ### Rate limiter goes durable on Supabase + IP extractor fix — no Upstash needed

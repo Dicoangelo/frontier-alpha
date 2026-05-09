@@ -164,8 +164,20 @@ export interface CognitiveExplanation {
 export interface APIResponse<T> {
   success: boolean;
   data?: T;
-  error?: { code: string; message: string; details?: Record<string, unknown> };
-  meta?: { timestamp: Date; requestId: string; latencyMs: number };
+  error?: {
+    code: string;
+    message: string;
+    details?: Record<string, unknown>;
+    /** Per-symbol fetch failures (factors handler — see US-001 in v1.2.6 PRD). */
+    skipped?: string[];
+  };
+  meta?: {
+    timestamp: Date;
+    requestId: string;
+    latencyMs: number;
+    /** Per-symbol fetch failures when partial result is returned. */
+    skipped?: string[];
+  };
 }
 
 // ============================================================================

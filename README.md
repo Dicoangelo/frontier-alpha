@@ -13,7 +13,7 @@
 
 <br/>
 
-<img src="https://img.shields.io/badge/Tests-265-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Tests" />
+<img src="https://img.shields.io/badge/Tests-740-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Tests" />
 <img src="https://img.shields.io/badge/Lines-62,000+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Lines" />
 <img src="https://img.shields.io/badge/Files-242+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Files" />
 <img src="https://img.shields.io/badge/Endpoints-107-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Endpoints" />
@@ -231,7 +231,7 @@ Diagnostic endpoint: `GET /api/v1/health/integrations`
 Every subsystem is a **module** — swap implementations with a config change, zero code changes.
 
 ```
-75+ modules · 107 API routes (26 modules) · 265 tests · 22 subsystems · 14 migrations · 13/14 integrations live · Two-tier deploy
+75+ modules · 107 API routes (26 modules) · 740 server tests · 22 subsystems · 14 migrations · 13/14 integrations live · Two-tier deploy
 ```
 
 | Subsystem | Module | Ships with | Extend |

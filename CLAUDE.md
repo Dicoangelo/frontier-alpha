@@ -130,7 +130,7 @@ npm run ml:start         # uvicorn on port 8000
 - **Env hygiene:** `client/src/api/websocket.ts::getWebSocketUrl()` `.trim()`s every env read. Trailing-newline regression (`echo | vercel env add`) is now defended at the read site, not just the write site.
 - **Production URL:** https://frontier-alpha.metaventionsai.com
 - **Deployment:** Two-tier — Vercel (SPA + REST, auto-deploy disabled, deploy manually) + Railway (always-on Fastify + Polygon WebSocket, `frontier-alpha-api`)
-- **Tests:** 54 test files (server + client), 265 tests passing (84 server + 181 client)
+- **Tests:** 39 server test files, 740 passing in 4.28s (zero failures, post-v1.2.5 quality sweep — 4 stale v1-Vercel-handler test files archived to `tests/.graveyard/`). Client suite separate.
 - **API surface:** Fully unified via `src/app.ts::buildApp()` — single source of truth for standalone Fastify and Vercel serverless. 107 unique Fastify route registrations across 26 route modules; `api/fastify.ts` catch-all handles them in Vercel. Only 10 Vercel .ts files remain: infrastructure (fastify catch-all, lib/auth, lib/errorHandler, lib/rateLimiter, lib/validation, docs, openapi), runtime-specific (edge/quotes), and platform health checks (api/health, api/v1/health). Zero hand-written Vercel endpoint handlers remain — all business logic lives in `src/routes/`.
 - **Server files:** 80+ .ts files
 - **Supabase migrations:** 14 (last applied: `frontier_rate_limits` via MCP, 2026-05-08 — atomic `rate_limit_check` RPC)

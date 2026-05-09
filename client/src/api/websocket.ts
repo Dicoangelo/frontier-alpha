@@ -506,6 +506,67 @@ class QuoteStreamClient {
   }
 
   /**
+   * US-005: User-initiated WebSocket reset.
+   *
+   * Clears the session-level "abandoned" flag, zeros the failure counters,
+   * forgets the last close code, and triggers a fresh handshake attempt.
+   * Used by the <DegradedService> "Reconnect" affordance on the offline pill.
+   *
+   * Distinct from internal reconnect logic (which respects the abandoned flag
+   * on purpose so we don't loop): this is the explicit "user wants to try
+   * again" lever and therefore allowed to bypass that gate.
+   *
+   * Idempotent on a healthy connection: if WS is already live we no-op
+   * (the existing onopen handler resets counters too, so calling this is
+   * safe). Subscribed symbols are preserved across the reset.
+   */
+  resetWebSocket() {
+    // Tear down whatever transport is currently active so we start clean.
+    // We can't call disconnect() because it would clear subscribedSymbols
+    // implicitly via unsubscribe paths upstream — keep that list intact.
+    if (this.ws) {
+      try { this.ws.close(); } catch { /* ignore */ }
+      this.ws = null;
+    }
+    if (this.eventSource) {
+      try { this.eventSource.close(); } catch { /* ignore */ }
+      this.eventSource = null;
+    }
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
+    this.stopHeartbeat();
+    if (this.reconnectTimer !== null) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
+    // Clear the gates that prevent a fresh WS handshake.
+    this.wsAbandoned = false;
+    this.wsFailureCount = 0;
+    this.reconnectAttempts = 0;
+    this.lastCloseCode = null;
+    this.pendingReconnectAt = null;
+    this.isConnected = false;
+    this.transport = null;
+
+    // Surface the in-flight "reconnecting" state immediately so the banner
+    // updates within the 5s budget instead of waiting for the WS handshake
+    // to resolve.
+    this.setConnectionState('reconnecting');
+    this.notifyHandlers('connectionState', {
+      state: this._connectionState,
+      transport: this.transport,
+      attempt: 0,
+      nextRetryMs: 0,
+    });
+
+    // Fire the fresh handshake.
+    this.connect();
+  }
+
+  /**
    * Disconnect from the stream and clean up ALL timers (US-028: AC#7)
    */
   disconnect() {

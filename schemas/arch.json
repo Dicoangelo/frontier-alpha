@@ -1,20 +1,20 @@
 {
-  "generatedAt": "2026-05-09T05:45:46.551Z",
-  "headSha": "197f9d51fce48999366050a33df5a9ed8d4fdd78",
+  "generatedAt": "2026-05-09T07:23:27.527Z",
+  "headSha": "83f0425ed611dddfff123c749d2fe880b00ebc99",
   "version": "1.2.6",
   "server": {
-    "tsFiles": 113,
-    "tsNonTestFiles": 110,
+    "tsFiles": 119,
+    "tsNonTestFiles": 116,
     "inSourceTestFiles": 3,
-    "routeModules": 26,
-    "endpoints": 108,
+    "routeModules": 29,
+    "endpoints": 111,
     "migrations": 13,
     "vercelApiFiles": 4,
-    "testFiles": 36
+    "testFiles": 37
   },
   "client": {
     "pages": 24,
-    "components": 110,
+    "components": 111,
     "stores": 6,
     "hooks": 13,
     "apiModules": 7,
@@ -90,6 +90,14 @@
       "endpoints": 3
     },
     {
+      "module": "health-errors.ts",
+      "endpoints": 1
+    },
+    {
+      "module": "health-summary.ts",
+      "endpoints": 1
+    },
+    {
       "module": "health.ts",
       "endpoints": 5
     },
@@ -128,6 +136,10 @@
     {
       "module": "social.ts",
       "endpoints": 3
+    },
+    {
+      "module": "synthetic-monitor.ts",
+      "endpoints": 1
     },
     {
       "module": "tax.ts",

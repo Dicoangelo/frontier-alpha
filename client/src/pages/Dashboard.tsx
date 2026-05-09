@@ -9,6 +9,7 @@ import { PositionList } from '@/components/portfolio/PositionList';
 import { FactorExposures } from '@/components/factors/FactorExposures';
 import { RiskMetrics } from '@/components/risk/RiskMetrics';
 import { CognitiveInsight } from '@/components/explainer/CognitiveInsight';
+import { FactorDeltas } from '@/components/explainer/FactorDeltas';
 import { EquityCurve } from '@/components/charts/EquityCurve';
 import { WeightAllocation } from '@/components/portfolio/WeightAllocation';
 import { SkeletonDashboard } from '@/components/shared/Skeleton';
@@ -517,6 +518,7 @@ export function Dashboard() {
       <div
         className="space-y-6 transition-opacity duration-300 ease-out pt-6"
         style={{ opacity: contentVisible ? 1 : 0 }}
+        data-testid="visual-dashboard-ready"
       >
 
         {/* Hero Header — Greeting + Quick Actions + Live Status */}
@@ -620,8 +622,20 @@ export function Dashboard() {
             <div data-tour="risk-metrics" className="min-h-[280px]">
               <RiskMetrics metrics={metrics} />
             </div>
-            <div data-tour="cognitive-insight" className="min-h-[280px]">
-              <CognitiveInsight symbols={portfolio.positions.map((p) => p.symbol)} factors={factors} />
+            {/* CognitiveInsight + FactorDeltas (DASH3-005) share the third
+                column. FactorDeltas is intentionally a sibling to the GPT-4o
+                explainer so the user reads "what's currently happening" and
+                "what changed" in the same visual zone. */}
+            <div className="space-y-5">
+              <div data-tour="cognitive-insight" className="min-h-[280px]">
+                <CognitiveInsight symbols={portfolio.positions.map((p) => p.symbol)} factors={factors} />
+              </div>
+              <div data-tour="factor-deltas" className="min-h-[280px]">
+                <FactorDeltas
+                  portfolioId={portfolio.id}
+                  symbols={portfolio.positions.map((p) => p.symbol)}
+                />
+              </div>
             </div>
           </div>
         </DashZone>

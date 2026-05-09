@@ -101,8 +101,11 @@
       "id": "DASH3-005",
       "title": "Cognitive Insight v2 \u2014 factor-change surfacing",
       "files": [
-        "client/src/components/explainer/CognitiveInsight.tsx",
-        "client/src/hooks/useFactorDeltas.ts"
+        "client/src/components/explainer/FactorDeltas.tsx",
+        "client/src/hooks/useFactorDeltas.ts",
+        "client/src/hooks/factorDeltas.helpers.ts",
+        "client/src/hooks/__tests__/useFactorDeltas.test.ts",
+        "client/src/pages/Dashboard.tsx"
       ],
       "criteria": [
         "Shows top-3 factor changes in the last session: e.g., 'Momentum +8pts, Quality -3pts, Sentiment +12pts'",
@@ -112,11 +115,11 @@
         "Degrades gracefully if ML endpoint 503s \u2014 shows last-known deltas with stale tint",
         "Min-height stable so layout doesn't jump during loading"
       ],
-      "status": "deferred",
+      "status": "done",
       "dependsOn": [
         "DASH3-003"
       ],
-      "completionNotes": "Deferred \u2014 requires ML API surface for factor deltas which is not yet live. Hook/component scaffolding can land once the /api/ml/factor-deltas endpoint exists. No UI blocker \u2014 current CognitiveInsight degrades gracefully."
+      "completionNotes": "Shipped 2026-05-09 as a sibling to <CognitiveInsight> in the tertiary Dashboard zone. Decision: client-computed deltas instead of a new /api/ml/factor-deltas endpoint. The server already exposes current factor exposures via /portfolio/factors/:symbols, so we diff client-side against a localStorage-persisted trailing baseline keyed by frontier:factor-baseline:{portfolioId}, rotated once per UTC day. Hook signature: useFactorDeltas(portfolioId, window='1d', symbols) returns DataSource<FactorDelta[]> per the v1.3.0 US-002 contract. Empty branch (no baseline yet, fresh user) renders <DegradedService> with 'Building factor baseline' copy. Real branch renders top-3 by absolute deltaPct as glass pills with mini Sparkline + one-line category-routed explanation; tinted amethyst-to-cyan backdrop applies when |largestDelta.deltaPct| > 1.0 (1\u03c3 stand-in until we have real per-factor sigma). Min-height 180px stable across loading/empty/data. Pure helpers extracted to factorDeltas.helpers.ts so the 21-test unit suite covers utcDayKey, baseline read/write/freshness, aggregateExposures, computeDeltas (top-3 sort, div-by-zero fallback, direction preservation), and explainDelta (category routing, no em dashes). Hooks count bumped 13 \u2192 14, components 112 \u2192 113 in schemas/arch.json."
     },
     {
       "id": "DASH3-006",

@@ -51,7 +51,7 @@ jobs:
       - name: Install Playwright (chromium only)
         run: npx playwright install --with-deps chromium
 
-      - name: Run visual regression suite (config: tests/visual/playwright.config.cjs)
+      - name: Run visual regression suite
         run: npm run test:visual
         env:
           CI: 'true'

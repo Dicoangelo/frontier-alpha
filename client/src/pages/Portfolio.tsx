@@ -152,29 +152,10 @@ export function Portfolio() {
     }
   };
 
-  if (isLoading) {
-    return <SkeletonPortfolioPage />;
-  }
-
-  if (error) {
-    const handleRetry = () => refetch();
-
-    // Show NetworkError for connection issues, DataLoadError for API errors
-    if (isNetworkError(error)) {
-      return (
-        <div className="glass-slab rounded-2xl p-6">
-          <NetworkError onRetry={handleRetry} />
-        </div>
-      );
-    }
-
-    return (
-      <div className="glass-slab rounded-2xl p-6">
-        <DataLoadError onRetry={handleRetry} error={getErrorMessage(error)} />
-      </div>
-    );
-  }
-
+  // ─── Derived data ─────────────────────────────────────────────────────
+  // Pulled out BEFORE any conditional returns so the hook count stays
+  // constant across renders (loading → loaded transition triggered React
+  // error #310 because useMemo/useCountUp lived below an early return).
   const positions = portfolio?.data?.positions || [];
   const cashBalance = portfolio?.data?.cash || 0;
   const totalValue = portfolio?.data?.totalValue || 0;
@@ -208,6 +189,30 @@ export function Portfolio() {
   const totalValueRef = useCountUp(totalValue, 800);
   const pnlRef = useCountUp(Math.abs(totalPnL), 800);
   const cashRef = useCountUp(cashBalance, 800);
+
+  // ─── Early returns (after all hooks have been called) ─────────────────
+  if (isLoading) {
+    return <SkeletonPortfolioPage />;
+  }
+
+  if (error) {
+    const handleRetry = () => refetch();
+
+    // Show NetworkError for connection issues, DataLoadError for API errors
+    if (isNetworkError(error)) {
+      return (
+        <div className="glass-slab rounded-2xl p-6">
+          <NetworkError onRetry={handleRetry} />
+        </div>
+      );
+    }
+
+    return (
+      <div className="glass-slab rounded-2xl p-6">
+        <DataLoadError onRetry={handleRetry} error={getErrorMessage(error)} />
+      </div>
+    );
+  }
 
   // Add Position Form (reused in both inline and bottom sheet)
   const renderAddPositionForm = (onCancel: () => void) => (

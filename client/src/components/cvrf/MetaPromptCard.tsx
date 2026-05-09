@@ -110,7 +110,12 @@ export function MetaPromptCard() {
     );
   }
 
-  const hasFactorAdjustments = Object.keys(metaPrompt.factorAdjustments).length > 0;
+  // Defend against partial server payloads: every collection we read below
+  // may be missing on the first cycle's meta-prompt.
+  const factorAdjustments = metaPrompt.factorAdjustments ?? {};
+  const keyLearnings = metaPrompt.keyLearnings ?? [];
+  const sourceEpisodes = metaPrompt.sourceEpisodes ?? { previous: 0, current: 0, delta: 0 };
+  const hasFactorAdjustments = Object.keys(factorAdjustments).length > 0;
 
   return (
     <div className="glass-slab rounded-2xl p-6 sm:p-8 animate-enter relative overflow-hidden">
@@ -135,13 +140,13 @@ export function MetaPromptCard() {
         </div>
         <div
           className={`px-2 py-1 mono text-[10px] tracking-[0.2em] uppercase tabular-nums rounded-full ${
-            metaPrompt.sourceEpisodes.delta >= 0
+            sourceEpisodes.delta >= 0
               ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]'
               : 'bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] text-[var(--color-negative)]'
           }`}
         >
-          {metaPrompt.sourceEpisodes.delta >= 0 ? '+' : ''}
-          {(metaPrompt.sourceEpisodes.delta * 100).toFixed(2)}% Δ
+          {sourceEpisodes.delta >= 0 ? '+' : ''}
+          {(sourceEpisodes.delta * 100).toFixed(2)}% Δ
         </div>
       </div>
 
@@ -157,18 +162,18 @@ export function MetaPromptCard() {
       </div>
 
       {/* Key Learnings */}
-      {metaPrompt.keyLearnings.length > 0 && (
+      {keyLearnings.length > 0 && (
         <div className="relative mb-4">
           <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">Key Learnings</p>
           <div className="space-y-1.5">
-            {metaPrompt.keyLearnings.slice(0, expanded ? undefined : 3).map((learning: string, idx: number) => (
+            {keyLearnings.slice(0, expanded ? undefined : 3).map((learning: string, idx: number) => (
               <div key={idx} className="flex items-start gap-2 text-sm text-theme-secondary">
                 <CheckCircle2 className="w-4 h-4 text-[var(--color-accent)] mt-0.5 shrink-0" aria-hidden="true" />
                 <span>{learning}</span>
               </div>
             ))}
           </div>
-          {metaPrompt.keyLearnings.length > 3 && (
+          {keyLearnings.length > 3 && (
             <button
               onClick={() => setExpanded(!expanded)}
               className="mt-2 mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] flex items-center gap-1 animate-press transition-[opacity] duration-150 hover:opacity-80"
@@ -180,7 +185,7 @@ export function MetaPromptCard() {
                 </>
               ) : (
                 <>
-                  <ChevronDown className="w-3 h-3" aria-hidden="true" /> Show {metaPrompt.keyLearnings.length - 3} more
+                  <ChevronDown className="w-3 h-3" aria-hidden="true" /> Show {keyLearnings.length - 3} more
                 </>
               )}
             </button>
@@ -195,7 +200,7 @@ export function MetaPromptCard() {
             Recommended Factor Adjustments
           </p>
           <div className="flex flex-wrap gap-2">
-            {Object.entries(metaPrompt.factorAdjustments)
+            {Object.entries(factorAdjustments)
               .sort(([, a], [, b]) => Math.abs(b as number) - Math.abs(a as number))
               .map(([factor, adjustment]) => (
                 <FactorAdjustmentBadge key={factor} factor={factor} adjustment={adjustment as number} />

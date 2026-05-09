@@ -208,12 +208,19 @@ export const BeliefConstellation = React.memo(function BeliefConstellation() {
   const { nodes, links } = useMemo(() => {
     if (!beliefs) return { nodes: [], links: [] };
 
-    const factorEntries = Object.entries(beliefs.factorWeights);
+    // Defensive: factorWeights/factorConfidences may be undefined when the
+    // server returns a partial payload (fresh user with zero CVRF state).
+    const factorWeightsObj = beliefs.factorWeights ?? {};
+    const factorConfidencesObj = beliefs.factorConfidences ?? {};
+    const factorEntries = Object.entries(factorWeightsObj);
+    if (factorEntries.length === 0) {
+      return { nodes: [], links: [] };
+    }
     const maxWeight = Math.max(...factorEntries.map(([, w]) => Math.abs(w as number)), 0.01);
 
     const nodeList: FactorNode[] = factorEntries.map(([factor, weight]) => {
       const w = weight as number;
-      const confidence = (beliefs.factorConfidences[factor] as number) || 0.5;
+      const confidence = (factorConfidencesObj[factor] as number) || 0.5;
       const category = categorizeFactor(factor);
       const normalizedSize = Math.abs(w) / maxWeight;
       const radius = MIN_NODE_RADIUS + normalizedSize * (MAX_NODE_RADIUS - MIN_NODE_RADIUS);

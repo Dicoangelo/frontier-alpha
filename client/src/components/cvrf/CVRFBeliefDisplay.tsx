@@ -93,11 +93,16 @@ export function CVRFBeliefDisplay() {
     );
   }
 
-  const factors = Object.entries(beliefs.factorWeights).map(([factor, weight]) => ({
+  // Guard against partial belief state on fresh accounts — both maps are
+  // serialized objects from the server and may be missing.
+  const factorWeightsObj = beliefs.factorWeights ?? {};
+  const factorConfidencesObj = beliefs.factorConfidences ?? {};
+  const factors = Object.entries(factorWeightsObj).map(([factor, weight]) => ({
     factor,
     weight: weight as number,
-    confidence: (beliefs.factorConfidences[factor] as number) || 0.5,
+    confidence: (factorConfidencesObj[factor] as number) || 0.5,
   }));
+  const conceptualPriors = beliefs.conceptualPriors ?? [];
 
   return (
     <div className="glass-slab rounded-2xl p-6 sm:p-8 animate-enter">
@@ -137,9 +142,13 @@ export function CVRFBeliefDisplay() {
           <span className="mono text-[10px] tracking-[0.3em] uppercase">Factor Exposures</span>
         </div>
         <div className="space-y-3">
-          {factors.map((f) => (
-            <FactorBar key={f.factor} {...f} />
-          ))}
+          {factors.length === 0 ? (
+            <p className="text-xs text-theme-muted">
+              Factor weights initialize after your first CVRF cycle.
+            </p>
+          ) : (
+            factors.map((f) => <FactorBar key={f.factor} {...f} />)
+          )}
         </div>
       </div>
 
@@ -181,11 +190,11 @@ export function CVRFBeliefDisplay() {
       </div>
 
       {/* Conceptual Priors */}
-      {beliefs.conceptualPriors.length > 0 && (
+      {conceptualPriors.length > 0 && (
         <div className="mt-4 pt-4 border-t border-[var(--color-border-light)]">
           <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">Conceptual Priors</p>
           <div className="flex flex-wrap gap-1">
-            {beliefs.conceptualPriors.slice(0, 5).map((prior) => (
+            {conceptualPriors.slice(0, 5).map((prior) => (
               <span
                 key={prior.id}
                 className={`px-2 py-0.5 text-xs rounded ${
@@ -200,9 +209,9 @@ export function CVRFBeliefDisplay() {
                 {prior.concept.length > 40 ? prior.concept.slice(0, 40) + '...' : prior.concept}
               </span>
             ))}
-            {beliefs.conceptualPriors.length > 5 && (
+            {conceptualPriors.length > 5 && (
               <span className="px-2 py-0.5 text-theme-muted text-xs tabular-nums">
-                +{beliefs.conceptualPriors.length - 5} more
+                +{conceptualPriors.length - 5} more
               </span>
             )}
           </div>

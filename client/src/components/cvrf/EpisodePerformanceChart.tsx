@@ -37,7 +37,7 @@ interface ChartDataPoint {
 
 function buildChartData(episodes: CVRFEpisode[]): ChartDataPoint[] {
   const completed = episodes
-    .filter((e) => e.status === 'completed' && e.portfolioReturn !== undefined)
+    .filter((e) => e && e.status === 'completed' && e.portfolioReturn !== undefined)
     .sort((a, b) => a.episodeNumber - b.episodeNumber);
 
   let cumulative = 1;
@@ -107,7 +107,7 @@ export function EpisodePerformanceChart() {
   const { data: episodesData, isLoading } = useCVRFEpisodes();
   const [metric, setMetric] = useState<MetricView>('returns');
 
-  const episodes = episodesData?.completed || [];
+  const episodes = episodesData?.completed ?? [];
   const chartData = buildChartData(episodes);
 
   if (isLoading) {

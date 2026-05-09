@@ -18,7 +18,7 @@
 <img src="https://img.shields.io/badge/Files-242+-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Files" />
 <img src="https://img.shields.io/badge/Endpoints-107-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Endpoints" />
 <img src="https://img.shields.io/badge/Factors-76-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Factors" />
-<img src="https://img.shields.io/badge/Version-1.2.4-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
+<img src="https://img.shields.io/badge/Version-1.2.5-00d9ff?style=for-the-badge&labelColor=0d1117" alt="Version" />
 
 <br/><br/>
 
@@ -200,7 +200,7 @@ Client config:
 
 <br/>
 
-### Backend Integrations (12 of 14 live — verified by `/api/v1/health/integrations`)
+### Backend Integrations (13 of 14 live — verified by `/api/v1/health/integrations`)
 
 | Integration | Status | Provider |
 |:------------|:------:|:---------|
@@ -216,7 +216,7 @@ Client config:
 | **Email** | ✅ Live | Resend — welcome + subscription-confirmed + alert-fired + weekly-digest |
 | **Weekly digest cron** | ✅ Live | Vercel cron, Mondays 13:00 UTC, real portfolio metrics |
 | **ML sentiment** | ✅ Live | DeepSeek llm-classification |
-| **Rate limiter** | ⚠️ in-memory fallback | Upstash deferred |
+| **Rate limiter** | ✅ Live | Supabase Postgres — `rate_limit_check` RPC, atomic UPSERT, durable across cold starts |
 
 Diagnostic endpoint: `GET /api/v1/health/integrations`
 
@@ -231,7 +231,7 @@ Diagnostic endpoint: `GET /api/v1/health/integrations`
 Every subsystem is a **module** — swap implementations with a config change, zero code changes.
 
 ```
-75+ modules · 107 API routes (26 modules) · 265 tests · 22 subsystems · 13 migrations · 12/14 integrations live · Two-tier deploy
+75+ modules · 107 API routes (26 modules) · 265 tests · 22 subsystems · 14 migrations · 13/14 integrations live · Two-tier deploy
 ```
 
 | Subsystem | Module | Ships with | Extend |
@@ -579,7 +579,7 @@ The client opens at `http://localhost:5173` and the API at `http://localhost:300
 | Endpoint | Method | Description |
 |:---------|:------:|:------------|
 | `/api/v1/health` | GET | Health check |
-| `/api/v1/health/integrations` | GET | Integration diagnostic (12 of 14 live — Vercel WS + Upstash deferred) |
+| `/api/v1/health/integrations` | GET | Integration diagnostic (13 of 14 live — only Vercel WS by-design remains degraded) |
 | `/api/openapi` | GET | OpenAPI specification |
 | `/api/v1/quotes/:symbol` | GET | Real-time quote |
 | `/api/v1/portfolio/factors/:symbols` | GET | Factor exposures |
@@ -716,6 +716,9 @@ npm run ml:start         # Optional Python ML engine (port 8000)
 - [x] `BILLING_ENABLED` kill switch — default-off gate prevents accidental live charges ✅ v1.2.0
 - [x] Weekly digest cron with real portfolio metrics — Mondays 13:00 UTC ✅ v1.2.1
 - [x] Comp-customer guard — webhook clobber protection for founder/lifetime accounts ✅ v1.2.2
+- [x] Health endpoint surfaces v1.2.x integrations + email provider trim ✅ v1.2.3
+- [x] VITE env-newline regression fix + Terms / Privacy pages ✅ v1.2.4
+- [x] Durable rate limiter on Supabase Postgres — no Upstash needed ✅ v1.2.5
 
 <div align="center">
 

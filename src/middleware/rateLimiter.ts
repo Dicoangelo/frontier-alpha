@@ -243,18 +243,31 @@ export function getRateLimiterMode(): 'supabase' | 'memory' {
 // HELPERS
 // ============================================================================
 
+/**
+ * Resolve the originating client IP behind Vercel / Railway / direct Fastify.
+ *
+ * Vercel rewrites `x-forwarded-for` with a chain that often puts a Vercel
+ * PoP IP first (216.73.162.x range), so reading [0] silently rate-limits
+ * the wrong identifier — every request looks like a fresh client. Prefer
+ * Vercel's stable `x-vercel-forwarded-for` and Cloudflare's `cf-connecting-ip`
+ * header when present, then `x-real-ip`, then the LAST entry of XFF (the
+ * one closest to our service, most reliable behind a proxy chain we trust),
+ * and finally Fastify's own `request.ip`.
+ */
+function pickHeader(value: string | string[] | undefined): string | null {
+  if (!value) return null;
+  const v = Array.isArray(value) ? value[0] : value;
+  return v.split(',')[0].trim() || null;
+}
+
 function getClientIp(request: FastifyRequest): string {
-  // Check common proxy headers
-  const forwarded = request.headers['x-forwarded-for'];
-  if (forwarded) {
-    const first = Array.isArray(forwarded) ? forwarded[0] : forwarded.split(',')[0];
-    return first.trim();
-  }
-  const realIp = request.headers['x-real-ip'];
-  if (realIp) {
-    return Array.isArray(realIp) ? realIp[0] : realIp;
-  }
-  return request.ip;
+  return (
+    pickHeader(request.headers['x-vercel-forwarded-for']) ||
+    pickHeader(request.headers['cf-connecting-ip']) ||
+    pickHeader(request.headers['x-real-ip']) ||
+    pickHeader(request.headers['x-forwarded-for']) ||
+    request.ip
+  );
 }
 
 // ============================================================================

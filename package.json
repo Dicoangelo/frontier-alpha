@@ -15,6 +15,8 @@
     "test:e2e": "vitest run tests/e2e",
     "test:coverage": "vitest run --coverage",
     "test:all": "npm run test:unit && cd client && npm run test:run",
+    "test:integration": "INTEGRATION=true vitest run tests/integration --reporter=basic",
+    "test:integration:watch": "INTEGRATION=true vitest tests/integration",
     "lint": "eslint src/",
     "client:dev": "cd client && npm run dev",
     "client:build": "cd client && npm run build",

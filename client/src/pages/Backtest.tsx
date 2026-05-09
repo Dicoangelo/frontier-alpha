@@ -466,7 +466,16 @@ export function Backtest() {
                       y={config.initialCapital}
                       stroke="var(--color-text-muted)"
                       strokeDasharray="3 3"
-                      label={{ value: 'Initial', position: 'left', fill: 'var(--color-text-muted)', fontSize: 11 }}
+                      label={{
+                        value: `Initial $${(config.initialCapital / 1000).toFixed(0)}k`,
+                        // 'left' put the label exactly on top of the Y-axis tick
+                        // (which formats the same value as `$100k`), making them
+                        // collide. 'insideTopRight' parks the label inside the
+                        // plot area, well away from any axis tick.
+                        position: 'insideTopRight',
+                        fill: 'var(--color-text-muted)',
+                        fontSize: 11,
+                      }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>

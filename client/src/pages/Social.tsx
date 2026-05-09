@@ -482,31 +482,61 @@ export function Social() {
   const followingCount = useMemo(() => leaderboard.filter((e) => e.is_following).length, [leaderboard]);
 
   function handleToggleFollow(userId: string) {
+    // Read current following state from the freshest source (leaderboard or
+    // profile / selectedProfile). All three views share the same `is_following`
+    // truth and must flip in lockstep — the previous version only updated
+    // selectedProfile on follow, leaving the profile card and leaderboard out
+    // of sync once the user clicked Unfollow.
+    const currentEntry = leaderboard.find((e) => e.user_id === userId);
+    const currentSelected = selectedProfile?.user_id === userId ? selectedProfile : null;
+    const currentProfile = profile.user_id === userId ? profile : null;
+    const wasFollowing =
+      currentEntry?.is_following ??
+      currentSelected?.is_following ??
+      currentProfile?.is_following ??
+      false;
+    const willFollow = !wasFollowing;
+
     setLeaderboard((prev) =>
-      prev.map((e) => (e.user_id === userId ? { ...e, is_following: !e.is_following } : e))
+      prev.map((e) => (e.user_id === userId ? { ...e, is_following: willFollow } : e))
     );
 
-    // Update profile if currently viewing this user
+    // Viewer's own profile (the user we're "viewing" by default).
     if (profile.user_id === userId) {
       setProfile((prev) => ({
         ...prev,
-        is_following: !prev.is_following,
-        follower_count: prev.is_following ? prev.follower_count - 1 : prev.follower_count + 1,
+        is_following: willFollow,
+        follower_count: prev.follower_count + (willFollow ? 1 : -1),
       }));
     }
 
-    // Show profile card when following a new user from leaderboard
-    const entry = leaderboard.find((e) => e.user_id === userId);
-    if (entry && !entry.is_following) {
+    // Active selected profile card.
+    if (selectedProfile && selectedProfile.user_id === userId) {
+      setSelectedProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              is_following: willFollow,
+              follower_count: prev.follower_count + (willFollow ? 1 : -1),
+            }
+          : prev
+      );
+    }
+
+    // When the user follows a leaderboard entry that has no profile card
+    // open, surface the new follow as a selected profile so they can unfollow
+    // without scrolling to find the row again. (Skipped if a profile is
+    // already open — don't yank focus.)
+    if (willFollow && currentEntry && !selectedProfile) {
       setSelectedProfile({
-        user_id: entry.user_id,
-        display_name: entry.display_name,
-        avatar_url: entry.avatar_url,
+        user_id: currentEntry.user_id,
+        display_name: currentEntry.display_name,
+        avatar_url: currentEntry.avatar_url,
         bio: '',
-        follower_count: 0,
+        follower_count: 1,
         following_count: 0,
-        total_return: entry.total_return,
-        sharpe_ratio: entry.sharpe_ratio,
+        total_return: currentEntry.total_return,
+        sharpe_ratio: currentEntry.sharpe_ratio,
         is_following: true,
       });
     }

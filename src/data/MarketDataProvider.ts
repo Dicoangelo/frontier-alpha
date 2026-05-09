@@ -332,7 +332,23 @@ export class MarketDataProvider {
       }
     }
 
-    // Fetch from Alpha Vantage
+    // Provider chain — try Polygon REST first (higher rate limits, no daily
+    // cap on the free tier), fall back to Alpha Vantage when Polygon errors
+    // or is not configured. Alpha Vantage free tier is 25 req/day so we
+    // hammer Polygon first to preserve the AV quota.
+    if (this.config.polygonApiKey) {
+      try {
+        const prices = await this.fetchPolygonPrices(upperSymbol, days);
+        if (prices.length > 0) {
+          this.priceCache.set(upperSymbol, { prices, timestamp: now });
+          await this.cacheHistoricalPricesToSupabase(upperSymbol, prices);
+          return prices;
+        }
+      } catch (e) {
+        logger.warn({ err: e, symbol: upperSymbol }, 'Polygon historical price error');
+      }
+    }
+
     if (this.config.alphaVantageApiKey) {
       try {
         const prices = await this.fetchAlphaVantagePrices(upperSymbol, days);
@@ -792,23 +808,107 @@ export class MarketDataProvider {
   // ALPHA VANTAGE INTEGRATION
   // ============================================================================
 
+  /**
+   * Polygon REST historical aggregates — preferred path because the free tier
+   * is 5 req/min (vs Alpha Vantage's 25 req/day). The Polygon `aggs` endpoint
+   * returns daily OHLCV with one HTTP call per symbol.
+   *
+   * Returns [] on any error so the caller falls through to Alpha Vantage.
+   */
+  private async fetchPolygonPrices(symbol: string, days: number): Promise<Price[]> {
+    const end = new Date();
+    const start = new Date();
+    // Pull a few extra calendar days to absorb weekends + holidays so the
+    // returned trading-day count >= `days` whenever possible.
+    const calendarDays = Math.ceil(days * 1.6);
+    start.setDate(end.getDate() - calendarDays);
+
+    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+    const url =
+      `https://api.polygon.io/v2/aggs/ticker/${encodeURIComponent(symbol)}` +
+      `/range/1/day/${fmt(start)}/${fmt(end)}` +
+      `?adjusted=true&sort=asc&limit=5000&apiKey=${this.config.polygonApiKey}`;
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      logger.warn(
+        { symbol, status: response.status },
+        'Polygon HTTP non-200 for historical aggregates'
+      );
+      return [];
+    }
+
+    const data = (await response.json()) as {
+      status?: string;
+      error?: string;
+      results?: Array<{ t: number; o: number; h: number; l: number; c: number; v: number }>;
+    };
+
+    if (data.status === 'ERROR' || data.error) {
+      logger.warn(
+        { symbol, reason: String(data.error ?? data.status).slice(0, 240) },
+        'Polygon refused historical aggregates (key invalid or rate-limited)'
+      );
+      return [];
+    }
+
+    const results = data.results ?? [];
+    if (results.length === 0) return [];
+
+    const prices: Price[] = results.slice(-days).map((r) => ({
+      symbol,
+      timestamp: new Date(r.t),
+      open: r.o,
+      high: r.h,
+      low: r.l,
+      close: r.c,
+      volume: r.v,
+    }));
+
+    return prices;
+  }
+
   private async fetchAlphaVantagePrices(
     symbol: string,
     days: number
   ): Promise<Price[]> {
-    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&outputsize=full&apikey=${this.config.alphaVantageApiKey}`;
-    
+    // 2024: TIME_SERIES_DAILY_ADJUSTED moved to a paid tier. The free key
+    // hits TIME_SERIES_DAILY instead. Volume column is `5. volume` on the
+    // free endpoint (was `6. volume` on the adjusted endpoint).
+    // outputsize=compact = 100 trading days, full = 20+ years. We pick based
+    // on the requested window so we burn the daily quota carefully.
+    const outputsize = days > 100 ? 'full' : 'compact';
+    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&outputsize=${outputsize}&apikey=${this.config.alphaVantageApiKey}`;
+
     const response = await fetch(url);
-    if (!response.ok) return [];
-    
+    if (!response.ok) {
+      logger.warn(
+        { symbol, status: response.status },
+        'Alpha Vantage HTTP non-200'
+      );
+      return [];
+    }
+
     const data = await response.json();
+
+    // Alpha Vantage signals rate limit / premium block via these keys
+    // INSTEAD of an HTTP error. Surface it so the caller can pick a fallback
+    // (Supabase cache, Polygon REST, etc.) instead of silently returning [].
+    if (data['Information'] || data['Note'] || data['Error Message']) {
+      const reason = data['Information'] || data['Note'] || data['Error Message'];
+      logger.warn(
+        { symbol, reason: String(reason).slice(0, 240) },
+        'Alpha Vantage refused (rate limit, premium gate, or invalid key)'
+      );
+      return [];
+    }
+
     const timeSeries = data['Time Series (Daily)'];
-    
     if (!timeSeries) return [];
-    
+
     const prices: Price[] = [];
     const dates = Object.keys(timeSeries).slice(0, days).reverse();
-    
+
     for (const date of dates) {
       const day = timeSeries[date];
       prices.push({
@@ -818,10 +918,10 @@ export class MarketDataProvider {
         high: parseFloat(day['2. high']),
         low: parseFloat(day['3. low']),
         close: parseFloat(day['4. close']),
-        volume: parseInt(day['6. volume']),
+        volume: parseInt(day['5. volume']),
       });
     }
-    
+
     return prices;
   }
 

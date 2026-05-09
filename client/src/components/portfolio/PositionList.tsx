@@ -1,64 +1,49 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { Card } from '@/components/shared/Card';
 import { Badge } from '@/components/shared/Badge';
+import { quotesApi, type HistoricalPrices } from '@/api/quotes';
 import type { Position, Quote } from '@/types';
 
-// Seeded pseudo-random for deterministic sparkline data
-function seededRandom(seed: number) {
-  let s = seed;
-  return () => {
-    s = (s * 16807 + 0) % 2147483647;
-    return s / 2147483647;
-  };
-}
-
-// Hash a string to a numeric seed
-function symbolSeed(symbol: string): number {
-  let hash = 0;
-  for (let i = 0; i < symbol.length; i++) {
-    hash = (hash * 31 + symbol.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash);
-}
-
-// Generate 7 mock data points for sparkline
-function getSparklinePoints(symbol: string, unrealizedPnL: number): number[] {
-  const rand = seededRandom(symbolSeed(symbol));
-  const points: number[] = [100];
-  for (let i = 1; i < 7; i++) {
-    points.push(points[i - 1] * (1 + (rand() - 0.48) * 0.04));
-  }
-  // Bias last point direction to match pnl sign
-  if (unrealizedPnL > 0 && points[6] < points[0]) {
-    const factor = points[0] / points[6] * (1 + rand() * 0.03);
-    return points.map((p, i) => p * (1 + (i / 6) * (factor - 1)));
-  } else if (unrealizedPnL < 0 && points[6] > points[0]) {
-    const factor = points[0] / points[6] * (1 - rand() * 0.03);
-    return points.map((p, i) => p * (1 - (i / 6) * (1 - factor)));
-  }
-  return points;
-}
-
-// Pure SVG sparkline component
-const Sparkline = React.memo(function Sparkline({ symbol, unrealizedPnL }: { symbol: string; unrealizedPnL: number }) {
-  const points = useMemo(() => getSparklinePoints(symbol, unrealizedPnL), [symbol, unrealizedPnL]);
-  const min = Math.min(...points);
-  const max = Math.max(...points);
-  const range = max - min || 1;
+// Real-data sparkline rendered from 7-day daily closes.
+// Loading: thin shimmering placeholder bar.
+// Empty/failed: render nothing (the parent cell falls back to em-dash).
+const Sparkline = React.memo(function Sparkline({
+  closes,
+  isLoading,
+}: {
+  closes: number[] | undefined;
+  isLoading: boolean;
+}) {
   const W = 40;
   const H = 16;
 
-  const coords = points.map((v, i) => {
-    const x = (i / (points.length - 1)) * W;
+  if (isLoading) {
+    return (
+      <span
+        aria-hidden="true"
+        className="inline-block shrink-0 rounded-sm bg-[var(--color-border-light)] animate-pulse-subtle"
+        style={{ width: W, height: 4, marginTop: 6, marginBottom: 6 }}
+      />
+    );
+  }
+
+  if (!closes || closes.length < 2) {
+    return null;
+  }
+
+  const min = Math.min(...closes);
+  const max = Math.max(...closes);
+  const range = max - min || 1;
+
+  const coords = closes.map((v, i) => {
+    const x = (i / (closes.length - 1)) * W;
     const y = H - ((v - min) / range) * H;
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   });
 
-  const isUp = points[points.length - 1] >= points[0];
-  const color = useMemo(() => {
-    const varName = isUp ? '--color-positive' : '--color-negative';
-    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-  }, [isUp]);
+  const isUp = closes[closes.length - 1] >= closes[0];
+  const colorVar = isUp ? '--color-positive' : '--color-negative';
 
   return (
     <svg
@@ -71,7 +56,7 @@ const Sparkline = React.memo(function Sparkline({ symbol, unrealizedPnL }: { sym
       <polyline
         points={coords.join(' ')}
         fill="none"
-        stroke={color}
+        stroke={`var(${colorVar})`}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -79,6 +64,57 @@ const Sparkline = React.memo(function Sparkline({ symbol, unrealizedPnL }: { sym
     </svg>
   );
 });
+
+interface SparklineEntry {
+  closes: number[] | undefined;
+  isLoading: boolean;
+  changePct: number | null; // 7-day % change vs prior close, or null when unavailable
+}
+
+/**
+ * Fetch 7-day daily closes for every position in parallel and expose them
+ * keyed by symbol. Each query fails closed (returns null) so a single bad
+ * ticker can't blank the table.
+ */
+function useSparklineData(positions: Position[]): Map<string, SparklineEntry> {
+  // Stable list of symbols (uppercased) for query keys
+  const symbols = useMemo(
+    () => Array.from(new Set(positions.map((p) => p.symbol.toUpperCase()))).sort(),
+    [positions]
+  );
+
+  const results = useQueries({
+    queries: symbols.map((symbol) => ({
+      queryKey: ['quotes', symbol, 'history', 7] as const,
+      queryFn: () => quotesApi.getHistoricalPrices(symbol, 7),
+      staleTime: 5 * 60 * 1000, // 5 min — daily-bar data is slow-moving
+      retry: 1,
+    })),
+  });
+
+  return useMemo(() => {
+    const map = new Map<string, SparklineEntry>();
+    symbols.forEach((symbol, i) => {
+      const r = results[i];
+      const data = r.data as HistoricalPrices | null | undefined;
+      const closes = data?.closes;
+      let changePct: number | null = null;
+      if (closes && closes.length >= 2) {
+        const first = closes[0];
+        const last = closes[closes.length - 1];
+        if (Number.isFinite(first) && Number.isFinite(last) && first !== 0) {
+          changePct = ((last - first) / first) * 100;
+        }
+      }
+      map.set(symbol, {
+        closes,
+        isLoading: r.isLoading,
+        changePct,
+      });
+    });
+    return map;
+  }, [symbols, results]);
+}
 
 type SortField = 'symbol' | 'shares' | 'currentPrice' | 'value' | 'unrealizedPnL' | 'weight';
 type SortDir = 'asc' | 'desc';
@@ -154,6 +190,7 @@ export function PositionList({ positions, quotes }: PositionListProps) {
   const [sortField, setSortField] = useState<SortField>('value');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const flashMap = useQuoteFlash(quotes);
+  const sparklineMap = useSparklineData(positions);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -254,8 +291,9 @@ export function PositionList({ positions, quotes }: PositionListProps) {
       {/* Mobile card layout — hidden at md and above */}
       <div className="md:hidden space-y-3">
         {sorted.map((position) => {
-          const quote = quotes?.get(position.symbol);
-          const changePercent = quote?.changePercent ?? 0;
+          const sparkline = sparklineMap.get(position.symbol.toUpperCase());
+          const changePct = sparkline?.changePct ?? null;
+          const isLoadingSpark = sparkline?.isLoading ?? false;
           const positionValue = position.shares * position.currentPrice;
 
           const flash = flashMap.get(position.symbol);
@@ -307,11 +345,21 @@ export function PositionList({ positions, quotes }: PositionListProps) {
                   <p className="text-[var(--color-text)] font-medium">{position.shares}</p>
                 </div>
                 <div className="col-span-2">
-                  <p className="mb-0.5">Day Change</p>
-                  <div className="mt-0.5">
-                    <Badge variant={changePercent >= 0 ? 'success' : 'danger'}>
-                      {changePercent >= 0 ? '↑' : '↓'} {Math.abs(changePercent).toFixed(2)}%
-                    </Badge>
+                  <p className="mb-0.5">7D Change</p>
+                  <div className="mt-0.5 flex items-center gap-2">
+                    {isLoadingSpark ? (
+                      <span
+                        aria-hidden="true"
+                        className="inline-block h-3 w-16 rounded-sm bg-[var(--color-border-light)] animate-pulse-subtle"
+                      />
+                    ) : changePct === null ? (
+                      <span className="text-[var(--color-text-muted)]">—</span>
+                    ) : (
+                      <Badge variant={changePct >= 0 ? 'success' : 'danger'}>
+                        {changePct >= 0 ? '+' : ''}
+                        {changePct.toFixed(2)}%
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
@@ -347,8 +395,9 @@ export function PositionList({ positions, quotes }: PositionListProps) {
           </thead>
           <tbody>
             {sorted.map((position) => {
-              const quote = quotes?.get(position.symbol);
-              const changePercent = quote?.changePercent ?? 0;
+              const sparkline = sparklineMap.get(position.symbol.toUpperCase());
+              const changePct = sparkline?.changePct ?? null;
+              const isLoadingSpark = sparkline?.isLoading ?? false;
               const positionValue = position.shares * position.currentPrice;
 
               const flash = flashMap.get(position.symbol);
@@ -382,7 +431,7 @@ export function PositionList({ positions, quotes }: PositionListProps) {
                   </td>
                   <td className="py-3 px-4 text-right">
                     <div className="flex justify-end">
-                      <Sparkline symbol={position.symbol} unrealizedPnL={position.unrealizedPnL} />
+                      <Sparkline closes={sparkline?.closes} isLoading={isLoadingSpark} />
                     </div>
                   </td>
                   <td className={`py-3 px-4 text-right font-semibold ${pnlColor(position.unrealizedPnL)}`}>
@@ -396,9 +445,19 @@ export function PositionList({ positions, quotes }: PositionListProps) {
                     {(position.weight * 100).toFixed(1)}%
                   </td>
                   <td className="py-3 px-4 text-right">
-                    <Badge variant={changePercent >= 0 ? 'success' : 'danger'}>
-                      {changePercent >= 0 ? '↑' : '↓'} {Math.abs(changePercent).toFixed(2)}%
-                    </Badge>
+                    {isLoadingSpark ? (
+                      <span
+                        aria-hidden="true"
+                        className="inline-block h-3 w-14 rounded-sm bg-[var(--color-border-light)] animate-pulse-subtle"
+                      />
+                    ) : changePct === null ? (
+                      <span className="text-[var(--color-text-muted)]">—</span>
+                    ) : (
+                      <Badge variant={changePct >= 0 ? 'success' : 'danger'}>
+                        {changePct >= 0 ? '+' : ''}
+                        {changePct.toFixed(2)}%
+                      </Badge>
+                    )}
                   </td>
                 </tr>
               );

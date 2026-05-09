@@ -124,6 +124,51 @@ export const handlers = [
   // ========================
   // Factors
   // ========================
+  http.get(`${API_BASE}/api/v1/portfolio/factors/history/:symbols`, ({ params, request }) => {
+    const url = new URL(request.url);
+    const window = url.searchParams.get('window') ?? '1d';
+    if (!['1d', '5d'].includes(window)) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'UNSUPPORTED_WINDOW', message: 'window must be one of 1d, 5d' },
+        },
+        { status: 400 },
+      );
+    }
+    const symbols = (params.symbols as string).split(',');
+    const current: Record<string, ReturnType<typeof mockFactorExposures>> = {};
+    const prior: Record<string, ReturnType<typeof mockFactorExposures>> = {};
+    for (const raw of symbols) {
+      const symbol = raw.trim();
+      current[symbol] = mockFactorExposures(symbol);
+      // Prior snapshot: shift each exposure by a deterministic small delta so
+      // the test fixture exercises the "real change" branch of computeDeltas.
+      prior[symbol] = mockFactorExposures(symbol).map((f) => ({
+        ...f,
+        exposure: f.exposure * 0.95,
+      }));
+    }
+    const today = new Date();
+    const priorDate = new Date(today);
+    priorDate.setUTCDate(priorDate.getUTCDate() - (window === '5d' ? 5 : 1));
+    return HttpResponse.json(
+      {
+        success: true,
+        data: {
+          current,
+          prior,
+          window,
+          asOfDate: today.toISOString().slice(0, 10),
+          priorDate: priorDate.toISOString().slice(0, 10),
+        },
+        dataSource: 'mock',
+        meta: mockMeta(),
+      },
+      { headers: { 'X-Data-Source': 'mock' } },
+    );
+  }),
+
   http.get(`${API_BASE}/api/v1/portfolio/factors/:symbols`, ({ params }) => {
     const symbols = (params.symbols as string).split(',');
     const data: Record<string, ReturnType<typeof mockFactorExposures>> = {};

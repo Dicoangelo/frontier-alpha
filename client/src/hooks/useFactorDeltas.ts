@@ -5,28 +5,27 @@
  * `DataSource<T>` discriminated union so empty / demo / real renders are a
  * compile-time concern, not a runtime audit.
  *
- * Why client-computed instead of a new `/api/ml/factor-deltas` endpoint?
+ * Two strategies, in priority order:
  *
- *   - The server already exposes the current factor exposures via
- *     `/portfolio/factors/:symbols`. That's the authoritative read.
- *   - A second endpoint would have to either re-derive deltas server-side
- *     from the same data, or persist a per-user trailing baseline. Both add
- *     server surface for what is fundamentally a client-side diff.
- *   - The trailing baseline lives naturally in localStorage keyed by
- *     `frontier:factor-baseline:{portfolioId}`. Once-per-UTC-day rotation
- *     gives a stable 1-day prior without a DB write.
- *   - When a real ML endpoint exists later, this hook's signature stays
- *     identical; only the internal implementation changes.
+ *   Strategy 1 — server-derived history (preferred):
+ *     `GET /api/v1/portfolio/factors/history/:symbols?window=1d|5d` returns
+ *     both the current snapshot and a `window`-prior snapshot in one round
+ *     trip. The prior snapshot is computed by truncating the same Price[]
+ *     series the current snapshot uses (see `src/factors/historySlice.ts`),
+ *     so the user gets a real day-1 delta without waiting for localStorage
+ *     to accumulate. This is the "remove the wait til tomorrow" UX gap that
+ *     the original DASH3-005 deferred.
  *
- * Baseline strategy (in priority order):
- *   1. If the factors API ever returns historical exposure (today it does
- *      not, see `client/src/api/factors.ts`), diff vs the `window`-prior
- *      snapshot. Wired as a no-op fall-through for forward compatibility.
- *   2. Otherwise, persist the prior-session exposures to localStorage and
- *      diff current vs stored. Roll the baseline once per UTC day on first
- *      load so reloads inside the same UTC day don't smear the diff.
- *   3. If no baseline yet (first-time user / fresh signup), return `EMPTY`.
- *      The DataSource contract handles the empty render.
+ *   Strategy 2 — localStorage baseline (fallback):
+ *     Persist the prior-session exposures to localStorage and diff current
+ *     vs stored. Roll the baseline once per UTC day on first load. Used
+ *     only when the server endpoint is unreachable, errors out, or returns
+ *     an empty prior snapshot. This preserves the original DASH3-005
+ *     behavior so the card never regresses below "client-only" coverage.
+ *
+ *   Strategy 3 — empty:
+ *     Neither strategy yielded a delta. The DataSource contract handles the
+ *     empty render.
  *
  * Top-3 selection: sort by `|deltaPct|` desc, take 3.
  *
@@ -37,7 +36,7 @@
  */
 
 import { useEffect, useMemo } from 'react';
-import { useFactors } from './useFactors';
+import { useFactors, useFactorsHistory } from './useFactors';
 import { type DataSource, EMPTY, wrapReal } from '@/lib/dataSource';
 import {
   aggregateExposures,
@@ -72,10 +71,6 @@ export interface UseFactorDeltasResult {
  * because Dashboard.tsx today owns its symbols list locally; coupling this
  * hook to a store the dashboard doesn't currently write would be a hidden
  * refactor that violates the "no incidental refactors" constraint.
- *
- * The window argument is preserved for the future-history strategy. Today
- * only the localStorage-baseline path runs; window is a no-op until the
- * server-side history field lands.
  */
 export function useFactorDeltas(
   portfolioId: string,
@@ -83,17 +78,25 @@ export function useFactorDeltas(
   symbols: string[] = [],
 ): UseFactorDeltasResult {
   const factorsQuery = useFactors(symbols);
+  const historyQuery = useFactorsHistory(symbols, window);
 
-  // Derive the delta envelope as a pure read off the React Query cache + the
-  // localStorage baseline. Keeping this in useMemo (not setState-in-useEffect)
-  // avoids the cascading-render lint and keeps the render deterministic for
-  // the same inputs.
-  //
-  // Strategy 1: API-provided history. Today the API has none. When it gains
-  // a `history` field (server-side change, future story), this is where we'd
-  // pick the `window`-prior snapshot. Until then, fall through to strategy 2.
   const data = useMemo<DataSource<FactorDelta[]>>(() => {
-    void window;
+    // ── Strategy 1: server-derived current + prior snapshot ─────────────
+    const history = historyQuery.data;
+    if (history && history.current.length > 0 && history.prior.length > 0) {
+      const priorAggregated = aggregateExposures(history.prior);
+      const deltas = computeDeltas(history.current, priorAggregated);
+      if (deltas.length > 0) {
+        return wrapReal(deltas);
+      }
+      // Server returned both snapshots but they aggregate to identical
+      // exposures (rare; usually means the price series didn't actually
+      // change between snapshot dates — e.g., over a weekend with window=1d).
+      // Fall through to localStorage so we don't render a falsely-empty card
+      // when a longer-horizon baseline exists locally.
+    }
+
+    // ── Strategy 2: localStorage baseline ───────────────────────────────
     const factorsResp = factorsQuery.data;
     if (!factorsResp || !factorsResp.factors || factorsResp.factors.length === 0) {
       return EMPTY;
@@ -109,15 +112,13 @@ export function useFactorDeltas(
       const deltas = computeDeltas(current, baseline.exposures);
       return deltas.length > 0 ? wrapReal(deltas) : EMPTY;
     }
-    // Same-day baseline OR no baseline: render the empty state. The baseline
-    // capture / rotation is handled in the side-effect below.
     return EMPTY;
-  }, [factorsQuery.data, portfolioId, window]);
+  }, [historyQuery.data, factorsQuery.data, portfolioId]);
 
-  // Side effect: capture / rotate the baseline once per UTC day. This is the
-  // only legitimate effect; it writes to localStorage, which is exactly the
-  // "synchronize React state with an external system" pattern useEffect is
-  // for. The render path above does not depend on this write.
+  // Side effect: capture / rotate the localStorage baseline once per UTC
+  // day. Continues to run even when Strategy 1 succeeds, because the local
+  // baseline is the offline fallback — losing it would re-introduce a
+  // wait-til-tomorrow gap if the server endpoint ever degrades.
   useEffect(() => {
     const factorsResp = factorsQuery.data;
     if (!factorsResp || !factorsResp.factors || factorsResp.factors.length === 0) return;
@@ -137,6 +138,6 @@ export function useFactorDeltas(
 
   return {
     data,
-    isLoading: factorsQuery.isLoading,
+    isLoading: factorsQuery.isLoading || historyQuery.isLoading,
   };
 }

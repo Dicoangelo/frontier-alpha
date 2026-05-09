@@ -5,6 +5,14 @@ import { logger } from '../observability/logger.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { PerformanceAttribution } from '../analytics/PerformanceAttribution.js';
 import type { APIResponse, OptimizationConfig, Price } from '../types/index.js';
+import {
+  BASE_HISTORY_DAYS,
+  SUPPORTED_WINDOWS,
+  lastBarDate,
+  sliceAsOf,
+  windowToDays,
+  type HistoryWindow,
+} from '../factors/historySlice.js';
 
 interface RouteContext {
   server: {
@@ -383,6 +391,103 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
         return reply.status(500).send({
           success: false,
           error: { code: 'INTERNAL_ERROR', message: 'Factor calculation failed' },
+        });
+      }
+    }
+  );
+
+  // GET /api/v1/portfolio/factors/history/:symbols?window=1d|5d
+  //
+  // Server-derived companion to /portfolio/factors/:symbols. Returns BOTH the
+  // current factor exposures AND a window-prior snapshot in a single round
+  // trip, so the client can render the FactorDeltas card without waiting a
+  // UTC day for the localStorage baseline to capture.
+  //
+  // The prior snapshot is computed by truncating the same Price[] series the
+  // current snapshot uses (see src/factors/historySlice.ts for the rationale)
+  // and re-running calculateExposures. No new persistence layer.
+  fastify.get<{
+    Params: { symbols: string };
+    Querystring: { window?: string };
+    Reply: APIResponse<unknown>;
+  }>(
+    '/api/v1/portfolio/factors/history/:symbols',
+    async (request, reply) => {
+      const start = Date.now();
+      const symbols = request.params.symbols.split(',');
+      const rawWindow = request.query?.window ?? '1d';
+      if (!SUPPORTED_WINDOWS.includes(rawWindow as HistoryWindow)) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: 'UNSUPPORTED_WINDOW',
+            message: `window must be one of ${SUPPORTED_WINDOWS.join(', ')}`,
+          },
+        });
+      }
+      const window = rawWindow as HistoryWindow;
+      const windowDays = windowToDays(window);
+      const fetchDays = BASE_HISTORY_DAYS + windowDays;
+
+      try {
+        const prices = new Map<string, Price[]>();
+        const skipped: string[] = [];
+        for (const symbol of [...symbols, 'SPY']) {
+          try {
+            const symbolPrices = await server.dataProvider.getHistoricalPrices(symbol, fetchDays);
+            prices.set(symbol, symbolPrices);
+          } catch (err) {
+            logger.warn({ err, symbol }, 'factors-history: skipping symbol');
+            skipped.push(symbol);
+          }
+        }
+
+        if (prices.size === 0) {
+          return reply.status(500).send({
+            success: false,
+            error: {
+              code: 'NO_FACTOR_DATA',
+              message: 'All symbol fetches failed',
+              skipped,
+            },
+          });
+        }
+
+        const resolvedSymbols = symbols.filter((s) => prices.has(s));
+        const priorPrices = sliceAsOf(prices, windowDays);
+        const priorResolvedSymbols = resolvedSymbols.filter((s) => priorPrices.has(s));
+
+        const [current, prior] = await Promise.all([
+          server.factorEngine.calculateExposures(resolvedSymbols, prices),
+          priorResolvedSymbols.length > 0
+            ? server.factorEngine.calculateExposures(priorResolvedSymbols, priorPrices)
+            : Promise.resolve(new Map<string, unknown[]>()),
+        ]);
+
+        const benchmark = prices.get('SPY') ?? [];
+        const priorBenchmark = priorPrices.get('SPY') ?? [];
+
+        return {
+          success: true,
+          data: {
+            current: Object.fromEntries(current),
+            prior: Object.fromEntries(prior),
+            window,
+            asOfDate: lastBarDate(benchmark),
+            priorDate: lastBarDate(priorBenchmark),
+          },
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+            ...(skipped.length > 0 ? { skipped } : {}),
+          },
+        };
+      } catch (error) {
+        logger.error({ err: error }, 'Factor history calculation failed');
+        return reply.status(500).send({
+          success: false,
+          error: { code: 'INTERNAL_ERROR', message: 'Factor history calculation failed' },
         });
       }
     }

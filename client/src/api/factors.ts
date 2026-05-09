@@ -18,6 +18,44 @@ interface ApiResponse {
   meta?: { timestamp: string; requestId: string; latencyMs: number };
 }
 
+export type FactorHistoryWindow = '1d' | '5d';
+
+export interface PortfolioFactorsHistory {
+  current: FactorExposureWithCategory[];
+  prior: FactorExposureWithCategory[];
+  window: FactorHistoryWindow;
+  asOfDate: string;
+  priorDate: string;
+}
+
+interface ApiHistoryResponse {
+  success: boolean;
+  data: {
+    current: Record<string, FactorExposure[]>;
+    prior: Record<string, FactorExposure[]>;
+    window: FactorHistoryWindow;
+    asOfDate: string;
+    priorDate: string;
+  };
+  meta?: { timestamp: string; requestId: string; latencyMs: number };
+}
+
+function flattenWithCategory(
+  bySymbol: Record<string, FactorExposure[]>,
+): FactorExposureWithCategory[] {
+  const out: FactorExposureWithCategory[] = [];
+  for (const [symbol, factors] of Object.entries(bySymbol)) {
+    for (const factor of factors) {
+      out.push({
+        ...factor,
+        symbol,
+        category: categorizeFactorName(factor.factor),
+      });
+    }
+  }
+  return out;
+}
+
 export const factorsApi = {
   getFactors: async (symbols: string[]): Promise<PortfolioFactors> => {
     if (symbols.length === 0) {
@@ -28,20 +66,9 @@ export const factorsApi = {
     // Transform backend response { data: { AAPL: [...], NVDA: [...] } }
     // into { factors: [...all factors with symbols and categories...] }
     const factorsBySymbol = (response as unknown as ApiResponse).data || {};
-    const allFactors: FactorExposureWithCategory[] = [];
-
-    for (const [symbol, factors] of Object.entries(factorsBySymbol)) {
-      for (const factor of factors) {
-        allFactors.push({
-          ...factor,
-          symbol,
-          category: categorizeFactorName(factor.factor),
-        });
-      }
-    }
 
     return {
-      factors: allFactors,
+      factors: flattenWithCategory(factorsBySymbol),
       lastUpdated: (response as unknown as ApiResponse).meta?.timestamp || new Date().toISOString(),
     };
   },
@@ -54,6 +81,40 @@ export const factorsApi = {
   refreshFactors: async (symbols: string[]): Promise<PortfolioFactors> => {
     // Use the same endpoint - no separate refresh endpoint on backend
     return factorsApi.getFactors(symbols);
+  },
+
+  /**
+   * Server-derived companion to getFactors — returns the current snapshot
+   * AND a `window`-prior snapshot in one call. Used by useFactorDeltas to
+   * skip the localStorage-baseline accumulation gap (DASH3-005 follow-up).
+   *
+   * Backend computes the prior snapshot by truncating the same Price[]
+   * series the current snapshot uses (see src/factors/historySlice.ts).
+   */
+  getFactorsHistory: async (
+    symbols: string[],
+    window: FactorHistoryWindow = '1d',
+  ): Promise<PortfolioFactorsHistory> => {
+    if (symbols.length === 0) {
+      return {
+        current: [],
+        prior: [],
+        window,
+        asOfDate: '',
+        priorDate: '',
+      };
+    }
+    const response = await api.get<ApiHistoryResponse>(
+      `/portfolio/factors/history/${symbols.join(',')}?window=${window}`,
+    );
+    const payload = (response as unknown as ApiHistoryResponse).data;
+    return {
+      current: flattenWithCategory(payload?.current ?? {}),
+      prior: flattenWithCategory(payload?.prior ?? {}),
+      window: payload?.window ?? window,
+      asOfDate: payload?.asOfDate ?? '',
+      priorDate: payload?.priorDate ?? '',
+    };
   },
 };
 

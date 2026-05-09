@@ -307,9 +307,13 @@ export function Dashboard() {
     try {
       // Fetch portfolio
       let portfolioData = await fetchPortfolio();
+      const isAuthenticated = Boolean(localStorage.getItem('supabase_token'));
 
-      // If empty portfolio, seed from imported_symbols (welcome handoff),
-      // then analyze_symbols (raw landing flow), then demo.
+      // If empty portfolio, seed from imported_symbols (welcome handoff)
+      // or analyze_symbols (raw landing flow). Authenticated users with no
+      // positions see the empty state — never synthesized demo numbers.
+      // Unauthenticated visitors fall back to the demo portfolio so the
+      // dashboard remains a useful preview surface.
       if (!portfolioData || !portfolioData.positions || portfolioData.positions.length === 0) {
         const stored =
           localStorage.getItem('imported_symbols') ||
@@ -337,8 +341,18 @@ export function Dashboard() {
             }
           } catch { /* ignore parse errors */ }
         }
-        if (!portfolioData || portfolioData.positions.length === 0) {
+        if (
+          (!portfolioData || portfolioData.positions.length === 0) &&
+          !isAuthenticated
+        ) {
           portfolioData = getDemoPortfolio();
+        }
+        if (!portfolioData) {
+          portfolioData = {
+            ...EMPTY_PORTFOLIO,
+            id: 'user',
+            name: 'My Portfolio',
+          };
         }
       }
 
@@ -429,16 +443,42 @@ export function Dashboard() {
     );
   }
 
-  // Show empty state if no positions
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  // Show empty state if no positions. Keep the greeting + quick actions row
+  // visible above so the page never feels blank, but hide every card that
+  // would otherwise render synthesized numbers (Risk Metrics, AI Insights,
+  // Holdings, Equity curve).
   if (portfolio.positions.length === 0 && portfolio.id !== 'demo') {
     return (
-      <div className="min-h-[400px] flex items-center justify-center bg-[var(--color-bg)] rounded-xl shadow-lg animate-fade-in">
-        <EmptyPortfolio onAddPosition={() => navigate('/portfolio')} />
-      </div>
+      <PullToRefresh onRefresh={loadPortfolioData} className="min-h-screen">
+        <div
+          className="space-y-6 transition-opacity duration-300 ease-out pt-6"
+          style={{ opacity: contentVisible ? 1 : 0 }}
+        >
+          {/* Hero Header — Greeting + Quick Actions (kept visible per US-005) */}
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold">
+                <span className="text-gradient-brand">{getGreeting()}</span>
+                <span className="text-[var(--color-text)]">, {getDisplayName(user?.email)}</span>
+              </h1>
+              <p className="text-sm text-[var(--color-text-muted)] mt-1">{today}</p>
+              <div className="flex items-center gap-2 mt-3 flex-wrap">
+                <QuickAction to="/portfolio" icon={<Plus className="w-3 h-3" />} label="Add Position" />
+                <QuickAction to="/optimize" icon={<Zap className="w-3 h-3" />} label="Optimize" />
+                <QuickAction to="/trade" icon={<ArrowRightLeft className="w-3 h-3" />} label="Trade" />
+              </div>
+            </div>
+          </div>
+
+          <div className="animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
+            <EmptyPortfolio onAddPosition={() => navigate('/portfolio')} />
+          </div>
+        </div>
+      </PullToRefresh>
     );
   }
-
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   return (
     <PullToRefresh onRefresh={loadPortfolioData} className="min-h-screen">

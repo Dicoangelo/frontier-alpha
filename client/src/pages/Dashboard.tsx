@@ -316,7 +316,10 @@ export function Dashboard() {
     try {
       // Fetch portfolio
       let portfolioData = await fetchPortfolio();
-      const isAuthenticated = Boolean(localStorage.getItem('supabase_token'));
+      // v1.3.1: read auth state from authStore (already hydrated via US-003
+      // isReady gate before this hook fires) — wrong-key localStorage check
+      // was always returning false and forcing demo data even for authed users.
+      const isAuthenticated = Boolean(useAuthStore.getState().session);
 
       // If empty portfolio, seed from imported_symbols (welcome handoff)
       // or analyze_symbols (raw landing flow). Authenticated users with no

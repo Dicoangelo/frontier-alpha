@@ -7,6 +7,87 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-05-09
+
+### End-User Reliability Wave — 9 user stories shipped via 3 waves of parallel agents
+
+The v1.2.6 walkthrough exposed a deeper structural problem: 740 tests passed
+while `/api/v1/portfolio` 404'd for everyone in production. Test counts and
+integration health flags lied. v1.3.0 closes that class of "boundary bugs"
+AND threads in five compounding patterns so each fix produces durable
+infrastructure beyond the immediate bug.
+
+**Stories shipped (in three parallel waves):**
+
+- **US-001 — Architecture refresh + machine-checkable arch contract**
+  - `d1fd833` chore(docs): refresh ARCHITECTURE + CONTEXT current state
+  - `56e54ac` feat(scripts): arch-scanner + schemas/arch.json + CI hook
+  - Operations runbook (daily / weekly / incident playbook / rotation runbook / upgrade triggers)
+  - Auth state machine documented in ARCHITECTURE.md
+
+- **US-002 — Mock-data integrity + DataSource type contract**
+  - `6f392af` feat(integrity): DataSource<T> type contract + 6-page mock-data audit
+  - New `client/src/lib/dataSource.ts` discriminated union; mock-data leaks now TS errors
+  - Dashboard / ML / Tax / Alerts / Options / Earnings audited for fabricated state
+
+- **US-003 — Auth lifecycle hardening (eliminate cold-load 401 race)**
+  - `aaceecb` feat(auth): isReady flag + ProtectedRoute gate
+  - `e210990` feat(auth): 401 retry-with-refresh in API interceptor
+  - 6 hooks gated on `isReady && session?.access_token`
+  - ARCHITECTURE.md auth lifecycle diagram refined with predicates + render permissions
+
+- **US-004 — Health probe upgrade (real upstream calls + standardized shape)**
+  - `b8594fd` feat(health): real-upstream probes + standardized shape + JSON Schema
+  - 7 real-upstream probes (Polygon, AV, Stripe, Resend, Supabase, ConnectAlpaca crypto, weekly digest cron)
+  - `IntegrationHealthEntry` type extended with `latencyMs / lastError / lastSuccessAt / ttlSeconds`
+  - `schemas/health-integration.json` + ajv runtime validation
+
+- **US-005 — WebSocket UX + reusable DegradedService primitive**
+  - `0df78bd` feat(ws): wsClient.resetWebSocket() user-initiated reset
+  - `7edb80d` feat(ui): <DegradedService> primitive + ConnectionStatus refactor
+  - Reusable for future degraded paths (rate limiter, AI explainer, billing webhook lag)
+
+- **US-006 — Provider rate-limit architecture + extracted cache module**
+  - `a4ab925` feat(cache): extracted Memory/Supabase/Composite cache module + tests (18 new)
+  - `7aea9f5` refactor(market-data): MarketDataProvider uses CompositeCache
+  - `84ad491` feat(cache): CacheWarmer + boot-time warm + hourly cron + README upgrade callout
+  - `inflightHistoricalPrices` request coalescing preserved separately
+  - Hand-rolled `ConcurrencyLimiter(4)` for Polygon free-tier ceiling
+
+- **US-007 — Authenticated smoke tests + golden state + synthetic monitor**
+  - `153a8d6` feat(test): integration auth-helper + golden-state fixture
+  - `1a45356` feat(test): protected routes smoke suite + api-shape schema
+  - `89e7fd8` feat(observability): synthetic monitor fills US-008 stub with smoke assertions
+  - 17 assertions across 13 protected routes, schema-validated via ajv
+  - Synthetic monitor cron runs every 15 minutes against production
+  - Golden state fixture (`tests/fixtures/golden-state.sql`) reusable for screenshots / smoke / support
+
+- **US-008 — Observability (error counter + request tracing + weekly digest)**
+  - `1cbc81d` feat(observability): error counter + request tracing + weekly health digest
+  - `ErrorCounter` singleton; `RequestTracing` middleware threads `X-Request-Id` client → server → console
+  - Weekly health-summary email cron (Sundays 13:00 UTC)
+  - Synthetic monitor results auto-feed `errorCounter`
+
+- **US-009 — Env audit + schema-driven contract**
+  - `83f0425` feat(env): schema-driven contract + audit script + CI hook
+  - `schemas/env-schema.json` declares every production env var with regex/length contracts
+  - `scripts/audit-env.mjs` lint mode + full-audit mode
+  - GitHub Action runs weekly + on every PR that touches env references
+
+**Compounding outputs delivered (the durable yield):**
+- 5 reusable primitives: `DataSource<T>`, `<DegradedService>`, `MemoryCache`/`SupabaseCache`/`CompositeCache`, `auth-helper.mintTestSession()`, `RequestTracing`
+- 4 machine-checkable schemas: `arch.json`, `env-schema.json`, `health-integration.json`, `api-shape.json`
+- 1 documented state machine: auth lifecycle
+- 1 golden-state fixture: canonical seeded test user
+- 1 operations runbook: daily / weekly / incident / rotation / upgrade triggers
+- 1 synthetic monitor: production smoke tests on 15-min cron sharing CI assertions
+
+**Tests:** 740 (v1.2.6) → **765 passing**, 41 test files, ~3 second runtime.
+
+**New cron entries:** `/api/v1/cron/warm-cache` (hourly), `/api/v1/digest/health-summary` (Sundays 13:00 UTC), `/api/v1/cron/synthetic-monitor` (every 15 min).
+
+---
+
 ## [1.2.6] - 2026-05-08
 
 ### End-user walkthrough fixes — 9 user stories shipped via parallel agents

@@ -1,0 +1,14 @@
+13. [GET] https://frontier-alpha.metaventionsai.com/api/v1/billing/subscription => [200] 
+26. [GET] https://frontier-alpha.metaventionsai.com/api/v1/portfolio => [401] 
+27. [GET] https://frontier-alpha.metaventionsai.com/api/v1/alerts => [200] 
+28. [GET] https://frontier-alpha.metaventionsai.com/api/v1/portfolio/factors/NVDA,MSFT,AAPL,GOOGL,AMZN => [200] 
+29. [GET] https://frontier-alpha.metaventionsai.com/api/v1/quotes/AAPL/history?days=7 => [502] 
+30. [GET] https://frontier-alpha.metaventionsai.com/api/v1/quotes/AMZN/history?days=7 => [502] 
+31. [GET] https://frontier-alpha.metaventionsai.com/api/v1/quotes/GOOGL/history?days=7 => [200] 
+32. [GET] https://frontier-alpha.metaventionsai.com/api/v1/quotes/MSFT/history?days=7 => [502] 
+33. [GET] https://frontier-alpha.metaventionsai.com/api/v1/quotes/NVDA/history?days=7 => [502] 
+47. [GET] https://frontier-alpha.metaventionsai.com/api/v1/portfolio => [200] 
+49. [GET] https://frontier-alpha.metaventionsai.com/api/v1/earnings/upcoming?symbols=NVDA&daysAhead=30 => [200] 
+50. [GET] https://frontier-alpha.metaventionsai.com/api/v1/cvrf/beliefs => [200] 
+
+Note: 51 static requests not shown, run with "static" option to see them.

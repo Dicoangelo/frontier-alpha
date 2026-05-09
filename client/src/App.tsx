@@ -4,18 +4,24 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import '@/stores/themeStore'; // Initialize theme (dark mode) on load
 import { Layout } from '@/components/layout/Layout';
-import { Landing } from '@/pages/Landing';
 import { Login } from '@/pages/Login';
-import { ResetPassword } from '@/pages/ResetPassword';
-import { Terms } from '@/pages/Terms';
-import { Privacy } from '@/pages/Privacy';
 import { Spinner } from '@/components/shared/Spinner';
 import { ToastContainer } from '@/components/shared/Toast';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { OnboardingProvider } from '@/components/onboarding';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
-// Lazy load heavy pages for better initial load performance
+// Lazy load heavy pages for better initial load performance.
+// Landing is the marketing entry point (HeroEnhanced + TypingTickerDemo +
+// HowItWorks + TrustComparison + DemoPreview, plus dozens of SVG icons).
+// Repeat users hitting /login don't need any of that JS in their entry
+// chunk; lazy gives them ~150kB lighter first paint.
+// Terms / Privacy / ResetPassword are rarely-visited single-purpose pages
+// where a one-RTT lazy load is invisible to the user.
+const Landing = lazy(() => import('@/pages/Landing').then(m => ({ default: m.Landing })));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword').then(m => ({ default: m.ResetPassword })));
+const Terms = lazy(() => import('@/pages/Terms').then(m => ({ default: m.Terms })));
+const Privacy = lazy(() => import('@/pages/Privacy').then(m => ({ default: m.Privacy })));
 const Dashboard = lazy(() => import('@/pages/Dashboard').then(m => ({ default: m.Dashboard })));
 const Portfolio = lazy(() => import('@/pages/Portfolio').then(m => ({ default: m.Portfolio })));
 const Factors = lazy(() => import('@/pages/Factors').then(m => ({ default: m.Factors })));

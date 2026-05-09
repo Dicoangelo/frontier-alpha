@@ -120,7 +120,7 @@ export function HowItWorks({ onCTAClick }: HowItWorksProps): React.JSX.Element {
       ref={sectionRef}
       id="how-it-works"
       aria-labelledby={headingId}
-      className="relative isolate overflow-hidden py-20 sm:py-24 lg:py-32 px-4 sm:px-6"
+      className="relative isolate overflow-hidden py-12 sm:py-16 lg:py-20 px-4 sm:px-6"
     >
       {/* Inline scoped keyframes — defined here so this component is self-contained */}
       <style>{`

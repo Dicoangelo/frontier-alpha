@@ -212,7 +212,7 @@ export function TrustComparison({ className = '' }: TrustComparisonProps) {
   return (
     <section
       aria-labelledby="why-frontier-alpha-heading"
-      className={`relative isolate overflow-hidden py-20 sm:py-24 lg:py-32 px-4 sm:px-6 ${className}`}
+      className={`relative isolate overflow-hidden py-12 sm:py-16 lg:py-20 px-4 sm:px-6 ${className}`}
     >
       {/* Inlined marquee keyframes — frontier-alpha index.css does not declare these */}
       <style>{`

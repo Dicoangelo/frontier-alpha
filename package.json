@@ -17,6 +17,8 @@
     "test:all": "npm run test:unit && cd client && npm run test:run",
     "test:integration": "INTEGRATION=true vitest run tests/integration --reporter=basic",
     "test:integration:watch": "INTEGRATION=true vitest tests/integration",
+    "test:visual": "playwright test --config=tests/visual/playwright.config.cjs",
+    "test:visual:update": "playwright test --config=tests/visual/playwright.config.cjs --update-snapshots",
     "lint": "eslint src/",
     "client:dev": "cd client && npm run dev",
     "client:build": "cd client && npm run build",
@@ -59,6 +61,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@playwright/test": "^1.59.1",
     "@types/node": "^20.11.5",
     "@types/pg": "^8.11.0",
     "@types/pino": "^7.0.4",

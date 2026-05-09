@@ -106,7 +106,7 @@ export function Factors() {
     .filter(f => Math.abs(f.tStat) > 1.96).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="visual-factors-ready">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
         <div>

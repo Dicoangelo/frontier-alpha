@@ -269,7 +269,7 @@ export function Earnings() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh} className="min-h-full">
-      {content}
+      <div data-testid="visual-earnings-ready">{content}</div>
     </PullToRefresh>
   );
 }

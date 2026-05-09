@@ -137,7 +137,7 @@ export function Options() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="visual-options-ready">
       <MockDataBanner force pageKey="options" />
 
       {/* Header */}

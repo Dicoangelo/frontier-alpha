@@ -78,7 +78,7 @@ export function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
+    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col" data-testid="visual-landing-ready">
       <div className="sovereign-bar fixed top-0 left-0 right-0 z-50" />
 
       {/* ── Top auth strip — Sign In + Sign Up always visible ─────────────── */}

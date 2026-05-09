@@ -469,8 +469,10 @@ async function probeWeeklyDigestCron(serverPort?: number): Promise<Partial<Integ
     (vercelUrl ? `https://${vercelUrl}` : `http://127.0.0.1:${port}`);
   try {
     const resp = await fetchWithTimeout(
-      `${base.replace(/\/$/, '')}/api/v1/digest/run?key=${encodeURIComponent(cronSecret)}`,
-      { method: 'HEAD' },
+      // Vercel rewrites HEAD → GET on the catch-all, so HEAD didn't avoid
+      // running the cron — we use ?probe=true to short-circuit after auth.
+      `${base.replace(/\/$/, '')}/api/v1/digest/run?key=${encodeURIComponent(cronSecret)}&probe=true`,
+      { method: 'GET' },
     );
     // We don't run the cron — HEAD just exercises the gate. 200/204/405/503
     // all indicate the route is reachable and the secret is acceptable. A 401

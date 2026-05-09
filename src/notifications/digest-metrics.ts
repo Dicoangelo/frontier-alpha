@@ -80,6 +80,17 @@ export async function computeWeeklyMetrics(userId: string): Promise<WeeklyMetric
           marketDataProvider.getHistoricalPrices(symbol, 14).catch(() => [] as Price[]),
         ]);
 
+        // If both data sources gave us nothing, skip the symbol rather than
+        // synthesizing a 0% move from the avg_cost fallback. A 0% move would
+        // pollute the worst-mover surface with a ticker we have no data on.
+        if (!quote && history.length === 0) {
+          logger.warn(
+            { userId, symbol },
+            'Digest metrics: skipping symbol — no quote and no history',
+          );
+          return;
+        }
+
         const currentPrice = quote?.last ?? priorClose(history, Date.now()) ?? fallback;
         const priorPrice = priorClose(history, cutoffMs) ?? currentPrice;
 

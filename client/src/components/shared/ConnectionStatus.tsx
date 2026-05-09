@@ -1,22 +1,66 @@
 import { useEffect, useState } from 'react';
-import { Wifi, WifiOff } from 'lucide-react';
 import { wsClient, type ConnectionState, type TransportType } from '@/api/websocket';
+import { DegradedService } from './DegradedService';
 
 /**
- * Visual indicator + banner for WebSocket connection state.
- * - connected: hidden
- * - reconnecting: yellow banner with attempt + countdown
- * - offline (US-006): red banner, "Live feed offline · using polling fallback",
- *   no animation. Terminal — does not flicker back to "Reconnecting".
- * - disconnected: red banner, "Offline · Data Stale"
+ * Visual indicator for WebSocket connection state.
  *
- * US-028: Shows transport type (WS/SSE/Poll) and reconnect countdown.
+ * US-005: refactored on top of <DegradedService>. Connection-specific
+ * concerns (close code, attempt counter, transport label, reconnect
+ * countdown) are massaged into the primitive's `service` + `reason` +
+ * `onRetry` shape. Future degradations (rate limiter, AI explainer, billing
+ * webhook lag) inherit the same affordance for free.
+ *
+ * State → render:
+ * - connected: nothing
+ * - reconnecting: warning pill with attempt + countdown in tooltip; no
+ *   onRetry (reconnect is already in flight)
+ * - offline (terminal, US-006): warning pill with close-code reason; clicking
+ *   Reconnect calls wsClient.resetWebSocket() — clears wsAbandoned, resets
+ *   counters, fresh handshake. On success the banner clears within 5s; on
+ *   failure it returns to offline within 5s with the new close code.
+ * - disconnected (transient pre-connect): warning pill, no onRetry.
+ *
+ * US-028: transport label (WS/SSE/Poll) lives in the tooltip reason.
  */
+
+const CLOSE_CODE_LABELS: Record<number, string> = {
+  1000: 'Normal closure',
+  1001: 'Endpoint going away',
+  1002: 'Protocol error',
+  1003: 'Unsupported data',
+  1005: 'No status received',
+  1006: 'Abnormal closure (no close frame)',
+  1007: 'Invalid frame payload',
+  1008: 'Policy violation',
+  1009: 'Message too big',
+  1010: 'Mandatory extension missing',
+  1011: 'Internal server error',
+  1012: 'Service restart',
+  1013: 'Try again later',
+  1014: 'Bad gateway',
+  1015: 'TLS handshake failure',
+};
+
+function describeCloseCode(code: number | null): string {
+  if (code === null) return 'Connection unavailable';
+  const label = CLOSE_CODE_LABELS[code] ?? 'Unknown reason';
+  return `WebSocket closed with code ${code} (${label})`;
+}
+
+function transportLabelFor(transport: TransportType): string | null {
+  if (transport === 'websocket') return 'WS';
+  if (transport === 'sse') return 'SSE';
+  if (transport === 'polling') return 'Poll';
+  return null;
+}
+
 export function ConnectionStatus() {
   const [state, setState] = useState<ConnectionState>(wsClient.connectionState);
   const [transport, setTransport] = useState<TransportType>(wsClient.activeTransport);
   const [attempt, setAttempt] = useState(0);
   const [countdownMs, setCountdownMs] = useState<number | null>(null);
+  const [closeCode, setCloseCode] = useState<number | null>(wsClient.closeCode);
 
   useEffect(() => {
     return wsClient.on('connectionState', (data: unknown) => {
@@ -25,6 +69,7 @@ export function ConnectionStatus() {
         transport?: TransportType;
         attempt?: number;
         nextRetryMs?: number;
+        closeCode?: number | null;
       };
       setState(payload.state);
       if (payload.transport !== undefined) setTransport(payload.transport);
@@ -32,6 +77,8 @@ export function ConnectionStatus() {
       if (payload.nextRetryMs !== undefined) setCountdownMs(payload.nextRetryMs);
       else if (payload.state === 'connected') setCountdownMs(null);
       else if (payload.state === 'offline') setCountdownMs(null);
+      if (payload.closeCode !== undefined) setCloseCode(payload.closeCode);
+      else setCloseCode(wsClient.closeCode);
     });
   }, []);
 
@@ -55,78 +102,50 @@ export function ConnectionStatus() {
 
   if (state === 'connected') return null;
 
-  const transportLabel = transport === 'websocket' ? 'WS' : transport === 'sse' ? 'SSE' : transport === 'polling' ? 'Poll' : null;
+  const transportLabel = transportLabelFor(transport);
   const countdownSec = countdownMs !== null ? Math.ceil(countdownMs / 1000) : null;
 
-  const isReconnecting = state === 'reconnecting';
-  const isOffline = state === 'offline';
+  // Build the tooltip "reason" string per state. The pill copy stays generic
+  // ("Live feed offline · polling fallback") inside <DegradedService>; the
+  // close-code / attempt detail shows on hover/long-press as required by the
+  // US-005 acceptance criteria.
+  let reason: string;
+  if (state === 'reconnecting') {
+    const parts: string[] = ['Reconnecting'];
+    if (attempt > 0) parts.push(`attempt ${attempt}`);
+    if (countdownSec !== null && countdownSec > 0) parts.push(`next try in ${countdownSec}s`);
+    if (transportLabel) parts.push(`transport ${transportLabel}`);
+    reason = parts.join(' · ');
+  } else if (state === 'offline') {
+    const detail = describeCloseCode(closeCode);
+    reason = transportLabel ? `${detail} · transport ${transportLabel}` : detail;
+  } else {
+    // disconnected (transient)
+    reason = transportLabel ? `Disconnected · transport ${transportLabel}` : 'Disconnected · data may be stale';
+  }
 
-  // 'offline' (terminal) and 'disconnected' both render red. 'offline' uses a
-  // static dot (no pulse) to communicate "this is a settled state, not a
-  // transient one we're working on".
-  const railClass = isReconnecting
-    ? 'before:bg-[var(--color-warning)]'
-    : 'before:bg-[var(--color-negative)]';
-  const textClass = isReconnecting
-    ? 'text-[var(--color-warning)]'
-    : 'text-[var(--color-negative)]';
-  const glowClass = isReconnecting
-    ? 'shadow-[0_18px_60px_-20px_rgba(245,158,11,0.45)]'
-    : 'shadow-[0_18px_60px_-20px_rgba(239,68,68,0.45)]';
-  const dotClass = isReconnecting
-    ? 'bg-[var(--color-warning)] animate-pulse-subtle'
-    : 'bg-[var(--color-negative)]'; // offline: no animation, terminal state
+  // Only the terminal 'offline' state exposes the manual reconnect button.
+  // While 'reconnecting' the WS layer is already trying — clicking Reconnect
+  // would just kick off a duplicate handshake.
+  const onRetry = state === 'offline' ? () => wsClient.resetWebSocket() : undefined;
 
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      data-connection-state={state}
-      className={`
-        glass-slab-floating fixed top-20 right-4 z-40
-        rounded-full pl-4 pr-3 py-2 flex items-center gap-2
-        before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:rounded-l-full
-        ${railClass} ${glowClass} ${textClass}
-        transition-[opacity,transform] duration-300
-      `}
-    >
-      <span
-        className={`inline-block w-1.5 h-1.5 rounded-full ${dotClass}`}
-        aria-hidden="true"
-      />
-      {isReconnecting ? (
-        <>
-          <Wifi className="w-3.5 h-3.5" aria-hidden="true" />
-          <span className="mono text-[10px] tracking-[0.25em] uppercase font-medium">
-            Reconnecting
-            {attempt > 0 && ` · ${attempt}`}
-            {countdownSec !== null && countdownSec > 0 && ` · ${countdownSec}s`}
-            {transportLabel && <span className="ml-1 opacity-70">· {transportLabel}</span>}
-          </span>
-        </>
-      ) : isOffline ? (
-        <>
-          <WifiOff className="w-3.5 h-3.5" aria-hidden="true" />
-          <span className="mono text-[10px] tracking-[0.25em] uppercase font-medium">
-            Live Feed Offline · Polling Fallback
-          </span>
-        </>
-      ) : (
-        <>
-          <WifiOff className="w-3.5 h-3.5" aria-hidden="true" />
-          <span className="mono text-[10px] tracking-[0.25em] uppercase font-medium">
-            Offline · Data Stale
-            {transportLabel && <span className="ml-1 opacity-70">· {transportLabel}</span>}
-          </span>
-        </>
-      )}
-    </div>
+    <DegradedService
+      service="Live feed"
+      reason={reason}
+      severity="warning"
+      onRetry={onRetry}
+      position="pill-bottom-right"
+    />
   );
 }
 
 /**
  * Small dot indicator for use in headers/toolbars.
  * US-028: Also shows transport badge.
+ *
+ * Unchanged in US-005 — the dot is a glanceable status, not a degradation
+ * affordance, so it doesn't need the <DegradedService> chrome.
  */
 export function ConnectionDot() {
   const [state, setState] = useState<ConnectionState>(wsClient.connectionState);
@@ -147,7 +166,7 @@ export function ConnectionDot() {
     offline: 'bg-[var(--color-negative)]',
   };
 
-  const transportLabel = transport === 'websocket' ? 'WS' : transport === 'sse' ? 'SSE' : transport === 'polling' ? 'Poll' : '';
+  const transportLabel = transportLabelFor(transport);
   const labels: Record<ConnectionState, string> = {
     connected: `Live feed connected${transportLabel ? ` (${transportLabel})` : ''}`,
     reconnecting: 'Reconnecting to live feed',

@@ -335,7 +335,7 @@ export function HeroEnhanced({ onAnalyze, onLoadDemo, isAnalyzing }: HeroEnhance
         style={glowStyle}
       />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-20 pb-16 sm:pt-28 sm:pb-24">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-20 pb-8 sm:pt-24 sm:pb-10">
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-10 lg:gap-14 items-center">
           {/* ─── LEFT: brand + headline + CTA ───────────────────────── */}
           <div className="animate-fade-in-up">

@@ -1,0 +1,114 @@
+name: Environment Audit
+
+# US-009: schema-driven env contract.
+#
+# Runs in two modes:
+#
+#   1. schema-only — every PR. Greps process.env.X and import.meta.env.X
+#      references in src/, client/src/, api/, tests/, scripts/ and fails if
+#      any X is missing from schemas/env-schema.json. NO Vercel access required.
+#
+#   2. value-audit — weekly cron + manual dispatch. Pulls Vercel production envs
+#      and validates trailing whitespace, embedded \n, length, and regex against
+#      schemas/env-schema.json. Requires the VERCEL_TOKEN repo secret.
+#
+# Operator setup for the value-audit:
+#   1. Create a Vercel personal access token: https://vercel.com/account/tokens
+#   2. Add it as a repo secret named VERCEL_TOKEN (Settings → Secrets → Actions)
+#   3. Optionally also add VERCEL_ORG_ID and VERCEL_PROJECT_ID secrets if the
+#      action runs in a fresh checkout without `vercel link` state.
+#
+# The schema-only check has zero secret dependency — it runs on every PR.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'client/src/**'
+      - 'api/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'schemas/env-schema.json'
+      - '.github/workflows/env-audit.yml'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'client/src/**'
+      - 'api/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'schemas/env-schema.json'
+  schedule:
+    # Mondays 12:00 UTC — weekly drift check against live production envs.
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+
+jobs:
+  # Cheap PR-time check. No secrets needed. Catches new process.env.X references
+  # added without a matching schema entry.
+  schema-only:
+    name: Schema-Only (no secrets)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Verify every env reference has a schema entry
+        run: node scripts/audit-env.mjs --schema-only
+
+  # Expensive cron-time check. Requires VERCEL_TOKEN. Pulls production envs and
+  # validates them against the schema. Skipped when the secret is absent (so
+  # forks running CI don't fail on missing creds).
+  value-audit:
+    name: Vercel Production Value Audit
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Confirm VERCEL_TOKEN secret is present
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::error::VERCEL_TOKEN repo secret is not set."
+            echo "::error::Add it at Settings → Secrets → Actions → New repository secret."
+            echo "::error::Create the token at https://vercel.com/account/tokens"
+            exit 1
+          fi
+
+      - name: Link Vercel project
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            mkdir -p .vercel
+            cat > .vercel/project.json <<EOF
+          { "orgId": "$VERCEL_ORG_ID", "projectId": "$VERCEL_PROJECT_ID" }
+          EOF
+          else
+            vercel link --yes --token "$VERCEL_TOKEN"
+          fi
+
+      - name: Run env audit against Vercel production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: node scripts/audit-env.mjs

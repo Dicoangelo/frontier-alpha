@@ -17,7 +17,11 @@ import {
 } from 'recharts';
 import { Target } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
-import { rechartsTooltipStyle } from '@/lib/theme';
+import {
+  rechartsTooltipStyle,
+  rechartsTooltipItemStyle,
+  rechartsTooltipLabelStyle,
+} from '@/lib/theme';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -94,10 +98,10 @@ function FactorAttributionInner({ waterfall, topDrivers }: FactorAttributionProp
             <Tooltip
               contentStyle={{
                 ...rechartsTooltipStyle,
-                backgroundColor: 'var(--color-bg-tooltip)',
-                color: 'var(--color-text-inverse)',
                 backdropFilter: 'blur(12px)',
               }}
+              itemStyle={rechartsTooltipItemStyle}
+              labelStyle={rechartsTooltipLabelStyle}
               formatter={(_value: unknown, name: unknown, props: unknown) => {
                 if (name === 'base') return [null, null];
                 const p = props as { payload: { rawValue: number; type: string } };

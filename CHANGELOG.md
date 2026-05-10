@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.7] - 2026-05-09
+
+### Fix: align CacheWarmer to 300 days so /factors/history hits cache
+
+Continuation of the v1.3.6 investigation. The cache-key alignment fix was correct but insufficient: the dashboard's first /factors/history call after a Vercel cold-start still got 500 because the Supabase cache layer was empty for 300-day requests.
+
+Root cause: `src/data/CacheWarmer.ts::warmSymbols` defaulted to `days = 252`. SupabaseCache.getPrices requires `rows.length >= days * coverage` (default coverage 0.9, so 270 rows needed for a 300-day request). With only 252 rows warmed per symbol, every 300-day request from the factors endpoints fell through to Polygon — and Polygon's free-tier 5 req/min limit blew immediately on the dashboard's burst of /factors + /quotes/history × 5 + /factors/history.
+
+Fix: bump CacheWarmer default to `days = 300` so the warmer's hourly cron populates Supabase with the same depth the factors endpoints request. Both `/portfolio/factors/:symbols` and `/portfolio/factors/history/:symbols` now hit the warm cache and never reach Polygon.
+
+After deploy: trigger the warmer once via `GET /api/v1/cron/warm-cache?key=$CRON_SECRET` to refresh the cache to 300 days. The hourly cron continues from there.
+
+---
+
 ## [1.3.6] - 2026-05-09
 
 ### Fix: FactorDeltas card stuck on "Return tomorrow" in production

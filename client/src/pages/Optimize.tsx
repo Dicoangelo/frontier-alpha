@@ -15,47 +15,11 @@ import { Spinner } from '@/components/shared/Spinner';
 import { UpgradeGate } from '@/components/shared/UpgradeGate';
 import { SectionErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { MonteCarloChart } from '@/components/charts/MonteCarloChart';
+import type { OptimizationConfig, OptimizationResult } from '@/types';
 
-type OptimizationObjective = 'max_sharpe' | 'min_volatility' | 'risk_parity' | 'target_volatility';
-
-interface OptimizationConfig {
-  objective: OptimizationObjective;
-  riskFreeRate: number;
-  targetVolatility?: number;
-  constraints?: {
-    minWeight?: number;
-    maxWeight?: number;
-    targetVolatility?: number;
-  };
-}
-
-interface MonteCarloResult {
-  medianReturn: number;
-  var95: number;
-  cvar95: number;
-  probPositive: number;
-  confidenceInterval: {
-    p5: number;
-    p25: number;
-    p50: number;
-    p75: number;
-    p95: number;
-  };
-  simulations?: number[];
-}
-
-interface OptimizationResult {
-  weights: Record<string, number>;
-  expectedReturn: number;
-  expectedVolatility: number;
-  sharpeRatio: number;
-  factorExposures: Array<{
-    factor: string;
-    exposure: number;
-    contribution: number;
-  }>;
-  monteCarlo?: MonteCarloResult;
-}
+// Page-local objective union — kept here because the picker uses this exact
+// subset and the shared OptimizationConfig.objective is the canonical superset.
+type OptimizationObjective = OptimizationConfig['objective'];
 
 // Canonical input class — matches Settings/Backtest/LoginForm pattern.
 const inputClass =
@@ -466,13 +430,18 @@ function OptimizeContent() {
           style={{ animationDelay: '200ms', animationFillMode: 'both' }}
         >
           <MonteCarloChart
-            result={result.monteCarlo || {
-              // Generate Monte Carlo estimate from optimization result if not provided by API
-              medianReturn: result.expectedReturn,
-              var95: -result.expectedVolatility * 1.645,
-              cvar95: -result.expectedVolatility * 2.063,
-              probPositive: 0.5 + (result.expectedReturn / (result.expectedVolatility * 2)) * 0.3,
-              confidenceInterval: {
+            result={{
+              // Build a chart-compatible MonteCarloResult by merging server
+              // values (when present) with synthesized confidence-interval
+              // estimates derived from expectedReturn ± vol * z-scores.
+              // The shared OptimizationResult.monteCarlo confidenceInterval
+              // is optional; the chart prop requires it.
+              medianReturn: result.monteCarlo?.medianReturn ?? result.expectedReturn,
+              var95: result.monteCarlo?.var95 ?? -result.expectedVolatility * 1.645,
+              cvar95: result.monteCarlo?.cvar95 ?? -result.expectedVolatility * 2.063,
+              probPositive: result.monteCarlo?.probPositive ?? 0.5 + (result.expectedReturn / (result.expectedVolatility * 2)) * 0.3,
+              simulations: result.monteCarlo?.simulations,
+              confidenceInterval: result.monteCarlo?.confidenceInterval ?? {
                 p5: result.expectedReturn - result.expectedVolatility * 1.645,
                 p25: result.expectedReturn - result.expectedVolatility * 0.675,
                 p50: result.expectedReturn,

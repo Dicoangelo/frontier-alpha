@@ -9,6 +9,10 @@ import { useStripeStatus } from '@/hooks/useIntegrationsHealth';
 
 const NOTIFY_EMAIL = 'dico@metaventionsai.com';
 
+// Pricing-page-local UI shape — drives the static PLANS table. Not an
+// API contract; the server-side Stripe billing flow uses `priceId` only.
+// Keep local; promote to shared types only if Settings or another page
+// starts rendering plan cards too.
 interface PlanConfig {
   name: string;
   price: string;

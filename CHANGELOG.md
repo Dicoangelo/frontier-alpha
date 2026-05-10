@@ -7,6 +7,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2026-05-10
+
+### Phase E — Production-readiness gate review + semantic version bump
+
+End of the MASTERPLAN execution started this session. All five phases
+shipped in 14 commits (v1.3.4 → v1.3.14) with four production deploys.
+This is the version bump that marks the semantic shift: structurally
+ready for a second user when adoption + spend decisions align.
+
+### Gate state at v1.4.0
+
+| # | Criterion | State |
+|---|---|---|
+| 1 | Polygon Starter live | ❌ deferred (user direction) |
+| 2 | FactorDeltas day-1 deltas live | ✅ verified live |
+| 3 | Onboarding empty states polished | ✅ shipped (v1.3.5 + v1.3.13) |
+| 4 | Visual regression CI green 14+ nights | ⏳ awaiting clock |
+| 5 | Second external user | ❌ deferred (user direction) |
+| 6 | Server tests 800+ | ⏳ 782 / 800 — 18 short |
+| 7 | Lighthouse / CWV green | ⏳ unmeasured (pre-v1.x report stale) |
+
+### What v1.4.0 means
+
+- **Technical foundation laid.** Remaining gates are operational, not
+  structural — spend (1), calendar time (4), adoption (5), focused
+  test-writing (6), one-time measurement (7).
+- **MASTERPLAN.md archived** as historical trail.
+- **ROADMAP.md** is the active "next" doc; **IDEAS.md** the pull queue
+  for promoted research/cross-pollination work.
+
+### Today's full ship list (one session)
+
+| Phase | Version | Commit | Effect |
+|---|---|---|---|
+| 0 | v1.3.4 | b96e19f | Server-side factor history endpoint |
+| 0 | (visual) | 3817a28 | 16 visual regression baselines committed |
+| 0 | v1.3.5 | 1fa6921 | Onboarding polish round 1 |
+| 0 | v1.3.6 | 309b940 | Cache-key alignment fix #1 |
+| 0 | v1.3.7 | 3d1364b | Warmer days alignment fix #2 |
+| 0 | (Supabase MCP) | — | Restored historical_prices + factor_returns |
+| 0 | v1.3.8 | 516c5d7 | Onboarding polish round 2 + chart text |
+| 0 | v1.3.9 | accbabc | Cash balance + optimizer + modals + CVRF |
+| A | v1.3.10 | 43ed392 | Centralize + defend |
+| B | v1.3.11 | 96aa887 | Type drift sweep + strict typecheck |
+| C | v1.3.12 | 50dbbbd | Page audit + 4 fix-on-spot |
+| C-q | v1.3.13 | 300f5fe | Silent-failure toasts + onboarding bridge |
+| D | v1.3.14 | 313404a | Playwright walkthrough regression net |
+| E | v1.4.0 | (this) | Gate review + semantic bump |
+
+### Verification
+
+- Server: 782/782 unchanged.
+- Client: 207/208 (1 pre-existing EarningsHeatmap unchanged).
+- Strict typecheck: clean.
+- Build: clean.
+- Walkthrough: 16 tests, dashboard verified live in 6.6s.
+- Visual: 18 baselines committed.
+
+### MASTERPLAN status
+
+- Phase A: ✅
+- Phase B: ✅
+- Phase C: ✅
+- Phase C-q: ✅
+- Phase D: ✅
+- Phase E: ✅ — ALL PHASES COMPLETE
+
+---
+
 ## [1.3.14] - 2026-05-10
 
 ### Phase D of MASTERPLAN — Playwright walkthrough regression net

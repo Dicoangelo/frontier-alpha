@@ -101,7 +101,10 @@ function readChartColors() {
   const bg = v('--color-bg');
   return {
     grid: v('--color-border'),
-    label: v('--color-text-muted'),
+    // Use full theme text color for axis labels — muted reads as broken on
+    // dark backgrounds (per user feedback 2026-05-10). Theme-aware: white-ish
+    // in dark mode, dark in light mode.
+    label: v('--color-text'),
     benchmark: v('--color-text-muted'),
     line: chartPrimary,
     gradientTop: chartPrimary + '40', // ~25% opacity via hex alpha
@@ -524,23 +527,23 @@ export const EquityCurve = React.memo(function EquityCurve({
             : 0;
           return (
             <div
-              className="pointer-events-none absolute top-2 backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-text-inverse)] border border-theme-light rounded-lg shadow-lg px-3 py-2 text-xs z-10"
+              className="pointer-events-none absolute top-2 backdrop-blur-md bg-[var(--color-bg-tooltip)] text-theme border border-theme-light rounded-lg shadow-lg px-3 py-2 text-xs z-10"
               style={{ left: clampedLeft, width: tooltipWidth }}
             >
-              <p className="text-[9px] mono tracking-[0.3em] uppercase opacity-70 mb-1">
+              <p className="text-[9px] mono tracking-[0.3em] uppercase text-theme opacity-90 mb-1">
                 {new Date(hoveredPoint.date).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
                   year: 'numeric',
                 })}
               </p>
-              <p className="font-semibold tabular-nums">
+              <p className="font-semibold tabular-nums text-theme">
                 $
                 {hoveredPoint.portfolio.toLocaleString(undefined, {
                   maximumFractionDigits: 0,
                 })}
               </p>
-              <p className="opacity-70 tabular-nums text-[11px]">
+              <p className="text-theme opacity-80 tabular-nums text-[11px]">
                 Bench: $
                 {hoveredPoint.benchmark.toLocaleString(undefined, {
                   maximumFractionDigits: 0,
@@ -565,13 +568,13 @@ export const EquityCurve = React.memo(function EquityCurve({
       <div className="flex items-center justify-center gap-6 mt-4">
         <div className="flex items-center gap-2">
           <div className="w-4 h-0.5 bg-[var(--color-accent)]" />
-          <span className="text-[10px] mono tracking-[0.3em] uppercase text-theme-secondary">
+          <span className="text-[10px] mono tracking-[0.3em] uppercase text-theme">
             Portfolio
           </span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-0.5 border-dashed border-t-2 border-theme" />
-          <span className="text-[10px] mono tracking-[0.3em] uppercase text-theme-secondary">
+          <span className="text-[10px] mono tracking-[0.3em] uppercase text-theme">
             S&amp;P 500
           </span>
         </div>

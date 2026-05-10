@@ -140,7 +140,7 @@ export function FactorDeltas({ portfolioId, symbols, window = '1d' }: FactorDelt
         <div className="min-h-[180px] flex items-center justify-center px-4 py-6">
           <DegradedService
             service="Factor deltas"
-            reason="Building factor baseline. Return tomorrow for first delta read."
+            reason="Baseline accumulating · first deltas after the next UTC rollover"
             severity="info"
             position="banner-top"
           />

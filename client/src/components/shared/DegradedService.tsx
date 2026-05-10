@@ -170,7 +170,7 @@ export function DegradedService({
         onBlur={() => setTooltipOpen(false)}
         tabIndex={0}
       >
-        {service} offline · polling fallback
+        {service} · polling mode
       </span>
       {onRetry && (
         <button

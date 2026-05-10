@@ -203,8 +203,8 @@ export function WelcomeModal({
                     {demoSymbols.length === 1 ? 'symbol' : 'symbols'} from your demo.
                   </p>
                   <p className="text-sm text-theme-secondary leading-relaxed mt-1">
-                    Import {demoSymbols.length === 1 ? 'it' : 'them'} as your starting
-                    portfolio?
+                    Pre-fill your portfolio with{' '}
+                    {demoSymbols.length === 1 ? 'it' : 'them'} as a starting point?
                   </p>
 
                   {/* Symbol chips */}

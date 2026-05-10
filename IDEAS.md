@@ -10,6 +10,35 @@ matters," a "lift estimate" (XS / S / M / L), and a source citation.
 
 ---
 
+## ⏸️ Status: deferred until current app is production-ready
+
+**Decision (2026-05-10):** Hold all ideas in this file. Ship the existing
+v1.3.7 surface to production-grade FIRST. Re-open this doc only when the
+current product is mature.
+
+### Production-readiness gate (must all be met before promoting any idea)
+
+- [ ] Polygon Starter ($29/mo) live — unblocks the residual data freshness
+      issues per `ROADMAP.md`
+- [ ] FactorDeltas card showing real day-1 deltas in production (the
+      v1.3.4 endpoint working end-to-end for the seeded test user)
+- [ ] Onboarding empty states polished across all primary pages (one
+      pass per page, audit done)
+- [ ] Visual regression CI green for 14+ consecutive nightly runs (no
+      false positives, no real regressions)
+- [ ] At least one external user (beyond Dico) actively using the app
+      and giving feedback
+- [ ] Test coverage: server 800+ passing, client 220+ passing
+- [ ] Lighthouse / Core Web Vitals: green across all primary routes
+
+When all 7 gates are met → return here, re-rank ideas against the current
+state of the product, promote 1-2 highest-value to `ROADMAP.md` "Next
+session candidates", begin work.
+
+Until then: **do not start any IDEA-* work.** Polish what's shipped.
+
+---
+
 ## From Cinema Studio (OS-App video gen substrate)
 
 Source: `~/projects/apps/OS-App/services/cinema/` (~2.3k LOC, TS-clean,

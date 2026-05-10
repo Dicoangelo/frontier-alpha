@@ -7,6 +7,7 @@ import type { MarketRegime, RegimeDetectionResult } from '../ml/RegimeDetector.j
 import type { FactorAttributionResult } from '../ml/FactorAttribution.js';
 import type { ModelStatus, ModelType } from '../ml/TrainingPipeline.js';
 import type { Price } from '../types/index.js';
+import { BASE_HISTORY_DAYS } from '../factors/historySlice.js';
 
 interface RouteContext {
   server: {
@@ -42,7 +43,7 @@ export async function mlRoutes(fastify: FastifyInstance, opts: RouteContext) {
       const symbol = symbolsParam.split(',')[0].trim().toUpperCase();
 
       try {
-        const prices = await server.dataProvider.getHistoricalPrices(symbol, 252);
+        const prices = await server.dataProvider.getHistoricalPrices(symbol, BASE_HISTORY_DAYS);
 
         if (!prices || prices.length < 42) {
           return reply.status(400).send({
@@ -102,7 +103,7 @@ export async function mlRoutes(fastify: FastifyInstance, opts: RouteContext) {
         // Fetch prices and compute factor exposures
         const prices = new Map<string, Price[]>();
         for (const s of [...symbols, 'SPY']) {
-          const symbolPrices = await server.dataProvider.getHistoricalPrices(s, 300);
+          const symbolPrices = await server.dataProvider.getHistoricalPrices(s, BASE_HISTORY_DAYS);
           prices.set(s, symbolPrices);
         }
 

@@ -4,6 +4,7 @@ import { subscriptionGate, requirePlan } from '../middleware/subscriptionGate.js
 import { logger } from '../observability/logger.js';
 import type { ExplanationRequest, ExplanationType } from '../services/ExplanationService.js';
 import type { APIResponse, Price } from '../types/index.js';
+import { BASE_HISTORY_DAYS } from '../factors/historySlice.js';
 
 interface RouteContext {
   server: {
@@ -44,7 +45,7 @@ export async function explainRoutes(fastify: FastifyInstance, opts: RouteContext
         // Get factor exposures
         const prices = new Map<string, Price[]>();
         for (const s of [symbol, 'SPY']) {
-          prices.set(s, await server.dataProvider.getHistoricalPrices(s, 252));
+          prices.set(s, await server.dataProvider.getHistoricalPrices(s, BASE_HISTORY_DAYS));
         }
 
         const exposures = await server.factorEngine.calculateExposures([symbol], prices);
@@ -71,7 +72,7 @@ export async function explainRoutes(fastify: FastifyInstance, opts: RouteContext
         logger.error({ err: error }, 'Explanation generation failed');
         return reply.status(500).send({
           success: false,
-          error: { code: 'INTERNAL_ERROR', message: 'Explanation generation failed' },
+          error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? `Explanation generation failed: ${error.message}` : 'Explanation generation failed' },
         });
       }
     }
@@ -124,7 +125,7 @@ export async function explainRoutes(fastify: FastifyInstance, opts: RouteContext
         logger.error({ err: error }, 'Explanation generation failed');
         return reply.status(500).send({
           success: false,
-          error: { code: 'INTERNAL_ERROR', message: 'Explanation generation failed' },
+          error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? `Explanation generation failed: ${error.message}` : 'Explanation generation failed' },
         });
       }
     }
@@ -164,7 +165,7 @@ export async function explainRoutes(fastify: FastifyInstance, opts: RouteContext
         logger.error({ err: error, symbol }, 'Trade explanation failed');
         return reply.status(500).send({
           success: false,
-          error: { code: 'INTERNAL_ERROR', message: 'Trade explanation generation failed' },
+          error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? `Trade explanation generation failed: ${error.message}` : 'Trade explanation generation failed' },
         });
       }
     }

@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.10] - 2026-05-10
+
+### Phase A of MASTERPLAN — centralize + defend
+
+First execution phase of the production-readiness masterplan written
+this session. Four small mechanical wins that close recurring bug
+classes today's earlier ships kept reopening.
+
+- **A1: `BASE_HISTORY_DAYS` centralized**
+  - Every server-side `getHistoricalPrices()` consumer now imports
+    `BASE_HISTORY_DAYS` from `src/factors/historySlice.ts` instead of
+    hard-coding 252 / 300 / 301. Touched: `routes/explain.ts`,
+    `routes/earnings.ts`, `routes/ml.ts` (2 sites), `routes/portfolio.ts`.
+  - Only `notifications/digest-metrics.ts` retains a numeric (14, intentional
+    weekly-digest sparkline window). Audited.
+  - **Why:** v1.3.6, v1.3.7, v1.3.9 all traced to a cluster of "different
+    days = different cache keys" mismatches. Centralizing the constant
+    means the next consumer can't reopen the same class of bug.
+
+- **A2: `<SectionErrorBoundary>` around Optimize results**
+  - `client/src/pages/Optimize.tsx` — result-rendering block (Sharpe,
+    weights, factor exposures, Monte Carlo chart) wrapped in the
+    existing `SectionErrorBoundary` from `components/shared/ErrorBoundary`.
+  - **Why:** v1.3.9 user-reported "Cannot read properties of n... reading
+    'colSpan'" was a client-side crash from a child rendering a bad
+    result. Server-side INSUFFICIENT_DATA fix in v1.3.9 should prevent
+    the trigger; the boundary is defense in depth.
+
+- **A3: Modal sizing rules in `DESIGN-SYSTEM.md` §14**
+  - Codified the three-tier rule (compact / structured / workflow) with
+    Tailwind class mapping, content-type criteria, and the three
+    required ancillary props every modal must have (max-h-[90vh]
+    overflow-y-auto, items-start sm:items-center, p-4 sm:p-6 lg:p-8).
+  - **Why:** v1.3.9 caught two production modals (`TradeReasoning`,
+    `ShareModal`) defaulting to `max-w-lg` and rendering cropped on
+    desktop. Future modal authors now have a clear rule.
+
+- **A4: Real error messages surfaced on portfolio + explain routes**
+  - `src/routes/portfolio.ts` (5 catch blocks) and `src/routes/explain.ts`
+    (3 catch blocks) — generic "An unexpected error occurred" / "Risk
+    calculation failed" replaced with `error.message`-aware copy.
+  - New helper at `src/lib/routeErrors.ts` (not yet used; documented for
+    Phase B sweep across notifications.ts / sec.ts / api-keys.ts).
+  - **Why:** v1.3.9 optimizer debug took an hour because the real error
+    was 5 levels deep. Eight more user-facing routes will now produce
+    actionable messages instead of black-box "An unexpected error."
+
+### Verification
+
+- Server: 782/782 unchanged.
+- Client: 207/208 (1 pre-existing EarningsHeatmap failure unchanged).
+- Type-check: clean both sides.
+- Build: clean.
+
+### MASTERPLAN status
+
+- Phase A: ✅ shipped as v1.3.10
+- Phase B (type drift sweep): pending
+- Phase C (page-by-page audit): pending
+- Phase D (Playwright walkthrough): pending
+- Phase E (production-readiness gate review): pending
+
+---
+
 ## [1.3.9] - 2026-05-10
 
 ### Cash balance reconciliation, optimizer crash fix, modal sizing, CVRF clarity

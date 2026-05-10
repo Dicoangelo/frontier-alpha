@@ -201,7 +201,7 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
         logger.error({ err: error }, 'Failed to add position');
         return reply.status(500).send({
           success: false,
-          error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
+          error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? `Portfolio operation failed: ${error.message}` : 'Portfolio operation failed' },
         });
       }
     }
@@ -248,7 +248,7 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
         logger.error({ err: error }, 'Failed to update position');
         return reply.status(500).send({
           success: false,
-          error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
+          error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? `Portfolio operation failed: ${error.message}` : 'Portfolio operation failed' },
         });
       }
     }
@@ -288,7 +288,7 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
         logger.error({ err: error }, 'Failed to delete position');
         return reply.status(500).send({
           success: false,
-          error: { code: 'INTERNAL_ERROR', message: 'An unexpected error occurred' },
+          error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? `Portfolio operation failed: ${error.message}` : 'Portfolio operation failed' },
         });
       }
     }
@@ -390,7 +390,7 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
         // Request 300 days to ensure enough data for momentum calculations (need 252 + 21 + buffer)
         for (const symbol of [...symbols, 'SPY']) {
           try {
-            const symbolPrices = await server.dataProvider.getHistoricalPrices(symbol, 300);
+            const symbolPrices = await server.dataProvider.getHistoricalPrices(symbol, BASE_HISTORY_DAYS);
             prices.set(symbol, symbolPrices);
           } catch (err) {
             logger.warn({ err, symbol }, 'factors: skipping symbol');
@@ -428,7 +428,7 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
         logger.error({ err: error }, 'Factor calculation failed');
         return reply.status(500).send({
           success: false,
-          error: { code: 'INTERNAL_ERROR', message: 'Factor calculation failed' },
+          error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? `Factor calculation failed: ${error.message}` : 'Factor calculation failed' },
         });
       }
     }
@@ -535,7 +535,7 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
         logger.error({ err: error }, 'Factor history calculation failed');
         return reply.status(500).send({
           success: false,
-          error: { code: 'INTERNAL_ERROR', message: 'Factor history calculation failed' },
+          error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? `Factor history calculation failed: ${error.message}` : 'Factor history calculation failed' },
         });
       }
     }
@@ -1259,7 +1259,7 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
 
         return reply.status(500).send({
           success: false,
-          error: { code: 'INTERNAL_ERROR', message: 'Risk calculation failed' },
+          error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? `Risk calculation failed: ${error.message}` : 'Risk calculation failed' },
         });
       }
     }

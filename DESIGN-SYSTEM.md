@@ -574,7 +574,30 @@ Is this an active nav link?                → Sovereign-gradient before: rail (
 
 ---
 
-## 14. Quick Reference Card
+## 14. Modal Sizing Rules (added v1.3.10 — 2026-05-10)
+
+After the v1.3.9 audit caught two production modals (`TradeReasoning`,
+`ShareModal`) defaulting to `max-w-lg` (512px) and rendering cropped on
+desktop, we codified a content-tier rule. Pick the tier by content
+type, not by intuition.
+
+| Tier | Tailwind class | Width (px) | Use when... | Examples |
+|---|---|---|---|---|
+| **Compact** | `max-w-md` or `max-w-lg` | 448 / 512 | Single confirmation prompt, simple form (≤3 fields), marketing-style hero | `WelcomeModal`, `ConfirmDialog`, simple toast prompts |
+| **Structured** | `max-w-2xl lg:max-w-3xl` | 672 / 768 | Multi-section content: tables, charts, lists with detail panes, chain-of-thought reasoning, forms with 4+ fields | `TradeReasoning` (Why this trade), `ShareModal`, `KeyboardHelpModal`, `FeatureTour` |
+| **Workflow** | `max-w-4xl lg:max-w-5xl` | 896 / 1024 | Multi-step wizards, comparison tables, side-by-side panes | (earmarked for future portfolio-import wizard) |
+
+Three required ancillary props every modal must have:
+
+1. `max-h-[90vh] overflow-y-auto` on the inner panel — content scrolls instead of overflowing the viewport
+2. `items-start sm:items-center` on the centering wrapper — top-aligned on tall content / mobile, centered on short content / desktop
+3. `p-4 sm:p-6 lg:p-8` on the centering wrapper — breathing room from viewport edges
+
+Anti-pattern: `<Card className="max-w-lg">` for structured content. The `Card` component does not enforce these rules; pick a tier explicitly.
+
+---
+
+## 15. Quick Reference Card
 
 ```
 DESIGN SYSTEM ENTRYPOINTS:

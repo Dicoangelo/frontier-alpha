@@ -9,15 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.7] - 2026-05-09
 
-### Fix: align CacheWarmer to 300 days so /factors/history hits cache
+### Investigation findings — FactorDeltas "Return tomorrow" root cause
 
-Continuation of the v1.3.6 investigation. The cache-key alignment fix was correct but insufficient: the dashboard's first /factors/history call after a Vercel cold-start still got 500 because the Supabase cache layer was empty for 300-day requests.
+End-of-investigation diagnosis. Three layered fixes shipped (this version + v1.3.6 + a Supabase MCP migration). One residual issue documented for the user that requires a paid-tier provider upgrade.
 
-Root cause: `src/data/CacheWarmer.ts::warmSymbols` defaulted to `days = 252`. SupabaseCache.getPrices requires `rows.length >= days * coverage` (default coverage 0.9, so 270 rows needed for a 300-day request). With only 252 rows warmed per symbol, every 300-day request from the factors endpoints fell through to Polygon — and Polygon's free-tier 5 req/min limit blew immediately on the dashboard's burst of /factors + /quotes/history × 5 + /factors/history.
+**Confirmed root causes (in order of discovery):**
 
-Fix: bump CacheWarmer default to `days = 300` so the warmer's hourly cron populates Supabase with the same depth the factors endpoints request. Both `/portfolio/factors/:symbols` and `/portfolio/factors/history/:symbols` now hit the warm cache and never reach Polygon.
+1. **Cache-key mismatch (v1.3.6)**: `/factors/history` requested `BASE_HISTORY_DAYS + windowDays` (301-305) while `/factors/:symbols` requested 300. Memory cache keys on `${symbol}:${days}` so they never shared. Fixed by aligning the new endpoint to 300 always.
 
-After deploy: trigger the warmer once via `GET /api/v1/cron/warm-cache?key=$CRON_SECRET` to refresh the cache to 300 days. The hourly cron continues from there.
+2. **Warmer-days mismatch (this version)**: `CacheWarmer.warmSymbols` defaulted to `days = 252` while both factor endpoints request 300. SupabaseCache.getPrices requires `rows.length >= days * coverage` (270 for a 300-day request) and was returning null on every check. Fixed by aligning the warmer default to 300.
+
+3. **Missing Supabase tables (Supabase MCP migration)**: `frontier_historical_prices` and `frontier_factor_returns` from `supabase/migrations/001_initial_schema.sql` did not exist in production Supabase. Cause unknown — possibly partial migration apply or manual drop. Without the prices table, every SupabaseCache write silently failed (caught and logged as warning) and every read returned null. Restored via `apply_migration` named `restore_missing_historical_prices_and_factor_returns`. Both tables now exist with the same DDL the migration file specifies.
+
+**Residual issue requiring user action — Polygon free-tier insufficiency**
+
+After all three fixes, the production warmer now writes to Supabase but only with **200 rows ending 2025-12-12** for the seeded user's symbols. A direct curl to Polygon from the operator's home network returns **330 rows ending 2026-05-08** for the same date range with the same API key. The discrepancy points to either:
+- Polygon free-tier IP-based throttling that affects Vercel egress IPs more aggressively than residential, or
+- A frozen-tier behavior where the production key's history depth shrinks under sustained load, or
+- A timing artifact of the warmer running while another instance had already exhausted the per-minute budget
+
+Per cross-project memory `project_frontier_alpha_provider_tiers.md`, the documented upgrade trigger has been hit ("when the dashboard's 5 holding sparklines start hitting the free-tier 5-req/min ceiling under normal load"). **Next step for the user**: upgrade Polygon to Starter ($29/mo) and re-run the warmer. The code changes shipped here will start delivering correct FactorDeltas as soon as the cache has 270+ fresh rows per symbol.
+
+### Code changes shipped this version
+
+- `src/data/CacheWarmer.ts::warmSymbols` default `days` 252 → 300
+- Tests: 782 server unchanged
 
 ---
 

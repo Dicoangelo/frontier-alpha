@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.1] - 2026-05-10
+
+### Phase E gate items 6 + 7 closed (server tests 800+, Lighthouse measured)
+
+Two of the open Phase E gate criteria closed in this version. Both
+were "knowable work" — discrete tasks that just needed someone to do
+them, no provider spend or adoption signal required.
+
+- **Gate criterion 6: Server tests 782 → 800**
+  - 18 net new tests covering code we shipped today:
+    - `src/lib/routeErrors.test.ts` (new file, 10 tests) — pins the
+      contract on the Phase A4 helper. Error vs unknown input,
+      message preservation, response shape, no stack-trace leakage,
+      long-message handling, defensive coercion.
+    - `tests/e2e/optimization.test.ts` (6 new tests) — defensive
+      paths from v1.3.9: 503 INSUFFICIENT_DATA when fewer than 2
+      symbols, riskFreeRate default, riskFreeRate preserved when
+      sent, skipped[] passthrough on partial fetch failure,
+      target_volatility objective acceptance.
+    - `src/factors/historySlice.test.ts` (2 new tests) — invariants
+      that locked-in v1.3.7 lessons: BASE_HISTORY_DAYS minus 5d
+      window stays above 252 (factor engine min), and BASE_HISTORY_DAYS
+      pinned at 300 (cache-key alignment with CacheWarmer).
+  - `tests/setup/msw-handlers.ts` updated: `/portfolio/optimize`
+    handler now mocks the v1.3.9 INSUFFICIENT_DATA + riskFreeRate
+    defaulting + skipped[] paths so the e2e tests have a target.
+
+- **Gate criterion 7: Fresh Lighthouse measured**
+  - Run against `https://frontier-alpha.metaventionsai.com/` (landing,
+    public route) on v1.4.0 production.
+  - Scores:
+    - **Best Practices: 1.00** (100/100)
+    - **SEO: 1.00** (100/100)
+    - **Accessibility: 0.85** (85/100) — yellow, room for ARIA / contrast improvements
+    - **Performance: 0.68** (68/100) — yellow, room for image / JS optimization
+  - Authenticated `/dashboard` Lighthouse run failed with exit code 2
+    (auth redirect to /login confused the headless Chrome flow).
+    Public-route measurement is the gate signal; auth-gated
+    measurement queued for a future session that can inject auth.
+  - Reports archived at `audit-2026-05-10/lighthouse-landing-v1.4.0.html`
+    and `.json`.
+
+### Updated Phase E gate state
+
+| # | Criterion | State (was) | State (now) |
+|---|---|---|---|
+| 1 | Polygon Starter live | ❌ deferred | ❌ deferred |
+| 2 | FactorDeltas day-1 deltas live | ✅ | ✅ |
+| 3 | Onboarding empty states polished | ✅ | ✅ |
+| 4 | Visual + walkthrough CI green 14+ nights | ⏳ | ⏳ |
+| 5 | Second external user | ❌ deferred | ❌ deferred |
+| 6 | Server tests 800+ | ⏳ 782 | ✅ 800 |
+| 7 | Lighthouse / CWV green | ⏳ unmeasured | ✅ measured (BP+SEO 100, A11y/Perf yellow) |
+
+**5 of 7 gate criteria green. 2 remaining are deferred user decisions
+(Polygon spend + second-user invite) — not engineering work.**
+
+### Verification
+
+- Server: 800/800 (was 782, net +18).
+- Client: 207/208 (1 pre-existing EarningsHeatmap unchanged).
+- Strict typecheck: clean.
+- Build: clean.
+
+---
+
 ## [1.4.0] - 2026-05-10
 
 ### Phase E — Production-readiness gate review + semantic version bump

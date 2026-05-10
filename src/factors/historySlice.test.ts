@@ -108,4 +108,19 @@ describe('windowToDays + constants', () => {
   it('lists 1d and 5d as supported windows', () => {
     expect(SUPPORTED_WINDOWS).toEqual(['1d', '5d']);
   });
+
+  it('BASE_HISTORY_DAYS minus 5d window still leaves >= 252 trading days for momentum_12m', () => {
+    // Critical invariant — if BASE_HISTORY_DAYS drops below 257, the
+    // FactorEngine can no longer compute momentum_12m on a 5d-window
+    // prior snapshot. Pin the relationship.
+    expect(BASE_HISTORY_DAYS - windowToDays('5d')).toBeGreaterThanOrEqual(252);
+  });
+
+  it('matches the days the CacheWarmer warms (alignment invariant)', () => {
+    // v1.3.7 lesson: CacheWarmer.warmSymbols defaulted to 252 while the
+    // factor endpoints requested 300, missing cache every time. Now
+    // both must request BASE_HISTORY_DAYS. This test pins the constant
+    // so any divergence is loud.
+    expect(BASE_HISTORY_DAYS).toBe(300);
+  });
 });

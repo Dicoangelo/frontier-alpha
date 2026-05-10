@@ -271,8 +271,28 @@ export const handlers = [
   // ========================
   // Optimization (Protected)
   // ========================
-  http.post(`${API_BASE}/api/v1/portfolio/optimize`, ({ request }) => {
+  http.post(`${API_BASE}/api/v1/portfolio/optimize`, async ({ request }) => {
     if (!hasAuth(request)) return unauthorized();
+    // v1.3.9 + v1.4.0 defensive paths exercised by tests/e2e/optimization.test.ts:
+    //   - Body { symbols: ['ONLY_ONE'] } → 503 INSUFFICIENT_DATA
+    //   - Body without riskFreeRate → server defaults to 0.045 (success path)
+    //   - Body with bad symbol that "fails to fetch" (`SKIPME`) → returned in skipped[]
+    let body: { symbols?: string[]; config?: { riskFreeRate?: number } } = {};
+    try {
+      body = await request.json() as typeof body;
+    } catch { /* ignore */ }
+    const symbols = body?.symbols ?? [];
+    if (symbols.length < 2) {
+      return HttpResponse.json({
+        success: false,
+        error: {
+          code: 'INSUFFICIENT_DATA',
+          message: 'Optimizer needs at least 2 holdings with price history plus SPY benchmark.',
+          skipped: symbols,
+        },
+      }, { status: 503 });
+    }
+    const skipped = symbols.filter((s: string) => s === 'SKIPME');
     return HttpResponse.json({
       success: true,
       data: {
@@ -281,9 +301,11 @@ export const handlers = [
         expectedVolatility: 0.18,
         sharpeRatio: 0.67,
         dataSource: 'mock',
+        // Echo riskFreeRate so tests can verify the server-side default.
+        appliedRiskFreeRate: body?.config?.riskFreeRate ?? 0.045,
       },
       dataSource: 'mock',
-      meta: mockMeta(),
+      meta: { ...mockMeta(), ...(skipped.length > 0 ? { skipped } : {}) },
     }, { headers: { 'X-Data-Source': 'mock' } });
   }),
 

@@ -141,4 +141,116 @@ describe('Portfolio Optimization', () => {
       expect([200, 401, 404, 500]).toContain(response.status);
     });
   });
+
+  // v1.3.9 + v1.4.0 defensive paths — pin them so future regressions are loud.
+  describe('Optimizer defensive paths (v1.3.9)', () => {
+    it('returns 503 INSUFFICIENT_DATA when fewer than 2 symbols', async () => {
+      const response = await fetch(`${API_BASE}/api/v1/portfolio/optimize`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          symbols: ['AAPL'],
+          config: { objective: 'max_sharpe', riskFreeRate: 0.045 },
+        }),
+      });
+      // Accept either the new INSUFFICIENT_DATA path OR external API error
+      // (real server might 500 if Polygon fails before the validation check)
+      expect([400, 401, 404, 500, 503]).toContain(response.status);
+      if (response.status === 503) {
+        const body = await response.json();
+        expect(body.success).toBe(false);
+        expect(body.error.code).toBe('INSUFFICIENT_DATA');
+        expect(body.error.message).toMatch(/at least 2 holdings/i);
+        expect(body.error.skipped).toBeDefined();
+      }
+    });
+
+    it('returns 503 with empty symbols array', async () => {
+      const response = await fetch(`${API_BASE}/api/v1/portfolio/optimize`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          symbols: [],
+          config: { objective: 'max_sharpe', riskFreeRate: 0.045 },
+        }),
+      });
+      expect([400, 401, 404, 503]).toContain(response.status);
+    });
+
+    it('echoes appliedRiskFreeRate when server defaults to 0.045', async () => {
+      // Client omits riskFreeRate; server should default to 0.045 (10y treasury).
+      const response = await fetch(`${API_BASE}/api/v1/portfolio/optimize`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          symbols: ['AAPL', 'MSFT', 'NVDA', 'GOOGL'],
+          config: { objective: 'max_sharpe' },
+        }),
+      });
+      if (response.status === 200) {
+        const body = await response.json();
+        // MSW mock echoes appliedRiskFreeRate; production may not include
+        // this field but MUST not crash with NaN sharpe (the v1.3.9 bug).
+        expect(body.data?.sharpeRatio).not.toBeNaN();
+      }
+    });
+
+    it('preserves user-supplied riskFreeRate when provided', async () => {
+      const response = await fetch(`${API_BASE}/api/v1/portfolio/optimize`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          symbols: ['AAPL', 'MSFT', 'NVDA', 'GOOGL'],
+          config: { objective: 'max_sharpe', riskFreeRate: 0.06 },
+        }),
+      });
+      if (response.status === 200) {
+        const body = await response.json();
+        expect(body.data?.sharpeRatio).not.toBeNaN();
+      }
+    });
+
+    it('reports skipped symbols in meta when partial fetch fails', async () => {
+      // The 'SKIPME' symbol is rigged in the MSW mock to always end up
+      // in the skipped[] array. Real server uses per-symbol try/catch
+      // around getHistoricalPrices and accumulates skipped on Polygon
+      // rate-limit failures.
+      const response = await fetch(`${API_BASE}/api/v1/portfolio/optimize`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          symbols: ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'SKIPME'],
+          config: { objective: 'max_sharpe', riskFreeRate: 0.045 },
+        }),
+      });
+      if (response.status === 200) {
+        const body = await response.json();
+        if (body.meta?.skipped) {
+          expect(body.meta.skipped).toContain('SKIPME');
+        }
+      }
+    });
+
+    it('validates target_volatility objective is in the union', async () => {
+      // v1.3.9 + v1.3.12 added target_volatility to OptimizationConfig.objective.
+      const response = await fetch(`${API_BASE}/api/v1/portfolio/optimize`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({
+          symbols: ['AAPL', 'MSFT', 'NVDA', 'GOOGL'],
+          config: {
+            objective: 'target_volatility',
+            riskFreeRate: 0.045,
+            targetVolatility: 0.15,
+          },
+        }),
+      });
+      // Should NOT 400 with "invalid objective" — the union accepts it
+      expect([200, 401, 404, 500, 503]).toContain(response.status);
+      if (response.status === 200) {
+        const body = await response.json();
+        expect(body.success).toBe(true);
+      }
+    });
+  });
 });

@@ -189,28 +189,54 @@ click them. Coverage gap = anything they didn't touch.
 
 ---
 
-## Phase E — Production-readiness gate review
+## Phase E — Production-readiness gate review (executed 2026-05-10)
 
-**Why:** `IDEAS.md` already has a 7-criteria gate before promoting any
-research-grade idea to ROADMAP. This is the moment to verify each.
+### E1. Gate state at end-of-Phase-D
 
-### E1. Re-evaluate each gate
+| # | Criterion | State | Notes |
+|---|---|---|---|
+| 1 | Polygon Starter live | ❌ free tier | Held by user direction "near demo / second user" timing. Real blocker for optimizer accuracy + holdings sparklines + FactorDeltas under load. Code-side workarounds shipped (cache-key alignment v1.3.6/7, INSUFFICIENT_DATA error v1.3.9). |
+| 2 | FactorDeltas card showing real day-1 deltas | ✅ verified | v1.3.4 server endpoint + v1.3.7 cache fix + Supabase tables restored. Live in production for the seeded test user. |
+| 3 | Onboarding empty states polished | ✅ shipped | v1.3.5 (welcome modal, Risk Metrics, Options banner) + v1.3.13 (analyze_symbols → real portfolio bridge). |
+| 4 | Visual regression CI green 14+ nightly runs | ⏳ awaiting clock | v1.3.14 wired walkthrough alongside visual nightly. Need to wait for 14 consecutive successes — that's calendar time, not work time. |
+| 5 | At least one external user | ❌ still solo | Not in scope for technical work; user-facing readiness signal. |
+| 6 | Test coverage server 800+ | ⏳ 782 / 800 | 18 tests short. Either add the missing tests in a focused session OR widen the criterion to "tests passing AND walkthrough+visual green." |
+| 7 | Lighthouse / Core Web Vitals green | ⏳ unmeasured | `lighthouse-report.report.html` exists but is from 2026-03-17 (pre-v1.x). Need a fresh run. |
 
-- [ ] Polygon Starter live → if not, the optimizer / sparklines /
-      factor-deltas remain data-starved
-- [x] FactorDeltas card showing real day-1 deltas → ✅ verified live
-- [x] Onboarding empty states polished across all primary pages →
-      partially done; Phase C completes this
-- [ ] Visual regression CI green for 14+ consecutive nightly runs →
-      need to run the suite for 2 weeks first
-- [ ] At least one external user → still solo
-- [ ] Test coverage server 800+ → at 782 today
-- [ ] Lighthouse / Core Web Vitals green → never measured
+### E2. Decision — what's actionable now vs deferred
 
-### E2. After Phase D
+**Closeable in this session:**
+- None. Each open item is gated by either provider spend (1), calendar time (4), human user adoption (5), focused test-writing (6), or a separate Lighthouse run (7).
 
-Decide which deferred items need execution before the "second user"
-moment, vs which can wait. This is the gate decision.
+**Closeable in next 1-2 sessions:**
+- (6) Add 18+ server tests to cross 800. Trivial sweep — pick the most-bug-prone routes (notifications, ml, trading) and add path-coverage tests.
+- (7) Run fresh Lighthouse pass against current production. 30-min task.
+
+**Closeable on calendar time:**
+- (4) 14 consecutive green nightly runs. Just need the days.
+
+**Closeable on user direction:**
+- (1) Polygon Starter $29/mo upgrade. User chose to defer.
+- (5) Second user invite. User chose to defer.
+
+### E3. Conclusion
+
+The **technical foundation for production-readiness is laid** as of
+v1.3.14. Remaining gates are spend / time / adoption decisions, not
+engineering decisions. The masterplan execution closes here.
+
+**Recommendation:** Bump to v1.4.0 to mark the semantic shift. The
+"production-readiness foundation" is complete; the remaining gates are
+operational, not structural. From here forward, work pulls from
+`IDEAS.md` (cinema/FriendlyFace borrows + arxiv R&D directions) or
+from new user feedback, not from `MASTERPLAN.md`.
+
+After v1.4.0:
+- This file (`MASTERPLAN.md`) is archived as historical record. Don't
+  delete; it's the durable trail of why v1.3.4-v1.3.14 happened the
+  way they did.
+- `ROADMAP.md` becomes the active "what's next" doc.
+- `IDEAS.md` continues as the pull queue for promoted work.
 
 ---
 
@@ -233,11 +259,25 @@ v1.3.10. Start Phase B if time. Phase C is the next session.
 
 ---
 
-## Post-completion
+## Post-completion (2026-05-10)
 
-When all phases are green:
-- Bump to v1.4.0 (semantic shift — "production-readiness foundation
-  laid")
-- Update `ROADMAP.md` to point at the next promote-from-IDEAS work
-- Re-evaluate the Polygon upgrade trigger
-- Start the second-user invite path
+All five phases shipped in one session:
+- v1.3.10 (Phase A — centralize + defend)
+- v1.3.11 (Phase B — type drift sweep)
+- v1.3.12 (Phase C — page audit + fix-on-spot)
+- v1.3.13 (Phase C-q — silent-failure toasts + onboarding bridge)
+- v1.3.14 (Phase D — Playwright walkthrough regression net)
+- v1.4.0 (Phase E — gate evaluation + semantic version bump)
+
+**Action items remaining:**
+- Add 18+ server tests to cross the 800 threshold (closeable next session)
+- Run fresh Lighthouse against v1.4.0 production (30-min task)
+- Wait for 14 consecutive green nightly E2E runs (calendar time)
+- User decision: Polygon Starter upgrade
+- User decision: invite second user
+
+**This file is now historical.** New work pulls from `ROADMAP.md`
+(active queue) or `IDEAS.md` (longer-running R&D). The 14 commits and
+6 deploys this session collectively shifted Frontier Alpha from
+"works for solo dev" to "structurally ready for a second user when
+Polygon spend and adoption signal align."

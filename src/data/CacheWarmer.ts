@@ -172,13 +172,21 @@ export interface WarmResult {
  * Pre-fetch historical prices for the given symbols through the bottleneck.
  * Each call goes via `MarketDataProvider.getHistoricalPrices`, which in
  * turn flows through the CompositeCache so we automatically populate both
- * memory and Supabase layers. 252 days = a year of trading data, enough
- * to back any factor / sparkline rendering.
+ * memory and Supabase layers.
+ *
+ * 300 days matches the depth that `/portfolio/factors/:symbols` and
+ * `/portfolio/factors/history/:symbols` request. Aligning the warmer to
+ * the same `days` value ensures the Supabase cache check
+ * (`rows.length >= days * coverage`) passes for both endpoints — a
+ * mismatch was causing the FactorDeltas card to fall back to its empty
+ * state in production because the new history endpoint always missed
+ * cache and got rate-limited by Polygon's free tier (2026-05-09
+ * incident, see CHANGELOG v1.3.6).
  */
 async function warmSymbols(
   provider: MarketDataProvider,
   symbols: string[],
-  days = 252,
+  days = 300,
 ): Promise<WarmResult> {
   let succeeded = 0;
   let failed = 0;

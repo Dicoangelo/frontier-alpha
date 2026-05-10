@@ -130,7 +130,7 @@ npm run ml:start         # uvicorn on port 8000
 
 ## Current State
 
-- **Version:** 1.2.6 (server `package.json`) — bumped 2026-05-08 for the end-user walkthrough wave (CDN cache trap, fastify-websocket v8 mismatch, Polygon truncation, AV premium endpoint, hooks-after-early-return, useDatabase wiring, in-flight dedup, etc.).
+- **Version:** 1.3.7 (server `package.json`) — bumped 2026-05-09 across a four-wave ship day: v1.3.4 (server-side factor history endpoint), v1.3.5 (onboarding polish — welcome-modal data-destructive prompt, Risk Metrics empty state, Options banner copy), v1.3.6 + v1.3.7 (factors-history endpoint + CacheWarmer cache-key alignments), plus a Supabase MCP migration restoring `frontier_historical_prices` + `frontier_factor_returns` tables that drifted out of production. See `CHANGELOG.md` for full detail and `ROADMAP.md` for queued upgrade triggers.
 - **Phase 1:** Complete — all 4 weeks shipped (Feb–Mar 2026).
 - **UI polish wave:** Complete — 35 files across 5 rounds, PRs #3 + #4, v1.1.0 (2026-05-07). Family-aligned with `metaventionsai.com` / `careers.metaventionsai.com` / `friendlyface.metaventionsai.com`. See `DESIGN-SYSTEM.md` §12.
 - **Backend integration wave:** 13 of 14 integrations live in production (verified by `/api/v1/health/integrations`, v1.2.6). Stripe billing (live + comp guard), DeepSeek primary explainer / OpenAI fallback, Resend email (welcome + subscription-confirmed + alert-fired + weekly-digest), VAPID web push, internal SimulatedBroker, per-user Alpaca connect (AES-256-GCM at rest), weekly digest cron with real portfolio metrics, Supabase-backed rate limiter (`rate_limit_check` RPC). Only Vercel WS remains degraded by design (Railway covers that tier; the Railway WS handshake itself was repaired v1.2.6 `fb3aed5`). Caveat the v1.3.0 PRD calls out: today's health probes flip "live" largely on Boolean env presence — US-004 upgrades them to real upstream calls.
@@ -200,7 +200,16 @@ Dark mode: CSS variable–based (no `dark:` Tailwind prefixes needed). Light/Dar
 ## Known Issues / Tech Debt
 
 ### Critical
-- _None currently tracked. The v1.3.0 PRD addresses the structural issues the v1.2.6 walkthrough surfaced — Boolean health probes, runtime mock-data guarding, doc drift._
+- _None currently tracked._
+
+### Queued behind Polygon upgrade
+The following symptoms all stem from Polygon free-tier insufficiency (5 req/min ceiling + IP throttling on Vercel egress that returns ~5-month stale data even when the operator's home network gets fresh data with the same key). Code-side fixes are in place; the upgrade is the unlock. Trigger condition hit 2026-05-09. See `ROADMAP.md` for the full upgrade trigger table.
+
+- **FactorDeltas card "Return tomorrow" fallback on production** — Strategy 1 server endpoint correct (verified via direct curl), falls through to Strategy 2 only because the IP-throttled Polygon response can't deliver the 270+ rows the SupabaseCache check requires.
+- **Holdings sparkline 502s** — `/api/v1/quotes/SYMBOL/history?days=7` blows the 5/min ceiling on every dashboard load.
+- **5-month-stale prices for Vercel egress** — even when the cache warmer succeeds, Polygon returns rows ending 2025-12-12 to Vercel function instances.
+
+Per cross-project memory `project_frontier_alpha_provider_tiers.md`, the upgrade trigger is documented and the user direction is to hold until "near demo / second user" timing.
 
 ### Resolved (Walkthrough Wave 2026-05-08 → 2026-05-09 — v1.2.6)
 

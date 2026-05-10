@@ -19,6 +19,8 @@ type OptimizationObjective = 'max_sharpe' | 'min_volatility' | 'risk_parity' | '
 
 interface OptimizationConfig {
   objective: OptimizationObjective;
+  riskFreeRate: number;
+  targetVolatility?: number;
   constraints?: {
     minWeight?: number;
     maxWeight?: number;

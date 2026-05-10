@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.6] - 2026-05-09
+
+### Fix: FactorDeltas card stuck on "Return tomorrow" in production
+
+The v1.3.4 server endpoint shipped correctly but never resolved on the live dashboard for users with positions. Investigation traced this to a cache-key mismatch.
+
+- `src/data/cache/CompositeCache.ts::getPrices` keys the memory cache as `${symbol}:${days}` and only returns a hit when `cached.length >= days`. The new history endpoint asked for `BASE_HISTORY_DAYS + windowDays` (301 days for `1d`, 305 for `5d`) while the existing `/factors/:symbols` endpoint asks for `300`. Two different cache keys per symbol.
+- Polygon free-tier rate limit is 5 requests per minute. When the dashboard fired both `/factors/:symbols` (6 fetches at 300 days) and `/factors/history/:symbols` (6 fetches at 301 days) in sequence, the second batch always missed cache, hit Polygon, and got rate-limited. Every symbol skipped, route returned `NO_FACTOR_DATA`, hook fell through to localStorage Strategy 2, card rendered "Building factor baseline. Return tomorrow."
+- Verified live in production network log 2026-05-09: 5 of 6 quote requests returned 502 in the same window, confirming the upstream rate-limit pressure.
+
+**Fix**: `src/routes/portfolio.ts` history endpoint now requests `BASE_HISTORY_DAYS` (300 days) regardless of window, so both endpoints share the same memory cache key. The 5-day max slice still leaves 295 trading days, comfortably above the 252-day minimum FactorEngine needs for `momentum_12m`.
+
+Tests pass: 12 slicer unit tests + 5 e2e endpoint tests unchanged.
+
+---
+
 ## [1.3.5] - 2026-05-09
 
 ### Onboarding Polish (3 confirmed fresh-user UX bugs)

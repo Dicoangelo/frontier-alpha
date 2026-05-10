@@ -13,6 +13,7 @@ import { api, getErrorMessage } from '@/api/client';
 import { useToast } from '@/hooks/useToast';
 import { Spinner } from '@/components/shared/Spinner';
 import { UpgradeGate } from '@/components/shared/UpgradeGate';
+import { SectionErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { MonteCarloChart } from '@/components/charts/MonteCarloChart';
 
 type OptimizationObjective = 'max_sharpe' | 'min_volatility' | 'risk_parity' | 'target_volatility';
@@ -375,7 +376,13 @@ function OptimizeContent() {
       </div>
 
       {/* ── Results ───────────────────────────────────────────────────── */}
+      {/* Wrapped in SectionErrorBoundary to defend against the v1.3.9
+          "Cannot read properties of n... reading 'colSpan'" client-side
+          crash class — if a child chart/table chokes on a malformed
+          result, the boundary renders an inline error instead of taking
+          down the whole page. */}
       {result && (
+        <SectionErrorBoundary sectionName="Optimization Results">
         <section
           className="glass-slab rounded-2xl p-6 sm:p-8 animate-fade-in-up"
           style={{ animationDelay: '150ms', animationFillMode: 'both' }}
@@ -449,6 +456,7 @@ function OptimizeContent() {
               ))}
           </div>
         </section>
+        </SectionErrorBoundary>
       )}
 
       {/* ── Monte Carlo Chart ─────────────────────────────────────────── */}

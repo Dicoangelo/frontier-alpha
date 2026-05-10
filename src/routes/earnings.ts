@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { logger } from '../observability/logger.js';
 import { EarningsOracle } from '../earnings/EarningsOracle.js';
 import type { APIResponse, EarningsImpactForecast, Price } from '../types/index.js';
+import { BASE_HISTORY_DAYS } from '../factors/historySlice.js';
 
 const refreshCooldowns = new Map<string, number>();
 const COOLDOWN_MS = 60_000;
@@ -142,7 +143,7 @@ export async function earningsRoutes(fastify: FastifyInstance, opts: RouteContex
         // Get factor exposures
         const prices = new Map<string, Price[]>();
         for (const s of [symbol, 'SPY']) {
-          prices.set(s, await server.dataProvider.getHistoricalPrices(s, 252));
+          prices.set(s, await server.dataProvider.getHistoricalPrices(s, BASE_HISTORY_DAYS));
         }
         const exposures = await server.factorEngine.calculateExposures([symbol], prices);
 

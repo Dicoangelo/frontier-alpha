@@ -64,13 +64,22 @@ export class PortfolioService {
     shares: number,
     avgCost: number
   ): Promise<FrontierPosition | null> {
+    // Pull cash_balance alongside id so we can decrement it after the
+    // position write succeeds. Adding a position is a buy; cash must
+    // decrease by `shares * avgCost`. The sell path (sellPosition below)
+    // already does the symmetric increment, but addPosition was leaving
+    // cash untouched — visible in production 2026-05-10 as "$100k cash"
+    // even after a $45k buy.
     const { data: portfolio } = await supabaseAdmin
       .from('frontier_portfolios')
-      .select('id')
+      .select('id, cash_balance')
       .eq('user_id', userId)
       .single();
 
     if (!portfolio) return null;
+
+    const cashCost = shares * avgCost;
+    const newCashBalance = Number(portfolio.cash_balance) - cashCost;
 
     // Check if position already exists
     const { data: existing } = await supabaseAdmin
@@ -101,6 +110,12 @@ export class PortfolioService {
         return null;
       }
 
+      // Decrement cash_balance for the new shares being added
+      await supabaseAdmin
+        .from('frontier_portfolios')
+        .update({ cash_balance: newCashBalance })
+        .eq('id', portfolio.id);
+
       return data;
     }
 
@@ -121,6 +136,12 @@ export class PortfolioService {
       return null;
     }
 
+    // Decrement cash_balance for the cost of the new position
+    await supabaseAdmin
+      .from('frontier_portfolios')
+      .update({ cash_balance: newCashBalance })
+      .eq('id', portfolio.id);
+
     return data;
   }
 
@@ -130,10 +151,10 @@ export class PortfolioService {
     shares: number,
     avgCost: number
   ): Promise<FrontierPosition | null> {
-    // Verify ownership
+    // Verify ownership and pull cash_balance for the delta calc
     const { data: portfolio } = await supabaseAdmin
       .from('frontier_portfolios')
-      .select('id')
+      .select('id, cash_balance')
       .eq('user_id', userId)
       .single();
 
@@ -160,18 +181,44 @@ export class PortfolioService {
       return null;
     }
 
+    // Cash-balance delta: editing shares/avgCost is implicitly a buy (cost
+    // increased) or sell (cost decreased). Symmetric with addPosition +
+    // sellPosition. Without this, edits silently drift cash.
+    const oldCost = Number(position.shares) * Number(position.avg_cost);
+    const newCost = shares * avgCost;
+    const cashDelta = newCost - oldCost;
+    if (Math.abs(cashDelta) > 0.001) {
+      const newCashBalance = Number(portfolio.cash_balance) - cashDelta;
+      await supabaseAdmin
+        .from('frontier_portfolios')
+        .update({ cash_balance: newCashBalance })
+        .eq('id', portfolio.id);
+    }
+
     return data;
   }
 
   async deletePosition(userId: string, positionId: string): Promise<boolean> {
-    // Verify ownership
+    // Verify ownership + pull cash_balance
     const { data: portfolio } = await supabaseAdmin
       .from('frontier_portfolios')
-      .select('id')
+      .select('id, cash_balance')
       .eq('user_id', userId)
       .single();
 
     if (!portfolio) return false;
+
+    // Read the position FIRST so we can credit cash for the cost basis on
+    // delete (treated as a sell at avg_cost). Without this, deleting
+    // positions silently drifts cash downward.
+    const { data: position } = await supabaseAdmin
+      .from('frontier_positions')
+      .select('shares, avg_cost')
+      .eq('id', positionId)
+      .eq('portfolio_id', portfolio.id)
+      .single();
+
+    if (!position) return false;
 
     const { error } = await supabaseAdmin
       .from('frontier_positions')
@@ -182,6 +229,15 @@ export class PortfolioService {
     if (error) {
       logger.error({ err: error, userId, positionId }, 'Error deleting position');
       return false;
+    }
+
+    // Credit cash with the cost basis of the deleted position
+    const cashCredit = Number(position.shares) * Number(position.avg_cost);
+    if (cashCredit > 0.001) {
+      await supabaseAdmin
+        .from('frontier_portfolios')
+        .update({ cash_balance: Number(portfolio.cash_balance) + cashCredit })
+        .eq('id', portfolio.id);
     }
 
     return true;

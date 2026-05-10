@@ -156,8 +156,8 @@ export function TradeReasoning({ symbol, isOpen, onClose }: TradeReasoningProps)
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative min-h-full flex items-center justify-center p-4">
-        <Card className="relative w-full max-w-lg shadow-xl overflow-hidden">
+      <div className="relative min-h-full flex items-start sm:items-center justify-center p-4 sm:p-6 lg:p-8">
+        <Card className="relative w-full max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-y-auto shadow-xl">
           <div className="sovereign-bar absolute left-0 right-0 top-0" aria-hidden="true" />
           {/* Header */}
           <div className="flex items-center justify-between border-b border-theme-light pb-4 mb-4 -mx-6 px-6 -mt-6 pt-7">

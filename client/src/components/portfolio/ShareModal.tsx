@@ -155,8 +155,8 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
       />
 
       {/* Modal */}
-      <div className="relative min-h-full flex items-center justify-center p-4">
-        <div className="relative bg-[var(--color-bg)] rounded-xl shadow-xl w-full max-w-lg">
+      <div className="relative min-h-full flex items-start sm:items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div className="relative bg-[var(--color-bg)] rounded-xl shadow-xl w-full max-w-xl lg:max-w-2xl max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
             <div className="flex items-center gap-3">

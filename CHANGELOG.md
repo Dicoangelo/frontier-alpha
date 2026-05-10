@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.11] - 2026-05-10
+
+### Phase B of MASTERPLAN — type drift sweep
+
+- **B1: Page-local Config/Result/Request types audited**
+  - `Optimize.tsx` was shadowing the shared `OptimizationConfig` and
+    `OptimizationResult` from `client/src/types/index.ts`. The local
+    versions had drifted (e.g., the local `OptimizationConfig` did not
+    have `riskFreeRate`, which v1.3.9 traced as a NaN cascade).
+  - Resolution: enhanced shared `OptimizationResult.monteCarlo` to be
+    a SUPERSET (optional `simulations` and `confidenceInterval` fields
+    so the chart's richer needs and the API's minimal shape both
+    type-check). Removed page-local duplicate. `Optimize.tsx` now
+    imports both from `@/types`.
+  - `Backtest.tsx` (BacktestRunConfig + BacktestResult) and
+    `Pricing.tsx` (PlanConfig) — kept page-local with explicit doc
+    comments explaining scope. No second consumer warrants promotion.
+
+- **B2: Stronger typecheck script — catches Vercel-build-only failures
+  locally**
+  - Added `npm run typecheck` (= `tsc -b`) and
+    `npm run typecheck:strict` (= `tsc -b --force`) to
+    `client/package.json`. The build-mode `tsc -b` IS what Vercel
+    actually runs and catches type drift that single-config
+    `tsc -p tsconfig.json --noEmit` misses. Caught a real
+    `MonteCarloChart` prop mismatch as the new check landed.
+  - Resolution of caught bug: `Optimize.tsx` now builds a
+    chart-compatible `MonteCarloResult` from the shared
+    `OptimizationResult.monteCarlo` superset, synthesizing
+    `confidenceInterval` when the server's response omits it.
+
+### Verification
+
+- Server: 782/782 unchanged.
+- Client: 207/208 (1 pre-existing EarningsHeatmap failure unchanged).
+- Strict typecheck (`npm run typecheck`): clean.
+- Build: clean.
+
+### MASTERPLAN status
+
+- Phase A: ✅ shipped as v1.3.10
+- Phase B: ✅ shipped as v1.3.11
+- Phase C (page-by-page audit): pending
+- Phase D (Playwright walkthrough): pending
+- Phase E (production-readiness gate review): pending
+
+---
+
 ## [1.3.10] - 2026-05-10
 
 ### Phase A of MASTERPLAN — centralize + defend

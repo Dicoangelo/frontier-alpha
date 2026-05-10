@@ -106,12 +106,27 @@ export interface OptimizationResult {
   expectedVolatility: number;
   sharpeRatio: number;
   factorExposures: FactorExposure[];
-  explanation: string;
-  monteCarlo: {
+  // The page may render results before the explainer LLM completes; keep
+  // explanation optional so the result type doesn't lock the page render
+  // path behind a slow upstream.
+  explanation?: string;
+  // Server-side optimizer always emits monteCarlo. The Optimize page
+  // synthesizes a fallback when the chart wants confidenceInterval-style
+  // shape from a min-fields response (see MonteCarloChart). Extended fields
+  // are optional on the canonical type so both consumers type-check.
+  monteCarlo?: {
     var95: number;
     cvar95: number;
     medianReturn: number;
     probPositive: number;
+    simulations?: number[];
+    confidenceInterval?: {
+      p5: number;
+      p25: number;
+      p50: number;
+      p75: number;
+      p95: number;
+    };
   };
 }
 

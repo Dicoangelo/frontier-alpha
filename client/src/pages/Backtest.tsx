@@ -38,6 +38,10 @@ import { useToast } from '@/hooks/useToast';
 import { rechartsTooltipStyle } from '@/lib/theme';
 import { EmptyState } from '@/components/shared/EmptyState';
 
+// Backtest API contract — page-local because no second consumer in the
+// client today. Promote to client/src/types/index.ts when a second page
+// (e.g., a saved-backtest list) needs the same shape. If the server-side
+// contract changes, update this AND src/routes/backtest.ts in lockstep.
 interface BacktestRunConfig {
   symbols: string[];
   startDate: string;

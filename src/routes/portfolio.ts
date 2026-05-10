@@ -427,7 +427,17 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
       }
       const window = rawWindow as HistoryWindow;
       const windowDays = windowToDays(window);
-      const fetchDays = BASE_HISTORY_DAYS + windowDays;
+      // Fetch the SAME 300-day window the sibling /portfolio/factors/:symbols
+      // endpoint asks for. The HistoricalPriceCache keys on `${symbol}:${days}`
+      // (CompositeCache.getPrices line ~56) so a 301-day request would never
+      // re-use a 300-day cache hit and would always fall through to Polygon,
+      // immediately tripping the 5 req/min free-tier rate limit when the
+      // dashboard fires both endpoints in sequence (observed in production
+      // 2026-05-09: every symbol skipped, NO_FACTOR_DATA returned, FactorDeltas
+      // card stuck on "Return tomorrow" for the seeded test user).
+      // 300 days minus the max 5-day slice still leaves 295 trading days,
+      // well above the 252-day minimum FactorEngine needs for momentum_12m.
+      const fetchDays = BASE_HISTORY_DAYS;
 
       try {
         const prices = new Map<string, Price[]>();

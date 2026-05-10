@@ -57,12 +57,19 @@ describe('RISK_THRESHOLDS', () => {
   });
 });
 
-describe('RiskMetrics — empty (US-002)', () => {
-  it('renders dash placeholders when metrics is empty', () => {
+describe('RiskMetrics — empty (US-002, onboarding polish)', () => {
+  it('renders the calm awaiting-data placeholder when metrics is empty', () => {
     render(<RiskMetrics metrics={EMPTY} />);
-    // 6 metric tiles → 6 dashes
-    const dashes = screen.getAllByText('—');
-    expect(dashes.length).toBeGreaterThanOrEqual(6);
+    expect(screen.getByText(/Awaiting price history/i)).toBeTruthy();
+    expect(
+      screen.getByText(/Sharpe, volatility, drawdown, VaR, CVaR, and beta populate/i),
+    ).toBeTruthy();
+  });
+
+  it('does not render 6 dashed metric tiles in the empty state', () => {
+    render(<RiskMetrics metrics={EMPTY} />);
+    const dashes = screen.queryAllByText('—');
+    expect(dashes.length).toBeLessThan(6);
   });
 
   it('does not synthesize a Sharpe value when empty', () => {

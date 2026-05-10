@@ -1,8 +1,10 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { WelcomeModal, useOnboarding } from './WelcomeModal';
 import { FeatureTour } from './FeatureTour';
 import { useAuthStore } from '@/stores/authStore';
+import { portfolioApi } from '@/api/portfolio';
 import { toast } from '@/components/shared/Toast';
 
 interface OnboardingContextValue {
@@ -38,6 +40,22 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [showTour, setShowTour] = useState(false);
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
 
+  // Suppress the welcome modal for authenticated users who already have a
+  // funded portfolio. The modal's import-symbols flow assumes a fresh
+  // portfolio and would prompt the user to overwrite their existing
+  // positions with the demo set, which is data-destructive UX. The query
+  // is conditional on the same auth gate as the modal trigger so we don't
+  // fire it for signed-out visitors.
+  const portfolioQuery = useQuery({
+    queryKey: ['portfolio'],
+    queryFn: portfolioApi.getPortfolio,
+    enabled: Boolean(initialized && user && !isOnboardingComplete && !hasShownWelcome),
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+  const hasPositions = (portfolioQuery.data?.positions?.length ?? 0) > 0;
+  const portfolioReady = portfolioQuery.isFetched || portfolioQuery.isError;
+
   // Show welcome modal for first-time authenticated users on dashboard
   useEffect(() => {
     if (
@@ -45,6 +63,8 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       user &&
       !isOnboardingComplete &&
       !hasShownWelcome &&
+      portfolioReady &&
+      !hasPositions &&
       (location.pathname === '/dashboard' || location.pathname === '/')
     ) {
       // Small delay to let the dashboard load first
@@ -55,7 +75,29 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
       return () => clearTimeout(timer);
     }
-  }, [initialized, user, isOnboardingComplete, hasShownWelcome, location.pathname]);
+  }, [
+    initialized,
+    user,
+    isOnboardingComplete,
+    hasShownWelcome,
+    portfolioReady,
+    hasPositions,
+    location.pathname,
+  ]);
+
+  // Returning user who already has positions — quietly mark them onboarded
+  // so the modal doesn't reappear if their localStorage is wiped.
+  useEffect(() => {
+    if (
+      initialized &&
+      user &&
+      !isOnboardingComplete &&
+      portfolioReady &&
+      hasPositions
+    ) {
+      completeOnboarding();
+    }
+  }, [initialized, user, isOnboardingComplete, portfolioReady, hasPositions, completeOnboarding]);
 
   const handleCloseWelcome = useCallback(() => {
     setShowWelcome(false);

@@ -849,8 +849,9 @@ function ConnectionSettingsModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="glass-slab rounded-2xl p-6 sm:p-8 w-full max-w-lg animate-scale-in">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm animate-fade-in">
+      <div className="relative min-h-full flex items-start sm:items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="glass-slab rounded-2xl p-6 sm:p-8 w-full max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-y-auto animate-scale-in">
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">Integrations</p>
@@ -983,6 +984,7 @@ function ConnectionSettingsModal({
             Use Demo Mode
           </Button>
         </div>
+      </div>
       </div>
     </div>
   );

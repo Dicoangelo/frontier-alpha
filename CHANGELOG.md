@@ -7,6 +7,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.12] - 2026-05-10
+
+### Phase C of MASTERPLAN — page-by-page audit + fix-on-spot wins
+
+Audit log written at `tasks/audit-2026-05-10-pages.md` covers 14 pages
+(Trading, Earnings, Tax, Backtest, ML, Alerts, Social, Optimize, CVRF,
+Settings, APIKeys, Help, Pricing, Onboarding). Method was code-read +
+targeted grep — no full live click-through this round (next phase D's
+Playwright pass covers that).
+
+### Fix-on-spot wins shipped this version
+
+- **Trading broker-connect modal sized per Phase A3 rule**
+  - `client/src/pages/Trading.tsx` — `BrokerConnectionModal` was
+    `max-w-lg` (Tier 1) for a multi-field structured workflow. Bumped
+    to `max-w-2xl lg:max-w-3xl` (Tier 2) plus the three required
+    ancillary props (overflow-y-auto, items-start sm:items-center,
+    p-4 sm:p-6 lg:p-8).
+
+- **Tax tables restored in production Supabase**
+  - `frontier_tax_lots` and `frontier_tax_events` from
+    `supabase/migrations/20260209_tax_lots.sql` did not exist in
+    production. Same drift class as the v1.3.7 historical_prices restore.
+  - Restored via Supabase MCP migration
+    `restore_missing_tax_lots_and_events_v2`. Dropped the original
+    `is_short_term` generated column because PostgreSQL rejects
+    `NOW()` as immutable in stored-generated context — app code can
+    derive that flag from `purchase_date` / `sold_date` instead.
+  - Effect: Tax page can now render real data; integration suite's
+    `seedGoldenState()` step 3 (tax events insert) will now succeed
+    instead of erroring out (per v1.3.5 audit-noted limit).
+
+- **Backtest strategy union aligned with Optimize**
+  - `client/src/pages/Backtest.tsx::BacktestRunConfig.strategy` —
+    added `'target_volatility'` to the union so Backtest matches
+    `OptimizationConfig.objective` from `@/types`. Fixed a silent
+    inconsistency between the two strategy pickers.
+
+- **api-keys.ts route — real error messages surfaced**
+  - 2 catch blocks updated to the Phase A4 pattern
+    (`error instanceof Error ? \`...: ${error.message}\` : '...'`).
+  - Other routes already had the pattern (notifications.ts, sec.ts).
+
+### Queued for v1.3.13 (next focused session, biggest leverage)
+
+- Refactor `Alerts.tsx` from raw `useState` + `try/catch` +
+  `console.error` to React Query + toasts. Loudest legacy pattern.
+- Trading silent-failure sweep — 8 `console.error()` sites need
+  `toastError()` companions.
+- Earnings demo-symbol leak (renders fake AAPL/MSFT/GOOGL when
+  user has zero positions).
+- Onboarding: `analyze_symbols` localStorage propagates to
+  WelcomeModal banner but never actually pre-fills the user's
+  portfolio. Demo-to-portfolio bridge is broken.
+
+### Verification
+
+- Server: 782/782 unchanged.
+- Client: 207/208 (1 pre-existing EarningsHeatmap failure unchanged).
+- Type-check (strict): clean.
+- Build: clean.
+
+### MASTERPLAN status
+
+- Phase A: ✅ shipped as v1.3.10
+- Phase B: ✅ shipped as v1.3.11
+- Phase C: ✅ shipped as v1.3.12 (audit + 4 fix-on-spot wins, 4 queued)
+- Phase D (Playwright walkthrough): pending
+- Phase E (production-readiness gate review): pending
+
+---
+
 ## [1.3.11] - 2026-05-10
 
 ### Phase B of MASTERPLAN — type drift sweep

@@ -138,7 +138,11 @@ export function Options() {
 
   return (
     <div className="space-y-6" data-testid="visual-options-ready">
-      <MockDataBanner force pageKey="options" />
+      <MockDataBanner
+        force
+        pageKey="options"
+        message="Options chain shown is demo data. Live chain wiring is on the roadmap."
+      />
 
       {/* Header */}
       <div

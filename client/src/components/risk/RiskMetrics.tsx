@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Card } from '@/components/shared/Card';
 import { Badge } from '@/components/shared/Badge';
 import { HelpTooltip } from '@/components/help';
-import { Shield, TrendingDown, Activity, Target, BarChart2 } from 'lucide-react';
+import { Shield, TrendingDown, Activity, Target, BarChart2, Sparkles } from 'lucide-react';
 import type { RiskMetrics as RiskMetricsType } from '@/types';
 import type { DataSource } from '@/lib/dataSource';
 
@@ -24,8 +24,6 @@ interface RiskMetricsProps {
   metrics: DataSource<RiskMetricsType>;
   benchmark?: { sharpeRatio?: number; volatility?: number; maxDrawdown?: number };
 }
-
-const EMPTY_PLACEHOLDER = '—';
 
 function getSharpeLabel(value: number): { variant: 'success' | 'warning' | 'danger' | 'info'; text: string; color: string } {
   if (value >= RISK_THRESHOLDS.sharpe.green) return { variant: 'success', text: value >= 2.0 ? 'Excellent' : 'Good', color: 'var(--color-positive)' };
@@ -58,29 +56,25 @@ function getVarLabel(value: number): { variant: 'success' | 'warning' | 'danger'
 }
 
 export function RiskMetrics({ metrics, benchmark }: RiskMetricsProps) {
-  // Empty state — render dashes everywhere instead of synthesizing zeros that
-  // read as if the user actually has a 0% drawdown / 0 sharpe portfolio.
+  // Empty state — show a single explanatory placeholder instead of 6 dashed
+  // metric cards. Six "No data" rows on dashboard first paint reads like a
+  // broken page; one calm line reads like a feature waiting on data.
   if (metrics.kind === 'empty') {
     return (
       <Card title="Risk Metrics">
-        <div className="grid grid-cols-2 gap-4">
-          {[
-            { icon: <Target className="w-5 h-5 text-[var(--color-text-muted)]" />, label: 'Sharpe Ratio' },
-            { icon: <Activity className="w-5 h-5 text-[var(--color-text-muted)]" />, label: 'Volatility (Ann.)' },
-            { icon: <TrendingDown className="w-5 h-5 text-[var(--color-text-muted)]" />, label: 'Max Drawdown' },
-            { icon: <Shield className="w-5 h-5 text-[var(--color-text-muted)]" />, label: 'VaR (95%)' },
-            { icon: <BarChart2 className="w-5 h-5 text-[var(--color-text-muted)]" />, label: 'Beta' },
-            { icon: <Shield className="w-5 h-5 text-[var(--color-text-muted)]" />, label: 'CVaR (95%)' },
-          ].map((m) => (
-            <MetricCard
-              key={m.label}
-              icon={m.icon}
-              label={m.label}
-              value={EMPTY_PLACEHOLDER}
-              badge={{ variant: 'info', text: 'No data', color: 'var(--color-text-muted)' }}
-              tooltip="Add positions to compute this metric."
-            />
-          ))}
+        <div className="flex flex-col items-center justify-center text-center py-10 px-4 gap-3">
+          <div
+            className="flex items-center justify-center w-12 h-12 rounded-full"
+            style={{ background: 'rgba(123, 44, 255, 0.12)' }}
+          >
+            <Sparkles className="w-6 h-6" style={{ color: 'var(--color-accent)' }} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-theme">Awaiting price history</p>
+            <p className="mt-1 text-xs text-theme-muted max-w-xs">
+              Sharpe, volatility, drawdown, VaR, CVaR, and beta populate as factor data accumulates from your positions.
+            </p>
+          </div>
         </div>
       </Card>
     );

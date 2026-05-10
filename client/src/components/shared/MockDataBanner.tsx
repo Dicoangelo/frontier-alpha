@@ -76,7 +76,7 @@ export interface MockDataBannerProps {
 }
 
 const DEFAULT_FORCE_MESSAGE =
-  'Showing demo data — connect a portfolio to see your numbers';
+  'Showing demo data. Connect a portfolio to see your numbers.';
 
 export function MockDataBanner({
   force = false,

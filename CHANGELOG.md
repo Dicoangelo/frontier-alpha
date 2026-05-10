@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.5] - 2026-05-09
+
+### Onboarding Polish (3 confirmed fresh-user UX bugs)
+
+End-of-day audit walked production as the seeded golden-state user and the anonymous landing visitor. Three real onboarding-stage bugs surfaced and were fixed in this release. Visual baselines for `dashboard` and `options` regenerated to lock the new rendering.
+
+- **Welcome modal data-destructive prompt**
+  - Before: every authenticated user (including users with funded portfolios) got the welcome modal on first dashboard load. The modal's "Import 7 symbols as your starting portfolio" CTA would overwrite their existing positions with the demo set.
+  - Fix: `client/src/components/onboarding/OnboardingProvider.tsx` now gates the modal on `portfolioQuery.data?.positions?.length === 0`. Returning users with positions are auto-marked onboarded so the modal does not reappear if their localStorage is cleared.
+  - Result: welcome modal only fires for users who actually have an empty portfolio. Verified with the seeded test user (5 positions): modal no longer appears.
+
+- **Risk Metrics empty state**
+  - Before: 6 metric tiles each showing "—" with "No data" badges. Read like a broken page on first dashboard paint.
+  - Fix: `client/src/components/risk/RiskMetrics.tsx` empty branch now renders a single calm placeholder with sparkle icon and one-line copy ("Awaiting price history. Sharpe, volatility, drawdown, VaR, CVaR, and beta populate as factor data accumulates from your positions."). Test updated to match the new behavior.
+  - Result: dashboard first paint reads as a feature waiting on data, not as broken.
+
+- **Options page banner copy**
+  - Before: "SHOWING DEMO DATA — CONNECT A PORTFOLIO TO SEE YOUR NUMBERS" rendered even when the user had positions. Misleading because the chain itself is mock-only and connecting positions does not change that.
+  - Fix: `client/src/pages/Options.tsx` now passes an explicit `message` to `MockDataBanner`: "Options chain shown is demo data. Live chain wiring is on the roadmap." Default banner copy in `MockDataBanner.tsx` also updated to swap the em dash for a period (cross-project no-em-dashes rule).
+
+### Visual baselines refreshed
+
+- `dashboard-light.png` and `dashboard-dark.png` re-captured to reflect the suppressed welcome modal and new Risk Metrics placeholder.
+- `options-light.png` and `options-dark.png` re-captured to reflect the new banner copy.
+- Other 14 baselines unchanged.
+
+### Audit observations deferred (not in this release)
+
+- FactorDeltas card on production still shows "Building factor baseline. Return tomorrow for first delta read." for the seeded test user even though the v1.3.4 server endpoint should resolve this. Strategy 1 path may not be firing. Investigate next session.
+- Live feed offline banner copy on Vercel tier (offline by design) is alarming for fresh users. Memory note: per v1.2.6 fix this is intentional terminal state. Could soften copy but not in this scope.
+- Landing stat counters appear to render at 0 in screenshots due to IntersectionObserver timing. Real users see them animate. Not a real UX issue.
+
+---
+
 ## [1.3.4] - 2026-05-09
 
 ### Server-Side Factor History (DASH3-005 follow-up, closes "wait til tomorrow" gap)

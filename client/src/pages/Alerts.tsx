@@ -13,6 +13,7 @@ import { SECFilingAlert } from '@/components/alerts/SECFilingAlert';
 import { SkeletonCard } from '@/components/shared/Skeleton';
 import { DataLoadError, EmptyAlerts } from '@/components/shared/EmptyState';
 import { MockDataBanner } from '@/components/shared/MockDataBanner';
+import { toast } from '@/components/shared/Toast';
 import { api } from '@/api/client';
 import { useEmailDeliveryStatus } from '@/hooks/useIntegrationsHealth';
 import type { RiskAlert } from '@/types';
@@ -53,7 +54,9 @@ export function Alerts() {
       setUsingDemoAlerts(false);
     } catch (error) {
       console.error('Failed to load alerts:', error);
-      setLoadError('Failed to load alerts');
+      const message = error instanceof Error ? error.message : 'Failed to load alerts';
+      setLoadError(message);
+      toast.error('Failed to load alerts', message);
       // US-002: don't seed mock NVDA / MSFT alerts on a new account.
       // The "All Clear" panel below renders correctly with an empty list.
       setAlerts([]);
@@ -105,8 +108,12 @@ export function Alerts() {
       );
     } catch (error) {
       console.error('Failed to load factor exposures:', error);
-      // API failure with unknown portfolio state: don't synthesize symbols
-      // or exposures. The factor-drift and SEC filings cards will hide.
+      // Soft failure — toast for awareness but don't render an error
+      // banner. Factor-drift section hides when exposures stay empty.
+      toast.warning(
+        'Factor data unavailable',
+        error instanceof Error ? error.message : 'Drift detection paused until next refresh.',
+      );
       setPortfolioSymbols([]);
       setFactorExposures([]);
       setUsingDemoFactors(false);
@@ -155,7 +162,15 @@ export function Alerts() {
       );
     } catch (error) {
       console.error('Failed to acknowledge alert:', error);
-      // Still update UI for demo
+      // Optimistic-update + warn-toast pattern: persistence failed but
+      // UI stays acknowledged so the user isn't blocked. The warning
+      // toast tells them a refresh might roll it back.
+      toast.warning(
+        'Acknowledgement saved locally',
+        error instanceof Error
+          ? `Server rejected the update: ${error.message}. It may revert on refresh.`
+          : 'Server rejected the update. It may revert on refresh.',
+      );
       setAlerts(prev =>
         prev.map(alert =>
           alert.id === id ? { ...alert, acknowledged: true } : alert

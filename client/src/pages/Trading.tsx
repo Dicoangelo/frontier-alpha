@@ -174,8 +174,13 @@ export default function Trading() {
   const handleConnectDemo = async () => {
     try {
       await connectBroker.mutateAsync({ broker: 'mock' });
+      toast.success('Demo broker connected', 'You can now place simulated orders');
     } catch (error) {
-      console.error('Failed to connect demo broker:', error);
+      // Surface real error to user — was previously silent (only console.error).
+      toast.error(
+        'Failed to connect demo broker',
+        error instanceof Error ? error.message : 'Try again or check console.',
+      );
     }
   };
 
@@ -833,18 +838,31 @@ function ConnectionSettingsModal({
         apiSecret,
         paperTrading,
       });
+      toast.success(
+        'Alpaca connected',
+        paperTrading ? 'Paper trading mode active' : 'Live trading mode active',
+      );
       onClose();
     } catch (error) {
-      console.error('Connection failed:', error);
+      // Surface real error to user — was previously silent (only console.error).
+      // Common causes: bad keys, network, Alpaca API down.
+      toast.error(
+        'Connection failed',
+        error instanceof Error ? error.message : 'Could not connect to Alpaca. Check your API keys and try again.',
+      );
     }
   };
 
   const handleConnectDemo = async () => {
     try {
       await connectBroker.mutateAsync({ broker: 'mock' });
+      toast.success('Demo broker connected', 'You can now place simulated orders');
       onClose();
     } catch (error) {
-      console.error('Demo connection failed:', error);
+      toast.error(
+        'Demo connection failed',
+        error instanceof Error ? error.message : 'Could not enable demo broker. Try again.',
+      );
     }
   };
 

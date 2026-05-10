@@ -130,13 +130,19 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       window.localStorage.removeItem('analyze_symbols');
       const count = symbols.length;
       toast.success(
-        `Imported ${count} ${count === 1 ? 'symbol' : 'symbols'} to your portfolio`,
-        'Visit the Portfolio page to wire live data and run a real read.',
+        `Saved ${count} ${count === 1 ? 'symbol' : 'symbols'} for import`,
+        'Add them to your portfolio with shares and cost basis on the next screen.',
       );
+      // Bridge the demo→real handoff — was previously stalled at localStorage.
+      // The Portfolio page reads `imported_symbols` and pre-populates the
+      // Add-Position form so the user has a concrete next action instead of
+      // landing on an empty portfolio with no obvious connection to their
+      // imported demo.
+      setTimeout(() => navigate('/portfolio?import=1'), 100);
     } catch {
       // Storage unavailable — fail quietly, banner still dismisses
     }
-  }, []);
+  }, [navigate]);
 
   const handleTourComplete = useCallback(() => {
     setShowTour(false);

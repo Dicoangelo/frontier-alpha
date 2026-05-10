@@ -194,9 +194,12 @@ export function CVRFBeliefDisplay() {
         <div className="mt-4 pt-4 border-t border-[var(--color-border-light)]">
           <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-2">Conceptual Priors</p>
           <div className="flex flex-wrap gap-1">
-            {conceptualPriors.slice(0, 5).map((prior) => (
+            {conceptualPriors.slice(0, 5).map((prior, idx) => (
               <span
-                key={prior.id}
+                // Server-generated `insight_risk_N` IDs can collide across
+                // cycles (counter resets per ConceptExtractor instance).
+                // Index disambiguates within a single render pass.
+                key={`${prior.id}-${idx}`}
                 className={`px-2 py-0.5 text-xs rounded ${
                   prior.impactDirection === 'positive'
                     ? 'bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] text-[var(--color-positive)]'

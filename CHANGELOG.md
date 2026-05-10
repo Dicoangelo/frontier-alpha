@@ -7,6 +7,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.2] - 2026-05-10
+
+### Walkthrough first run — 3 real bugs surfaced + fixed
+
+The first end-to-end run of the v1.3.14 walkthrough suite (16 tests
+across all primary pages) caught three real bugs that the v1.4.1
+production deploy was carrying. This is exactly the value the
+regression net was designed to provide — bugs caught automatically
+before reaching a user.
+
+- **Test user subscription was on `free` plan instead of `enterprise`**
+  - Cause: v1.3.7 tax-events table failure aborted `seedGoldenState()`
+    before its subscription upsert step (line 304-322 of integration
+    auth-helper). Test user existed but never got the comp-enterprise
+    record, so the CVRF route's subscription gate returned 403 to
+    every `/cvrf/*` call.
+  - Fix: one-time SQL `UPDATE frontier_subscriptions SET plan='enterprise',
+    stripe_customer_id='comp_test_user'` via Supabase MCP. The full
+    `seedGoldenState()` will succeed now that v1.3.12 restored the
+    tax tables.
+
+- **Factors page React duplicate key warnings**
+  - Cause: `client/src/pages/Factors.tsx:50` and two sites in
+    `client/src/components/factors/FactorExposures.tsx` keyed by
+    `factor.factor` only. The factors API aggregates exposures
+    across multiple symbols, so `momentum_12m`, `market`, etc. each
+    appear once per holding — same key collides.
+  - Fix: include symbol + index in the key
+    (`${factor.symbol ?? 'agg'}-${factor.factor}-${idx}` on the page,
+    `${factor.factor}-${idx}` on the generic component which lacks a
+    `symbol` field).
+
+- **CVRF page React duplicate key warning**
+  - Cause: `CVRFBeliefDisplay.tsx:199` keyed by `prior.id` which
+    comes from server-side `insight_risk_${this.insightCounter}`
+    in `src/cvrf/ConceptExtractor.ts`. The counter is per-instance,
+    so different ConceptExtractor instances generate the same IDs
+    across cycles, and the union renders with collisions.
+  - Fix: include map index in the key (`${prior.id}-${idx}`). The
+    server-side ID generator should also be made unique
+    (UUID-suffixed or cycle-prefixed) but that's a deeper refactor
+    queued separately.
+
+### Verification
+
+- Walkthrough: **16/16 tests passing locally** (was 13/16 before fixes).
+- Server: 800/800 unchanged.
+- Client: 207/208 (1 pre-existing unchanged).
+- Strict typecheck + build: clean.
+
+### Phase E gate state at v1.4.2
+
+| # | Criterion | State |
+|---|---|---|
+| 1 | Polygon Starter live | ❌ deferred |
+| 2 | FactorDeltas day-1 deltas live | ✅ |
+| 3 | Onboarding empty states polished | ✅ |
+| 4 | Visual + walkthrough CI green 14+ nights | ⏳ first run today proves the suite passes; clock starts |
+| 5 | Second external user | ❌ deferred |
+| 6 | Server tests 800+ | ✅ 800 |
+| 7 | Lighthouse / CWV measured | ✅ |
+
+Walkthrough first-run completing 16/16 is itself a milestone — the suite
+now provides a real regression net. The 14-night clock for gate criterion
+4 starts today.
+
+---
+
 ## [1.4.1] - 2026-05-10
 
 ### Phase E gate items 6 + 7 closed (server tests 800+, Lighthouse measured)

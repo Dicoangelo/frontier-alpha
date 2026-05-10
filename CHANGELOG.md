@@ -7,6 +7,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.13] - 2026-05-10
+
+### Phase C queued items shipped — silent failures + demo→real bridge
+
+Three of four high-priority items from the Phase C audit log shipped
+together. The fourth (Q1 Earnings demo-symbol leak) was already
+correctly handled by US-002 — audit observation was stale, marked
+done.
+
+- **Q2: Trading silent-failure toast sweep**
+  - 3 `console.error()` sites in `Trading.tsx` (broker connect demo,
+    Alpaca live connect, Alpaca demo connect within
+    ConnectionSettingsModal) now surface real error messages via the
+    existing `toast.error()` API. Successful connects also get a
+    `toast.success()` confirmation so the user sees feedback either
+    way.
+  - **Why:** Broker connection failures (bad keys, network, Alpaca API
+    down) were completely silent. User would click "Connect Alpaca"
+    and the modal would just sit there with no feedback either way.
+
+- **Q3: Alerts.tsx surgical toast pass**
+  - Three legacy `try/catch + console.error` sites in `Alerts.tsx` now
+    fire `toast.error/warning` alongside the console log: `loadAlerts`
+    (page load failure), `loadFactorExposures` (factor data failure,
+    soft-toasted as warning since the page degrades gracefully),
+    `handleAcknowledge` (persistence failure with optimistic update +
+    warn-toast pattern).
+  - Did NOT do the full React Query refactor — the surgical approach
+    captures the user-facing value (no more silent failures) without
+    a 520-line refactor. Full refactor queued for a future session if
+    needed.
+
+- **Q4: Onboarding analyze_symbols → portfolio pre-fill bridge**
+  - `OnboardingProvider.handleImportDemoSymbols` now navigates the user
+    to `/portfolio?import=1` after the WelcomeModal "Import N symbols"
+    CTA. Previously the imported symbols stalled at localStorage and
+    the user landed on a still-empty Portfolio with no obvious
+    connection to their demo intent.
+  - `Portfolio.tsx` reads the `?import=1` flag on mount, pulls the
+    `imported_symbols` queue from localStorage, pre-fills the
+    Add-Position form with the first symbol, and opens the form
+    (modal on desktop, sheet on mobile). Each subsequent visit prompts
+    the next symbol until the queue clears.
+  - **Why:** v1.3.5 audit flagged this as a broken bridge — the
+    WelcomeModal toast said "imported to your portfolio" but no real
+    positions were created. Now the toast accurately says "saved for
+    import" and walks the user through the actual add-position flow.
+
+### Verification
+
+- Server: 782/782 unchanged.
+- Client: 207/208 (1 pre-existing EarningsHeatmap failure unchanged).
+- Strict typecheck: clean.
+- Build: clean.
+
+### MASTERPLAN status
+
+- Phase A: ✅ shipped as v1.3.10
+- Phase B: ✅ shipped as v1.3.11
+- Phase C: ✅ shipped as v1.3.12
+- Phase C queued items: ✅ shipped as v1.3.13
+- Phase D (Playwright walkthrough): pending
+- Phase E (production-readiness gate review): pending
+
+### Queued for IDEAS.md / future sessions
+
+The medium-priority items from the Phase C audit log remain queued:
+
+- Social page placeholder honesty banner OR hide nav.
+- ML training-status state machine refinement.
+- CVRF RecordDecision modal sizing verification.
+- Settings notification mutation rollback on failure.
+- Pricing Enterprise CTA → Resend + Supabase signup table.
+- SignupPage rate-limit handling.
+- Full Alerts.tsx React Query refactor (surgical toasts shipped).
+
+---
+
 ## [1.3.12] - 2026-05-10
 
 ### Phase C of MASTERPLAN — page-by-page audit + fix-on-spot wins

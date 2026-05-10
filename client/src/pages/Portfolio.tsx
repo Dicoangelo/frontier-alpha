@@ -5,7 +5,7 @@
  * Layout-wrapped (see App.tsx) — page chrome is provided by parent Layout.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Edit2, X, Check, Share2, DollarSign, TrendingUp, TrendingDown, BarChart3, Wallet } from 'lucide-react';
 import { api, isNetworkError, getErrorMessage } from '@/api/client';
@@ -151,6 +151,45 @@ export function Portfolio() {
       setShowAddForm(true);
     }
   };
+
+  // Demo→real onboarding handoff: when the WelcomeModal "Import N symbols"
+  // CTA navigates here with `?import=1`, read `imported_symbols` from
+  // localStorage, pre-fill the Add-Position form with the first symbol,
+  // and open the form. User finishes by entering shares + cost. Per
+  // imported symbol, repeat. Closes the v1.3.5-flagged dead-end where the
+  // imported_symbols never made it to a real portfolio row.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('import') !== '1') return;
+    try {
+      const raw = window.localStorage.getItem('imported_symbols');
+      if (!raw) {
+        url.searchParams.delete('import');
+        window.history.replaceState({}, '', url.toString());
+        return;
+      }
+      const queue = (JSON.parse(raw) as string[]).filter((s) => typeof s === 'string' && s.length > 0);
+      if (queue.length === 0) return;
+      const [head, ...rest] = queue;
+      setFormData({ symbol: head.toUpperCase(), shares: '', avgCost: '' });
+      if (isMobile) addPositionSheet.open();
+      else setShowAddForm(true);
+      // Persist the remaining queue so each subsequent add prompts the next.
+      window.localStorage.setItem('imported_symbols', JSON.stringify(rest));
+      // Strip the query param so refresh doesn't re-trigger the flow.
+      url.searchParams.delete('import');
+      window.history.replaceState({}, '', url.toString());
+      // Last item in the queue: also clear the localStorage key entirely.
+      if (rest.length === 0) {
+        window.localStorage.removeItem('imported_symbols');
+      }
+    } catch {
+      /* parse / storage failures are non-blocking — just skip the handoff */
+    }
+    // Run once on mount; the URL/state changes inside this effect would
+    // otherwise re-fire it unnecessarily.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ─── Derived data ─────────────────────────────────────────────────────
   // Pulled out BEFORE any conditional returns so the hook count stays

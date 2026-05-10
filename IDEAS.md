@@ -235,50 +235,219 @@ flows without account creation.
 
 ---
 
-## From ResearchGravity / arxiv (deferred, suggested)
+## From ResearchGravity arxiv sweep (2026-05-09 R&D Discovery session)
 
-Source: ResearchGravity protocol. Last sweep: pre-2026-04. The FriendlyFace
-analysis above pulled three real arxiv papers it has implemented in code:
+Session: `frontier-alpha-r&d-d-20260509-213842-b881f0` (archived). 25+
+papers surfaced across 5 query topics. Headliners + lift estimates below.
+Synthesis (thesis-gap-direction) at the end of this section.
 
-- **arXiv:2409.17509 (BioZero, 2024)** — append-only Merkle tree for
-  forensic evidence integrity. Already in FriendlyFace. Direct analog:
-  factor signal integrity verification, CVRF episode chain.
-- **Mohammed ICDF2C 2024** — forensic-friendly schema (ForensicEvent,
-  ProvenanceNode, ForensicBundle). Already in FriendlyFace. Note: Mohammed
-  is in cross-project memory `project_mohammed_contact.md` — direct
-  collaboration channel exists if a deeper port is pursued.
-- **arXiv:2505.03837 (SDD Saliency, Li 2025)** — pixel-level saliency via
-  spatial-directional decomposition. Already implemented in FriendlyFace.
-  Could analog to "trading-day saliency" for momentum / volatility signals
-  (which days drove the exposure?).
+### Topic A — Interpretable attention factor models
 
-### Suggested re-sweep queries
+- **arXiv:2510.11616 — "Attention Factors for Statistical Arbitrage"** (Oct 2025)
+  - Sharpe 4.0 frictionless, **2.3 with friction** on 24-yr daily returns
+    of top-500 US equities. Loadings are interpretable (closely tied to
+    industry sectors).
+  - **FA fit:** Direct augment to `src/factors/FactorEngine.ts`. Replace
+    or augment classical OLS factor regression with attention-derived
+    loadings. Keep classical as baseline for fallback + comparison.
+  - **Lift:** L (3-week phase) — port the attention factor model + run
+    it parallel to OLS in production for dual-output validation
+- **arXiv:2505.01575 — "Asset Pricing in Transformer"** (May 2025) — anatomy
+  of black-box transformer factor models, mechanistic interpretation. Pair
+  with above for the "why does the attention model say what it says" UI.
+- **arXiv:2511.21514 — "Mechanistic Interpretability for Transformer-based
+  Time Series Classification"** (Nov 2025) — activation patching, attention
+  saliency, sparse autoencoders for individual head causal roles. Pulls
+  directly into Cognitive Insight v3.
+- **arXiv:2507.07107 — "ML-Enhanced Multi-Factor Quantitative Trading"** —
+  cross-sectional portfolio optimization with bias correction.
 
-When ResearchGravity is rerun for Frontier-Alpha-relevant papers, focus on:
+### Topic B — Episodic memory for trading agents (CVRF v2 candidates)
 
-1. **"factor exposure interpretability transformer 2025-2026"** — likely
-   has new attention-based factor models that improve on classical OLS
-   regression for factor-loading estimation
-2. **"episodic belief learning portfolio 2025-2026"** — direct hit on CVRF;
-   anything new in episodic memory for trading agents
-3. **"regime detection deep learning end-of-day 2025-2026"** — CVRF's
-   regime layer could pull new techniques
-4. **"options pricing neural surrogate 2025-2026"** — feeds the Options
-   page's vol surface
-5. **"factor saliency explainability finance 2025-2026"** — extends the
-   IDEA-FF-2 multi-method explainer with domain-specific saliency
+- **arXiv:2601.03192 — "MemRL: Self-Evolving Agents via Runtime RL on
+  Episodic Memory"** (Jan 2026)
+  - Non-parametric, **decouples stable reasoning from plastic memory**.
+    Two-Phase Retrieval filters noise to identify high-utility strategies
+    via environmental feedback.
+  - **FA fit:** Maps directly to CVRF — `factor model = stable reasoning`,
+    `belief state = plastic memory`. The Two-Phase Retrieval pattern is
+    what CVRF needs to graduate from "log episodes" to "learn from
+    episodes." This is the highest-leverage paper in the sweep.
+  - **Lift:** L (4-6 week phase) — touches `src/cvrf/`, requires RL
+    training infrastructure
+- **arXiv:2603.07670 — "AgeMem: Memory for Autonomous LLM Agents"** —
+  treats 5 memory ops (store/retrieve/update/summarize/discard) as
+  callable tools, end-to-end RL with 3-stage curriculum (SFT warm-up,
+  task-level RL, step-level GRPO). Cleaner abstraction than current CVRF.
+- **arXiv:2503.04143 — "MTS: Deep RL Portfolio Management with
+  Time-Awareness + Short-Selling"** — domain-specific baseline.
+- **arXiv:2512.13564 — "Memory in the Age of AI Agents"** — taxonomy
+  paper: factual / experiential / working memory. Frame for
+  positioning CVRF.
 
-### How to run
+### Topic C — Deep regime detection
+
+- **arXiv:2410.22346 — "Representation Learning for Regime Detection in
+  Block Hierarchical Financial Markets"** (Oct 2024)
+  - SPDNet/SPD-NetBN/U-SPDNet on Riemannian manifold of block-hierarchical
+    SPD correlation matrices. Direct upgrade over HMM/Markov-switching.
+  - **FA fit:** CVRF's regime layer currently uses simple heuristics.
+    Swap in SPDNet for the correlation-matrix-based classifier.
+  - **Lift:** M (existing CVRF regime hooks + new model + new training)
+- **arXiv:2508.19609 — "FinCast: Foundation Model for Financial
+  Time-Series Forecasting"** — handles non-stationarity, multi-domain,
+  varying temporal resolutions. Worth tracking for v3.
+- **arXiv:2603.01820 — "Deep Learning for Financial Time Series:
+  Large-Scale Benchmark"** (Mar 2026) — benchmarks linear / RNN /
+  transformer / state-space / sequence-rep across 2010-2025. Read before
+  picking any architecture.
+- **arXiv:2603.17692 — "BlindTrade"** (ICLR 2026 Workshop) —
+  anonymization-first LLM-GNN-RL for cross-market regime generalization.
+
+### Topic D — Temporal saliency for financial signals
+
+- **arXiv:2509.22839 — "CrossScaleNet: Learning Temporal Saliency for
+  Time Series Forecasting with Cross-Scale Attention"** (Sep 2025)
+  - Patch-based cross-attention with multi-scale processing. Intrinsic
+    explainability via embedded attention.
+  - **FA fit:** Direct UX upgrade. Power the "your momentum signal was
+    driven 73% by the last 14 days" copy on Cognitive Insight cards.
+    Time-series analog of FriendlyFace's SDD saliency (arXiv:2505.03837).
+  - **Lift:** S-M (1-2 week phase, mostly UI + one new model surface)
+- **arXiv:2505.13100 — "Time Series Saliency Maps: Cross-domain Integrated
+  Gradients"** — generalization of IG to ANY domain expressible as
+  invertible differentiable transform of time domain (Fourier, wavelet).
+  Useful when raw-time saliency is noisy.
+- **arXiv:2407.15909 — "Survey of XAI in Financial Time Series
+  Forecasting"** — read first to pick the right method; categorizes
+  approaches.
+
+### Topic E — Provenance + verifiable audit (FF-1 / FF-4 substrate)
+
+- **arXiv:2511.17118 — "Constant-Size Cryptographic Evidence Structures
+  for Regulated AI Workflows"** (Nov 2025)
+  - Hash-and-sign construction with collision-resistant hashes + digital
+    signatures. **Constant-size storage with uniform verification cost
+    per event** — the exact properties IDEA-FF-1 needs at scale.
+  - **FA fit:** Replace the "Mohammed ICDF2C 2024 forensic event chain"
+    target in IDEA-FF-1 with this. Same goal, better cost profile.
+  - **Lift:** M-L (Ed25519 keypair management + signed event store +
+    verification endpoint). Wrap into the same delivery as IDEA-FF-1.
+- **arXiv:2503.22573 — "Framework for End-to-End Verifiable AI
+  Pipelines"** — DECORAIT decentralized tamper-evident registry, ZK
+  proofs for training correctness / data provenance / inference
+  execution. Matches IDEA-FF-4 (signed backtest receipts).
+- **arXiv:2502.19567 — "Atlas: ML Lifecycle Provenance & Transparency"**
+  — extends Sigstore's Rekor with C2PA model transformation
+  attestations. Lower-lift adoption path if we want OFF-the-shelf vs
+  build-our-own.
+- **arXiv:2602.20214 — "Right to History: Sovereignty Kernel for
+  Verifiable AI Agent Execution"** (Feb 2026) — RFC 6962 Merkle audit
+  logs + capability-based isolation + energy-budget governance.
+  Strategic frame, less tactical fit.
+- **arXiv:2511.02841 — "AI Agents with DIDs + Verifiable Credentials"**
+  — pairs with IDEA-FF-4. Skip unless we go deep on the institutional
+  trust play.
+
+### Synthesis (per RG protocol — Thesis · Gap · Innovation Direction)
+
+**Thesis** — 2024-2026 quant finance ML is converging on three pillars:
+(1) transformer/attention models WITH interpretable structure, (2)
+episodic memory architectures that decouple stable reasoning from
+plastic memory, (3) tamper-evident provenance audit trails. Temporal
+saliency is mature tech ready to plug in. The black-box-beats-Fama-French
+era is ending; the new bar is "interpretable deep model that beats AND
+explains."
+
+**Gap** — No paper combines all four pillars (interpretable attention
+factors + episodic memory + temporal saliency + provenance audit) into
+one production system. Each pillar exists in isolation. Surveys cover
+financial time-series XAI but skip the specific "explain my factor
+exposure for a retail / advisor user" UX. CVRF (FA's cognitive value
+reasoning framework with episodic learning + factor weights) is unique
+to FA in the literature — closest analog (MemRL) is not factor-aware.
+No published implementation of constant-size cryptographic evidence
+(arXiv:2511.17118) for financial recommendation systems — this is the
+cleanest IP/moat opportunity.
+
+**Innovation Direction** — actionable phased roadmap for FA:
+
+| Phase | Lift | Headliner paper | Description |
+|---|---|---|---|
+| 1 | 2-3 wks | arXiv:2510.11616 | Integrate Attention Factors into FactorEngine as v2 augment. Classical OLS stays baseline. |
+| 2 | 4-6 wks | arXiv:2601.03192 | Adopt MemRL stable/plastic decoupling for CVRF. Two-Phase Retrieval. Episodes become RL training signal. |
+| 3 | 1-2 wks | arXiv:2509.22839 | Add CrossScaleNet temporal saliency to Cognitive Insight. UX upgrade. |
+| 4 | 3-4 wks | arXiv:2511.17118 | Constant-size cryptographic evidence for every Insight + backtest. Unifies IDEA-FF-1 + IDEA-FF-4. |
+
+**Bonus moat:** The combined system (attention factors + episodic CVRF
++ temporal saliency + verifiable audit) doesn't exist anywhere in the
+literature. Workshop paper writeup candidate for ICLR FinAI 2027 or
+similar — would establish FA as the production reference implementation
+before competitors integrate the pieces.
+
+### How to re-run this sweep
 
 ```bash
-# In a separate session for context isolation:
-/deep-research factor exposure interpretability transformer 2025-2026
-# OR for batch mode:
-python3 ~/projects/researchgravity/...  # exact entry point per RG docs
+cd ~/projects/apps/researchgravity
+python3 scripts/session/init_session.py "FA R&D Discovery $(date +%Y-%m-%d)" --impl-project frontier-alpha
+# Then either:
+#   - delegate_research MCP for each query topic (current state: routes
+#     to no-op `get_session_stats` agents; needs an arxiv-fetcher agent
+#     to be registered in the trust ledger)
+#   - WebSearch with allowed_domains=["arxiv.org"] (what worked today)
+#   - Run python3 -m cpb.precision_cli "query" --deep-research
+# Then log_finding for each paper, archive_session.py to finalize.
 ```
 
-Output: a `_TBD` section here gets replaced with paper citations + lift
-estimates per finding. Aim for 5-8 papers per sweep, not exhaustive.
+Cadence: monthly with a 5-paper-per-query budget. Today's sweep was the
+first since pre-2026-04; the four-pillar thesis above is fresh and
+should be revisited Q3 2026 to check for convergence-system papers
+(competitors building toward the same gap).
+
+---
+
+## Convergence + cross-project learning (architectural note)
+
+The cinema and FriendlyFace borrows above are not isolated borrowings — they
+are evidence that the D-ecosystem's projects can serve as a **convergence
+substrate** for each other. Three observations:
+
+1. **Substrate-first routing was solved in cinema first, then mapped to FA.**
+   The pattern wasn't invented in either project; it was crystallized in
+   cinema (because video-gen has stark cost gradients between providers) and
+   transferred here. The lesson: small, sharp project domains crystallize
+   patterns earlier than large projects can.
+
+2. **FriendlyFace already implements three published papers** — Mohammed
+   ICDF2C 2024 (forensic event chain), BioZero arXiv:2409.17509 (Merkle
+   tree), Li 2025 arXiv:2505.03837 (SDD saliency). The work of porting them
+   to FA is _adoption_, not _invention_. Meta-vengine's premise (D-ecosystem
+   learns from all projects) is exactly this adoption-loop made automatic.
+
+3. **ResearchGravity is the supply side of the same loop.** RG fetches new
+   arxiv, FF/cinema/OS-App implement it first in a focused domain, FA adopts
+   the proven version. This is a 3-stage pipeline: research → focused
+   prototype → cross-project adoption. The bottleneck today is manual
+   coordination between stages.
+
+### Architectural opportunity
+
+If meta-vengine periodically scans every `~/projects/*/CONTEXT.md` + emits
+"X has primitive Y at file:line; Z could borrow it" reports, that's an
+adoption-loop accelerator. FA could run this nightly and surface
+unexploited patterns from across the ecosystem before they go stale.
+
+Worth a separate session to verify whether meta-vengine does this today
+or needs the upgrade.
+
+### ResearchGravity cadence
+
+Empirical: re-sweep monthly with a 5-paper budget per query. More frequent
+burns Gemini quota for diminishing returns. The four papers that landed in
+FriendlyFace (BioZero, Mohammed, SDD, plus the canonical LIME/SHAP) span
+2016-2025 — quant finance research moved meaningfully in 2025-2026 with
+attention-based factor models, episodic memory for trading agents, and
+end-of-day regime detection improvements. Re-sweep is overdue.
 
 ---
 

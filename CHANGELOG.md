@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.14] - 2026-05-10
+
+### Phase D of MASTERPLAN — Playwright walkthrough regression net
+
+Test infra only — no production behavior change. Adds nightly automated
+coverage of the bug class today's session kept finding (silent
+failures, broken handlers, server crashes).
+
+- **`tests/visual/walkthrough.spec.ts`** (new, 16 tests)
+  - One smoke test per page: navigate → wait for ready anchor →
+    assert no `console.error` fired during load → assert no
+    unexpected 5xx during load.
+  - Reuses the seeded golden-state user
+    (`dicoangelo+test@metaventionsai.com`) and the same auth-injection
+    pattern as the visual suite.
+  - Single chromium pass at 1440x900 (no per-theme split — this is
+    functional, not visual).
+  - **Acceptable noise**: `/api/v1/quotes/SYMBOL/history` and
+    `/api/v1/portfolio/factors/history` 5xx — both documented in
+    ROADMAP.md as the Polygon Starter upgrade trigger. The pages
+    handle these gracefully (sparkline blank, factor-card degraded)
+    so a 5xx here doesn't indicate a real regression.
+  - Verified locally: `walkthrough: dashboard` passes in 6.6s.
+
+- **`package.json` scripts split**
+  - `test:visual` now uses `--grep 'visual:'` so it runs only the
+    18 token snapshot tests.
+  - `test:walkthrough` (new) runs only the 16 walkthrough smoke tests.
+  - `test:e2e:full` (new) runs both suites.
+  - `test:visual:update` updated to match.
+
+- **`.github/workflows/visual-regression.yml` runs both suites nightly**
+  - Renamed to `Nightly E2E (Visual + Walkthrough)`.
+  - Runtime budget bumped 30 → 45 minutes to accommodate both suites.
+  - Walkthrough runs even if visual fails (`if: always()`) — they test
+    different things and a stale baseline shouldn't hide a real
+    walkthrough regression.
+
+### Verification
+
+- `npx playwright test --list` shows 34 total tests (18 visual + 16
+  walkthrough).
+- Local smoke run of `walkthrough: dashboard` passes in 6.6s.
+- Type-check / build unaffected (no production source changes).
+
+### MASTERPLAN status
+
+- Phase A: ✅ shipped as v1.3.10
+- Phase B: ✅ shipped as v1.3.11
+- Phase C: ✅ shipped as v1.3.12
+- Phase C queued items: ✅ shipped as v1.3.13
+- Phase D: ✅ shipped as v1.3.14 — regression net live
+- Phase E (production-readiness gate review): pending — final phase
+
+---
+
 ## [1.3.13] - 2026-05-10
 
 ### Phase C queued items shipped — silent failures + demo→real bridge

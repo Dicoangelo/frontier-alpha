@@ -1,14 +1,22 @@
-name: Visual Regression (Nightly)
+name: Nightly E2E (Visual + Walkthrough)
 
-# TOKEN-007: snapshot every primary page in light + dark themes against the
-# committed baselines in tests/visual/baseline/. Runs nightly, NOT per-PR —
-# the story completion note explicitly defers to a nightly cron because a
-# 20-minute Playwright pass on every PR is not worth the cycle cost when
-# the no-raw-hex ESLint rule (TOKEN-006) already gates the migration.
+# Two playwright suites running in one workflow:
+#
+# 1. TOKEN-007 visual regression (snapshot diff per page x theme,
+#    18 tests). On any diff > 1% per channel, fails + uploads diff
+#    PNGs as artifacts.
+#
+# 2. Phase D walkthrough (smoke navigation, 16 tests). For each
+#    primary page: navigate, wait for ready anchor, assert no
+#    console.error and no unexpected 5xx during load. Catches the
+#    class of bug the v1.3.4-v1.3.13 user audit kept finding —
+#    silent failures, broken handlers, server crashes — without
+#    requiring a human to click everything.
 #
 # Triggers:
 #   - 06:00 UTC nightly (02:00 ET) — run when nobody is shipping
-#   - workflow_dispatch — manual reruns after a baseline update
+#   - workflow_dispatch — manual reruns after a baseline update or
+#     after fixing a walkthrough regression
 #
 # Required repo secrets:
 #   - VITE_SUPABASE_URL
@@ -18,9 +26,9 @@ name: Visual Regression (Nightly)
 #   - SUPABASE_ANON_KEY (or VITE_SUPABASE_ANON_KEY — auth-helper accepts either)
 #
 # Failure artifacts:
-#   On any diff > 1% per channel, the playwright-report and test-results
-#   directories upload as artifacts so the operator can pull the actual
-#   diff PNGs and decide: real regression vs. baseline staleness.
+#   playwright-report and test-results directories upload as artifacts
+#   for both suites' failures, so the operator can pull the actual
+#   diff PNGs / failure traces.
 
 on:
   schedule:
@@ -28,10 +36,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  visual-regression:
-    name: Snapshot diff (chromium 1440x900)
+  e2e:
+    name: Visual diff + walkthrough (chromium 1440x900)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
         with:
@@ -53,7 +61,7 @@ jobs:
 
       - name: Run visual regression suite
         run: npm run test:visual
-        env:
+        env: &e2e_env
           CI: 'true'
           NODE_ENV: 'test'
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -61,6 +69,14 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+      - name: Run walkthrough smoke suite
+        # Always run walkthrough even if visual failed — they test
+        # different things and a stale baseline shouldn't hide a real
+        # walkthrough regression.
+        if: always()
+        run: npm run test:walkthrough
+        env: *e2e_env
 
       - name: Upload Playwright report on failure
         if: failure()

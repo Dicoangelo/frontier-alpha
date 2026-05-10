@@ -45,9 +45,13 @@ function FactorCategoryCard({ category, factors }: FactorCategoryCardProps) {
         </div>
       </div>
       <div className="space-y-3">
-        {sortedFactors.map((factor) => (
+        {sortedFactors.map((factor, idx) => (
           <FactorBar
-            key={factor.factor}
+            // The same factor name (e.g. momentum_12m) appears once per
+            // holding when the API aggregates exposures across symbols.
+            // Include symbol + index in the key so React's reconciler
+            // doesn't dedupe rows belonging to different positions.
+            key={`${factor.symbol ?? 'agg'}-${factor.factor}-${idx}`}
             factor={{
               factor: factor.factor,
               exposure: factor.exposure,

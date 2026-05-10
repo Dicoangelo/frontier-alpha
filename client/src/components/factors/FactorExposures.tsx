@@ -210,8 +210,12 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
 
                 <AccordionContent isExpanded={isExpanded}>
                   <div className="p-4 space-y-4">
-                    {categoryFactors.map((factor) => (
-                      <FactorBar key={factor.factor} factor={factor} showCategory={false} />
+                    {categoryFactors.map((factor, idx) => (
+                      <FactorBar
+                        key={`${factor.factor}-${idx}`}
+                        factor={factor}
+                        showCategory={false}
+                      />
                     ))}
                   </div>
                 </AccordionContent>
@@ -221,8 +225,11 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
         </div>
       ) : (
         <div className="space-y-4 animate-stagger">
-          {sortedFactors.slice(0, 10).map((factor) => (
-            <div key={factor.factor} className="animate-enter">
+          {sortedFactors.slice(0, 10).map((factor, idx) => (
+            <div
+              key={`${factor.factor}-${idx}`}
+              className="animate-enter"
+            >
               <FactorBar factor={factor} />
             </div>
           ))}

@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.9] - 2026-05-10
+
+### Cash balance reconciliation, optimizer crash fix, modal sizing, CVRF clarity
+
+User-reported five issues during a live walkthrough; all fixed. Plus a one-time SQL reconciliation for affected users whose cash drifted before the bug was patched.
+
+- **Cash balance not decremented on add/edit/delete position** (data correctness)
+  - `src/services/PortfolioService.ts::addPosition` now decrements `cash_balance` by `shares × avgCost` on both new-position and existing-position paths. Symmetric with the existing `sellPosition` cash-credit logic.
+  - `updatePosition` now applies the cash delta when `shares` or `avgCost` change (treats edit as buy or sell).
+  - `deletePosition` now credits the cost basis back to cash (treats delete as a sell at avg_cost).
+  - One-time SQL reconciliation applied to 4 affected user portfolios via Supabase MCP: `UPDATE frontier_portfolios SET cash_balance = 100000 - SUM(shares * avg_cost) WHERE cash_balance = 100000 AND EXISTS (SELECT 1 FROM frontier_positions WHERE portfolio_id = p.id)`. Seeded test user (cash $25k from golden state) was correctly excluded.
+
+- **Optimizer "Cannot read properties of (n) reading 'colSpan'" crash** (hard block)
+  - `src/routes/portfolio.ts` POST `/api/v1/portfolio/optimize`:
+    - Lower fetch days from 252 to `BASE_HISTORY_DAYS` (300) so the cache key matches `/factors` and `/factors/history` (same root-cause class as v1.3.6 cache-key alignment).
+    - Default `riskFreeRate` to 0.045 when client omits it (the type was marked required but old client builds didn't send it, NaN cascaded through Sharpe).
+    - Per-symbol try/catch + skipped-symbol passthrough; fail with 503 + `INSUFFICIENT_DATA` if fewer than 2 symbols + SPY resolve. Better than swallowing the actual error.
+    - Surface real `error.message` in the response instead of generic "Portfolio optimization failed".
+  - `client/src/pages/Optimize.tsx` now sends `riskFreeRate: 0.045` explicitly + sets `targetVolatility` at top level (matching the server type).
+  - `client/src/types/index.ts::OptimizationConfig` updated to include `target_volatility` in the objective union and add `constraints?` field. Was a type drift between client and server.
+
+- **"Why this trade?" modal cut off on wide viewports**
+  - `client/src/components/explainer/TradeReasoning.tsx`: `max-w-lg` (512px) → `max-w-2xl lg:max-w-3xl` (672/768px) + `max-h-[90vh] overflow-y-auto`. Centering changed from `items-center` to `items-start sm:items-center` so the modal aligns top on tall content.
+
+- **Share Portfolio modal cut off (same root cause)**
+  - `client/src/components/portfolio/ShareModal.tsx`: same fix — `max-w-lg` → `max-w-xl lg:max-w-2xl` + `max-h-[90vh] overflow-y-auto` + top-aligned on overflow.
+
+- **CVRF episode controls — clearer "what's happening" copy**
+  - `client/src/components/cvrf/CVRFEpisodeControls.tsx`: status badge "Episode N active" → "Episode N · learning" + a one-line subtitle below explaining "Recording decisions and updating beliefs as new data arrives." Empty state gains "Start an episode to record decisions and let CVRF update its beliefs from the outcomes."
+  - The result toast and active-episode info card already existed; the addition is the persistent inline explainer so users know what the system is actually doing while an episode runs.
+
+### Tests + verification
+
+- Server: 782/782 unchanged.
+- Client: 207 passing + 1 pre-existing EarningsHeatmap failure unchanged.
+- Type-check: clean both sides.
+- Modal fixes verified via screenshots (locally inspected against the screenshots the user shared).
+- Cash reconciliation verified via Supabase MCP query before/after.
+
+---
+
 ## [1.3.8] - 2026-05-10
 
 ### Onboarding polish round 2 — chart legibility + degraded-state copy

@@ -466,7 +466,7 @@ export function CVRFEpisodeControls() {
   return (
     <div className="glass-slab rounded-2xl p-4 sm:p-6 animate-enter">
       {/* Status Bar */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <div
             className={`w-2 h-2 rounded-full ${
@@ -474,9 +474,9 @@ export function CVRFEpisodeControls() {
             }`}
             aria-hidden="true"
           />
-          <span className="text-sm text-theme-secondary tabular-nums">
+          <span className="text-sm font-semibold text-theme tabular-nums">
             {hasActiveEpisode
-              ? `Episode ${activeEpisode?.episodeNumber} active`
+              ? `Episode ${activeEpisode?.episodeNumber} · learning`
               : 'No active episode'}
           </span>
         </div>
@@ -484,6 +484,13 @@ export function CVRFEpisodeControls() {
           {totalEpisodes} total
         </span>
       </div>
+
+      {/* Status hint — explains what the badge actually means */}
+      <p className="text-xs text-theme-muted mb-4">
+        {hasActiveEpisode
+          ? 'Recording decisions and updating beliefs as new data arrives.'
+          : 'Start an episode to record decisions and let CVRF update its beliefs from the outcomes.'}
+      </p>
 
       {/* Action Buttons */}
       <div className="flex gap-3">

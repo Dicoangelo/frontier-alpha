@@ -304,15 +304,49 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
       const { symbols, config } = request.body;
 
       try {
-        // Fetch prices for all symbols
+        // Fetch prices for all symbols. Use BASE_HISTORY_DAYS (300) so we
+        // share the cache key with /factors and /factors/history — otherwise
+        // every cold Vercel function falls through to Polygon and trips the
+        // free-tier rate limit.
         const prices = new Map<string, Price[]>();
+        const skipped: string[] = [];
         for (const symbol of [...symbols, 'SPY']) {
-          const symbolPrices = await server.dataProvider.getHistoricalPrices(symbol, 252);
-          prices.set(symbol, symbolPrices);
+          try {
+            const symbolPrices = await server.dataProvider.getHistoricalPrices(symbol, BASE_HISTORY_DAYS);
+            if (symbolPrices.length > 0) {
+              prices.set(symbol, symbolPrices);
+            } else {
+              skipped.push(symbol);
+            }
+          } catch (err) {
+            logger.warn({ err, symbol }, 'optimize: skipping symbol');
+            skipped.push(symbol);
+          }
         }
 
-        // Run optimization
-        const result = await server.optimizer.optimize(symbols, prices, config);
+        // Need at least 2 symbols + SPY benchmark to optimize
+        const resolvedSymbols = symbols.filter((s) => prices.has(s));
+        if (resolvedSymbols.length < 2 || !prices.has('SPY')) {
+          return reply.status(503).send({
+            success: false,
+            error: {
+              code: 'INSUFFICIENT_DATA',
+              message: `Optimizer needs at least 2 holdings with price history plus SPY benchmark. Resolved ${resolvedSymbols.length} of ${symbols.length} holdings; SPY ${prices.has('SPY') ? 'available' : 'unavailable'}.`,
+              skipped,
+            },
+          });
+        }
+
+        // Default risk-free rate to 4.5% (10y treasury proxy) when client
+        // omits it — older client builds don't send it and the type was
+        // marked required, causing NaN cascades through the optimizer.
+        const safeConfig: OptimizationConfig = {
+          ...config,
+          riskFreeRate: typeof config.riskFreeRate === 'number' ? config.riskFreeRate : 0.045,
+        };
+
+        // Run optimization on the resolved subset only
+        const result = await server.optimizer.optimize(resolvedSymbols, prices, safeConfig);
 
         return {
           success: true,
@@ -327,10 +361,14 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
           },
         };
       } catch (error) {
+        const message = error instanceof Error ? error.message : 'Portfolio optimization failed';
         logger.error({ err: error }, 'Portfolio optimization failed');
         return reply.status(500).send({
           success: false,
-          error: { code: 'INTERNAL_ERROR', message: 'Portfolio optimization failed' },
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: `Optimization failed: ${message}`,
+          },
         });
       }
     }

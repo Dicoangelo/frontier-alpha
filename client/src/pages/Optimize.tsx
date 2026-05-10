@@ -112,12 +112,17 @@ function OptimizeContent() {
 
     const config: OptimizationConfig = {
       objective: selectedObjective,
+      // 4.5% — 10-year treasury proxy. Server defaults this to the same
+      // value when omitted, but sending it explicitly avoids any client-
+      // server type mismatch that previously surfaced as a NaN sharpe.
+      riskFreeRate: 0.045,
       constraints: {
         maxWeight: parseFloat(maxWeight),
       },
     };
 
     if (selectedObjective === 'target_volatility') {
+      config.targetVolatility = parseFloat(targetVol);
       config.constraints!.targetVolatility = parseFloat(targetVol);
     }
 

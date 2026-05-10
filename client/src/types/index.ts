@@ -91,9 +91,13 @@ export interface HistoricalEarningsReaction {
 }
 
 export interface OptimizationConfig {
-  objective: 'max_sharpe' | 'min_volatility' | 'risk_parity';
+  objective: 'max_sharpe' | 'min_volatility' | 'risk_parity' | 'target_volatility';
   riskFreeRate: number;
   targetVolatility?: number;
+  constraints?: {
+    maxWeight?: number;
+    targetVolatility?: number;
+  };
 }
 
 export interface OptimizationResult {

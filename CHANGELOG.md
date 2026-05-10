@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.8] - 2026-05-10
+
+### Onboarding polish round 2 — chart legibility + degraded-state copy
+
+Four small fixes, all surfaced during the v1.3.5 audit but deferred. Each
+addresses a real fresh-user UX issue without depending on the Polygon
+Starter upgrade. Pure copy + CSS work; no dependencies, no schema, no
+new providers.
+
+- **Live feed banner copy softened**
+  - `client/src/components/shared/DegradedService.tsx` line 173: pill copy
+    "{service} offline · polling fallback" → "{service} · polling mode"
+  - `client/src/components/shared/ConnectionStatus.tsx` line 174: aria-label
+    "Live feed offline (using polling fallback)" → "Live feed in polling mode"
+  - **Why:** The Vercel tier is offline-by-design (the Railway tier carries
+    the WebSocket). The previous copy read like the site was broken on
+    every protected page; the new copy reads as an intentional mode.
+
+- **FactorDeltas degraded-state copy**
+  - `client/src/components/explainer/FactorDeltas.tsx` line 143
+  - Before: "Building factor baseline. Return tomorrow for first delta read."
+  - After: "Baseline accumulating · first deltas after the next UTC rollover"
+  - **Why:** The original copy read as a dead-end. The new copy surfaces
+    the actual mechanism (UTC rollover) so a returning user knows when to
+    check back.
+
+- **Welcome modal import-banner copy**
+  - `client/src/components/onboarding/WelcomeModal.tsx` line 206-207
+  - Before: "Import them as your starting portfolio?"
+  - After: "Pre-fill your portfolio with them as a starting point?"
+  - **Why:** The original copy implied total replacement of any existing
+    positions. The new copy implies augmentation. The v1.3.5
+    `OnboardingProvider` gate already suppresses the modal entirely for
+    users with positions, so this is belt-and-suspenders for the rare race
+    where the portfolio query hasn't resolved yet.
+
+- **Portfolio Performance chart text colors**
+  - `client/src/components/charts/EquityCurve.tsx`
+  - Canvas axis labels (X-axis dates, Y-axis dollar values): `--color-text-muted`
+    → `--color-text` (theme-aware white in dark mode)
+  - Tooltip header + body text: `--color-text-inverse` → `text-theme` with
+    `opacity-80` (was `opacity-70` plus inverse, which read as dark-on-dark
+    in dark mode)
+  - Legend ("Portfolio" / "S&P 500"): `text-theme-secondary` → `text-theme`
+  - **Why:** User-reported (2026-05-10 screenshots) — chart axis labels
+    and tooltip text were rendering near-invisible on dark backgrounds.
+    The chart now has full-contrast labels in both themes.
+
+### Visual baselines
+
+- `dashboard-light.png` and `dashboard-dark.png` re-captured to lock the
+  new chart text colors. The diff was below the 1% threshold so a forced
+  delete-then-recapture was needed; the previous baselines would have let
+  the change drift.
+
+---
+
 ## [1.3.7] - 2026-05-09
 
 ### Investigation findings — FactorDeltas "Return tomorrow" root cause

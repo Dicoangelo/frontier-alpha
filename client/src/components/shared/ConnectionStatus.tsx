@@ -171,7 +171,7 @@ export function ConnectionDot() {
     connected: `Live feed connected${transportLabel ? ` (${transportLabel})` : ''}`,
     reconnecting: 'Reconnecting to live feed',
     disconnected: 'Live feed disconnected',
-    offline: 'Live feed offline (using polling fallback)',
+    offline: 'Live feed in polling mode',
   };
 
   return (

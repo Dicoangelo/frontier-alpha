@@ -421,6 +421,29 @@
       "sourceUrl": "internal",
       "lastVerified": "2026-05-09",
       "description": "Optional override telling the integrations health probe which API base URL to call instead of localhost. Used in US-004 staging diagnostics."
+    },
+    {
+      "name": "VERCEL_URL",
+      "required": false,
+      "sourceUrl": "https://vercel.com/docs/environment-variables/system-environment-variables",
+      "lastVerified": "2026-05-10",
+      "description": "Auto-injected by Vercel into every deployment (e.g. `frontier-alpha-abc123.vercel.app`). Used by `src/routes/health.ts` to report which Vercel deployment is responding without the operator having to look it up. Read-only, no rotation needed."
+    },
+    {
+      "name": "SYNTHETIC_BASE_URL",
+      "required": false,
+      "regex": "^https?://[^\\s]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-10",
+      "description": "Optional override telling the synthetic monitor cron which base URL to probe (defaults to FRONTEND_URL). Useful for staging or PR-preview synthetic checks without changing production config."
+    },
+    {
+      "name": "INTEGRATION_BASE_URL",
+      "required": false,
+      "regex": "^https?://[^\\s]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-05-10",
+      "description": "Test-only — `tests/integration/auth-helper.ts` uses this to point integration tests at a non-localhost API (e.g., a deployed preview). When unset, integration suite hits `http://localhost:3000`."
     }
   ],
   "ignoredEnvNames": [

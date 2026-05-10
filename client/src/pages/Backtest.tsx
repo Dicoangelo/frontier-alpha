@@ -48,7 +48,9 @@ interface BacktestRunConfig {
   endDate: string;
   initialCapital: number;
   episodeLengthDays: number;
-  strategy: 'max_sharpe' | 'min_volatility' | 'risk_parity';
+  // Union mirrors OptimizationConfig.objective from @/types so the two
+  // strategy pickers (Backtest + Optimize) stay aligned.
+  strategy: 'max_sharpe' | 'min_volatility' | 'risk_parity' | 'target_volatility';
   useCVRF: boolean;
   rebalanceFrequency: 'daily' | 'weekly' | 'monthly';
 }

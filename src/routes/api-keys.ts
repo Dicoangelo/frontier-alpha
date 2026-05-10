@@ -28,7 +28,7 @@ export async function apiKeysRoutes(fastify: FastifyInstance, _opts: RouteContex
         logger.error({ err: error }, 'Failed to fetch API keys');
         return reply.status(500).send({
           success: false,
-          error: { code: 'INTERNAL_ERROR', message: 'Failed to load API keys' },
+          error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? `Failed to load API keys: ${error.message}` : 'Failed to load API keys' },
         });
       }
 
@@ -99,7 +99,7 @@ export async function apiKeysRoutes(fastify: FastifyInstance, _opts: RouteContex
         logger.error({ err: error }, 'Failed to create API key');
         return reply.status(500).send({
           success: false,
-          error: { code: 'INTERNAL_ERROR', message: 'Failed to create API key' },
+          error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? `Failed to create API key: ${error.message}` : 'Failed to create API key' },
         });
       }
 

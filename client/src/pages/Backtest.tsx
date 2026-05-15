@@ -37,6 +37,7 @@ import { api } from '@/api/client';
 import { useToast } from '@/hooks/useToast';
 import { rechartsTooltipStyle } from '@/lib/theme';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { SectionErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 // Backtest API contract — page-local because no second consumer in the
 // client today. Promote to client/src/types/index.ts when a second page
@@ -48,9 +49,11 @@ interface BacktestRunConfig {
   endDate: string;
   initialCapital: number;
   episodeLengthDays: number;
-  // Union mirrors OptimizationConfig.objective from @/types so the two
-  // strategy pickers (Backtest + Optimize) stay aligned.
-  strategy: 'max_sharpe' | 'min_volatility' | 'risk_parity' | 'target_volatility';
+  // Backend (src/routes/backtest.ts + BacktestRunner) accepts only these
+  // three. Optimize supports a fourth ('target_volatility') because its
+  // walk-forward engine doesn't yet implement the constraint. Keep these
+  // in lockstep with src/routes/backtest.ts.
+  strategy: 'max_sharpe' | 'min_volatility' | 'risk_parity';
   useCVRF: boolean;
   rebalanceFrequency: 'daily' | 'weekly' | 'monthly';
 }
@@ -375,8 +378,12 @@ export function Backtest() {
       )}
 
       {/* ── Results ─────────────────────────────────────────────────────── */}
+      {/* Wrapped in SectionErrorBoundary so a bad data shape in the
+          equity/episode charts or factor attribution can't white-screen
+          the page — the run controls above stay usable. Mirrors the
+          Optimize page pattern from v1.3.9. */}
       {result && (
-        <>
+        <SectionErrorBoundary sectionName="Backtest Results">
           {/* Metrics Row */}
           <section
             className="animate-fade-in-up"
@@ -619,7 +626,7 @@ export function Backtest() {
               </div>
             </div>
           </section>
-        </>
+        </SectionErrorBoundary>
       )}
 
       {/* ── Empty State ─────────────────────────────────────────────────── */}

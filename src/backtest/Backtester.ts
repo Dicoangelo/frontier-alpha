@@ -188,7 +188,7 @@ export class Backtester {
       }
       
       // Get benchmark value
-      const benchmarkPrice = benchmarkPrices.find(p => 
+      const benchmarkPrice = benchmarkPrices.findLast(p =>
         p.timestamp.getTime() <= date.getTime()
       )?.close || benchmarkStartPrice;
       const benchmarkValue = config.initialCapital * (benchmarkPrice / benchmarkStartPrice);
@@ -372,7 +372,7 @@ export class Backtester {
     const result = new Map<string, number>();
     
     for (const [symbol, symbolPrices] of prices) {
-      const price = symbolPrices.find(p => 
+      const price = symbolPrices.findLast(p =>
         p.timestamp.getTime() <= date.getTime()
       );
       if (price) {

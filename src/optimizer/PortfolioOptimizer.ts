@@ -138,42 +138,44 @@ export class PortfolioOptimizer {
    */
   private maxSharpe(mu: number[], sigma: number[][], rf: number): number[] {
     const n = mu.length;
-    
+
     // Use gradient descent for max Sharpe
     const weights = this.equalWeight(n);
     const lr = 0.01;
     const iterations = 1000;
-    
+    const gradient = new Array(n).fill(0);
+    const scratch = new Array(n).fill(0);
+    const delta = 0.0001;
+
     for (let iter = 0; iter < iterations; iter++) {
       const ret = this.portfolioReturn(weights, mu);
       const vol = this.portfolioVolatility(weights, sigma);
       const sharpe = (ret - rf / 252) / vol;
-      
+
       // Calculate gradient
-      const gradient = new Array(n).fill(0);
-      const delta = 0.0001;
-      
+      gradient.fill(0);
+
       for (let i = 0; i < n; i++) {
-        const wPlus = [...weights];
-        wPlus[i] += delta;
-        this.normalizeWeights(wPlus);
-        
-        const retPlus = this.portfolioReturn(wPlus, mu);
-        const volPlus = this.portfolioVolatility(wPlus, sigma);
+        for (let j = 0; j < n; j++) scratch[j] = weights[j];
+        scratch[i] += delta;
+        this.normalizeWeights(scratch);
+
+        const retPlus = this.portfolioReturn(scratch, mu);
+        const volPlus = this.portfolioVolatility(scratch, sigma);
         const sharpePlus = (retPlus - rf / 252) / volPlus;
-        
+
         gradient[i] = (sharpePlus - sharpe) / delta;
       }
-      
+
       // Update weights
       for (let i = 0; i < n; i++) {
         weights[i] += lr * gradient[i];
         weights[i] = Math.max(0, weights[i]);  // Long-only constraint
       }
-      
+
       this.normalizeWeights(weights);
     }
-    
+
     return weights;
   }
 
@@ -182,38 +184,40 @@ export class PortfolioOptimizer {
    */
   private minVolatility(sigma: number[][]): number[] {
     const n = sigma.length;
-    
+
     // Analytical solution for min variance (no return constraint)
     // w* = Σ^(-1) * 1 / (1' * Σ^(-1) * 1)
-    
+
     // For simplicity, use gradient descent
     const weights = this.equalWeight(n);
     const lr = 0.01;
     const iterations = 1000;
-    
+    const gradient = new Array(n).fill(0);
+    const scratch = new Array(n).fill(0);
+    const delta = 0.0001;
+
     for (let iter = 0; iter < iterations; iter++) {
-      const gradient = new Array(n).fill(0);
-      const delta = 0.0001;
+      gradient.fill(0);
       const currentVol = this.portfolioVolatility(weights, sigma);
-      
+
       for (let i = 0; i < n; i++) {
-        const wPlus = [...weights];
-        wPlus[i] += delta;
-        this.normalizeWeights(wPlus);
-        
-        const volPlus = this.portfolioVolatility(wPlus, sigma);
+        for (let j = 0; j < n; j++) scratch[j] = weights[j];
+        scratch[i] += delta;
+        this.normalizeWeights(scratch);
+
+        const volPlus = this.portfolioVolatility(scratch, sigma);
         gradient[i] = (volPlus - currentVol) / delta;
       }
-      
+
       // Move against gradient (minimize)
       for (let i = 0; i < n; i++) {
         weights[i] -= lr * gradient[i];
         weights[i] = Math.max(0, weights[i]);
       }
-      
+
       this.normalizeWeights(weights);
     }
-    
+
     return weights;
   }
 

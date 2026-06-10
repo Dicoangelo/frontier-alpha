@@ -29,16 +29,8 @@ beforeAll(() => {
     value: true,
   });
 
-  // Mock import.meta.env
-  vi.stubGlobal('import', {
-    meta: {
-      env: {
-        VITE_API_URL: 'http://localhost:3000',
-        VITE_SUPABASE_URL: 'http://localhost:54321',
-        VITE_SUPABASE_ANON_KEY: 'test-key',
-      },
-    },
-  });
+  // import.meta.env values live in vitest.config.ts `test.env` —
+  // vi.stubGlobal('import', ...) cannot intercept import.meta and was a no-op.
 });
 
 // Reset mocks after each test

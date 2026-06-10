@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-05-10T07:08:23.920Z",
-  "headSha": "7320f33076d59a3b23fe923672155456b85143b7",
+  "generatedAt": "2026-06-10T18:55:48.947Z",
+  "headSha": "bc1b48295375b908423a9618a3f2dfbf8239e95e",
   "version": "1.4.2",
   "server": {
     "tsFiles": 129,
@@ -8,9 +8,9 @@
     "inSourceTestFiles": 5,
     "routeModules": 30,
     "endpoints": 113,
-    "migrations": 13,
+    "migrations": 14,
     "vercelApiFiles": 4,
-    "testFiles": 40
+    "testFiles": 41
   },
   "client": {
     "pages": 24,
@@ -171,7 +171,8 @@
     "20260209_social_profiles.sql",
     "20260209_tax_lots.sql",
     "20260508_add_welcomed_at.sql",
-    "20260508_paper_trading.sql"
+    "20260508_paper_trading.sql",
+    "20260510_enable_rls_public_read.sql"
   ],
   "pages": [
     "Alerts",

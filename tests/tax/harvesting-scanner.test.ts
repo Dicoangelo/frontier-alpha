@@ -6,7 +6,7 @@
  * holding period classification, and edge cases.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest';
 import { TaxLotTracker } from '../../src/tax/TaxLotTracker.js';
 import { HarvestingScanner } from '../../src/tax/HarvestingScanner.js';
 import type {
@@ -54,6 +54,18 @@ function setupTrackerWithLosses(): {
 
 describe('HarvestingScanner', () => {
   let scanner: HarvestingScanner;
+
+  // Fixture lots are pinned to 2024/2025 dates; freeze the clock so their
+  // short/long-term classification never rots as real time passes the
+  // 1-year holding boundary.
+  beforeAll(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-01-15T12:00:00Z'));
+  });
+
+  afterAll(() => {
+    vi.useRealTimers();
+  });
 
   beforeEach(() => {
     scanner = new HarvestingScanner();

@@ -382,8 +382,8 @@ export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
         conviction: number;
         direction: 'bullish' | 'bearish' | 'neutral';
       }> = FACTOR_DEFINITIONS.map(def => {
-        const weight = fw.get(def.name) ?? neutralWeight;
-        const confidence = fc.get(def.name) ?? 0.5;
+        const weight = (fw.get(def.name) ?? neutralWeight) as number;
+        const confidence = (fc.get(def.name) ?? 0.5) as number;
         let direction: 'bullish' | 'bearish' | 'neutral' = 'neutral';
         if ((weight as number) > neutralWeight + neutralThreshold) direction = 'bullish';
         else if ((weight as number) < neutralWeight - neutralThreshold) direction = 'bearish';

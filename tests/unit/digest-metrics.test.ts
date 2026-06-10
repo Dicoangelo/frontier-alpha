@@ -10,12 +10,20 @@
  * - All fetches fail → returns null
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
 
 vi.hoisted(() => {
   process.env.SUPABASE_URL ??= 'http://localhost:54321';
   process.env.SUPABASE_SERVICE_KEY ??= 'test-service-key';
 });
+
+// Frozen clock: priceSeries timestamps and the SUT's Date.now() cutoff are
+// computed from the same fixed point so there is no race between test setup
+// and SUT execution.
+const FROZEN_NOW = new Date('2026-01-15T12:00:00.000Z');
+
+beforeAll(() => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(FROZEN_NOW); });
+afterAll(() => { vi.useRealTimers(); });
 
 // ─── Mocks ────────────────────────────────────────────────────────────
 const mockGetPortfolio = vi.fn();

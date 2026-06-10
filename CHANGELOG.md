@@ -7,6 +7,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2026-06-10
+
+### Intelligence wave — substrate routing, temporal grounding, provenance ledger
+
+SUPERMAX multi-agent session (4 agents, 7 tasks). Promotes the first three
+IDEAS.md items (CIN-1/2/3) plus US-004 real health probes, and clears the
+explicit-any and clock-rot debt classes. 887 server + 231 client tests green.
+
+#### Added
+
+- **CIN-1 — Substrate-first AI routing** (`src/services/ExplanationService.ts`)
+  - DeepSeek is THE substrate; OpenAI is the secondary substrate; template is
+    the always-available floor. Every route away from the substrate is a named
+    `EscapeReason` (`unconfigured`, `token_overflow`, `latency_budget_exceeded`,
+    `provider_down`) instead of a try/catch accident.
+  - Every `ExplanationResult` now carries `routing`:
+    `{ substrate, escaped, escapeReason, latencyMs, model }`.
+  - Env knobs: `EXPLAINER_LATENCY_BUDGET_MS` (default 12000),
+    `EXPLAINER_TOKEN_CEILING` (default 8000), `DEEPSEEK_MODEL`.
+  - 10 new tests cover every escape path. Behavior preserved (same fallback
+    order, same outputs).
+
+- **CIN-3 — Multi-anchor temporal factor analysis**
+  (`src/services/factorAnchors.ts`, `src/routes/explain.ts`)
+  - `/api/v1/explain` enriches symbol explanations with factor deltas against
+    5d- and 30d-prior snapshots via `sliceAsOf`, so the LLM reports real
+    trends instead of inventing them.
+  - Reuses the `BASE_HISTORY_DAYS` cached price path — zero new Polygon calls.
+  - Token growth bounded: top-4 moving factors per window, flat deltas
+    (<0.05) dropped, never raw series. Degrades to single-snapshot on
+    INSUFFICIENT_DATA. 11 new tests.
+
+- **CIN-2 — Insight provenance ledger**
+  (`supabase/migrations/20260610_insight_ledger.sql`, `src/insights/InsightLedger.ts`,
+  `src/routes/insights.ts`, `client/src/pages/InsightHistory.tsx`)
+  - `frontier_insight_ledger` table (per-user RLS) records every cognitive
+    insight: prompt hash, factors snapshot, model, substrate, escape reason,
+    latency, output, user rating.
+  - Fire-and-forget writes at the route layer — never block or fail the
+    explanation response; no-ops cleanly until the migration is applied.
+  - `GET /api/v1/insights/history` (paginated) + `POST /api/v1/insights/:id/rating`.
+  - New "Insights" page under Intelligence in the sidebar — provenance
+    receipts with substrate/escape/model/latency + thumbs rating.
+  - **NOTE: migration is file-only, NOT yet applied to production Supabase.**
+
+- **US-004 — Real upstream health probes** (`src/routes/health.ts`)
+  - `/api/v1/health/integrations` probes now make real upstream calls
+    (Polygon, Alpha Vantage, Supabase, DeepSeek/OpenAI models list) instead
+    of flipping "live" on env-var presence. 60s probe cache protects the
+    Polygon free-tier 5 req/min ceiling. 43 MSW-backed tests.
+
+#### Fixed
+
+- Server build was broken at HEAD: `.findLast` (bc1b482) requires ES2023 —
+  tsconfig lib/target bumped ES2022 → ES2023; added `npm run typecheck`.
+- Two clock-rotted test suites repaired (tax harvesting fixtures crossed the
+  1-year long-term boundary on 2026-06-01; EarningsHeatmap pinned to Feb 2026)
+  plus three more suites frozen pre-emptively (greeks-calculator,
+  strategy-builder, digest-metrics). Pattern: `vi.useFakeTimers({ toFake:
+  ['Date'] })` + `vi.setSystemTime` consistent with fixtures.
+- Client vitest env: `vi.stubGlobal('import', ...)` was a no-op (cannot
+  intercept `import.meta.env`) — replaced with real `test.env` values;
+  unblocked the silently-skipped `client.test.ts` suite (208 → 231 tests).
+- Explicit-any debt: 46 lint warnings → 0 across portfolio, cvrf, earnings,
+  options, app.ts. Retyping exposed 3 latent type errors previously hidden by
+  `as any` — repaired in the same wave.
+- Tracked the out-of-band RLS migration (`20260510_enable_rls_public_read.sql`),
+  arch fingerprint regenerated (31 routes, 115 endpoints, 25 pages, 15 migrations).
+
+#### Provenance note
+
+CIN-1's files rode into commit 08a2b40 ("feat(health): US-004 ...") via a
+concurrent git-add race between agents. Content verified intact; label
+mismatch accepted rather than rewriting shared history.
+
+---
+
 ## [1.4.2] - 2026-05-10
 
 ### Walkthrough first run — 3 real bugs surfaced + fixed

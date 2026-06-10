@@ -37,6 +37,7 @@ const ML = lazy(() => import('@/pages/ML').then(m => ({ default: m.ML })));
 const Options = lazy(() => import('@/pages/Options').then(m => ({ default: m.Options })));
 const Social = lazy(() => import('@/pages/Social').then(m => ({ default: m.Social })));
 const Tax = lazy(() => import('@/pages/Tax').then(m => ({ default: m.Tax })));
+const InsightHistory = lazy(() => import('@/pages/InsightHistory').then(m => ({ default: m.InsightHistory })));
 const SharedPortfolio = lazy(() => import('@/pages/SharedPortfolio'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
 const BillingSuccess = lazy(() => import('@/pages/BillingSuccess'));
@@ -244,6 +245,18 @@ function AppRoutes() {
             <Layout>
               <ErrorBoundary>
                 <ML />
+              </ErrorBoundary>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/insights"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ErrorBoundary>
+                <InsightHistory />
               </ErrorBoundary>
             </Layout>
           </ProtectedRoute>

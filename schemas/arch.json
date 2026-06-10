@@ -1,24 +1,24 @@
 {
-  "generatedAt": "2026-06-10T18:55:48.947Z",
-  "headSha": "bc1b48295375b908423a9618a3f2dfbf8239e95e",
+  "generatedAt": "2026-06-10T19:06:26.595Z",
+  "headSha": "08a2b40aa851e6be055feef709caf140837f9b2c",
   "version": "1.4.2",
   "server": {
-    "tsFiles": 129,
-    "tsNonTestFiles": 124,
+    "tsFiles": 131,
+    "tsNonTestFiles": 126,
     "inSourceTestFiles": 5,
-    "routeModules": 30,
-    "endpoints": 113,
-    "migrations": 14,
+    "routeModules": 31,
+    "endpoints": 115,
+    "migrations": 15,
     "vercelApiFiles": 4,
-    "testFiles": 41
+    "testFiles": 45
   },
   "client": {
-    "pages": 24,
+    "pages": 25,
     "components": 113,
     "stores": 6,
     "hooks": 15,
-    "apiModules": 7,
-    "appRoutes": 26
+    "apiModules": 8,
+    "appRoutes": 27
   },
   "integrations": [
     "alpaca",
@@ -106,6 +106,10 @@
       "endpoints": 5
     },
     {
+      "module": "insights.ts",
+      "endpoints": 2
+    },
+    {
       "module": "ml.ts",
       "endpoints": 3
     },
@@ -172,7 +176,8 @@
     "20260209_tax_lots.sql",
     "20260508_add_welcomed_at.sql",
     "20260508_paper_trading.sql",
-    "20260510_enable_rls_public_read.sql"
+    "20260510_enable_rls_public_read.sql",
+    "20260610_insight_ledger.sql"
   ],
   "pages": [
     "Alerts",
@@ -184,6 +189,7 @@
     "Earnings",
     "Factors",
     "Help",
+    "InsightHistory",
     "Landing",
     "Login",
     "ML",
@@ -212,6 +218,7 @@
     "/earnings",
     "/factors",
     "/help",
+    "/insights",
     "/landing",
     "/login",
     "/ml",
@@ -258,6 +265,7 @@
     "cvrf",
     "earnings",
     "factors",
+    "insights",
     "portfolio",
     "quotes",
     "websocket"

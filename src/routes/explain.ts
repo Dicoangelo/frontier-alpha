@@ -5,6 +5,7 @@ import { logger } from '../observability/logger.js';
 import type { ExplanationRequest, ExplanationType } from '../services/ExplanationService.js';
 import type { APIResponse, Price } from '../types/index.js';
 import { BASE_HISTORY_DAYS } from '../factors/historySlice.js';
+import { insightLedger, type InsightMetadata } from '../insights/InsightLedger.js';
 
 interface RouteContext {
   server: {
@@ -12,7 +13,12 @@ interface RouteContext {
     factorEngine: { calculateExposures(symbols: string[], prices: Map<string, Price[]>): Promise<Map<string, unknown[]>> };
     explainer: { explainAllocationChange(symbol: string, oldWeight: number, newWeight: number, factors: { old: unknown[]; new: unknown[] }): unknown };
     explanationService: {
-      generate(req: ExplanationRequest): Promise<{ sources: string[]; [key: string]: unknown }>;
+      generate(req: ExplanationRequest): Promise<{
+        sources: string[];
+        text?: string;
+        routing?: InsightMetadata;
+        [key: string]: unknown;
+      }>;
       explainTrade(symbol: string): Promise<{ cached: boolean; [key: string]: unknown }>;
       isLLMEnabled: boolean;
     };
@@ -109,6 +115,20 @@ export async function explainRoutes(fastify: FastifyInstance, opts: RouteContext
           symbol,
           context,
         });
+
+        // Fire-and-forget provenance write (IDEA-CIN-2). Never blocks or fails
+        // the response: the ledger swallows its own errors and no-ops when the
+        // table isn't applied yet. The userId is present because this route is
+        // behind authMiddleware.
+        if (request.user?.id) {
+          void insightLedger.record({
+            userId: request.user.id,
+            prompt: `${type}:${symbol ?? '_portfolio'}`,
+            factorsSnapshot: context?.factors ?? {},
+            output: typeof result.text === 'string' ? result.text : undefined,
+            metadata: result.routing,
+          });
+        }
 
         return {
           success: true,

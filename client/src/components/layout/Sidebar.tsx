@@ -16,6 +16,7 @@ import {
   Users,
   Receipt,
   LineChart,
+  ScrollText,
 } from 'lucide-react';
 
 // Route → lazy import map for hover prefetching
@@ -31,6 +32,7 @@ const routePrefetchMap: Record<string, () => Promise<unknown>> = {
   '/ml':       () => import('@/pages/ML'),
   '/backtest': () => import('@/pages/Backtest'),
   '/options':  () => import('@/pages/Options'),
+  '/insights': () => import('@/pages/InsightHistory'),
   '/social':   () => import('@/pages/Social'),
   '/tax':      () => import('@/pages/Tax'),
   '/settings': () => import('@/pages/Settings'),
@@ -71,6 +73,7 @@ const navSections: NavSection[] = [
       { name: 'CVRF', icon: Brain, href: '/cvrf' },
       { name: 'ML', icon: Cpu, href: '/ml' },
       { name: 'Backtest', icon: LineChart, href: '/backtest' },
+      { name: 'Insights', icon: ScrollText, href: '/insights' },
       { name: 'Earnings', icon: Calendar, href: '/earnings' },
       { name: 'Social', icon: Users, href: '/social' },
     ],

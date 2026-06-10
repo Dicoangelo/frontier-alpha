@@ -67,6 +67,7 @@ import { healthErrorsRoutes } from './routes/health-errors.js';
 import { healthSummaryRoutes } from './routes/health-summary.js';
 import { syntheticMonitorRoutes } from './routes/synthetic-monitor.js';
 import { cronWarmCacheRoutes } from './routes/cron-warm-cache.js';
+import { insightsRoutes } from './routes/insights.js';
 import { errorCounter } from './observability/ErrorCounter.js';
 import { installRequestTracing } from './observability/RequestTracing.js';
 
@@ -254,6 +255,7 @@ export async function buildApp(
   app.register(healthSummaryRoutes, ctx);
   app.register(syntheticMonitorRoutes, ctx);
   app.register(cronWarmCacheRoutes, ctx);
+  app.register(insightsRoutes);
   if (websockets) {
     app.register(websocketRoutes, ctx);
   }

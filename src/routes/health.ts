@@ -33,6 +33,9 @@ interface CachedProbe {
 }
 const probeCache = new Map<string, CachedProbe>();
 
+/** Exposed for tests only — allows beforeEach to clear cache between cases. */
+export const _probeCacheForTests: Map<string, CachedProbe> = probeCache;
+
 function nowIso(): string {
   return new Date().toISOString();
 }

@@ -5,9 +5,25 @@
  * Supports 5 explanation types with optional LLM integration
  * and in-memory caching (1 explanation per symbol per day).
  *
- * - If OPENAI_API_KEY is set, uses OpenAI for richer narratives
- * - Otherwise, falls back to enhanced template-based generation
- *   via the existing CognitiveExplainer
+ * ## Substrate-first routing (IDEA-CIN-1)
+ *
+ * DeepSeek is THE substrate. Every route away from it is a *named, documented
+ * escape condition* — not a try/catch accident. The four escapes are:
+ *
+ *   - `unconfigured`             — no DeepSeek key; the secondary substrate
+ *                                  (OpenAI) runs if keyed, else templates.
+ *   - `token_overflow`          — the prompt exceeds the token ceiling, so we
+ *                                  escape *before* spending a substrate call.
+ *   - `latency_budget_exceeded` — the substrate call ran past the latency
+ *                                  budget; we abandon it and template.
+ *   - `provider_down`           — HTTP non-2xx, fetch threw, or the response
+ *                                  was malformed/empty.
+ *
+ * Each decision is recorded on the result's `routing` field
+ * ({ substrate, escaped, escapeReason, latencyMs, model }) so cost behavior is
+ * observable downstream (the route layer persists it). Behavior is identical to
+ * the prior DeepSeek -> OpenAI -> template failover; this is a restructure that
+ * makes the escapes explicit and measurable, not a rewrite.
  */
 
 import { CognitiveExplainer, cognitiveExplainer } from '../core/CognitiveExplainer.js';
@@ -30,6 +46,41 @@ export type ExplanationType =
   | 'risk_alert'
   | 'factor_shift';
 
+/**
+ * Named escape conditions (IDEA-CIN-1). Every value here is a reason we did NOT
+ * run on the preferred substrate (DeepSeek). An enum, never an unnamed
+ * try/catch fallthrough.
+ */
+export type EscapeReason =
+  | 'unconfigured'
+  | 'token_overflow'
+  | 'latency_budget_exceeded'
+  | 'provider_down';
+
+/**
+ * The engine that actually produced the explanation text.
+ * `deepseek` is the substrate; `openai` is the secondary substrate; `template`
+ * is the always-available deterministic floor.
+ */
+export type Substrate = 'deepseek' | 'openai' | 'template';
+
+/**
+ * Routing decision recorded on every ExplanationResult so the route layer can
+ * persist cost behavior and the team can publish escape-rate dashboards.
+ */
+export interface RoutingDecision {
+  /** Which engine produced the text. */
+  substrate: Substrate;
+  /** True when we did NOT run on the preferred substrate (DeepSeek). */
+  escaped: boolean;
+  /** Why we escaped. `null` only when `escaped` is false. */
+  escapeReason: EscapeReason | null;
+  /** Wall-clock of the substrate call in ms. 0 for the pure-template path. */
+  latencyMs: number;
+  /** Resolved model id (env-driven, never hardcoded). `null` for templates. */
+  model: string | null;
+}
+
 export interface ExplanationResult {
   id: string;
   type: ExplanationType;
@@ -39,6 +90,8 @@ export interface ExplanationResult {
   sources: string[];
   generatedAt: string;
   cached: boolean;
+  /** Substrate-first routing decision (IDEA-CIN-1). */
+  routing: RoutingDecision;
 }
 
 // Chain-of-thought step for trade explanations (US-025)
@@ -198,15 +251,83 @@ function hasLLMKey(): boolean {
 }
 
 /**
- * Generate an explanation via the configured LLM (DeepSeek or OpenAI).
- * Returns null if unavailable or on error, allowing fallback.
+ * Hard constraints that trigger an escape away from the substrate.
+ *
+ * Both are env-overridable so the latency budget and token ceiling can be tuned
+ * per-deployment without a code change. Defaults preserve current behavior: the
+ * old code had no explicit budget, so the default budget is generous enough to
+ * never trip under normal upstream latency, and the token ceiling matches the
+ * 8K guidance in IDEA-CIN-1. Read at call time (not module load) so the env can
+ * be tuned without a process restart.
  */
-async function generateWithLLM(
-  _type: ExplanationType,
-  prompt: string,
-): Promise<{ text: string; confidence: number } | null> {
+const DEFAULT_LATENCY_BUDGET_MS = 12_000;
+const DEFAULT_TOKEN_CEILING = 8_000;
+
+function latencyBudgetMs(): number {
+  return Number(process.env.EXPLAINER_LATENCY_BUDGET_MS) || DEFAULT_LATENCY_BUDGET_MS;
+}
+
+function tokenCeiling(): number {
+  return Number(process.env.EXPLAINER_TOKEN_CEILING) || DEFAULT_TOKEN_CEILING;
+}
+
+/**
+ * Cheap, dependency-free token estimate. The OpenAI/DeepSeek chat schema bills
+ * roughly ~4 chars/token for English; we use that heuristic to decide
+ * `token_overflow` before spending a network call. Intentionally conservative
+ * (rounds up) so we escape early rather than send an over-budget prompt.
+ */
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
+}
+
+/**
+ * Outcome of attempting the LLM substrate. Either the substrate produced text
+ * (`escapeReason` null), or it escaped with a named reason (`text` null).
+ * `latencyMs` is the wall-clock of the attempt (0 when we escaped before making
+ * any call).
+ *
+ * Uniform (non-discriminated) shape on purpose: this repo runs with
+ * `strict: false`, so `strictNullChecks`-based discriminated-union narrowing is
+ * unavailable. Callers branch on `escapeReason === null`.
+ */
+interface SubstrateOutcome {
+  text: string | null;
+  confidence: number;
+  escapeReason: EscapeReason | null;
+  latencyMs: number;
+}
+
+/**
+ * Run the configured LLM substrate (DeepSeek preferred, OpenAI secondary).
+ *
+ * Returns an explicit outcome: success, or a named escape. Every non-success
+ * path carries an `EscapeReason` so the caller records *why* it fell back to
+ * the template floor — there is no silent null.
+ */
+async function runSubstrate(prompt: string): Promise<SubstrateOutcome> {
   const provider = resolveLLMProvider();
-  if (!provider) return null;
+
+  // Escape: no LLM key configured -> template floor.
+  if (!provider) {
+    return { text: null, confidence: 0, escapeReason: 'unconfigured', latencyMs: 0 };
+  }
+
+  // Escape: prompt exceeds the token ceiling -> bail before spending a call.
+  const ceiling = tokenCeiling();
+  if (estimateTokens(prompt) > ceiling) {
+    logger.warn(
+      { provider: provider.name, estimatedTokens: estimateTokens(prompt), ceiling },
+      'Prompt exceeds token ceiling, escaping to templates',
+    );
+    return { text: null, confidence: 0, escapeReason: 'token_overflow', latencyMs: 0 };
+  }
+
+  const start = Date.now();
+  // Abort the upstream call once it blows the latency budget.
+  const budgetMs = latencyBudgetMs();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), budgetMs);
 
   try {
     const response = await fetch(`${provider.baseUrl}/chat/completions`, {
@@ -231,23 +352,36 @@ async function generateWithLLM(
         temperature: 0.4,
         max_tokens: 300,
       }),
+      signal: controller.signal,
     });
 
     if (!response.ok) {
-      logger.warn({ status: response.status, provider: provider.name }, 'LLM API returned error, falling back to templates');
-      return null;
+      logger.warn({ status: response.status, provider: provider.name }, 'LLM API returned error, escaping to templates');
+      return { text: null, confidence: 0, escapeReason: 'provider_down', latencyMs: Date.now() - start };
     }
 
     const data = (await response.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
     const text = data.choices?.[0]?.message?.content?.trim();
-    if (!text) return null;
+    if (!text) {
+      return { text: null, confidence: 0, escapeReason: 'provider_down', latencyMs: Date.now() - start };
+    }
 
-    return { text, confidence: 0.85 };
+    return { text, confidence: 0.85, escapeReason: null, latencyMs: Date.now() - start };
   } catch (error) {
-    logger.warn({ err: error }, 'LLM generation failed, falling back to templates');
-    return null;
+    // AbortError means we tripped the latency budget; everything else is a
+    // provider/transport failure.
+    const latencyMs = Date.now() - start;
+    const isAbort = error instanceof Error && error.name === 'AbortError';
+    if (isAbort) {
+      logger.warn({ budgetMs, provider: provider.name }, 'LLM call exceeded latency budget, escaping to templates');
+      return { text: null, confidence: 0, escapeReason: 'latency_budget_exceeded', latencyMs };
+    }
+    logger.warn({ err: error }, 'LLM generation failed, escaping to templates');
+    return { text: null, confidence: 0, escapeReason: 'provider_down', latencyMs };
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -667,24 +801,50 @@ export class ExplanationService {
     symbol: string | undefined,
     context: ExplanationContext,
   ): Promise<ExplanationResult> {
-    // Try LLM first if available
-    if (hasLLMKey()) {
-      const prompt = this.buildLLMPrompt(type, symbol, context);
-      const llmResult = await generateWithLLM(type, prompt);
+    // Resolve the substrate up front so the routing decision names the engine
+    // we attempted, even when it escapes.
+    const provider = resolveLLMProvider();
+    const prompt = this.buildLLMPrompt(type, symbol, context);
+    const outcome = await runSubstrate(prompt);
 
-      if (llmResult) {
-        return this.makeResult(type, symbol, {
-          text: llmResult.text,
-          confidence: llmResult.confidence,
-          sources: ['ai_model', 'factor_engine', 'market_data'],
-        });
-      }
+    // Escaped to the template floor. The reason is the named condition that
+    // sent us here; the substrate that produced the text is the template.
+    if (outcome.escapeReason !== null || outcome.text === null) {
+      const templateResult = this.generateFromTemplate(type, symbol, context);
+      return this.makeResult(type, symbol, templateResult, {
+        substrate: 'template',
+        escaped: true,
+        // escapeReason is non-null on this branch in practice; the `?? ` guards
+        // the impossible (text null without a reason) so we never record a
+        // silent escape.
+        escapeReason: outcome.escapeReason ?? 'provider_down',
+        latencyMs: outcome.latencyMs,
+        model: null,
+      });
     }
 
-    // Fall back to template-based generation
-    const templateResult = this.generateFromTemplate(type, symbol, context);
-
-    return this.makeResult(type, symbol, templateResult);
+    // Ran on the substrate. A successful outcome always means a provider was
+    // resolved. `escaped` is true only when we ran on the secondary substrate
+    // (OpenAI) rather than the preferred one (DeepSeek).
+    const resolved = provider as LLMProvider;
+    const substrate: Substrate = resolved.name;
+    const escaped = substrate !== 'deepseek';
+    return this.makeResult(
+      type,
+      symbol,
+      {
+        text: outcome.text,
+        confidence: outcome.confidence,
+        sources: ['ai_model', 'factor_engine', 'market_data'],
+      },
+      {
+        substrate,
+        escaped,
+        escapeReason: escaped ? 'unconfigured' : null,
+        latencyMs: outcome.latencyMs,
+        model: resolved.model,
+      },
+    );
   }
 
   private generateFromTemplate(
@@ -779,6 +939,7 @@ export class ExplanationService {
     type: ExplanationType,
     symbol: string | undefined,
     data: { text: string; confidence: number; sources: string[] },
+    routing: RoutingDecision,
   ): ExplanationResult {
     return {
       id: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -789,6 +950,7 @@ export class ExplanationService {
       sources: data.sources,
       generatedAt: new Date().toISOString(),
       cached: false,
+      routing,
     };
   }
 }

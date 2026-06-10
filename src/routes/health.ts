@@ -524,6 +524,89 @@ async function probeWeeklyDigestCron(serverPort?: number): Promise<Partial<Integ
   }
 }
 
+/** DeepSeek / OpenAI models list — confirms the key is accepted and the LLM
+ * backend is reachable. Calls the lighter `GET /models` (no token burn).
+ * DeepSeek is tried first when DEEPSEEK_API_KEY is present; falls back to
+ * OpenAI when only OPENAI_API_KEY is set. */
+async function probeLLMExplainer(): Promise<Partial<IntegrationHealthEntry> & { status: IntegrationHealthEntry['status'] }> {
+  const deepseekKey = process.env.DEEPSEEK_API_KEY?.trim();
+  const openaiKey = process.env.OPENAI_API_KEY?.trim();
+
+  if (!deepseekKey && !openaiKey) {
+    return {
+      status: 'degraded',
+      via: null,
+      reason: 'Neither DEEPSEEK_API_KEY nor OPENAI_API_KEY set',
+      fallback: 'template-based explanation',
+      lastError: 'no LLM key set',
+    };
+  }
+
+  // Prefer DeepSeek; fall back to OpenAI.
+  const key = deepseekKey ?? openaiKey!;
+  const provider = deepseekKey ? 'deepseek' : 'openai';
+  const url = deepseekKey
+    ? 'https://api.deepseek.com/models'
+    : 'https://api.openai.com/v1/models';
+  const via = deepseekKey ? 'DEEPSEEK_API_KEY' : 'OPENAI_API_KEY';
+
+  try {
+    const resp = await fetchWithTimeout(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (resp.status === 401 || resp.status === 403) {
+      return {
+        status: 'offline',
+        via,
+        provider,
+        reason: `Key rejected (HTTP ${resp.status})`,
+        impact: 'AI explanations unavailable; template fallback active',
+        lastError: `HTTP ${resp.status} from ${provider} models list`,
+      };
+    }
+    if (resp.status === 429) {
+      return {
+        status: 'degraded',
+        via,
+        provider,
+        reason: 'Rate limited (HTTP 429)',
+        fallback: 'template-based explanation',
+        lastError: 'HTTP 429 rate limited',
+      };
+    }
+    if (!resp.ok) {
+      return {
+        status: 'offline',
+        via,
+        provider,
+        reason: `HTTP ${resp.status}`,
+        impact: 'AI explanations unavailable',
+        lastError: `HTTP ${resp.status}`,
+      };
+    }
+
+    return {
+      status: 'live',
+      via,
+      provider,
+      mode: 'models-list',
+    };
+  } catch (err) {
+    return {
+      status: 'offline',
+      via,
+      provider,
+      reason: 'upstream request failed',
+      lastError: errMessage(err),
+    };
+  }
+}
+
 /** Polygon WebSocket — preserves the by-design degraded entry on Vercel. */
 function probePolygonWebSocket(): Partial<IntegrationHealthEntry> & { status: IntegrationHealthEntry['status'] } {
   if (process.env.VERCEL) {
@@ -782,6 +865,7 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
       emailDeliveryEntry,
       connectAlpacaEntry,
       weeklyDigestCronEntry,
+      llmExplainerEntry,
     ] = await Promise.all([
       runProbe('supabase', probeSupabase),
       runProbe('polygon', probePolygon),
@@ -790,6 +874,7 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
       runProbe('emailDelivery', probeResend),
       runProbe('connectAlpaca', probeConnectAlpaca),
       runProbe('weeklyDigestCron', () => probeWeeklyDigestCron(port)),
+      runProbe('llmExplainer', probeLLMExplainer),
     ]);
 
     integrations.supabase = supabaseEntry;
@@ -799,36 +884,12 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
     integrations.emailDelivery = emailDeliveryEntry;
     integrations.connectAlpaca = connectAlpacaEntry;
     integrations.weeklyDigestCron = weeklyDigestCronEntry;
+    integrations.llmExplainer = llmExplainerEntry;
 
     // --- Static / no-network entries (still standardized shape) -----------
 
     // Polygon WebSocket — by-design degraded on Vercel; live-checked elsewhere.
     integrations.polygonWebSocket = staticEntry(probePolygonWebSocket());
-
-    // LLM Explainer — env presence only (would otherwise burn paid tokens).
-    if (envHas('DEEPSEEK_API_KEY')) {
-      integrations.llmExplainer = staticEntry({
-        status: 'live',
-        via: 'DEEPSEEK_API_KEY',
-        provider: 'deepseek',
-        mode: 'env-checked',
-      });
-    } else if (envHas('OPENAI_API_KEY')) {
-      integrations.llmExplainer = staticEntry({
-        status: 'live',
-        via: 'OPENAI_API_KEY',
-        provider: 'openai',
-        mode: 'env-checked',
-      });
-    } else {
-      integrations.llmExplainer = staticEntry({
-        status: 'degraded',
-        via: null,
-        reason: 'Neither DEEPSEEK_API_KEY nor OPENAI_API_KEY set',
-        fallback: 'template',
-        lastError: 'no LLM key set',
-      });
-    }
 
     // Alpaca / SimulatedBroker — env presence only; "live" either way (real
     // adapter or internal simulated broker with live quotes).

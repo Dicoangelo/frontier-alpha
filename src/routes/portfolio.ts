@@ -4,7 +4,7 @@ import { portfolioService } from '../services/PortfolioService.js';
 import { logger } from '../observability/logger.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { PerformanceAttribution } from '../analytics/PerformanceAttribution.js';
-import type { APIResponse, OptimizationConfig, Price } from '../types/index.js';
+import type { APIResponse, OptimizationConfig, OptimizationResult, Price } from '../types/index.js';
 import {
   BASE_HISTORY_DAYS,
   SUPPORTED_WINDOWS,
@@ -14,10 +14,25 @@ import {
   type HistoryWindow,
 } from '../factors/historySlice.js';
 
+/** Polygon.io daily-aggregates response (the fields this route reads). */
+interface PolygonAggsResponse {
+  status?: string;
+  results?: Array<{ c: number }>;
+}
+
+/**
+ * Shape of a `frontier_portfolio_shares` row joined with its
+ * `frontier_portfolios` relation. The Supabase client types the embedded
+ * relation loosely, so the join target is declared explicitly here.
+ */
+interface ShareWithPortfolio {
+  frontier_portfolios?: { id: string; name: string; user_id: string };
+}
+
 interface RouteContext {
   server: {
     dataProvider: { getQuote(symbol: string): Promise<{ last: number } | null>; getHistoricalPrices(symbol: string, days: number): Promise<Price[]> };
-    optimizer: { optimize(symbols: string[], prices: Map<string, Price[]>, config: OptimizationConfig): Promise<{ weights: Map<string, number>; [key: string]: unknown }> };
+    optimizer: { optimize(symbols: string[], prices: Map<string, Price[]>, config: OptimizationConfig): Promise<OptimizationResult> };
     factorEngine: { calculateExposures(symbols: string[], prices: Map<string, Price[]>): Promise<Map<string, unknown[]>> };
     currentPortfolio: unknown;
     useDatabase: boolean;
@@ -619,7 +634,7 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
       const response = await fetch(url);
       if (!response.ok) return null;
 
-      const data: any = await response.json();
+      const data = (await response.json()) as PolygonAggsResponse;
       if (data.status !== 'OK' || !data.results || data.results.length < 2) {
         return null;
       }
@@ -887,9 +902,9 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
         const response = await fetch(url);
         if (!response.ok) return;
 
-        const data: any = await response.json();
+        const data = (await response.json()) as PolygonAggsResponse;
         if (data.results) {
-          const closes = data.results.map((r: any) => r.c);
+          const closes = data.results.map((r) => r.c);
           pricesMap.set(symbol, closes);
         }
       } catch (error) {
@@ -1231,16 +1246,17 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
             simulations: 10000,
           },
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         logger.error({ err: error }, 'Risk calculation error');
 
+        const errorMessage = error instanceof Error ? error.message : '';
         const isExternalError =
-          error.message?.includes('fetch') ||
-          error.message?.includes('network') ||
-          error.message?.includes('timeout') ||
-          error.message?.includes('Polygon') ||
-          error.message?.includes('ECONNREFUSED') ||
-          error.message?.includes('ETIMEDOUT');
+          errorMessage.includes('fetch') ||
+          errorMessage.includes('network') ||
+          errorMessage.includes('timeout') ||
+          errorMessage.includes('Polygon') ||
+          errorMessage.includes('ECONNREFUSED') ||
+          errorMessage.includes('ETIMEDOUT');
 
         if (isExternalError) {
           return reply.status(503).send({
@@ -1314,7 +1330,7 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
         }
 
         // Verify user owns the portfolio
-        if ((share as any).frontier_portfolios?.user_id !== request.user.id) {
+        if ((share as unknown as ShareWithPortfolio).frontier_portfolios?.user_id !== request.user.id) {
           return reply.status(403).send({
             success: false,
             error: { code: 'FORBIDDEN', message: 'You do not have permission to view this share' },
@@ -1328,7 +1344,7 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
           data: {
             id: share.id,
             portfolioId: share.portfolio_id,
-            portfolioName: (share as any).frontier_portfolios?.name || 'Unknown',
+            portfolioName: (share as unknown as ShareWithPortfolio).frontier_portfolios?.name || 'Unknown',
             shareUrl: `${baseUrl}/shared/${share.share_token}`,
             permissions: share.permissions,
             sharedWithEmail: share.shared_with_email,
@@ -1393,7 +1409,7 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
         }
 
         // Verify user owns the portfolio
-        if ((share as any).frontier_portfolios?.user_id !== request.user.id) {
+        if ((share as unknown as ShareWithPortfolio).frontier_portfolios?.user_id !== request.user.id) {
           return reply.status(403).send({
             success: false,
             error: { code: 'FORBIDDEN', message: 'You do not have permission to revoke this share' },

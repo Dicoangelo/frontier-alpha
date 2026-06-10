@@ -9,7 +9,7 @@
  * - Known analytical solutions for ATM/OTM/ITM contracts
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import {
   GreeksCalculator,
   normalCDF,
@@ -18,6 +18,13 @@ import {
 import type {
   OptionPosition,
 } from '../../src/options/GreeksCalculator.js';
+
+// Frozen clock: all DTE calculations are relative to this fixed point so the
+// suite produces identical results on every run.
+const FROZEN_NOW = new Date('2026-01-15T12:00:00.000Z');
+
+beforeAll(() => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(FROZEN_NOW); });
+afterAll(() => { vi.useRealTimers(); });
 
 // ============================================================================
 // REFERENCE PARAMETERS
@@ -579,9 +586,9 @@ describe('GreeksCalculator', () => {
 // HELPERS
 // ============================================================================
 
-/** Return an ISO date string N days in the future. */
+/** Return an ISO date string N days after the frozen anchor (2026-01-15). */
 function futureDate(daysFromNow: number): string {
-  const d = new Date();
+  const d = new Date(FROZEN_NOW);
   d.setDate(d.getDate() + daysFromNow);
   return d.toISOString().split('T')[0];
 }

@@ -8,7 +8,7 @@
  * contracts (1 contract = 1 unit in the P&L formula). Users control scaling.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import {
   StrategyBuilder,
 } from '../../src/options/StrategyBuilder.js';
@@ -17,8 +17,16 @@ import {
 // COMMON TEST PARAMETERS
 // ============================================================================
 
+// Frozen clock: all DTE calculations are relative to this fixed point so the
+// suite produces identical results on every run.
+const FROZEN_NOW = new Date('2026-01-15T12:00:00.000Z');
+
+beforeAll(() => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(FROZEN_NOW); });
+afterAll(() => { vi.useRealTimers(); });
+
 const UNDERLYING = 100;
-const EXPIRATION = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+// 30 days from the frozen anchor — deterministic across all runs.
+const EXPIRATION = '2026-02-14';
 const IV = 0.25;
 
 // ============================================================================

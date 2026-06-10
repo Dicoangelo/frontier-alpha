@@ -22,6 +22,7 @@
     "test:walkthrough": "playwright test --config=tests/visual/playwright.config.cjs --grep 'walkthrough:'",
     "test:e2e:full": "playwright test --config=tests/visual/playwright.config.cjs",
     "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
     "client:dev": "cd client && npm run dev",
     "client:build": "cd client && npm run build",
     "client:install": "cd client && npm install",

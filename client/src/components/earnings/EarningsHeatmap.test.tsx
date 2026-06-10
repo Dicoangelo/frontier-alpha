@@ -3,7 +3,7 @@
  * Mon-Fri 5-col grid, BMO/AMC indicator, mobile list view, month navigation
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { EarningsHeatmap } from './EarningsHeatmap';
@@ -55,6 +55,18 @@ const MOCK_EARNINGS: EarningsCalendarItem[] = [
 ];
 
 describe('EarningsHeatmap (US-027)', () => {
+  // Fixtures are pinned to Feb 2026 and the heatmap opens on the current
+  // month — freeze the clock there so cell/badge assertions never depend
+  // on when the suite runs.
+  beforeAll(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 1, 10, 12, 0, 0));
+  });
+
+  afterAll(() => {
+    vi.useRealTimers();
+  });
+
   it('renders without crashing', () => {
     const { container } = render(
       <EarningsHeatmap earnings={MOCK_EARNINGS} onSelect={() => {}} selectedSymbol={null} />,
@@ -127,14 +139,10 @@ describe('EarningsHeatmap (US-027)', () => {
       <EarningsHeatmap earnings={[MOCK_EARNINGS[2]]} onSelect={onSelect} selectedSymbol={null} />,
       { wrapper }
     );
-    // Navigate to February 2026
-    // The test may be running in a different month, so navigate if needed
-    // Try clicking the cell for day 25
-    const cell = screen.queryByTestId('day-cell-25');
-    if (cell) {
-      fireEvent.click(cell);
-      expect(onSelect).toHaveBeenCalledWith('MSFT');
-    }
+    // Clock is frozen to Feb 2026 (suite beforeAll), so day 25 carries MSFT
+    const cell = screen.getByTestId('day-cell-25');
+    fireEvent.click(cell);
+    expect(onSelect).toHaveBeenCalledWith('MSFT');
   });
 
   it('navigates to previous month', () => {

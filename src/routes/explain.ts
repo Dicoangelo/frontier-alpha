@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { authMiddleware } from '../middleware/auth.js';
 import { subscriptionGate, requirePlan } from '../middleware/subscriptionGate.js';
 import { logger } from '../observability/logger.js';
-import type { ExplanationRequest, ExplanationType } from '../services/ExplanationService.js';
+import type { ExplanationRequest, ExplanationType, ExplanationContext } from '../services/ExplanationService.js';
 import type { APIResponse, Price } from '../types/index.js';
 import { BASE_HISTORY_DAYS } from '../factors/historySlice.js';
 import { insightLedger, type InsightMetadata } from '../insights/InsightLedger.js';
@@ -20,6 +20,12 @@ interface RouteContext {
         [key: string]: unknown;
       }>;
       explainTrade(symbol: string): Promise<{ cached: boolean; [key: string]: unknown }>;
+      enrichWithTemporalAnchors(
+        context: ExplanationContext,
+        symbol: string,
+        prices: Map<string, Price[]>,
+        factorEngine: { calculateExposures(symbols: string[], prices: Map<string, Price[]>): Promise<Map<string, unknown[]>> },
+      ): Promise<ExplanationContext>;
       isLLMEnabled: boolean;
     };
   };
@@ -110,10 +116,33 @@ export async function explainRoutes(fastify: FastifyInstance, opts: RouteContext
           });
         }
 
+        // Temporal grounding (IDEA-CIN-3): when a symbol is present, enrich the
+        // context with 5d/30d-prior factor deltas so the LLM reports real
+        // trends. Reuses the BASE_HISTORY_DAYS cache key (shared with /factors
+        // and /factors/history) so no new Polygon calls are made. Degrades to
+        // the single-snapshot prompt on any fetch failure or INSUFFICIENT_DATA.
+        let enrichedContext: ExplanationContext = context ?? {};
+        if (symbol) {
+          try {
+            const prices = new Map<string, Price[]>();
+            for (const s of [symbol, 'SPY']) {
+              prices.set(s, await server.dataProvider.getHistoricalPrices(s, BASE_HISTORY_DAYS));
+            }
+            enrichedContext = await server.explanationService.enrichWithTemporalAnchors(
+              enrichedContext,
+              symbol,
+              prices,
+              server.factorEngine,
+            );
+          } catch (err) {
+            logger.warn({ err, symbol }, 'temporal anchor fetch failed, using single snapshot');
+          }
+        }
+
         const result = await server.explanationService.generate({
           type,
           symbol,
-          context,
+          context: enrichedContext,
         });
 
         // Fire-and-forget provenance write (IDEA-CIN-2). Never blocks or fails

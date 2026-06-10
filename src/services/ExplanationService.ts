@@ -28,8 +28,14 @@
 
 import { CognitiveExplainer, cognitiveExplainer } from '../core/CognitiveExplainer.js';
 import { logger } from '../lib/logger.js';
+import {
+  assembleTemporalContext,
+  buildAnchorSummaryLines,
+  type FactorEngineLike,
+} from './factorAnchors.js';
 import type {
   FactorExposure,
+  Price,
   SentimentScore,
   EarningsImpactForecast,
   Portfolio,
@@ -140,6 +146,14 @@ export interface ExplanationContext {
     oldVol: number;
     newVol: number;
   };
+  /**
+   * Compact temporal-anchor delta lines (IDEA-CIN-3). Pre-computed server-side
+   * by `buildAnchorSummaryLines` from current vs 5d/30d-prior factor snapshots,
+   * so the LLM reports real trends instead of inventing them. Omitted (or empty)
+   * when factor history is unavailable (INSUFFICIENT_DATA) — the prompt then
+   * degrades to the single-snapshot form exactly as before.
+   */
+  temporalSummary?: string[];
 }
 
 // ============================================================================
@@ -685,6 +699,37 @@ export class ExplanationService {
   }
 
   /**
+   * Enrich an explanation context with temporal factor anchors (IDEA-CIN-3).
+   *
+   * Reuses the ALREADY-FETCHED `prices` map (same `BASE_HISTORY_DAYS` cache key
+   * the /factors and /factors/history endpoints share) — makes zero new market
+   * data calls — to slice 5d/30d-prior snapshots, recompute exposures, and
+   * attach a compact `temporalSummary` so the LLM grounds trend language in real
+   * deltas.
+   *
+   * Degrades gracefully: on INSUFFICIENT_DATA (no current snapshot computable),
+   * or on any error, returns the context unchanged so callers fall back to the
+   * single-snapshot prompt exactly as before. Never throws.
+   */
+  async enrichWithTemporalAnchors(
+    context: ExplanationContext,
+    symbol: string,
+    prices: Map<string, Price[]>,
+    factorEngine: FactorEngineLike,
+  ): Promise<ExplanationContext> {
+    try {
+      const temporal = await assembleTemporalContext(symbol, prices, factorEngine);
+      if (!temporal) return context; // INSUFFICIENT_DATA -> single-snapshot
+      const lines = buildAnchorSummaryLines(temporal);
+      if (lines.length === 0) return context; // no material moves -> omit block
+      return { ...context, temporalSummary: lines };
+    } catch (error) {
+      logger.warn({ err: error, symbol }, 'temporal anchor enrichment failed, using single snapshot');
+      return context;
+    }
+  }
+
+  /**
    * Generate a 4-step chain-of-thought trade explanation for a symbol.
    * US-025: Factor Signal → Belief State → Optimization → Recommendation
    * Cached per symbol per day.
@@ -887,6 +932,17 @@ export class ExplanationService {
       parts.push('Factor Exposures:');
       for (const f of context.factors.slice(0, 8)) {
         parts.push(`  - ${f.factor}: exposure=${f.exposure.toFixed(3)}, t-stat=${f.tStat.toFixed(2)}, confidence=${(f.confidence * 100).toFixed(0)}%`);
+      }
+      parts.push('');
+    }
+
+    // Temporal anchors (IDEA-CIN-3): pre-computed factor deltas vs 5d/30d-prior
+    // snapshots. Compact one-line-per-factor; the LLM is told to ground trend
+    // language in these numbers and not extrapolate beyond them.
+    if (context.temporalSummary && context.temporalSummary.length > 0) {
+      parts.push('Factor Trend (current vs prior snapshots — use these for any trend claims):');
+      for (const line of context.temporalSummary) {
+        parts.push(`  - ${line}`);
       }
       parts.push('');
     }

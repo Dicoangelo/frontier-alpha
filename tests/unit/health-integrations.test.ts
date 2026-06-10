@@ -653,34 +653,129 @@ describe('probe cache (60s TTL)', () => {
 // ---------------------------------------------------------------------------
 // Static entries (env-checked, no network)
 // ---------------------------------------------------------------------------
+// LLM Explainer probe (real upstream HTTP to models list endpoint)
+// ---------------------------------------------------------------------------
 
-describe('static / env-checked integrations', () => {
-  it('llmExplainer → live when DEEPSEEK_API_KEY is set', async () => {
+describe('llmExplainer probe (DeepSeek / OpenAI models list)', () => {
+  beforeEach(() => {
     saveEnv('DEEPSEEK_API_KEY', 'OPENAI_API_KEY');
-    process.env['DEEPSEEK_API_KEY'] = 'ds-test';
+    delete process.env['DEEPSEEK_API_KEY'];
     delete process.env['OPENAI_API_KEY'];
     _probeCacheForTests.clear();
+  });
+
+  afterEach(() => {
+    restoreEnv('DEEPSEEK_API_KEY', 'OPENAI_API_KEY');
+  });
+
+  it('unconfigured (no keys) → degraded with reason', async () => {
+    const { body } = await getIntegrations(app);
+    const llm = body.integrations.llmExplainer;
+    expect(llm.status).toBe('degraded');
+    expect(llm.reason).toContain('DEEPSEEK_API_KEY');
+  });
+
+  it('DeepSeek key + 200 from models list → live with provider=deepseek', async () => {
+    process.env['DEEPSEEK_API_KEY'] = 'ds-test-key';
+    _probeCacheForTests.clear();
+
+    server.use(
+      http.get('https://api.deepseek.com/models', () =>
+        HttpResponse.json({ object: 'list', data: [{ id: 'deepseek-chat' }] }),
+      ),
+    );
 
     const { body } = await getIntegrations(app);
     const llm = body.integrations.llmExplainer;
     expect(llm.status).toBe('live');
     expect(llm.provider).toBe('deepseek');
-
-    restoreEnv('DEEPSEEK_API_KEY', 'OPENAI_API_KEY');
   });
 
-  it('llmExplainer → degraded when no LLM key set', async () => {
-    saveEnv('DEEPSEEK_API_KEY', 'OPENAI_API_KEY');
+  it('OpenAI key only (no DeepSeek) + 200 → live with provider=openai', async () => {
     delete process.env['DEEPSEEK_API_KEY'];
-    delete process.env['OPENAI_API_KEY'];
+    process.env['OPENAI_API_KEY'] = 'sk-test-key';
     _probeCacheForTests.clear();
 
-    const { body } = await getIntegrations(app);
-    expect(body.integrations.llmExplainer.status).toBe('degraded');
+    server.use(
+      http.get('https://api.openai.com/v1/models', () =>
+        HttpResponse.json({ object: 'list', data: [{ id: 'gpt-4o' }] }),
+      ),
+    );
 
-    restoreEnv('DEEPSEEK_API_KEY', 'OPENAI_API_KEY');
+    const { body } = await getIntegrations(app);
+    const llm = body.integrations.llmExplainer;
+    expect(llm.status).toBe('live');
+    expect(llm.provider).toBe('openai');
   });
 
+  it('DeepSeek key + 401 → offline (key rejected)', async () => {
+    process.env['DEEPSEEK_API_KEY'] = 'bad-key';
+    _probeCacheForTests.clear();
+
+    server.use(
+      http.get('https://api.deepseek.com/models', () =>
+        new HttpResponse(null, { status: 401 }),
+      ),
+    );
+
+    const { body } = await getIntegrations(app);
+    const llm = body.integrations.llmExplainer;
+    expect(llm.status).toBe('offline');
+    expect(llm.reason).toContain('401');
+  });
+
+  it('DeepSeek key + 429 → degraded (rate limited)', async () => {
+    process.env['DEEPSEEK_API_KEY'] = 'rate-limited-key';
+    _probeCacheForTests.clear();
+
+    server.use(
+      http.get('https://api.deepseek.com/models', () =>
+        new HttpResponse(null, { status: 429 }),
+      ),
+    );
+
+    const { body } = await getIntegrations(app);
+    const llm = body.integrations.llmExplainer;
+    expect(llm.status).toBe('degraded');
+    expect(llm.reason).toContain('429');
+  });
+
+  it('DeepSeek key + 5xx → offline', async () => {
+    process.env['DEEPSEEK_API_KEY'] = 'ds-key';
+    _probeCacheForTests.clear();
+
+    server.use(
+      http.get('https://api.deepseek.com/models', () =>
+        new HttpResponse(null, { status: 503 }),
+      ),
+    );
+
+    const { body } = await getIntegrations(app);
+    expect(body.integrations.llmExplainer.status).toBe('offline');
+  });
+
+  it('cache: second request reuses result without calling upstream again', async () => {
+    process.env['DEEPSEEK_API_KEY'] = 'cache-key';
+    _probeCacheForTests.clear();
+
+    let callCount = 0;
+    server.use(
+      http.get('https://api.deepseek.com/models', () => {
+        callCount++;
+        return HttpResponse.json({ object: 'list', data: [] });
+      }),
+    );
+
+    await getIntegrations(app);
+    const countAfterFirst = callCount;
+    await getIntegrations(app);
+    expect(callCount).toBe(countAfterFirst);
+  });
+});
+
+// ---------------------------------------------------------------------------
+
+describe('static / env-checked integrations', () => {
   it('vapidPush → live when both VAPID keys set', async () => {
     saveEnv('VAPID_PUBLIC_KEY', 'VAPID_PRIVATE_KEY');
     process.env['VAPID_PUBLIC_KEY'] = 'test-pub';

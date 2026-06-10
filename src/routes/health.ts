@@ -10,7 +10,10 @@ import type {
 } from '../types/index.js';
 
 interface RouteContext {
-  server: { version: string };
+  // `server` is passed through by the registrar but not read here (only
+  // `pkg.version` is used). Kept loose so the AppServer instance registers
+  // without requiring a `version` field it doesn't carry.
+  server: unknown;
   pkg: { version: string };
 }
 
@@ -638,7 +641,7 @@ async function checkDatabase(): Promise<{ status: 'ok' | 'error'; message?: stri
       return { status: 'ok' };
     }
     return { status: 'error', message: `HTTP ${response.status}` };
-  } catch (_error) {
+  } catch {
     return { status: 'error', message: 'Connection failed' };
   }
 }
@@ -662,7 +665,7 @@ async function checkExternalApis(): Promise<{ status: 'ok' | 'error'; message?: 
       return { status: 'ok', message: 'Rate limited (normal)' };
     }
     return { status: 'error', message: `HTTP ${response.status}` };
-  } catch (_error) {
+  } catch {
     return { status: 'error', message: 'Connection failed' };
   }
 }

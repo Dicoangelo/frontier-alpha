@@ -2,10 +2,10 @@ import type { FastifyInstance } from 'fastify';
 import { authMiddleware } from '../middleware/auth.js';
 import { subscriptionGate, requirePlan } from '../middleware/subscriptionGate.js';
 import { logger } from '../observability/logger.js';
-import type { ExplanationRequest, ExplanationType, ExplanationContext } from '../services/ExplanationService.js';
+import type { ExplanationRequest, ExplanationType, ExplanationContext, ExplanationResult, TradeReasoningChain } from '../services/ExplanationService.js';
 import type { APIResponse, Price } from '../types/index.js';
 import { BASE_HISTORY_DAYS } from '../factors/historySlice.js';
-import { insightLedger, type InsightMetadata } from '../insights/InsightLedger.js';
+import { insightLedger } from '../insights/InsightLedger.js';
 
 interface RouteContext {
   server: {
@@ -13,13 +13,8 @@ interface RouteContext {
     factorEngine: { calculateExposures(symbols: string[], prices: Map<string, Price[]>): Promise<Map<string, unknown[]>> };
     explainer: { explainAllocationChange(symbol: string, oldWeight: number, newWeight: number, factors: { old: unknown[]; new: unknown[] }): unknown };
     explanationService: {
-      generate(req: ExplanationRequest): Promise<{
-        sources: string[];
-        text?: string;
-        routing?: InsightMetadata;
-        [key: string]: unknown;
-      }>;
-      explainTrade(symbol: string): Promise<{ cached: boolean; [key: string]: unknown }>;
+      generate(req: ExplanationRequest): Promise<ExplanationResult>;
+      explainTrade(symbol: string): Promise<TradeReasoningChain>;
       enrichWithTemporalAnchors(
         context: ExplanationContext,
         symbol: string,

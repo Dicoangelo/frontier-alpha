@@ -85,6 +85,12 @@ export interface RoutingDecision {
   latencyMs: number;
   /** Resolved model id (env-driven, never hardcoded). `null` for templates. */
   model: string | null;
+  /**
+   * Open index signature so a RoutingDecision is structurally assignable to the
+   * route layer's flexible InsightMetadata contract (the provenance ledger
+   * persists this object). The named fields above stay the source of truth.
+   */
+  [key: string]: unknown;
 }
 
 export interface ExplanationResult {

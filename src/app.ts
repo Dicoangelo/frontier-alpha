@@ -225,8 +225,8 @@ export async function buildApp(
   });
 
   // --- Route registration --------------------------------------------------
-  const ctx = { server } as any;
-  app.register(healthRoutes, { server, pkg } as any);
+  const ctx: { server: AppServer } = { server };
+  app.register(healthRoutes, { server, pkg } as Parameters<typeof healthRoutes>[1]);
   app.register(settingsRoutes, ctx);
   app.register(alertsRoutes, ctx);
   app.register(portfolioRoutes, ctx);

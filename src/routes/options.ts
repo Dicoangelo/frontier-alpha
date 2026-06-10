@@ -10,9 +10,18 @@ import type { StrategyType } from '../options/StrategyBuilder.js';
 import { ivService } from '../options/ImpliedVolatility.js';
 import { logger } from '../observability/logger.js';
 
+// Minimal shape for Yahoo Finance option contract data
+interface YahooOptionContract {
+  strike: number;
+  openInterest?: number;
+  impliedVolatility?: number;
+  lastPrice?: number;
+  expiration?: number;
+}
+
 // IV endpoint caches
-const ivCache = new Map<string, { data: any; timestamp: number }>();
-const hvCache = new Map<string, { data: any; timestamp: number }>();
+const ivCache = new Map<string, { data: IVResult; timestamp: number }>();
+const hvCache = new Map<string, { data: number[]; timestamp: number }>();
 const IV_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 const HV_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
@@ -49,7 +58,7 @@ async function fetchHistoricalPrices(symbol: string): Promise<number[]> {
       return [];
     }
 
-    const closes: number[] = result.indicators.quote[0].close.filter((p: any) => p != null);
+    const closes: number[] = result.indicators.quote[0].close.filter((p: number | null) => p != null);
     hvCache.set(symbol, { data: closes, timestamp: Date.now() });
     return closes;
   } catch (error) {
@@ -116,8 +125,8 @@ async function fetchIVData(symbol: string): Promise<IVResult> {
     // Calculate ATM IV
     let atmIV = 0.25;
     if (calls.length > 0 && currentPrice > 0) {
-      const sortedCalls = [...calls].sort(
-        (a: any, b: any) => Math.abs(a.strike - currentPrice) - Math.abs(b.strike - currentPrice)
+      const sortedCalls = [...calls as YahooOptionContract[]].sort(
+        (a, b) => Math.abs(a.strike - currentPrice) - Math.abs(b.strike - currentPrice)
       );
       const atmCall = sortedCalls[0];
       if (atmCall?.impliedVolatility) {
@@ -131,20 +140,20 @@ async function fetchIVData(symbol: string): Promise<IVResult> {
     const hv90 = historicalPrices.length > 91 ? calculateHistoricalVolatility(historicalPrices, 90) : atmIV * 0.80;
 
     // Put/Call ratio
-    const totalCallOI = calls.reduce((sum: number, c: any) => sum + (c.openInterest || 0), 0);
-    const totalPutOI = puts.reduce((sum: number, p: any) => sum + (p.openInterest || 0), 0);
+    const totalCallOI = (calls as YahooOptionContract[]).reduce((sum, c) => sum + (c.openInterest || 0), 0);
+    const totalPutOI = (puts as YahooOptionContract[]).reduce((sum, p) => sum + (p.openInterest || 0), 0);
     const putCallRatio = totalCallOI > 0 ? Math.round((totalPutOI / totalCallOI) * 100) / 100 : 1.0;
 
     // Skew: OTM put IV vs OTM call IV
     let skew = 0;
     if (currentPrice > 0) {
-      const otmPuts = puts.filter((p: any) => p.strike < currentPrice * 0.95 && p.impliedVolatility > 0);
-      const otmCalls = calls.filter((c: any) => c.strike > currentPrice * 1.05 && c.impliedVolatility > 0);
+      const otmPuts = (puts as YahooOptionContract[]).filter((p) => p.strike < currentPrice * 0.95 && (p.impliedVolatility ?? 0) > 0);
+      const otmCalls = (calls as YahooOptionContract[]).filter((c) => c.strike > currentPrice * 1.05 && (c.impliedVolatility ?? 0) > 0);
       const avgPutIV = otmPuts.length > 0
-        ? otmPuts.reduce((s: number, p: any) => s + p.impliedVolatility, 0) / otmPuts.length
+        ? otmPuts.reduce((s, p) => s + (p.impliedVolatility ?? 0), 0) / otmPuts.length
         : atmIV;
       const avgCallIV = otmCalls.length > 0
-        ? otmCalls.reduce((s: number, c: any) => s + c.impliedVolatility, 0) / otmCalls.length
+        ? otmCalls.reduce((s, c) => s + (c.impliedVolatility ?? 0), 0) / otmCalls.length
         : atmIV;
       skew = Math.round((avgPutIV - avgCallIV) * 10000) / 10000;
     }
@@ -155,13 +164,13 @@ async function fetchIVData(symbol: string): Promise<IVResult> {
     for (const expTimestamp of expirationDates.slice(0, 6)) {
       const expDate = new Date(expTimestamp * 1000).toISOString().split('T')[0];
       // Find ATM IV for this expiration from calls
-      const expCalls = calls.filter((c: any) => {
-        const cExpDate = new Date(c.expiration * 1000).toISOString().split('T')[0];
+      const expCalls = (calls as YahooOptionContract[]).filter((c) => {
+        const cExpDate = new Date((c.expiration ?? 0) * 1000).toISOString().split('T')[0];
         return cExpDate === expDate;
       });
       if (expCalls.length > 0 && currentPrice > 0) {
         const sorted = [...expCalls].sort(
-          (a: any, b: any) => Math.abs(a.strike - currentPrice) - Math.abs(b.strike - currentPrice)
+          (a, b) => Math.abs(a.strike - currentPrice) - Math.abs(b.strike - currentPrice)
         );
         if (sorted[0]?.impliedVolatility) {
           termStructure.push({ expiration: expDate, iv: Math.round(sorted[0].impliedVolatility * 10000) / 10000 });
@@ -177,10 +186,10 @@ async function fetchIVData(symbol: string): Promise<IVResult> {
 
     // Expected moves from straddle pricing
     const atmPut = puts.length > 0
-      ? [...puts].sort((a: any, b: any) => Math.abs(a.strike - currentPrice) - Math.abs(b.strike - currentPrice))[0]
+      ? [...puts as YahooOptionContract[]].sort((a, b) => Math.abs(a.strike - currentPrice) - Math.abs(b.strike - currentPrice))[0]
       : null;
     const atmCallPrice = calls.length > 0
-      ? [...calls].sort((a: any, b: any) => Math.abs(a.strike - currentPrice) - Math.abs(b.strike - currentPrice))[0]?.lastPrice || 0
+      ? [...calls as YahooOptionContract[]].sort((a, b) => Math.abs(a.strike - currentPrice) - Math.abs(b.strike - currentPrice))[0]?.lastPrice || 0
       : 0;
     const atmPutPrice = atmPut?.lastPrice || 0;
     const straddlePrice = atmCallPrice + atmPutPrice;

@@ -5,8 +5,25 @@ import { getCVRFRiskAssessment } from '../cvrf/integration.js';
 import { logger } from '../observability/logger.js';
 import { FACTOR_DEFINITIONS } from '../factors/FactorEngine.js';
 import * as persistence from '../cvrf/persistence.js';
-import type { APIResponse } from '../types/index.js';
+import type { APIResponse, FactorCategory } from '../types/index.js';
 import type { PersistentCVRFManager } from '../cvrf/PersistentCVRFManager.js';
+import type { CVRFManager } from '../cvrf/CVRFManager.js';
+
+// Extended category type covering the standard FactorCategory values plus
+// synthetic categories ('macro' alias, 'risk') that only appear in the
+// beliefs/current endpoint's derived belief entries.
+type BeliefCategory = FactorCategory | 'risk';
+
+// Optional risk parameters that may exist on a CVRFManager belief state
+// but are not part of the core typed interface.
+interface ExtendedBeliefs {
+  maxDrawdownLimit?: number;
+  positionSizeLimit?: number;
+  sectorConcentration?: number;
+  turnoverLimit?: number;
+  trackingError?: number;
+  leverageLimit?: number;
+}
 
 interface RouteContext {
   server: {
@@ -218,7 +235,7 @@ export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
         portfolioValue,
         portfolioReturns || [],
         positions,
-        server.cvrfManager as any
+        server.cvrfManager as unknown as CVRFManager
       );
 
       // Serialize Maps in overEpisode to plain objects (matches Vercel surface)
@@ -358,7 +375,13 @@ export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
       const neutralWeight = 0.2;
       const neutralThreshold = 0.03;
 
-      const beliefs = FACTOR_DEFINITIONS.map(def => {
+      const beliefs: Array<{
+        factorId: string;
+        factorName: string;
+        category: BeliefCategory;
+        conviction: number;
+        direction: 'bullish' | 'bearish' | 'neutral';
+      }> = FACTOR_DEFINITIONS.map(def => {
         const weight = fw.get(def.name) ?? neutralWeight;
         const confidence = fc.get(def.name) ?? 0.5;
         let direction: 'bullish' | 'bearish' | 'neutral' = 'neutral';
@@ -374,32 +397,33 @@ export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
         };
       });
 
-      // Add regime meta-factor
+      // Add regime meta-factor ('macro' is a valid BeliefCategory / FactorCategory)
       beliefs.push({
         factorId: 'regime',
         factorName: 'Market Regime',
-        category: 'macro' as any,
+        category: 'macro',
         conviction: currentBeliefs.regimeConfidence ?? 0.5,
         direction: 'neutral',
       });
 
-      // Add risk parameter factors
+      // Add risk parameter factors ('risk' is covered by BeliefCategory)
+      const extBeliefs = currentBeliefs as typeof currentBeliefs & ExtendedBeliefs;
       const riskFactors = [
         { id: 'risk_tolerance', name: 'Risk Tolerance', value: currentBeliefs.riskTolerance },
         { id: 'volatility_target', name: 'Volatility Target', value: currentBeliefs.volatilityTarget },
-        { id: 'max_drawdown_limit', name: 'Max Drawdown Limit', value: (currentBeliefs as any).maxDrawdownLimit },
-        { id: 'position_size_limit', name: 'Position Size Limit', value: (currentBeliefs as any).positionSizeLimit },
-        { id: 'sector_concentration', name: 'Sector Concentration', value: (currentBeliefs as any).sectorConcentration },
-        { id: 'turnover_limit', name: 'Turnover Limit', value: (currentBeliefs as any).turnoverLimit },
-        { id: 'tracking_error', name: 'Tracking Error', value: (currentBeliefs as any).trackingError },
-        { id: 'leverage_limit', name: 'Leverage Limit', value: (currentBeliefs as any).leverageLimit },
+        { id: 'max_drawdown_limit', name: 'Max Drawdown Limit', value: extBeliefs.maxDrawdownLimit },
+        { id: 'position_size_limit', name: 'Position Size Limit', value: extBeliefs.positionSizeLimit },
+        { id: 'sector_concentration', name: 'Sector Concentration', value: extBeliefs.sectorConcentration },
+        { id: 'turnover_limit', name: 'Turnover Limit', value: extBeliefs.turnoverLimit },
+        { id: 'tracking_error', name: 'Tracking Error', value: extBeliefs.trackingError },
+        { id: 'leverage_limit', name: 'Leverage Limit', value: extBeliefs.leverageLimit },
       ];
 
       for (const rf of riskFactors) {
         beliefs.push({
           factorId: rf.id,
           factorName: rf.name,
-          category: 'risk' as any,
+          category: 'risk',
           conviction: rf.value ?? 0.5,
           direction: 'neutral',
         });
@@ -519,7 +543,7 @@ export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
     '/api/v1/cvrf/beliefs/timeline',
     async (request, _reply) => {
       const start = Date.now();
-      const daysParam = parseInt((request.query as any).days || '30', 10);
+      const daysParam = parseInt((request.query as { days?: string }).days || '30', 10);
       const days = Math.max(1, Math.min(365, daysParam));
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - days);
@@ -577,7 +601,7 @@ export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
     '/api/v1/cvrf/episodes',
     async (request, reply) => {
       const start = Date.now();
-      const query = request.query as any;
+      const query = request.query as { limit?: string; offset?: string; expand?: string };
       const limit = Math.max(1, Math.min(100, parseInt(query.limit || '50', 10)));
       const offset = Math.max(0, parseInt(query.offset || '0', 10));
       const expandDecisions = query.expand === 'decisions';

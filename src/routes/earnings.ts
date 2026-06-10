@@ -4,6 +4,13 @@ import { EarningsOracle } from '../earnings/EarningsOracle.js';
 import type { APIResponse, EarningsImpactForecast, Price } from '../types/index.js';
 import { BASE_HISTORY_DAYS } from '../factors/historySlice.js';
 
+interface EarningsReaction {
+  surprise: number | null;
+  priceMove: number | null;
+  outcome: 'beat' | 'miss';
+  [key: string]: unknown;
+}
+
 const refreshCooldowns = new Map<string, number>();
 const COOLDOWN_MS = 60_000;
 
@@ -279,10 +286,10 @@ export async function earningsRoutes(fastify: FastifyInstance, opts: RouteContex
           const oracle = new EarningsOracle(alphaVantageKey, polygonKey);
           const historicalReactions = await oracle.getHistoricalReactions(upperSymbol);
           if (historicalReactions && historicalReactions.length > 0) {
-            reactions = historicalReactions.map((r: any) => ({
+            reactions = historicalReactions.map((r) => ({
               ...r,
-              outcome: r.surprise > 0 ? 'beat' : 'miss',
-            }));
+              outcome: (r.surprise ?? 0) > 0 ? 'beat' : 'miss',
+            } as EarningsReaction));
             source = 'oracle';
           }
         } catch (error) {
@@ -295,11 +302,11 @@ export async function earningsRoutes(fastify: FastifyInstance, opts: RouteContex
       }
 
       // Calculate summary
-      const beats = reactions.filter((r: any) => r.outcome === 'beat');
-      const misses = reactions.filter((r: any) => r.outcome === 'miss');
-      const allMoves = reactions.map((r: any) => Math.abs(r.priceMove));
-      const beatMoves = beats.map((r: any) => Math.abs(r.priceMove));
-      const missMoves = misses.map((r: any) => Math.abs(r.priceMove));
+      const beats = (reactions as EarningsReaction[]).filter((r) => r.outcome === 'beat');
+      const misses = (reactions as EarningsReaction[]).filter((r) => r.outcome === 'miss');
+      const allMoves = (reactions as EarningsReaction[]).map((r) => Math.abs(r.priceMove ?? 0));
+      const beatMoves = beats.map((r) => Math.abs(r.priceMove ?? 0));
+      const missMoves = misses.map((r) => Math.abs(r.priceMove ?? 0));
 
       const avg = (arr: number[]) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 

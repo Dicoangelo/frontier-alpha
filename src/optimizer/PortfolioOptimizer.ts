@@ -101,10 +101,12 @@ export class PortfolioOptimizer {
     // Validate with Monte Carlo
     const monteCarlo = this.monteCarloSimulation(returns, weights, 10000);
 
-    // Calculate metrics
+    // Calculate metrics. expectedReturn/expectedVol are DAILY here (annualized
+    // on the way out below), so the annual risk-free rate must be de-annualized
+    // — subtracting 0.045 from a ~0.003 daily return produced Sharpe ≈ -38.
     const expectedReturn = this.portfolioReturn(weights, mu);
     const expectedVol = this.portfolioVolatility(weights, shrunkSigma);
-    const sharpe = (expectedReturn - config.riskFreeRate) / expectedVol;
+    const sharpe = (expectedReturn - config.riskFreeRate / 252) / expectedVol;
 
     // Calculate factor exposures
     const factorExposures = await this.calculateFactorExposures(symbols, weights, prices);

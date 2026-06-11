@@ -213,6 +213,21 @@ describe('useFactorDeltas — internals', () => {
       expect(out[0].deltaPct).toBeCloseTo(5, 5); // 0.05 * 100
     });
 
+    it('does not explode on tiny-but-nonzero baselines (walkthrough +4606% case)', () => {
+      const current: FactorExposureWithCategory[] = [mkFactor('interest_rate_sens', 0.235)];
+      const out = computeDeltas(current, { interest_rate_sens: 0.005 });
+      expect(out).toHaveLength(1);
+      // Below the 0.01 noise floor → delta*100 path: (0.235 - 0.005) * 100 = 23
+      expect(out[0].deltaPct).toBeCloseTo(23, 5);
+    });
+
+    it('caps the ratio branch at ±999', () => {
+      const current: FactorExposureWithCategory[] = [mkFactor('vix_beta', 1.5)];
+      const out = computeDeltas(current, { vix_beta: 0.011 });
+      expect(out).toHaveLength(1);
+      expect(out[0].deltaPct).toBe(999);
+    });
+
     it('returns top-3 sorted by absolute deltaPct (descending)', () => {
       const current: FactorExposureWithCategory[] = [
         mkFactor('a', 1.0),

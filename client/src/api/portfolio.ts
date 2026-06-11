@@ -26,7 +26,11 @@ export const portfolioApi = {
     symbols: string[],
     config: OptimizationConfig
   ): Promise<OptimizationResult> => {
-    const response = await api.post('/portfolio/optimize', { symbols, config });
+    // 90s override of the global 30s timeout: a cold serverless run fetching
+    // 300d × N symbols under the Polygon free-tier rate window can
+    // legitimately take 30-60s. Aborting early surfaced as a fake
+    // "check your internet connection" toast in the 2026-06-11 walkthrough.
+    const response = await api.post('/portfolio/optimize', { symbols, config }, { timeout: 90000 });
     return response.data;
   },
 

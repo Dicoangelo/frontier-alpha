@@ -243,7 +243,7 @@ Frontier Alpha runs on Polygon's **free tier (5 requests/min)** by default. The 
 Every subsystem is a **module** — swap implementations with a config change, zero code changes.
 
 ```
-75+ modules · 107 API routes (26 modules) · 740 server tests · 22 subsystems · 14 migrations · 13/14 integrations live · Two-tier deploy
+75+ modules · 124 API endpoints (33 route modules) · 960 server + 244 client tests · 22 subsystems · 17 migrations · 13/14 integrations live · Two-tier deploy
 ```
 
 | Subsystem | Module | Ships with | Extend |

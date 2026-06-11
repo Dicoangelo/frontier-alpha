@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.3] - 2026-06-11
+
+### Walkthrough findings — Sharpe units, delta blow-ups, optimize timeout
+
+All three open findings from the logged-in browser walkthrough, fixed and
+verified live. 960 server + 244 client tests green.
+
+#### Fixed
+
+- **Optimizer Sharpe rendered -38.27 where ~2.4 was correct**
+  (`src/optimizer/PortfolioOptimizer.ts`): the final metric subtracted the
+  ANNUAL risk-free rate from a DAILY return before annualizing. Now
+  de-annualizes rf (`rf/252`), matching the gradient loop. Verified in
+  production: same portfolio now reads Sharpe 2.37.
+- **FactorDeltas percent blow-ups** (`factorDeltas.helpers.ts`): a 0.23 move
+  off a 0.005 baseline rendered +4606%. Baselines under a 0.01 noise floor
+  use the delta×100 path; the ratio branch is capped at ±999. 2 regression
+  tests.
+- **Optimize aborted as a fake connection error** (`api/portfolio.ts`): the
+  global 30s axios timeout killed legitimate 30-60s cold runs under the
+  Polygon rate window. The optimize call now overrides to 90s, and throttle
+  failures surface the server's honest INSUFFICIENT_DATA message.
+
+## [1.9.2] - 2026-06-11
+
+### Walkthrough fixes — optimizer provenance + authed demo leak
+
+Two real bugs caught by the first logged-in browser walkthrough (golden
+account, full flow via chrome-devtools).
+
+#### Fixed
+
+- **Optimizer provenance never recorded**: `/portfolio/optimize` had no auth
+  decoration, so `request.user` was never populated and the market_data →
+  optimizer_run → recommendation chain silently never wrote. Now uses
+  `optionalAuthMiddleware` (route stays public for demo mode). Verified: the
+  full 3-node lineage renders on the Insights page.
+- **Authenticated demo-data leak**: the Dashboard's catch-path fell back to
+  the $125K demo portfolio under a LIVE badge for SIGNED-IN users whenever
+  `/portfolio` errored (e.g. upstream quote 500 under Polygon throttle).
+  The v1.2.6 fix covered the empty path; the error path was missed. Authed
+  users now get the honest empty/error state.
+
+## [1.9.1] - 2026-06-11
+
+### Vercel catch-all body relay fix
+
+#### Fixed
+
+- **Every POST through the Vercel tier 400'd on pretty-printed JSON**
+  (`api/fastify.ts`): the catch-all re-serializes Vercel's parsed body
+  (compact) but forwarded the client's original Content-Length, so any
+  request whose JSON contained whitespace failed with
+  `FST_ERR_CTP_INVALID_CONTENT_LENGTH`. Never surfaced because browsers/axios
+  send compact JSON; caught by the v1.9.0 seal-verify walkthrough. The
+  catch-all now strips `content-length`/`transfer-encoding` and lets
+  `inject()` recompute from the actual payload bytes.
+
+#### Operations
+
+- `SEAL_PRIVATE_KEY` set on both tiers (Vercel + Railway) — seal receipts now
+  use a persistent Ed25519 key (`keyMode: persistent`) and survive restarts.
+
 ## [1.9.0] - 2026-06-11
 
 ### Deep trust wave — ForensicSeal, method consensus, episodic retrieval

@@ -79,7 +79,7 @@ npm test                 # Server tests (watch mode)
 npm run test:unit        # Server unit tests (single run)
 npm run test:all         # All tests — server + client
 npm run test:coverage    # Coverage report
-npx vitest run --reporter=basic  # 740 server tests in ~5s
+npx vitest run --reporter=basic  # 960 server tests in ~20s
 
 # Build & lint
 npm run build            # Production build
@@ -112,9 +112,9 @@ npm run ml:start         # uvicorn on port 8000
 | `src/trading/` | Broker adapters (Alpaca) |
 | `src/ml/` | Neural factor models, regime detection |
 | `src/notifications/` | Web Push + SSE |
-| `src/routes/` | Fastify route definitions — 26 modules, 108 endpoint registrations |
-| `supabase/migrations/` | 13 tracked migrations (+ `frontier_rate_limits` applied via Supabase MCP, v1.2.5) |
-| `tests/` | Vitest tests with MSW handlers (740 server tests passing as of v1.2.6) |
+| `src/routes/` | Fastify route definitions — 33 modules, 124 endpoint registrations |
+| `supabase/migrations/` | 17 tracked migrations (3 applied out-of-band via scripts/apply-pending-migrations.sh — see Operations) |
+| `tests/` | Vitest tests with MSW handlers (960 server tests passing as of v1.9.3) |
 | `tests/visual/` | Playwright visual regression suite (TOKEN-007) — 9 pages x 2 themes, 18 PNG baselines, nightly CI only. See "Visual regression" under Operations. |
 | `schemas/` | Machine-checkable contracts. `arch.json` (this story) is the route/page/integration fingerprint; future schemas: `env-schema.json` (US-009), `health-integration.json` (US-004), `api-shape.json` (US-007) |
 | `scripts/arch-scanner.mjs` | Generates / verifies `schemas/arch.json`. CI runs `npm run arch:check`. |
@@ -130,7 +130,8 @@ npm run ml:start         # uvicorn on port 8000
 
 ## Current State
 
-- **Version:** 1.9.0 (server `package.json`) — 2026-06-11 deep trust wave: FF-4 ForensicSeal (`src/forensics/ForensicSeal.ts`, Ed25519 receipts on every backtest, public `POST /api/v1/seal/verify` + `GET /api/v1/seal/public-key`, `SEAL_PRIVATE_KEY` env optional), FF-2 v1 method consensus (`src/factors/methodConsensus.ts`, 3 independent rankings + agreement verdict, `GET /api/v1/explain/methods/:symbol`, card on Factors page), CVRF v2-A two-phase episode retrieval (`src/cvrf/EpisodeRetrieval.ts`, MemRL precedent insights in every cycle). Attention factors deferred to the Python ML engine. 960 server + 242 client tests. See CHANGELOG `[1.9.0]`.
+- **Version:** 1.9.3 (server `package.json`) — 2026-06-11 walkthrough-hardening: v1.9.1 fixed the Vercel catch-all Content-Length relay (ANY pretty-printed-JSON POST 400'd on the Vercel tier) + `SEAL_PRIVATE_KEY` persistent on both tiers; v1.9.2 fixed optimizer provenance never recording (`optionalAuthMiddleware` on `/portfolio/optimize`) + the authed $125K demo-leak on Dashboard error paths; v1.9.3 fixed Sharpe -38.27 (annual rf vs daily return), FactorDeltas ±4606% blow-ups (0.01 noise floor + ±999 cap), and the optimize client timeout (90s override). All verified live via logged-in browser walkthrough (golden account, full flow). 960 server + 244 client tests. See CHANGELOG `[1.9.1]`-`[1.9.3]`.
+- **Prior:** 1.9.0 (server `package.json`) — 2026-06-11 deep trust wave: FF-4 ForensicSeal (`src/forensics/ForensicSeal.ts`, Ed25519 receipts on every backtest, public `POST /api/v1/seal/verify` + `GET /api/v1/seal/public-key`, `SEAL_PRIVATE_KEY` env optional), FF-2 v1 method consensus (`src/factors/methodConsensus.ts`, 3 independent rankings + agreement verdict, `GET /api/v1/explain/methods/:symbol`, card on Factors page), CVRF v2-A two-phase episode retrieval (`src/cvrf/EpisodeRetrieval.ts`, MemRL precedent insights in every cycle). Attention factors deferred to the Python ML engine. 960 server + 242 client tests. See CHANGELOG `[1.9.0]`.
 - **Prior:** 1.8.0 (server `package.json`) — 2026-06-11 saliency wave: temporal saliency engine (`src/factors/temporalSaliency.ts`, true additive window attribution of momentum/volatility over recent-14d/mid-63d/far-252d), `GET /api/v1/portfolio/factors/saliency/:symbol` (cached price path), `Signal Timing` prompt grounding in the explainer, SignalTiming card on the Factors page. All three out-of-band migrations APPLIED in production as of 2026-06-11. 934 server + 242 client tests. See CHANGELOG `[1.8.0]`.
 - **Prior:** 1.7.0 (server `package.json`) — 2026-06-11 lineage wave: FF-3 provenance DAG (`src/forensics/ProvenanceDag.ts`, market_data→factor_compute→optimizer_run→recommendation→insight→user_action nodes from explain/optimize/orders routes, `GET /api/v1/provenance/recent` + `/:id/lineage`), Decision Lineage explorer on the Insight History page, FF-6 `?demo=true` shareable demo link (sessionStorage latch + sovereign-rail banner, real session wins). **Migration `20260611_provenance_nodes.sql` UNAPPLIED** — re-run `scripts/apply-pending-migrations.sh` (idempotent; includes all three). 925 server + 242 client tests. See CHANGELOG `[1.7.0]`.
 - **Prior:** 1.6.0 (server `package.json`) — 2026-06-10 trust wave: FF-1 hash-chained forensic event ledger (`src/forensics/ForensicChain.ts`, CVRF belief/episode/cycle events sealed SHA-256, `GET /api/v1/cvrf/chain` + `/chain/verify`), FF-5 trade audit log (order submit/cancel events on the `trading` chain, both simulated + Alpaca paths), CIN-5 quota-burn error classification (`src/data/QuotaClassifier.ts`, `GET /api/v1/health/quota`, `upstream_errors_total` Prometheus counter), CIN-4 quality-window badge (`DataQualityBadge` on Dashboard factor card + Factors page). **TWO migrations UNAPPLIED in production:** `20260610_insight_ledger.sql` + `20260610_forensic_events.sql` — run `scripts/apply-pending-migrations.sh` (NEVER `supabase db push`; shared project). Both services no-op cleanly until applied. 913 server + 238 client tests. See CHANGELOG `[1.6.0]`.
@@ -143,13 +144,13 @@ npm run ml:start         # uvicorn on port 8000
 - **Env hygiene:** `client/src/api/websocket.ts::getWebSocketUrl()` `.trim()`s every env read (v1.2.4). Polygon API key was rotated v1.2.6 (`6c971eb`) after `echo | vercel env add` truncated 32→30 chars in production. Always rotate keys with `printf "%s" $KEY | vercel env add NAME production --force`.
 - **Production URL:** https://frontier-alpha.metaventionsai.com
 - **Deployment:** Two-tier — Vercel (SPA + REST, auto-deploy disabled, deploy manually) + Railway (always-on Fastify + Polygon WebSocket, `frontier-alpha-api`).
-- **Tests:** 39 server test files, **740 server tests passing in ~5s** (verified 2026-05-09 via `npx vitest run --reporter=basic`; zero failures). Client suite separate.
-- **API surface:** Fully unified via `src/app.ts::buildApp()` — single source of truth for standalone Fastify and Vercel serverless. **108 endpoint registrations across 26 route modules** (verified 2026-05-09 via `grep -rE "fastify\.(get|post|put|delete|patch)" src/routes/*.ts | wc -l`). `api/fastify.ts` catch-all handles them in Vercel. Only **4 Vercel .ts files** remain (`api/fastify.ts`, `api/openapi.ts`, `api/docs.ts`, `api/edge/quotes.ts`). Zero hand-written Vercel endpoint handlers.
+- **Tests:** 60 server test files, **960 server tests** + **244 client tests** (verified 2026-06-11; zero failures).
+- **API surface:** Fully unified via `src/app.ts::buildApp()` — single source of truth for standalone Fastify and Vercel serverless. **124 endpoint registrations across 33 route modules** (verified 2026-06-11 via `grep -rE "fastify\.(get|post|put|delete|patch)" src/routes/*.ts | wc -l`). `api/fastify.ts` catch-all handles them in Vercel. Only **4 Vercel .ts files** remain (`api/fastify.ts`, `api/openapi.ts`, `api/docs.ts`, `api/edge/quotes.ts`). Zero hand-written Vercel endpoint handlers.
 - **Server files:** 113 .ts files (110 non-test + 3 in-source `.test.ts`).
-- **Supabase migrations:** 13 tracked files in `supabase/migrations/` + `frontier_rate_limits` applied out-of-band via Supabase MCP (v1.2.5, atomic `rate_limit_check` RPC). Folding the rate-limits migration back into a tracked file is a v1.3.x cleanup.
+- **Supabase migrations:** 17 tracked files in `supabase/migrations/`. The three 2026-06 additions (insight_ledger, forensic_events, provenance_nodes) were applied to production 2026-06-11 via `scripts/apply-pending-migrations.sh` (Management API; NEVER `supabase db push` — the shared project's migration history doesn't match this repo). `frontier_rate_limits` remains out-of-band from v1.2.5.
 - **Comp accounts:** dicoangelo@metaventionsai.com seeded with sentinel `comp_founder` IDs — write-protected from all four billing webhook branches. See `feedback_comp_customer_guard` pattern in `src/routes/billing.ts`.
 - **Architecture contract:** `schemas/arch.json` is the machine-checkable fingerprint. `npm run arch:check` runs in CI on every PR. If you add/remove routes, pages, integrations, stores, hooks, API modules, or migrations, regenerate via `npm run arch:scan` and commit the new fingerprint.
-- **v1.3.0 (in flight):** `tasks/prd-v1.3.0-reliability-wave.md` — 9 user stories. US-001 (this section + ARCHITECTURE.md refresh + arch-scanner) is the foundation. US-002 through US-009 build out type-level mock-data contracts, auth-lifecycle hardening, real upstream health probes, the `<DegradedService>` primitive, an extracted cache module, integration smoke tests + golden-state fixture, observability + synthetic monitor, and the env-schema audit.
+- **Backlog state (2026-06-11):** the v1.3.0 reliability PRD and the entire IDEAS.md cross-pollination backlog (CIN-1..5, FF-1..6, Topic D saliency) are SHIPPED. The single remaining big item is the attention factor model (arXiv:2510.11616) — deferred to the Python ML engine because an honest implementation needs training/eval infrastructure. The pre-decided Polygon Starter upgrade trigger remains READY TO PULL (see ROADMAP.md).
 
 ## PRD Status
 

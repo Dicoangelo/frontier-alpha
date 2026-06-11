@@ -24,7 +24,7 @@ again when one fires — execute the upgrade, update this row, move on.
 
 | Trigger | Cost | Status |
 |---|---|---|
-| **Polygon free → Polygon Starter** ($29/mo) — when a real second user joins, OR when the free-tier 5 req/min ceiling becomes binding under normal dashboard load (12+ requests on first paint), OR within 30 days of any planned demo / sales pitch. | $29/mo | **READY TO PULL** — trigger condition hit 2026-05-09. Holding for "near demo / second user" timing per user direction. See `Polygon free-tier insufficiency` below for evidence. |
+| **Polygon free → Polygon Starter** ($29/mo) — when a real second user joins, OR when the free-tier 5 req/min ceiling becomes binding under normal dashboard load (12+ requests on first paint), OR within 30 days of any planned demo / sales pitch. | $29/mo | **READY TO PULL** — trigger condition hit 2026-05-09; user holding as of 2026-06-11. Additional evidence: the 2026-06-11 logged-in walkthrough tripped the 5/min ceiling 3 times in one session (dashboard /portfolio 500, two optimize stalls), and the `?demo=true` share link (v1.7.0) makes the "near demo" condition live. |
 | **Supabase free → Pro** ($25/mo) — when database row count exceeds free-tier limits (currently ~100K free) OR when realtime / storage features become load-bearing. | $25/mo | Not triggered — well under thresholds. |
 | **Vercel Hobby → Pro** ($20/mo) — when Hobby's 100GB bandwidth ceiling becomes binding, OR when more than one human collaborator needs preview-deploy access. | $20/mo | Not triggered — solo. |
 | **Upstash Redis** (deferred) — current Supabase-backed rate limiter is enough at solo-user scale. Threshold: when `rate_limit_check` RPC p99 exceeds 50ms or sustained > 100 req/s. | TBD | Not triggered. |
@@ -71,6 +71,12 @@ Polygon Starter is live:**
 
 | Date | Version | Headline |
 |---|---|---|
+| 2026-06-11 | 1.9.1-1.9.3 | Walkthrough hardening — Vercel POST body relay, optimizer provenance, authed demo leak, Sharpe units, delta caps, persistent seal key |
+| 2026-06-11 | 1.9.0 | Deep trust wave — ForensicSeal (Ed25519 receipts), multi-method consensus, CVRF two-phase episode retrieval |
+| 2026-06-11 | 1.8.0-1.8.1 | Saliency wave — temporal window attribution engine + Signal Timing card |
+| 2026-06-11 | 1.7.0 | Lineage wave — provenance DAG + Decision Lineage explorer + ?demo=true link |
+| 2026-06-10 | 1.6.0 | Trust wave — forensic hash chain, trade audit, quota classification, quality windows |
+| 2026-06-10 | 1.5.0 | Intelligence wave — substrate routing (CIN-1), temporal anchors (CIN-3), insight ledger (CIN-2), real health probes (US-004) |
 | 2026-05-09 | 1.3.7 | CacheWarmer 300-day alignment + Supabase table restore |
 | 2026-05-09 | 1.3.6 | Factors-history endpoint cache-key alignment |
 | 2026-05-09 | 1.3.5 | Onboarding polish — welcome modal, Risk Metrics empty state, Options banner copy |

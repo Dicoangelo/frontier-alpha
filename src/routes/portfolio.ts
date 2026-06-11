@@ -4,6 +4,7 @@ import { portfolioService } from '../services/PortfolioService.js';
 import { logger } from '../observability/logger.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { PerformanceAttribution } from '../analytics/PerformanceAttribution.js';
+import { provenanceDag } from '../forensics/ProvenanceDag.js';
 import type { APIResponse, OptimizationConfig, OptimizationResult, Price } from '../types/index.js';
 import {
   BASE_HISTORY_DAYS,
@@ -362,6 +363,34 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
 
         // Run optimization on the resolved subset only
         const result = await server.optimizer.optimize(resolvedSymbols, prices, safeConfig);
+
+        // Provenance lineage (IDEA-FF-3): market_data → optimizer_run →
+        // recommendation. Fire-and-forget; only recorded for signed-in users.
+        if (request.user?.id) {
+          const userId = request.user.id;
+          void (async () => {
+            const marketDataId = await provenanceDag.record({
+              userId,
+              nodeType: 'market_data',
+              label: `Price history (${resolvedSymbols.length + 1} symbols, ${BASE_HISTORY_DAYS}d)`,
+              payload: { symbols: [...resolvedSymbols, 'SPY'], days: BASE_HISTORY_DAYS, skipped },
+            });
+            const runId = await provenanceDag.record({
+              userId,
+              nodeType: 'optimizer_run',
+              label: `Optimizer run — ${safeConfig.objective ?? 'default'}`,
+              payload: { config: safeConfig as unknown as Record<string, unknown> },
+              parents: [marketDataId],
+            });
+            await provenanceDag.record({
+              userId,
+              nodeType: 'recommendation',
+              label: 'Recommended weights',
+              payload: { weights: Object.fromEntries(result.weights) },
+              parents: [runId],
+            });
+          })();
+        }
 
         return {
           success: true,

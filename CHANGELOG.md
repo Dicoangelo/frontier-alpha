@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.0] - 2026-06-11
+
+### Saliency wave — "which days drove this signal?"
+
+Ships the v1 of IDEAS Topic D (arXiv:2509.22839's UX goal) as an honest
+analytic decomposition — no model, no new upstream calls. 934 server + 242
+client tests green.
+
+#### Added
+
+- **Temporal saliency engine** (`src/factors/temporalSaliency.ts`)
+  - Decomposes a symbol's momentum and volatility signals into recent
+    (14d) / mid (15-63d) / far (64-252d) window contributions. The shares
+    are TRUE additive attribution: momentum sums per-day log returns,
+    volatility sums squared returns — percentages reconstruct the totals
+    exactly. Degrades to null below 30 trading days. 9 new tests.
+  - `GET /api/v1/portfolio/factors/saliency/:symbol` — reuses the
+    BASE_HISTORY_DAYS cached price path (zero new Polygon calls).
+
+- **Cognitive Insight grounding** — the explain route now feeds a one-line
+  saliency digest ("NVDA's 252-day gain is driven 73% by the last 14
+  days") into the prompt as `Signal Timing`, with instructions to cite it
+  rather than invent timing claims. Same degradation posture as the
+  CIN-3 anchors.
+
+- **Signal Timing card** (`client/src/components/factors/SignalTiming.tsx`)
+  - New card on the Factors page: per-symbol stacked attribution bars for
+    momentum and volatility with the dominant-window sentence and a
+    window legend. Symbol pill selector for multi-position portfolios.
+
+---
+
 ## [1.7.0] - 2026-06-11
 
 ### Lineage wave — provenance DAG, decision lineage UI, shareable demo link

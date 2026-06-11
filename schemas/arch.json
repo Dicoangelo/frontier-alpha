@@ -1,20 +1,20 @@
 {
-  "generatedAt": "2026-06-11T13:42:13.901Z",
-  "headSha": "86df8c1c659a5cbfad61d4185d0b802003a6b508",
-  "version": "1.7.0",
+  "generatedAt": "2026-06-11T13:57:37.849Z",
+  "headSha": "790fa4e8568e03b76aaab1d58782b2118095fb44",
+  "version": "1.8.0",
   "server": {
-    "tsFiles": 136,
-    "tsNonTestFiles": 131,
+    "tsFiles": 137,
+    "tsNonTestFiles": 132,
     "inSourceTestFiles": 5,
     "routeModules": 32,
-    "endpoints": 120,
+    "endpoints": 121,
     "migrations": 17,
     "vercelApiFiles": 4,
-    "testFiles": 49
+    "testFiles": 50
   },
   "client": {
     "pages": 25,
-    "components": 115,
+    "components": 116,
     "stores": 6,
     "hooks": 15,
     "apiModules": 9,
@@ -123,7 +123,7 @@
     },
     {
       "module": "portfolio.ts",
-      "endpoints": 12
+      "endpoints": 13
     },
     {
       "module": "provenance.ts",

@@ -22,6 +22,7 @@ import { ConceptExtractor } from './ConceptExtractor.js';
 import { BeliefUpdater } from './BeliefUpdater.js';
 import * as persistence from './persistence.js';
 import { logger } from '../lib/logger.js';
+import { forensicChain } from '../forensics/ForensicChain.js';
 
 // ============================================================================
 // PERSISTENT CVRF MANAGER
@@ -136,6 +137,13 @@ export class PersistentCVRFManager {
     // Create new episode in Supabase
     const episode = await persistence.createEpisode(episodeNumber, this.userId);
 
+    void forensicChain.append({
+      userId: this.userId,
+      stream: 'cvrf',
+      eventType: 'episode_started',
+      payload: { episodeId: episode.id, episodeNumber },
+    });
+
     this.currentEpisode = episode;
     return episode;
   }
@@ -193,6 +201,19 @@ export class PersistentCVRFManager {
 
     // Save to Supabase
     await persistence.updateEpisode(this.currentEpisode);
+
+    void forensicChain.append({
+      userId: this.userId,
+      stream: 'cvrf',
+      eventType: 'episode_closed',
+      payload: {
+        episodeId: this.currentEpisode.id,
+        portfolioReturn: this.currentEpisode.portfolioReturn ?? null,
+        sharpeRatio: this.currentEpisode.sharpeRatio ?? null,
+        maxDrawdown: this.currentEpisode.maxDrawdown ?? null,
+        decisionCount: this.currentEpisode.decisions.length,
+      },
+    });
 
     // Move to recent episodes
     const closedEpisode = this.currentEpisode;
@@ -263,6 +284,29 @@ export class PersistentCVRFManager {
     // Save to Supabase
     await persistence.saveCycleResult(result, ++this.cycleCounter, this.userId);
     await persistence.saveBeliefs(newBeliefs, this.userId);
+
+    void forensicChain.append({
+      userId: this.userId,
+      stream: 'cvrf',
+      eventType: 'cycle_complete',
+      payload: {
+        cycleId: result.cycleId,
+        cycleNumber: this.cycleCounter,
+        performanceDelta: comparison.performanceDelta,
+        updateCount: updates.length,
+      },
+    });
+    void forensicChain.append({
+      userId: this.userId,
+      stream: 'cvrf',
+      eventType: 'belief_update',
+      payload: {
+        version: newBeliefs.version,
+        regime: newBeliefs.currentRegime,
+        regimeConfidence: newBeliefs.regimeConfidence,
+        factorWeights: Object.fromEntries(newBeliefs.factorWeights),
+      },
+    });
 
     // Update local state
     this.beliefs = newBeliefs;

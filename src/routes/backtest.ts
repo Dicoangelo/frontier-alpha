@@ -7,6 +7,7 @@
 
 import type { FastifyInstance } from 'fastify';
 import { BacktestRunner, type BacktestRunConfig } from '../backtest/BacktestRunner.js';
+import { forensicSeal } from '../forensics/ForensicSeal.js';
 import { logger } from '../observability/logger.js';
 import type { APIResponse } from '../types/index.js';
 
@@ -54,9 +55,14 @@ export async function backtestRoutes(fastify: FastifyInstance, _opts: RouteConte
         const runner = new BacktestRunner();
         const result = await runner.run(config);
 
+        // ForensicSeal (IDEA-FF-4): every backtest ships with a signed
+        // receipt over (config, result). Anyone can verify it later at
+        // POST /api/v1/seal/verify without trusting our database.
+        const seal = forensicSeal.issue('backtest', { config, result });
+
         return {
           success: true,
-          data: result,
+          data: { ...result, seal },
           meta: { timestamp: new Date(), requestId: request.id, latencyMs: Date.now() - start },
         };
       } catch (error) {

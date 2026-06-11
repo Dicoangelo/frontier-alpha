@@ -69,6 +69,7 @@ import { syntheticMonitorRoutes } from './routes/synthetic-monitor.js';
 import { cronWarmCacheRoutes } from './routes/cron-warm-cache.js';
 import { insightsRoutes } from './routes/insights.js';
 import { provenanceRoutes } from './routes/provenance.js';
+import { sealRoutes } from './routes/seal.js';
 import { errorCounter } from './observability/ErrorCounter.js';
 import { installRequestTracing } from './observability/RequestTracing.js';
 
@@ -258,6 +259,7 @@ export async function buildApp(
   app.register(cronWarmCacheRoutes, ctx);
   app.register(insightsRoutes);
   app.register(provenanceRoutes);
+  app.register(sealRoutes);
   if (websockets) {
     app.register(websocketRoutes, ctx);
   }

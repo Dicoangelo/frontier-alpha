@@ -89,9 +89,9 @@ function buildWindows(
 ): SaliencyWindow[] {
   const totalAbs = Math.abs(contributions[0]) + Math.abs(contributions[1]) + Math.abs(contributions[2]);
   const meta: Array<{ key: SaliencyWindow['key']; label: string }> = [
-    { key: 'recent', label: `last ${dayCounts[0]} days` },
-    { key: 'mid', label: `${RECENT_DAYS + 1}-${MID_DAYS} days ago` },
-    { key: 'far', label: `beyond ${MID_DAYS} days` },
+    { key: 'recent', label: `the last ${dayCounts[0]} days` },
+    { key: 'mid', label: `days ${RECENT_DAYS + 1}-${MID_DAYS}` },
+    { key: 'far', label: `days ${MID_DAYS + 1}+` },
   ];
   return meta.map((m, i) => ({
     key: m.key,
@@ -134,7 +134,7 @@ export function computeTemporalSaliency(symbol: string, prices: Price[]): Salien
     dominantWindow: momentumDominant,
     copy:
       `${symbol}'s ${returns.length}-day ${totalReturn >= 0 ? 'gain' : 'decline'} is driven ` +
-      `${momentumDominant.sharePct}% by the ${momentumDominant.label}.`,
+      `${momentumDominant.sharePct}% by ${momentumDominant.label}.`,
   };
 
   // Volatility: additive in squared-return (realized variance) space.
@@ -145,7 +145,7 @@ export function computeTemporalSaliency(symbol: string, prices: Price[]): Salien
     factor: 'volatility',
     windows: volWindows,
     dominantWindow: volDominant,
-    copy: `${volDominant.sharePct}% of ${symbol}'s realized volatility comes from the ${volDominant.label}.`,
+    copy: `${volDominant.sharePct}% of ${symbol}'s realized volatility comes from ${volDominant.label}.`,
   };
 
   return {

@@ -6,6 +6,7 @@ import type { ExplanationRequest, ExplanationType, ExplanationContext, Explanati
 import type { APIResponse, Price } from '../types/index.js';
 import { BASE_HISTORY_DAYS } from '../factors/historySlice.js';
 import { insightLedger } from '../insights/InsightLedger.js';
+import { provenanceDag } from '../forensics/ProvenanceDag.js';
 
 interface RouteContext {
   server: {
@@ -145,13 +146,36 @@ export async function explainRoutes(fastify: FastifyInstance, opts: RouteContext
         // table isn't applied yet. The userId is present because this route is
         // behind authMiddleware.
         if (request.user?.id) {
+          const userId = request.user.id;
           void insightLedger.record({
-            userId: request.user.id,
+            userId,
             prompt: `${type}:${symbol ?? '_portfolio'}`,
             factorsSnapshot: context?.factors ?? {},
             output: typeof result.text === 'string' ? result.text : undefined,
             metadata: result.routing,
           });
+          // Provenance lineage (IDEA-FF-3): factor_compute → insight. Chained
+          // inside one void-called block so the response never waits on it.
+          void (async () => {
+            const snapshotId = await provenanceDag.record({
+              userId,
+              nodeType: 'factor_compute',
+              label: `Factor snapshot for ${symbol ?? 'portfolio'}`,
+              payload: { factors: context?.factors ?? {}, symbol: symbol ?? null },
+            });
+            await provenanceDag.record({
+              userId,
+              nodeType: 'insight',
+              label: `${type} insight${symbol ? ` — ${symbol}` : ''}`,
+              payload: {
+                type,
+                symbol: symbol ?? null,
+                substrate: result.routing?.substrate ?? null,
+                model: result.routing?.model ?? null,
+              },
+              parents: [snapshotId],
+            });
+          })();
         }
 
         return {

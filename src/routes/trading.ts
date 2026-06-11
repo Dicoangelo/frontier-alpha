@@ -23,6 +23,7 @@ import { authMiddleware } from '../middleware/auth.js';
 import { logger } from '../observability/logger.js';
 import { getBrokerForUser } from '../trading/index.js';
 import { forensicChain } from '../forensics/ForensicChain.js';
+import { provenanceDag } from '../forensics/ProvenanceDag.js';
 
 interface RouteContext {
   server: unknown;
@@ -780,6 +781,8 @@ export async function tradingRoutes(fastify: FastifyInstance, _opts: RouteContex
     orderClass?: 'simple' | 'bracket' | 'oco' | 'oto';
     takeProfit?: { limitPrice: number };
     stopLoss?: { stopPrice: number; limitPrice?: number };
+    /** Optional provenance node id (e.g. a recommendation) this order acts on. */
+    provenanceParent?: string;
   }
   fastify.post<{ Body: PlaceOrderBody }>(
     '/api/v1/trading/orders',
@@ -849,6 +852,13 @@ export async function tradingRoutes(fastify: FastifyInstance, _opts: RouteContex
               notional: orderReq.notional ?? null,
               broker: 'simulated',
             },
+          });
+          void provenanceDag.record({
+            userId,
+            nodeType: 'user_action',
+            label: `${orderReq.side} ${order.symbol} (simulated)`,
+            payload: { orderId: order.id, side: orderReq.side, type: orderReq.type },
+            parents: [orderReq.provenanceParent],
           });
           reply.header('X-Data-Source', 'simulated');
           return {
@@ -921,6 +931,13 @@ export async function tradingRoutes(fastify: FastifyInstance, _opts: RouteContex
             broker: 'alpaca',
             paperTrading: isPaper,
           },
+        });
+        void provenanceDag.record({
+          userId: request.user?.id ?? null,
+          nodeType: 'user_action',
+          label: `${orderReq.side} ${order.symbol} (alpaca)`,
+          payload: { orderId: order.id, side: orderReq.side, type: orderReq.type },
+          parents: [orderReq.provenanceParent],
         });
         reply.header('X-Data-Source', 'live');
         return {

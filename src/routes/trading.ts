@@ -22,6 +22,7 @@ import type { FastifyInstance } from 'fastify';
 import { authMiddleware } from '../middleware/auth.js';
 import { logger } from '../observability/logger.js';
 import { getBrokerForUser } from '../trading/index.js';
+import { forensicChain } from '../forensics/ForensicChain.js';
 
 interface RouteContext {
   server: unknown;
@@ -835,6 +836,20 @@ export async function tradingRoutes(fastify: FastifyInstance, _opts: RouteContex
             extendedHours: orderReq.extendedHours,
             clientOrderId: orderReq.clientOrderId,
           });
+          void forensicChain.append({
+            userId,
+            stream: 'trading',
+            eventType: 'order_submitted',
+            payload: {
+              orderId: order.id,
+              symbol: order.symbol,
+              side: orderReq.side,
+              type: orderReq.type,
+              qty: orderReq.qty ?? null,
+              notional: orderReq.notional ?? null,
+              broker: 'simulated',
+            },
+          });
           reply.header('X-Data-Source', 'simulated');
           return {
             success: true,
@@ -892,6 +907,21 @@ export async function tradingRoutes(fastify: FastifyInstance, _opts: RouteContex
           timeout: 10000,
         });
         const order = mapAlpacaOrder(response.data);
+        void forensicChain.append({
+          userId: request.user?.id ?? null,
+          stream: 'trading',
+          eventType: 'order_submitted',
+          payload: {
+            orderId: order.id,
+            symbol: order.symbol,
+            side: orderReq.side,
+            type: orderReq.type,
+            qty: orderReq.qty ?? null,
+            notional: orderReq.notional ?? null,
+            broker: 'alpaca',
+            paperTrading: isPaper,
+          },
+        });
         reply.header('X-Data-Source', 'live');
         return {
           success: true,
@@ -994,6 +1024,12 @@ export async function tradingRoutes(fastify: FastifyInstance, _opts: RouteContex
           const broker = getBrokerForUser(userId);
           const ok = await broker.cancelOrder(id);
           if (ok) {
+            void forensicChain.append({
+              userId,
+              stream: 'trading',
+              eventType: 'order_canceled',
+              payload: { orderId: id, broker: 'simulated' },
+            });
             reply.header('X-Data-Source', 'simulated');
             return { success: true, data: { canceled: true, orderId: id } };
           }
@@ -1015,6 +1051,12 @@ export async function tradingRoutes(fastify: FastifyInstance, _opts: RouteContex
         await axios.delete(`${baseUrl}/v2/orders/${id}`, {
           headers: alpacaHeaders(alpacaKey, alpacaSecret),
           timeout: 10000,
+        });
+        void forensicChain.append({
+          userId: request.user?.id ?? null,
+          stream: 'trading',
+          eventType: 'order_canceled',
+          payload: { orderId: id, broker: 'alpaca' },
         });
         return { success: true, data: { canceled: true, orderId: id } };
       } catch (err) {

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import Ajv from 'ajv';
 import { metrics } from '../observability/metrics.js';
+import { getQuotaStats } from '../data/QuotaClassifier.js';
 import type {
   IntegrationHealthEntry,
   IntegrationsHealthResponse,
@@ -840,6 +841,13 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
   fastify.get('/api/v1/metrics', async (_request, reply) => {
     reply.type('text/plain; version=0.0.4; charset=utf-8');
     return metrics.toPrometheus();
+  });
+
+  // GET /api/v1/health/quota — IDEA-CIN-5: upstream errors classified by
+  // whether they consumed provider quota. "Did this burn budget or not" at
+  // a glance, with backoff guidance for the dominant error class.
+  fastify.get('/api/v1/health/quota', async () => {
+    return { success: true, data: getQuotaStats() };
   });
 
   // GET /api/v1/health/integrations — US-004: real upstream probe per

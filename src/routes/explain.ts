@@ -8,6 +8,8 @@ import { BASE_HISTORY_DAYS } from '../factors/historySlice.js';
 import { insightLedger } from '../insights/InsightLedger.js';
 import { provenanceDag } from '../forensics/ProvenanceDag.js';
 import { computeTemporalSaliency, saliencyPromptDigest } from '../factors/temporalSaliency.js';
+import { computeMethodConsensus } from '../factors/methodConsensus.js';
+import { assembleTemporalContext } from '../services/factorAnchors.js';
 
 interface RouteContext {
   server: {
@@ -240,6 +242,66 @@ export async function explainRoutes(fastify: FastifyInstance, opts: RouteContext
         return reply.status(500).send({
           success: false,
           error: { code: 'INTERNAL_ERROR', message: error instanceof Error ? `Trade explanation generation failed: ${error.message}` : 'Trade explanation generation failed' },
+        });
+      }
+    }
+  );
+
+  // GET /api/v1/explain/methods/:symbol — multi-method consensus (IDEA-FF-2)
+  //
+  // Three independent rankings of "which factors matter" (exposure magnitude,
+  // 5d temporal delta, statistical significance) with quantified agreement.
+  // Methods agreeing is a stronger trust signal than one LLM paragraph;
+  // disagreement is surfaced, not hidden.
+  fastify.get<{
+    Params: { symbol: string };
+    Reply: APIResponse<unknown>;
+  }>(
+    '/api/v1/explain/methods/:symbol',
+    async (request, reply) => {
+      const start = Date.now();
+      const symbol = request.params.symbol?.trim().toUpperCase();
+
+      if (!symbol) {
+        return reply.status(400).send({
+          success: false,
+          error: { code: 'VALIDATION_ERROR', message: 'Symbol is required' },
+        });
+      }
+
+      try {
+        const prices = new Map<string, Price[]>();
+        for (const s of [symbol, 'SPY']) {
+          prices.set(s, await server.dataProvider.getHistoricalPrices(s, BASE_HISTORY_DAYS));
+        }
+        const ctx = await assembleTemporalContext(symbol, prices, server.factorEngine);
+
+        if (!ctx) {
+          return reply.status(503).send({
+            success: false,
+            error: {
+              code: 'INSUFFICIENT_DATA',
+              message: `Not enough price history for ${symbol} to run the method consensus.`,
+            },
+          });
+        }
+
+        const result = computeMethodConsensus(symbol, ctx);
+
+        return {
+          success: true,
+          data: result,
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      } catch (error) {
+        logger.error({ err: error, symbol }, 'Method consensus failed');
+        return reply.status(500).send({
+          success: false,
+          error: { code: 'INTERNAL_ERROR', message: 'Method consensus computation failed' },
         });
       }
     }

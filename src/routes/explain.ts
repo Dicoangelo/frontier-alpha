@@ -7,6 +7,7 @@ import type { APIResponse, Price } from '../types/index.js';
 import { BASE_HISTORY_DAYS } from '../factors/historySlice.js';
 import { insightLedger } from '../insights/InsightLedger.js';
 import { provenanceDag } from '../forensics/ProvenanceDag.js';
+import { computeTemporalSaliency, saliencyPromptDigest } from '../factors/temporalSaliency.js';
 
 interface RouteContext {
   server: {
@@ -130,6 +131,11 @@ export async function explainRoutes(fastify: FastifyInstance, opts: RouteContext
               prices,
               server.factorEngine,
             );
+            // Temporal saliency (IDEAS Topic D): same price series, zero new
+            // upstream calls. Empty digest degrades silently.
+            const saliency = computeTemporalSaliency(symbol, prices.get(symbol) ?? []);
+            const digest = saliencyPromptDigest(saliency);
+            if (digest) enrichedContext = { ...enrichedContext, temporalSaliency: digest };
           } catch (err) {
             logger.warn({ err, symbol }, 'temporal anchor fetch failed, using single snapshot');
           }

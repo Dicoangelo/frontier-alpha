@@ -5,6 +5,7 @@ import { logger } from '../observability/logger.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { PerformanceAttribution } from '../analytics/PerformanceAttribution.js';
 import { provenanceDag } from '../forensics/ProvenanceDag.js';
+import { computeTemporalSaliency } from '../factors/temporalSaliency.js';
 import type { APIResponse, OptimizationConfig, OptimizationResult, Price } from '../types/index.js';
 import {
   BASE_HISTORY_DAYS,
@@ -413,6 +414,52 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
             code: 'INTERNAL_ERROR',
             message: `Optimization failed: ${message}`,
           },
+        });
+      }
+    }
+  );
+
+  // GET /api/v1/portfolio/factors/saliency/:symbol — temporal saliency
+  // (IDEAS Topic D): which trading-day windows drove the momentum and
+  // volatility signals. True additive attribution over the same cached
+  // price series the factor engine uses — zero new upstream calls.
+  fastify.get<{
+    Params: { symbol: string };
+    Reply: APIResponse<unknown>;
+  }>(
+    '/api/v1/portfolio/factors/saliency/:symbol',
+    async (request, reply) => {
+      const start = Date.now();
+      const symbol = request.params.symbol.toUpperCase();
+
+      try {
+        const prices = await server.dataProvider.getHistoricalPrices(symbol, BASE_HISTORY_DAYS);
+        const result = computeTemporalSaliency(symbol, prices);
+
+        if (!result) {
+          return reply.status(503).send({
+            success: false,
+            error: {
+              code: 'INSUFFICIENT_DATA',
+              message: `Not enough price history for ${symbol} to compute temporal saliency.`,
+            },
+          });
+        }
+
+        return {
+          success: true,
+          data: result,
+          meta: {
+            timestamp: new Date(),
+            requestId: request.id,
+            latencyMs: Date.now() - start,
+          },
+        };
+      } catch (error) {
+        logger.error({ err: error, symbol }, 'Temporal saliency failed');
+        return reply.status(500).send({
+          success: false,
+          error: { code: 'INTERNAL_ERROR', message: 'Temporal saliency computation failed' },
         });
       }
     }

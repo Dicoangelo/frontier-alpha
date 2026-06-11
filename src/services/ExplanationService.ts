@@ -160,6 +160,12 @@ export interface ExplanationContext {
    * degrades to the single-snapshot form exactly as before.
    */
   temporalSummary?: string[];
+  /**
+   * One-line temporal saliency digest (IDEAS Topic D): which trading-day
+   * windows drove the momentum and volatility signals, as a true additive
+   * attribution. Pre-computed server-side by `saliencyPromptDigest`.
+   */
+  temporalSaliency?: string;
 }
 
 // ============================================================================
@@ -950,6 +956,13 @@ export class ExplanationService {
       for (const line of context.temporalSummary) {
         parts.push(`  - ${line}`);
       }
+      parts.push('');
+    }
+
+    // Temporal saliency (IDEAS Topic D): which day-windows drove the signal.
+    // Additive attribution over the same price series — cite, don't invent.
+    if (context.temporalSaliency) {
+      parts.push(`Signal Timing (window attribution — cite when explaining momentum/volatility): ${context.temporalSaliency}`);
       parts.push('');
     }
 

@@ -121,11 +121,15 @@ export function computeDeltas(
     if (previous === undefined) continue; // factor wasn't in the baseline (new symbol)
 
     const delta = currentExposure - previous;
-    // Avoid div-by-zero on flat-zero baselines. Falling back to delta*100 keeps
-    // ordering sensible: a 0.05 absolute jump from 0 reads as 5%.
-    const deltaPct = Math.abs(previous) > 1e-6
+    // Near-zero baselines make percent changes explode (a 0.23 move off a
+    // 0.005 baseline read as +4606% in production). Below the noise floor,
+    // fall back to delta*100 — same ordering, honest magnitude — and cap the
+    // ratio branch so a just-above-floor baseline can't blow up either.
+    const NOISE_FLOOR = 0.01;
+    const rawPct = Math.abs(previous) >= NOISE_FLOOR
       ? (delta / Math.abs(previous)) * 100
       : delta * 100;
+    const deltaPct = Math.max(-999, Math.min(999, rawPct));
 
     const partial = {
       factor,

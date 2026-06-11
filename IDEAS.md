@@ -160,7 +160,7 @@ verify "yes, on 2026-05-08 the model believed X" with an inclusion proof.
 - **Promote when:** First institutional pitch, OR when a SOC 2 conversation
   starts
 
-### IDEA-FF-2 — Multi-method factor explainability (high impact)
+### IDEA-FF-2 — Multi-method factor explainability (high impact) ✅ v1 SHIPPED v1.9.0 (3-method consensus; LIME/SHAP models still open)
 
 FriendlyFace runs **three** explanation methods per prediction:
 - LIME (Ribeiro 2016, KDD) at `explainability/lime_explain.py`
@@ -205,7 +205,7 @@ O(parent_count) per hop, indexed via `parents` field.
 - **Lift:** M (one table, one service, one explorer UI)
 - **Promote when:** Cinema provenance ledger work starts (do them together)
 
-### IDEA-FF-4 — ForensicSeal for backtest / compliance receipts
+### IDEA-FF-4 — ForensicSeal for backtest / compliance receipts ✅ v1 SHIPPED v1.9.0 (Ed25519 receipts; VC/Merkle anchoring still open)
 
 `friendlyface/seal/service.py` issues W3C Verifiable Credentials + Schnorr
 ZK proof + Merkle root anchoring + Ed25519 DID signature. The "SSL

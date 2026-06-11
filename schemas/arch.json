@@ -1,20 +1,20 @@
 {
-  "generatedAt": "2026-06-11T14:02:51.558Z",
-  "headSha": "188eed1739554ffb50067056f47b6ff0f0429f62",
-  "version": "1.8.1",
+  "generatedAt": "2026-06-11T14:22:02.647Z",
+  "headSha": "ae16362903d1baaf177dbf21a1f405bf3cef8199",
+  "version": "1.9.0",
   "server": {
-    "tsFiles": 137,
-    "tsNonTestFiles": 132,
+    "tsFiles": 142,
+    "tsNonTestFiles": 137,
     "inSourceTestFiles": 5,
-    "routeModules": 32,
-    "endpoints": 121,
+    "routeModules": 33,
+    "endpoints": 124,
     "migrations": 17,
     "vercelApiFiles": 4,
-    "testFiles": 50
+    "testFiles": 53
   },
   "client": {
     "pages": 25,
-    "components": 116,
+    "components": 117,
     "stores": 6,
     "hooks": 15,
     "apiModules": 9,
@@ -91,7 +91,7 @@
     },
     {
       "module": "explain.ts",
-      "endpoints": 3
+      "endpoints": 4
     },
     {
       "module": "health-errors.ts",
@@ -132,6 +132,10 @@
     {
       "module": "quotes.ts",
       "endpoints": 3
+    },
+    {
+      "module": "seal.ts",
+      "endpoints": 2
     },
     {
       "module": "sec.ts",

@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-06-11T13:57:37.849Z",
-  "headSha": "790fa4e8568e03b76aaab1d58782b2118095fb44",
-  "version": "1.8.0",
+  "generatedAt": "2026-06-11T14:02:51.558Z",
+  "headSha": "188eed1739554ffb50067056f47b6ff0f0429f62",
+  "version": "1.8.1",
   "server": {
     "tsFiles": 137,
     "tsNonTestFiles": 132,

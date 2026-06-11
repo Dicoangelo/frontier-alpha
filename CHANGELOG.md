@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.0] - 2026-06-11
+
+### Deep trust wave — ForensicSeal, method consensus, episodic retrieval
+
+Ships v1s of the three remaining big backlog items: IDEA-FF-4 (signed
+receipts), IDEA-FF-2 (multi-method explainability), and CVRF v2 phase A
+(MemRL two-phase retrieval, arXiv:2601.03192). 960 server + 242 client
+tests green.
+
+#### Added
+
+- **FF-4 — ForensicSeal** (`src/forensics/ForensicSeal.ts`)
+  - Ed25519-signed receipts proving WHEN a result was produced and WHAT it
+    contained (canonical SHA-256 subject hash). Verification is stateless:
+    the receipt embeds its public key. Every `/backtest/run` response now
+    carries a `seal`; `POST /api/v1/seal/verify` (public, by design) checks
+    any receipt + optional subject; `GET /api/v1/seal/public-key` publishes
+    the server key. `SEAL_PRIVATE_KEY` env (base64 PKCS8 DER) for a
+    persistent key; ephemeral per-process key otherwise (flagged on every
+    receipt). 8 tests. `canonicalize` extracted to dependency-free
+    `src/forensics/canonical.ts`.
+
+- **FF-2 v1 — Multi-method factor consensus** (`src/factors/methodConsensus.ts`)
+  - Three independent rankings of "which factors matter": exposure
+    magnitude, 5d temporal delta (CIN-3 anchors), statistical significance
+    (|t-stat|). Agreement quantified per pair (top-K Jaccard + Spearman
+    rank correlation) and verdicted (strong / partial / disagreement).
+    `GET /api/v1/explain/methods/:symbol` reuses the anchors price path.
+    Method Consensus card beside Signal Timing on the Factors page.
+    7 tests.
+
+- **CVRF v2-A — Two-phase episode retrieval** (`src/cvrf/EpisodeRetrieval.ts`)
+  - MemRL pattern: Phase 1 relevance (symbol overlap + action-mix cosine +
+    factor-profile cosine), Phase 2 utility filter (tanh-squashed return +
+    Sharpe; unclosed/flat episodes never surface). Top-K precedents enter
+    each CVRF cycle as ConceptualInsights — winners say "repeat", losers
+    say "adjust" — so belief updates learn from the FULL episode history
+    instead of only the last two episodes. 11 tests.
+
+#### Deferred (recorded, not regressed)
+
+- Attention factor models (arXiv:2510.11616) stay open: an honest
+  implementation needs the Python ML engine + training/eval data, not a
+  TypeScript approximation.
+
+---
+
 ## [1.8.0] - 2026-06-11
 
 ### Saliency wave — "which days drove this signal?"

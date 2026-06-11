@@ -20,6 +20,28 @@ interface ApiResponse {
 
 export type FactorHistoryWindow = '1d' | '5d';
 
+/** Temporal saliency (IDEAS Topic D): window attribution for one symbol. */
+export interface SaliencyWindow {
+  key: 'recent' | 'mid' | 'far';
+  label: string;
+  days: number;
+  sharePct: number;
+  contribution: number;
+}
+
+export interface FactorSaliency {
+  factor: 'momentum' | 'volatility';
+  windows: SaliencyWindow[];
+  dominantWindow: SaliencyWindow;
+  copy: string;
+}
+
+export interface SaliencyResult {
+  symbol: string;
+  lookbackDays: number;
+  factors: FactorSaliency[];
+}
+
 export interface PortfolioFactorsHistory {
   current: FactorExposureWithCategory[];
   prior: FactorExposureWithCategory[];
@@ -81,6 +103,15 @@ export const factorsApi = {
   refreshFactors: async (symbols: string[]): Promise<PortfolioFactors> => {
     // Use the same endpoint - no separate refresh endpoint on backend
     return factorsApi.getFactors(symbols);
+  },
+
+  /**
+   * Temporal saliency for one symbol — which trading-day windows drove the
+   * momentum and volatility signals (true additive attribution).
+   */
+  getSaliency: async (symbol: string): Promise<SaliencyResult> => {
+    const response = await api.get(`/portfolio/factors/saliency/${symbol}`);
+    return (response as unknown as { data: SaliencyResult }).data;
   },
 
   /**

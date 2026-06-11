@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { RefreshCw, TrendingUp, Layers, Globe, Activity, MessageSquare } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { FactorBar } from '@/components/factors/FactorBar';
+import { SignalTiming } from '@/components/factors/SignalTiming';
 import { Button } from '@/components/shared/Button';
 import { DataQualityBadge } from '@/components/shared/DataQualityBadge';
 import { SkeletonFactorsPage } from '@/components/shared/LoadingSkeleton';
@@ -237,6 +238,13 @@ export function Factors() {
               factors={factorsByCategory[category] || []}
             />
           ))}
+        </div>
+      )}
+
+      {/* Signal Timing — temporal saliency attribution per symbol */}
+      {!isLoading && symbols.length > 0 && (
+        <div className="animate-fade-in-up" style={{ animationDelay: '175ms', animationFillMode: 'both' }}>
+          <SignalTiming symbols={symbols} />
         </div>
       )}
 

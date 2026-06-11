@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.6.0] - 2026-06-10
+
+### Trust wave — forensic hash chain, trade audit, quota classification, quality windows
+
+Promotes the FriendlyFace trust-infrastructure ideas (FF-1/FF-5) plus the two
+remaining cinema-pattern reliability ideas (CIN-4/CIN-5). 913 server + 238
+client tests green.
+
+#### Added
+
+- **FF-1 — Hash-chained forensic event ledger** (`src/forensics/ForensicChain.ts`)
+  - Tamper-evident, append-only audit trail: every CVRF episode transition,
+    cycle completion, and belief update is sealed as a SHA-256 event chained
+    to the previous event's hash. Pattern from FriendlyFace's `ForensicEvent`
+    (Mohammed ICDF2C 2024).
+  - Each `(user, stream)` pair is an independent chain with dense sequence
+    numbers; concurrent appends are serialized via a unique index + retry.
+  - `GET /api/v1/cvrf/chain` lists events; `GET /api/v1/cvrf/chain/verify`
+    recomputes every link server-side and reports the first broken one
+    (`sequence_gap` / `broken_prev_link` / `payload_tampered` / `seal_tampered`).
+  - Same fire-and-forget + schema-drift-safe posture as the insight ledger:
+    no-ops cleanly (logged once) until the migration is applied. 16 new tests.
+  - Migration: `supabase/migrations/20260610_forensic_events.sql` (UNAPPLIED —
+    run `scripts/apply-pending-migrations.sh`).
+
+- **FF-5 — Trade audit log on the forensic chain** (`src/routes/trading.ts`)
+  - Order submissions and cancellations (simulated broker AND Alpaca, single
+    and per-id cancel) append `order_submitted` / `order_canceled` events to
+    the user's `trading` chain — a tamper-evident order book independent of
+    the broker's system.
+
+- **CIN-5 — Quota-burn error classification** (`src/data/QuotaClassifier.ts`)
+  - Every Polygon / Alpha Vantage failure is classified by whether it consumed
+    quota: `quota_burned` (429 or rate-limit body — back off the window),
+    `quota_free` (malformed/auth — fix the request, retrying burns nothing),
+    `provider_fault` (5xx — retry with jitter). Classification + backoff
+    guidance attached to the existing warn logs.
+  - `GET /api/v1/health/quota` exposes per-provider counts with guidance for
+    the dominant class; mirrored to Prometheus as `upstream_errors_total`.
+    10 new tests.
+
+- **CIN-4 — Quality-window confidence badge**
+  (`client/src/components/shared/DataQualityBadge.tsx`)
+  - Factor surfaces (Dashboard Factor Exposures card, Factors page header) now
+    show which market window the reading was captured in: Open/Close Window
+    (first/last 30 min — auction noise), Mid-Session (clean), or Settled
+    (outside hours). Timezone-correct via `Intl` America/New_York. 7 new tests.
+
+#### Changed
+
+- `scripts/apply-pending-migrations.sh` replaces the single-migration helper:
+  decodes the CLI's `go-keyring-base64:` keychain token, applies BOTH pending
+  migrations via the Management API (never `db push` — shared project), and
+  verifies the tables. Run it manually.
+
+---
+
 ## [1.5.0] - 2026-06-10
 
 ### Intelligence wave — substrate routing, temporal grounding, provenance ledger

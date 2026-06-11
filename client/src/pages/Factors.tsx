@@ -4,6 +4,7 @@ import { RefreshCw, TrendingUp, Layers, Globe, Activity, MessageSquare } from 'l
 import { Card } from '@/components/shared/Card';
 import { FactorBar } from '@/components/factors/FactorBar';
 import { SignalTiming } from '@/components/factors/SignalTiming';
+import { MethodConsensus } from '@/components/factors/MethodConsensus';
 import { Button } from '@/components/shared/Button';
 import { DataQualityBadge } from '@/components/shared/DataQualityBadge';
 import { SkeletonFactorsPage } from '@/components/shared/LoadingSkeleton';
@@ -241,10 +242,11 @@ export function Factors() {
         </div>
       )}
 
-      {/* Signal Timing — temporal saliency attribution per symbol */}
+      {/* Signal Timing + Method Consensus — saliency and trust surfaces */}
       {!isLoading && symbols.length > 0 && (
-        <div className="animate-fade-in-up" style={{ animationDelay: '175ms', animationFillMode: 'both' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: '175ms', animationFillMode: 'both' }}>
           <SignalTiming symbols={symbols} />
+          <MethodConsensus symbols={symbols} />
         </div>
       )}
 

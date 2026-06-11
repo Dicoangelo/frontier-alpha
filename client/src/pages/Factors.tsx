@@ -4,6 +4,7 @@ import { RefreshCw, TrendingUp, Layers, Globe, Activity, MessageSquare } from 'l
 import { Card } from '@/components/shared/Card';
 import { FactorBar } from '@/components/factors/FactorBar';
 import { Button } from '@/components/shared/Button';
+import { DataQualityBadge } from '@/components/shared/DataQualityBadge';
 import { SkeletonFactorsPage } from '@/components/shared/LoadingSkeleton';
 import { portfolioApi } from '@/api/portfolio';
 import { useFactorsByCategory, useRefreshFactors, FACTOR_CATEGORY_LABELS, FACTOR_CATEGORY_DESCRIPTIONS } from '@/hooks/useFactors';
@@ -114,7 +115,10 @@ export function Factors() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Factor Analysis</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-[var(--color-text)]">Factor Analysis</h1>
+            <DataQualityBadge />
+          </div>
           <p className="text-[var(--color-text-muted)] mt-1">
             Deep-dive into your portfolio&apos;s factor exposures
           </p>

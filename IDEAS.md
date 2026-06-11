@@ -94,7 +94,7 @@ history endpoint is half of this; the other half is regime-tagged history.
   IDEA-CIN-1's substrate routing
 - **Promote when:** Cognitive Insight gets its next user-feedback loop
 
-### IDEA-CIN-4 — Quality-window awareness for live signals
+### IDEA-CIN-4 — Quality-window awareness for live signals ✅ SHIPPED v1.6.0
 
 Cinema knows Kling has 0-3s + 7-10s "golden windows" with 3-7s drift.
 Analogue: factor signals have time-of-day reliability. First 30 / last 30
@@ -108,7 +108,7 @@ until the next clean window for non-time-critical insights.
 - **Risk:** None
 - **Promote when:** Factor card UX gets its next polish round
 
-### IDEA-CIN-5 — Validation-rejection-is-free error classification
+### IDEA-CIN-5 — Validation-rejection-is-free error classification ✅ SHIPPED v1.6.0
 
 Cinema knows failed Seedance rejections cost $0 (`x-fal-billable-units: 0`).
 Frontier Alpha analogue: classify upstream errors by whether they consumed
@@ -138,7 +138,7 @@ patterns are not domain-locked to facial recognition; they're general
 "trust the AI's output" infrastructure that maps cleanly onto financial
 factor analysis.
 
-### IDEA-FF-1 — CVRF episodic belief hash-chaining (high impact)
+### IDEA-FF-1 — CVRF episodic belief hash-chaining (high impact) ✅ SHIPPED v1.6.0
 
 `friendlyface/core/models.py::ForensicEvent` is an immutable event with
 SHA-256 hashed to the previous event's hash, sequence number, and `seal()`
@@ -224,7 +224,7 @@ pages.
 - **Promote when:** Marketing claims about historical performance need to
   be defensible (or when an institutional buyer asks for proof)
 
-### IDEA-FF-5 — Append-only audit log for trades
+### IDEA-FF-5 — Append-only audit log for trades ✅ SHIPPED v1.6.0
 
 Every Alpaca paper / live trade becomes a ForensicEvent. Append-only,
 hash-chained, Merkle-rooted. User has tamper-evident copy of their order

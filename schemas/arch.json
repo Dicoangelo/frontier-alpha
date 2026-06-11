@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-06-11T03:42:32.110Z",
-  "headSha": "5523e0f0007abd3a4134ffeefcd6facb6a3fd2ca",
-  "version": "1.6.0",
+  "generatedAt": "2026-06-11T13:42:13.901Z",
+  "headSha": "86df8c1c659a5cbfad61d4185d0b802003a6b508",
+  "version": "1.7.0",
   "server": {
-    "tsFiles": 134,
-    "tsNonTestFiles": 129,
+    "tsFiles": 136,
+    "tsNonTestFiles": 131,
     "inSourceTestFiles": 5,
-    "routeModules": 31,
-    "endpoints": 118,
-    "migrations": 16,
+    "routeModules": 32,
+    "endpoints": 120,
+    "migrations": 17,
     "vercelApiFiles": 4,
-    "testFiles": 48
+    "testFiles": 49
   },
   "client": {
     "pages": 25,
-    "components": 114,
+    "components": 115,
     "stores": 6,
     "hooks": 15,
-    "apiModules": 8,
+    "apiModules": 9,
     "appRoutes": 27
   },
   "integrations": [
@@ -126,6 +126,10 @@
       "endpoints": 12
     },
     {
+      "module": "provenance.ts",
+      "endpoints": 2
+    },
+    {
       "module": "quotes.ts",
       "endpoints": 3
     },
@@ -178,7 +182,8 @@
     "20260508_paper_trading.sql",
     "20260510_enable_rls_public_read.sql",
     "20260610_forensic_events.sql",
-    "20260610_insight_ledger.sql"
+    "20260610_insight_ledger.sql",
+    "20260611_provenance_nodes.sql"
   ],
   "pages": [
     "Alerts",
@@ -268,6 +273,7 @@
     "factors",
     "insights",
     "portfolio",
+    "provenance",
     "quotes",
     "websocket"
   ]

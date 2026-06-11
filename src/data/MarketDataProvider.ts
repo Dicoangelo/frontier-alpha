@@ -14,6 +14,12 @@ import type { Price, Quote, Asset } from '../types/index.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { logger } from '../lib/logger.js';
 import { marketDataCache, type CompositeCache } from './cache/index.js';
+import {
+  classifyHttpStatus,
+  classifyErrorBody,
+  recordUpstreamError,
+  BACKOFF_GUIDANCE,
+} from './QuotaClassifier.js';
 import WebSocket from 'ws';
 import Redis, { type Redis as RedisClient } from 'ioredis';
 
@@ -766,7 +772,10 @@ export class MarketDataProvider {
     const url = `https://api.polygon.io/v2/last/trade/${symbol}?apiKey=${this.config.polygonApiKey}`;
 
     const response = await fetch(url);
-    if (!response.ok) return null;
+    if (!response.ok) {
+      recordUpstreamError('polygon', classifyHttpStatus(response.status));
+      return null;
+    }
 
     const data = await response.json() as { results?: { t: number; p: number } };
     const trade = data.results;
@@ -811,8 +820,9 @@ export class MarketDataProvider {
 
     const response = await fetch(url);
     if (!response.ok) {
+      const impact = recordUpstreamError('polygon', classifyHttpStatus(response.status));
       logger.warn(
-        { symbol, status: response.status },
+        { symbol, status: response.status, quotaImpact: impact, guidance: BACKOFF_GUIDANCE[impact] },
         'Polygon HTTP non-200 for historical aggregates'
       );
       return [];
@@ -825,8 +835,10 @@ export class MarketDataProvider {
     };
 
     if (data.status === 'ERROR' || data.error) {
+      const reason = String(data.error ?? data.status).slice(0, 240);
+      const impact = recordUpstreamError('polygon', classifyErrorBody(reason));
       logger.warn(
-        { symbol, reason: String(data.error ?? data.status).slice(0, 240) },
+        { symbol, reason, quotaImpact: impact, guidance: BACKOFF_GUIDANCE[impact] },
         'Polygon refused historical aggregates (key invalid or rate-limited)'
       );
       return [];
@@ -862,8 +874,9 @@ export class MarketDataProvider {
 
     const response = await fetch(url);
     if (!response.ok) {
+      const impact = recordUpstreamError('alphaVantage', classifyHttpStatus(response.status));
       logger.warn(
-        { symbol, status: response.status },
+        { symbol, status: response.status, quotaImpact: impact, guidance: BACKOFF_GUIDANCE[impact] },
         'Alpha Vantage HTTP non-200'
       );
       return [];
@@ -875,9 +888,10 @@ export class MarketDataProvider {
     // INSTEAD of an HTTP error. Surface it so the caller can pick a fallback
     // (Supabase cache, Polygon REST, etc.) instead of silently returning [].
     if (data['Information'] || data['Note'] || data['Error Message']) {
-      const reason = data['Information'] || data['Note'] || data['Error Message'];
+      const reason = String(data['Information'] || data['Note'] || data['Error Message']).slice(0, 240);
+      const impact = recordUpstreamError('alphaVantage', classifyErrorBody(reason));
       logger.warn(
-        { symbol, reason: String(reason).slice(0, 240) },
+        { symbol, reason, quotaImpact: impact, guidance: BACKOFF_GUIDANCE[impact] },
         'Alpha Vantage refused (rate limit, premium gate, or invalid key)'
       );
       return [];

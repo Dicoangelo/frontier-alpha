@@ -5,6 +5,8 @@ import { getCVRFRiskAssessment } from '../cvrf/integration.js';
 import { logger } from '../observability/logger.js';
 import { FACTOR_DEFINITIONS } from '../factors/FactorEngine.js';
 import * as persistence from '../cvrf/persistence.js';
+import { forensicChain } from '../forensics/ForensicChain.js';
+import type { ForensicStream } from '../forensics/ForensicChain.js';
 import type { APIResponse, FactorCategory } from '../types/index.js';
 import type { PersistentCVRFManager } from '../cvrf/PersistentCVRFManager.js';
 import type { CVRFManager } from '../cvrf/CVRFManager.js';
@@ -765,4 +767,72 @@ export async function cvrfRoutes(fastify: FastifyInstance, opts: RouteContext) {
       };
     }
   );
+
+  // ===========================================================================
+  // Forensic chain (IDEA-FF-1) — tamper-evident audit trail for belief updates
+  // and trading orders. Each (user, stream) pair is an independent SHA-256
+  // hash chain; /verify recomputes every link server-side.
+  // ===========================================================================
+
+  // GET /api/v1/cvrf/chain?stream=cvrf|trading&limit=&offset=
+  fastify.get<{
+    Querystring: { stream?: string; limit?: string; offset?: string };
+    Reply: APIResponse<unknown>;
+  }>('/api/v1/cvrf/chain', async (request, reply) => {
+    const start = Date.now();
+    const stream = parseStream(request.query.stream);
+    if (!stream) {
+      return reply.status(400).send({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'stream must be "cvrf" or "trading"' },
+      });
+    }
+
+    const result = await forensicChain.list(request.user?.id ?? null, stream, {
+      limit: request.query.limit ? Number(request.query.limit) : undefined,
+      offset: request.query.offset ? Number(request.query.offset) : undefined,
+    });
+
+    return {
+      success: true,
+      data: { stream, ...result },
+      meta: {
+        timestamp: new Date(),
+        requestId: request.id,
+        latencyMs: Date.now() - start,
+      },
+    };
+  });
+
+  // GET /api/v1/cvrf/chain/verify?stream=cvrf|trading
+  fastify.get<{
+    Querystring: { stream?: string };
+    Reply: APIResponse<unknown>;
+  }>('/api/v1/cvrf/chain/verify', async (request, reply) => {
+    const start = Date.now();
+    const stream = parseStream(request.query.stream);
+    if (!stream) {
+      return reply.status(400).send({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'stream must be "cvrf" or "trading"' },
+      });
+    }
+
+    const result = await forensicChain.verify(request.user?.id ?? null, stream);
+
+    return {
+      success: true,
+      data: { stream, ...result },
+      meta: {
+        timestamp: new Date(),
+        requestId: request.id,
+        latencyMs: Date.now() - start,
+      },
+    };
+  });
+}
+
+function parseStream(raw: string | undefined): ForensicStream | null {
+  const stream = raw ?? 'cvrf';
+  return stream === 'cvrf' || stream === 'trading' ? stream : null;
 }

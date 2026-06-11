@@ -333,7 +333,7 @@ Synthesis (thesis-gap-direction) at the end of this section.
 - **arXiv:2603.17692 — "BlindTrade"** (ICLR 2026 Workshop) —
   anonymization-first LLM-GNN-RL for cross-market regime generalization.
 
-### Topic D — Temporal saliency for financial signals
+### Topic D — Temporal saliency for financial signals ✅ v1 SHIPPED v1.8.0 (analytic decomposition; CrossScaleNet model still open)
 
 - **arXiv:2509.22839 — "CrossScaleNet: Learning Temporal Saliency for
   Time Series Forecasting with Cross-Scale Attention"** (Sep 2025)

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus, HelpCircle } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
+import { DataQualityBadge } from '@/components/shared/DataQualityBadge';
 import { FactorBar } from './FactorBar';
 import type { FactorExposure } from '@/types';
 
@@ -131,7 +132,9 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
     <Card
       title="Factor Exposures"
       action={
-        <div className="flex gap-1 bg-theme-tertiary rounded-lg p-0.5 border border-theme-light">
+        <div className="flex items-center gap-2">
+          <DataQualityBadge className="hidden sm:inline-flex" />
+          <div className="flex gap-1 bg-theme-tertiary rounded-lg p-0.5 border border-theme-light">
           <button
             onClick={() => setViewMode('grouped')}
             aria-pressed={viewMode === 'grouped'}
@@ -154,6 +157,7 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
           >
             By Impact
           </button>
+          </div>
         </div>
       }
     >

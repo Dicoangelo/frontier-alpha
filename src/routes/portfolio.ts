@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { authMiddleware } from '../middleware/auth.js';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth.js';
 import { portfolioService } from '../services/PortfolioService.js';
 import { logger } from '../observability/logger.js';
 import { supabaseAdmin } from '../lib/supabase.js';
@@ -316,6 +316,10 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
     Body: { symbols: string[]; config: OptimizationConfig };
   }>(
     '/api/v1/portfolio/optimize',
+    // Optional auth: the route stays public (demo mode uses it), but a
+    // signed-in caller gets request.user populated so the provenance DAG
+    // can record the market_data → optimizer_run → recommendation chain.
+    { preHandler: optionalAuthMiddleware },
     async (request, reply) => {
       const start = Date.now();
       const { symbols, config } = request.body;

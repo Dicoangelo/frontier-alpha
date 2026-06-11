@@ -400,9 +400,17 @@ export function Dashboard() {
       setInsight(insightText);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load portfolio');
-      // Fall back to demo data
-      setPortfolio(getDemoPortfolio());
-      setFactors(getDemoFactors());
+      // Demo fallback is for UNAUTHENTICATED preview only. An authenticated
+      // user whose portfolio fetch errored (e.g. upstream quote 500) must see
+      // the honest error/empty state — the walkthrough on 2026-06-11 caught
+      // this path rendering $125K synthetic numbers under a LIVE badge.
+      if (useAuthStore.getState().session) {
+        setPortfolio({ ...EMPTY_PORTFOLIO, id: 'user', name: 'My Portfolio' });
+        setFactors(EMPTY_FACTORS);
+      } else {
+        setPortfolio(getDemoPortfolio());
+        setFactors(getDemoFactors());
+      }
       setMetrics(EMPTY);
     } finally {
       setIsLoading(false);

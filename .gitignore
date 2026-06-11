@@ -44,3 +44,4 @@ playwright-report/
 test-results/
 tests/visual/test-results/
 tests/visual/playwright-report/
+.walkthrough-2026-06-11/

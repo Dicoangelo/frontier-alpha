@@ -23,6 +23,7 @@ import { BeliefUpdater } from './BeliefUpdater.js';
 import * as persistence from './persistence.js';
 import { logger } from '../lib/logger.js';
 import { forensicChain } from '../forensics/ForensicChain.js';
+import { retrieveRelevantEpisodes, precedentInsights } from './EpisodeRetrieval.js';
 
 // ============================================================================
 // PERSISTENT CVRF MANAGER
@@ -250,7 +251,16 @@ export class PersistentCVRFManager {
     const comparison = this.createEpisodeComparison(previousEp, currentEp);
 
     // Extract conceptual insights
-    const insights = this.conceptExtractor.extractInsights(comparison);
+    const extracted = this.conceptExtractor.extractInsights(comparison);
+
+    // CVRF v2-A (MemRL two-phase retrieval): learn from the FULL episode
+    // history, not just the two compared. Similar high-|utility| episodes
+    // enter the cycle as precedent insights — winners say "repeat",
+    // instructive losers say "adjust".
+    const precedents = precedentInsights(
+      retrieveRelevantEpisodes(currentEp, this.recentEpisodes.slice(2)),
+    );
+    const insights = [...extracted, ...precedents];
 
     // Generate meta-prompt
     const metaPrompt = this.conceptExtractor.generateMetaPrompt(comparison, insights);

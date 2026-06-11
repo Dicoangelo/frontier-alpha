@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.7.0] - 2026-06-11
+
+### Lineage wave — provenance DAG, decision lineage UI, shareable demo link
+
+Promotes IDEA-FF-3 (the last big FriendlyFace trust pattern) and IDEA-FF-6.
+925 server + 242 client tests green.
+
+#### Added
+
+- **FF-3 — Provenance DAG** (`src/forensics/ProvenanceDag.ts`)
+  - PROV-O-style decision lineage: every pipeline stage becomes a DAG node
+    pointing at its parents — `market_data → factor_compute → optimizer_run →
+    recommendation → insight → user_action`. "Why this trade?" is now a graph
+    traversal.
+  - Producers wired: `/portfolio/explain` records factor_compute → insight;
+    `/portfolio/optimize` records market_data → optimizer_run →
+    recommendation; `/trading/orders` records user_action (accepts an
+    optional `provenanceParent` body field to act on a recommendation).
+    All fire-and-forget, never on the response path.
+  - `GET /api/v1/provenance/recent` (paginated, ?nodeType=) and
+    `GET /api/v1/provenance/:id/lineage` (BFS ancestry walk, user-scoped on
+    every hop, honest `truncated` flag). 12 new tests.
+  - Migration: `supabase/migrations/20260611_provenance_nodes.sql`
+    (UNAPPLIED — re-run `scripts/apply-pending-migrations.sh`; idempotent).
+
+- **FF-3 UI — Decision Lineage explorer**
+  (`client/src/components/provenance/LineageExplorer.tsx`)
+  - New section on the Insight History page: recent pipeline nodes with
+    type chips, expandable into the full derivation chain rendered as a
+    railed timeline. Empty/error/loading states match the family system.
+
+- **FF-6 — `?demo=true` shareable demo link** (`client/src/lib/demoMode.ts`)
+  - `…/dashboard?demo=true` mounts the full app shell without an account:
+    sessionStorage latch (tab-scoped), persistent sovereign-rail Demo Mode
+    banner with Sign Up CTA, real session always wins and clears the latch.
+    Pattern from FriendlyFace's RequireAuth. 4 new tests.
+
+#### Changed
+
+- `scripts/apply-pending-migrations.sh` now includes the provenance-nodes
+  migration (safe to re-run; all statements idempotent).
+
+---
+
 ## [1.6.0] - 2026-06-10
 
 ### Trust wave — forensic hash chain, trade audit, quota classification, quality windows

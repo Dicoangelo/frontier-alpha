@@ -186,7 +186,7 @@ differentiation vs every "AI explains your portfolio" incumbent.
 - **Note:** SHAP for factors is well-trod ground. The novel angle is the
   multi-method consensus check + ForensicEvent provenance.
 
-### IDEA-FF-3 — Provenance DAG for portfolio decisions
+### IDEA-FF-3 — Provenance DAG for portfolio decisions ✅ SHIPPED v1.7.0
 
 `friendlyface/core/models.py::ProvenanceNode` is a DAG node with `parents`
 + `relations` (PROV-O W3C-style). FriendlyFace chains:
@@ -236,7 +236,7 @@ book independent of the broker's system.
 - **Promote when:** First user reports an Alpaca discrepancy, OR before
   any "regulated paper trading" pitch
 
-### IDEA-FF-6 — Demo mode via `?demo=true` URL param
+### IDEA-FF-6 — Demo mode via `?demo=true` URL param ✅ SHIPPED v1.7.0
 
 FriendlyFace's `App.tsx::RequireAuth` checks for `?demo=true` and bypasses
 auth, with `demoFetch` in `services/apiClient.ts` returning demo data.

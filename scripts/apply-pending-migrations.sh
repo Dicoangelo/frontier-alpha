@@ -12,9 +12,10 @@
 #
 # RUN THIS YOURSELF (it reads your keychain): bash scripts/apply-pending-migrations.sh
 #
-# Pending migrations applied, in order:
-#   1. 20260610_insight_ledger.sql    (frontier_insight_ledger)
-#   2. 20260610_forensic_events.sql   (frontier_forensic_events)
+# Pending migrations applied, in order (all idempotent — re-running is safe):
+#   1. 20260610_insight_ledger.sql     (frontier_insight_ledger)     [applied 2026-06-11]
+#   2. 20260610_forensic_events.sql    (frontier_forensic_events)    [applied 2026-06-11]
+#   3. 20260611_provenance_nodes.sql   (frontier_provenance_nodes)
 
 set -euo pipefail
 
@@ -23,6 +24,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MIGRATIONS=(
   "$REPO_ROOT/supabase/migrations/20260610_insight_ledger.sql"
   "$REPO_ROOT/supabase/migrations/20260610_forensic_events.sql"
+  "$REPO_ROOT/supabase/migrations/20260611_provenance_nodes.sql"
 )
 
 # --- Token: Supabase CLI stores it in the macOS keychain via go-keyring,
@@ -68,7 +70,7 @@ done
 
 # --- Verify both tables exist (harmless catalog read).
 echo "→ Verifying tables ..."
-verify_body='{"query":"SELECT tablename FROM pg_tables WHERE tablename IN ('"'"'frontier_insight_ledger'"'"','"'"'frontier_forensic_events'"'"');"}'
+verify_body='{"query":"SELECT tablename FROM pg_tables WHERE tablename IN ('"'"'frontier_insight_ledger'"'"','"'"'frontier_forensic_events'"'"','"'"'frontier_provenance_nodes'"'"');"}'
 curl -sS -X POST \
   "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
   -H "Authorization: Bearer $TOKEN" \

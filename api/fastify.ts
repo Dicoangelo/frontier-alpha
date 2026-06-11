@@ -55,10 +55,19 @@ export default async function handler(
           : JSON.stringify(req.body);
     }
 
+    // The payload above is RE-SERIALIZED (compact JSON), so the client's
+    // original Content-Length no longer matches whenever the request had
+    // any whitespace in its JSON. Forwarding the stale header makes Fastify
+    // 400 (FST_ERR_CTP_INVALID_CONTENT_LENGTH) on every such POST. Strip it
+    // and let inject() recompute from the actual payload bytes.
+    const headers = { ...(req.headers as Record<string, string>) };
+    delete headers['content-length'];
+    delete headers['transfer-encoding'];
+
     const response = await app.inject({
       method: req.method as any,
       url: req.url ?? '/',
-      headers: req.headers as Record<string, string>,
+      headers,
       payload,
     });
 

@@ -25,6 +25,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { SectionErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { LineageExplorer } from '@/components/provenance/LineageExplorer';
 import { insightsApi, type InsightLedgerEntry } from '@/api/insights';
 
 const PAGE_SIZE = 25;
@@ -307,6 +308,10 @@ export function InsightHistory() {
 
       <SectionErrorBoundary sectionName="Insight History">
         <HistoryBody />
+      </SectionErrorBoundary>
+
+      <SectionErrorBoundary sectionName="Decision Lineage">
+        <LineageExplorer />
       </SectionErrorBoundary>
     </div>
   );

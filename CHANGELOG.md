@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.12.0] - 2026-06-15
+
+### Backtest page — preview empty state (ROADMAP #3)
+
+The pre-run Backtest surface was a single generic `EmptyState` (icon + one line)
+— a dead end that conveyed none of the payoff. Replaced it with a preview that
+ghosts the actual result surfaces so a first-time user sees what a run produces.
+
+#### Added
+
+- **`client/src/components/backtest/BacktestEmptyState.tsx`**: previews the six
+  real walk-forward metric tiles (Total Return, Annualized, Sharpe, Max
+  Drawdown, Alpha, Duration) as ghosted placeholders plus a dashed equity-curve
+  silhouette, with a footer that points back up to the run controls. On-brand
+  (glass-slab, mono kicker, sovereign accent), pure presentational.
+
+#### Changed
+
+- **`client/src/pages/Backtest.tsx`**: swapped the generic `EmptyState` for
+  `BacktestEmptyState`; dropped the now-unused `EmptyState` + `BarChart3`
+  imports.
+
+#### Tests
+
+- `BacktestEmptyState.test.tsx` (4) — run prompt, the six metric labels match
+  the real results row, equity-curve preview, run-controls pointer. 262 client
+  tests (+4); server unchanged at 966. Typecheck + build clean.
+
+#### Note
+
+- Backtest is **not** in the 9-page visual-regression suite, so no baseline
+  refresh is required for this change.
+
 ## [1.11.0] - 2026-06-15
 
 ### Factors page — Signal Contribution Waterfall (ROADMAP #2)

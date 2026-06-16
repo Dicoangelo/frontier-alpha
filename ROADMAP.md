@@ -71,6 +71,7 @@ Polygon Starter is live:**
 
 | Date | Version | Headline |
 |---|---|---|
+| 2026-06-15 | 1.12.0 | Backtest UI polish — preview empty state ghosting the real metric tiles + equity curve |
 | 2026-06-15 | 1.11.0 | Factors drill-down — Signal Contribution Waterfall (ranked, net-preserving, floating-bar) |
 | 2026-06-15 | 1.10.0 | Tax page → real data — DB→engine hydration seam, live `/tax/*` wiring, mock fixtures retired to the `?demo=true` link |
 | 2026-06-11 | 1.9.1-1.9.3 | Walkthrough hardening — Vercel POST body relay, optimizer provenance, authed demo leak, Sharpe units, delta caps, persistent seal key |
@@ -105,7 +106,10 @@ In rough priority order. Each is a self-contained scope.
    floating-bar build-up with a per-row explainer (contribution, avg exposure,
    holding count). Remaining follow-on (deferred): a click-through per-factor
    detail panel with the historical exposure series.
-3. **Backtest UI polish** — page works but the empty state is rough.
+3. ~~**Backtest UI polish**~~ — **Preview empty state SHIPPED v1.12.0
+   (2026-06-15)** (`BacktestEmptyState.tsx`): ghosts the six real metric tiles +
+   equity curve so the pre-run surface communicates the payoff. Remaining
+   follow-on (deferred): a ghosted result skeleton during the `isPending` run.
 4. ~~**Tax page real data**~~ — **SHIPPED v1.10.0 (2026-06-15).** Wired to the
    live `/api/v1/tax/*` routes via a DB→engine hydration seam
    (`src/tax/taxRowMapper.ts` + `loadTrackerFromDb.ts`); `Tax.tsx` now renders

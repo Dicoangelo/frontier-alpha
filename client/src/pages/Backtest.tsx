@@ -24,7 +24,6 @@ import {
 } from 'recharts';
 import {
   Play,
-  BarChart3,
   TrendingUp,
   Clock,
   Settings2,
@@ -36,7 +35,7 @@ import { useMutation } from '@tanstack/react-query';
 import { api } from '@/api/client';
 import { useToast } from '@/hooks/useToast';
 import { rechartsTooltipStyle } from '@/lib/theme';
-import { EmptyState } from '@/components/shared/EmptyState';
+import { BacktestEmptyState } from '@/components/backtest/BacktestEmptyState';
 import { SectionErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 // Backtest API contract — page-local because no second consumer in the
@@ -630,14 +629,7 @@ export function Backtest() {
       )}
 
       {/* ── Empty State ─────────────────────────────────────────────────── */}
-      {!result && !isPending && !error && (
-        <EmptyState
-          icon={<BarChart3 className="w-8 h-8" />}
-          kicker="BACKTEST · Ready"
-          title="Configure and run a backtest"
-          description="Walk-forward backtesting validates your CVRF strategy against historical data. Select symbols, date range, and strategy to get started."
-        />
-      )}
+      {!result && !isPending && !error && <BacktestEmptyState />}
     </div>
   );
 }

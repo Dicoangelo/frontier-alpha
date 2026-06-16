@@ -5,6 +5,7 @@ import { Card } from '@/components/shared/Card';
 import { FactorBar } from '@/components/factors/FactorBar';
 import { SignalTiming } from '@/components/factors/SignalTiming';
 import { MethodConsensus } from '@/components/factors/MethodConsensus';
+import { ContributionWaterfall } from '@/components/factors/ContributionWaterfall';
 import { Button } from '@/components/shared/Button';
 import { DataQualityBadge } from '@/components/shared/DataQualityBadge';
 import { SkeletonFactorsPage } from '@/components/shared/LoadingSkeleton';
@@ -106,11 +107,15 @@ export function Factors() {
     ? CATEGORY_ORDER.filter(c => c === selectedCategory)
     : CATEGORY_ORDER;
 
+  // Flattened exposures power the aggregate stats and the contribution waterfall.
+  const allFactors = useMemo(
+    () => Object.values(factorsByCategory).flat(),
+    [factorsByCategory],
+  );
+
   // Calculate aggregate stats
-  const totalFactors = Object.values(factorsByCategory).flat().length;
-  const significantFactors = Object.values(factorsByCategory)
-    .flat()
-    .filter(f => Math.abs(f.tStat) > 1.96).length;
+  const totalFactors = allFactors.length;
+  const significantFactors = allFactors.filter(f => Math.abs(f.tStat) > 1.96).length;
 
   return (
     <div className="space-y-6" data-testid="visual-factors-ready">
@@ -239,6 +244,13 @@ export function Factors() {
               factors={factorsByCategory[category] || []}
             />
           ))}
+        </div>
+      )}
+
+      {/* Contribution Waterfall — which factors drive the net signal */}
+      {!isLoading && symbols.length > 0 && totalFactors > 0 && (
+        <div className="animate-fade-in-up" style={{ animationDelay: '160ms', animationFillMode: 'both' }}>
+          <ContributionWaterfall factors={allFactors} />
         </div>
       )}
 

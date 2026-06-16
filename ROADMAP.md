@@ -71,6 +71,7 @@ Polygon Starter is live:**
 
 | Date | Version | Headline |
 |---|---|---|
+| 2026-06-15 | 1.11.0 | Factors drill-down — Signal Contribution Waterfall (ranked, net-preserving, floating-bar) |
 | 2026-06-15 | 1.10.0 | Tax page → real data — DB→engine hydration seam, live `/tax/*` wiring, mock fixtures retired to the `?demo=true` link |
 | 2026-06-11 | 1.9.1-1.9.3 | Walkthrough hardening — Vercel POST body relay, optimizer provenance, authed demo leak, Sharpe units, delta caps, persistent seal key |
 | 2026-06-11 | 1.9.0 | Deep trust wave — ForensicSeal (Ed25519 receipts), multi-method consensus, CVRF two-phase episode retrieval |
@@ -99,9 +100,11 @@ In rough priority order. Each is a self-contained scope.
 1. **Cinema studio nav wiring** — Cinema Studio is built (~2.3k LOC,
    TypeScript-clean) but not yet linked from the main app nav. Per the cinema
    buildout roadmap memory, this is a one-session integration.
-2. **Factors page deeper drill-down** — current page renders the 80+ exposures
-   but lacks per-factor explainer and contribution waterfall. Aligns with
-   DASH3-005 / Cognitive Insight v2 surface.
+2. ~~**Factors page deeper drill-down**~~ — **Contribution waterfall SHIPPED
+   v1.11.0 (2026-06-15)** (`ContributionWaterfall.tsx`): ranked, net-preserving
+   floating-bar build-up with a per-row explainer (contribution, avg exposure,
+   holding count). Remaining follow-on (deferred): a click-through per-factor
+   detail panel with the historical exposure series.
 3. **Backtest UI polish** — page works but the empty state is rough.
 4. ~~**Tax page real data**~~ — **SHIPPED v1.10.0 (2026-06-15).** Wired to the
    live `/api/v1/tax/*` routes via a DB→engine hydration seam

@@ -7,6 +7,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.10.0] - 2026-06-15
+
+### Tax page → real data (ROADMAP "Next session candidates" #4)
+
+The Tax Optimization page shipped against a 740-line mock fixture even though
+the full backend (`TaxLotTracker`, `HarvestingScanner`, `WashSaleDetector`,
+`TaxReportGenerator`) and all four routes (`/api/v1/tax/{report,harvest,
+wash-sales,lots}`) already existed. The gap was an architectural seam: the
+report / harvest / wash-sale routes ran against the **in-memory**
+`server.taxLotTracker`, which `buildApp()` instantiates empty and never
+populates from the database — so every realized lot (persisted in
+`frontier_tax_lots` / `frontier_tax_events`) was invisible to the engines.
+
+#### Added
+
+- **DB→engine hydration seam** (`src/tax/taxRowMapper.ts` +
+  `src/tax/loadTrackerFromDb.ts`): `mapTaxRowsToTracker` (pure, env-free,
+  unit-tested) turns persisted rows into a hydrated `TaxLotTracker`;
+  `hydrateTaxTracker(userId)` is the async wrapper that fetches a user's lots +
+  events via the service-role client. Defensive numeric coercion (PostgREST
+  returns numerics as strings) and graceful degradation to an empty tracker on
+  query error (a "no realized activity" page beats a 500).
+- **`TaxLotTracker.loadSnapshot()`**: public bulk-load method (the tracker was
+  otherwise write-only via `addLot`/`sellShares`). Advances `nextId` past any
+  loaded numeric ids so a hydrated tracker stays collision-free.
+- **`client/src/api/tax.ts`**: typed client for all four tax routes plus a
+  `downloadReportCsv` blob helper that streams the server's `?format=csv`
+  Form 8949 export.
+
+#### Changed
+
+- **`src/routes/tax.ts`**: report / harvest / wash-sale handlers now run against
+  a per-request hydrated tracker when `useDatabase`, so the engines operate on
+  real persisted data instead of an empty in-memory instance.
+- **`client/src/pages/Tax.tsx`**: rewired from mock fixtures to the live
+  endpoints via React Query. Real accounts render real realized activity
+  (Summary + Report from `frontier_tax_events`; Harvest + Wash Sales honestly
+  empty until open lots exist); the `?demo=true` shareable link (FF-6) still
+  shows the banner-marked fixtures under the `DataSource<T>` contract. The
+  Report tab's existing client-side CSV/JSON export now operates on real rows.
+
+#### Tests
+
+- `src/tax/loadTrackerFromDb.test.ts` (6) — golden-state hydration, Form 8949
+  event mapping, numeric-string coercion, open-lot mapping, empty-state,
+  `loadSnapshot` id-collision guard.
+- `client/src/api/tax.test.ts` (6) — endpoint + param shaping, envelope
+  unwrapping, CSV blob download.
+- 966 server (+6) + 250 client (+6) green. Typecheck + lint + production build
+  clean. `schemas/arch.json` regenerated (apiModules 9→10, added `tax`).
+
 ## [1.9.3] - 2026-06-11
 
 ### Walkthrough findings — Sharpe units, delta blow-ups, optimize timeout

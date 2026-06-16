@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.11.0] - 2026-06-15
+
+### Factors page — Signal Contribution Waterfall (ROADMAP #2)
+
+The Factors grid renders 80+ raw exposures with equal visual weight, so "which
+factors actually drive my signal?" was unanswerable at a glance. Added a
+drill-down that aggregates each factor's contribution across holdings, ranks by
+impact, and shows a floating-bar waterfall building from zero to the net signal.
+
+#### Added
+
+- **`client/src/components/factors/ContributionWaterfall.tsx`**: a pure,
+  unit-tested `aggregateContributions()` helper (folds per-(symbol, factor)
+  rows into ranked, net-preserving steps with a top-8 + `Other` bucket) plus
+  the floating-bar waterfall card. Positive contributions step the running
+  total right (green), negative left (red); a per-row title surfaces the
+  contribution, average exposure, and holding count. No new API surface — it
+  reads the same `contribution` field the grid already receives.
+- Wired into `client/src/pages/Factors.tsx` between the category grid and the
+  Signal Timing / Method Consensus trust surfaces.
+
+#### Tests
+
+- `ContributionWaterfall.test.tsx` (8) — aggregation across holdings, net
+  invariance, magnitude ranking, top-N bucketing, all-zero empty guard, plus
+  three render assertions. 258 client tests (+8); server unchanged at 966.
+  Typecheck + production build clean.
+
+#### Note
+
+- Factors is one of the 9 pages in the nightly visual-regression suite; this
+  card changes its layout, so the baseline needs a `npm run test:visual:update`
+  pass on the next intentional-design sweep.
+
 ## [1.10.0] - 2026-06-15
 
 ### Tax page → real data (ROADMAP "Next session candidates" #4)

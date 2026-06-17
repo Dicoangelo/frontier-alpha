@@ -36,6 +36,7 @@ import { api } from '@/api/client';
 import { useToast } from '@/hooks/useToast';
 import { rechartsTooltipStyle } from '@/lib/theme';
 import { BacktestEmptyState } from '@/components/backtest/BacktestEmptyState';
+import { BacktestRunningSkeleton } from '@/components/backtest/BacktestRunningSkeleton';
 import { SectionErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 // Backtest API contract — page-local because no second consumer in the
@@ -627,6 +628,9 @@ export function Backtest() {
           </section>
         </SectionErrorBoundary>
       )}
+
+      {/* ── Running Skeleton ────────────────────────────────────────────── */}
+      {isPending && <BacktestRunningSkeleton />}
 
       {/* ── Empty State ─────────────────────────────────────────────────── */}
       {!result && !isPending && !error && <BacktestEmptyState />}

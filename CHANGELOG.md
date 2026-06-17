@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.12.1] - 2026-06-16
+
+### Backtest running skeleton + env-schema CI fix
+
+#### Added
+
+- **`client/src/components/backtest/BacktestRunningSkeleton.tsx`**: completes the
+  v1.12.0 Backtest polish. The page body went blank during a run (only the Run
+  button spinner moved); now an active-shimmer skeleton mirrors the result
+  layout (six metric tiles + equity-curve panel) with an `aria-live` running
+  announcement. Rendered while `isPending`. 2 tests.
+
+#### Fixed
+
+- **Schema-Only env-audit CI job was red** (pre-existing, surfaced by this PR):
+  `SEAL_PRIVATE_KEY` (v1.9.0 ForensicSeal) and `EXPLAINER_LATENCY_BUDGET_MS` /
+  `EXPLAINER_TOKEN_CEILING` (substrate-first explainer) were referenced in `src/`
+  but missing from `schemas/env-schema.json`. Added all three (optional, in-code
+  fallbacks); `npm run env:audit:schema` now passes.
+
+- 264 client tests (+2); server unchanged at 966. Typecheck + build clean.
+
 ## [1.12.0] - 2026-06-15
 
 ### Backtest page — preview empty state (ROADMAP #3)

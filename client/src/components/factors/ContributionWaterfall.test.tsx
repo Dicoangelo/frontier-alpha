@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { aggregateContributions, ContributionWaterfall } from './ContributionWaterfall';
 import type { FactorExposureWithCategory } from '@/api/factors';
 
@@ -8,8 +8,9 @@ function f(
   contribution: number,
   category: FactorExposureWithCategory['category'] = 'style',
   exposure = 1,
+  tStat = 2,
 ): FactorExposureWithCategory {
-  return { factor, exposure, tStat: 2, confidence: 0.9, contribution, category };
+  return { factor, exposure, tStat, confidence: 0.9, contribution, category };
 }
 
 describe('aggregateContributions', () => {
@@ -56,6 +57,16 @@ describe('aggregateContributions', () => {
     const model = aggregateContributions([f('a', 0), f('b', 0)]);
     expect(model.empty).toBe(true);
   });
+
+  it('averages t-stat and confidence across holdings', () => {
+    const model = aggregateContributions([
+      f('momentum_12m', 0.3, 'style', 1, 4),
+      f('momentum_12m', 0.3, 'style', 1, 2),
+    ]);
+    const step = model.steps.find((s) => s.factor === 'momentum_12m');
+    expect(step?.tStat).toBeCloseTo(3, 6);
+    expect(step?.confidence).toBeCloseTo(0.9, 6);
+  });
 });
 
 describe('<ContributionWaterfall />', () => {
@@ -82,5 +93,23 @@ describe('<ContributionWaterfall />', () => {
   it('renders nothing for an empty factor list', () => {
     const { container } = render(<ContributionWaterfall factors={[]} />);
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it('expands a per-factor explainer on click', () => {
+    render(
+      <ContributionWaterfall
+        factors={[f('momentum_12m', 0.6), f('value', -0.2, 'style')]}
+      />,
+    );
+    const row = screen.getByRole('button', { name: /Momentum 12m/i });
+    expect(row).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(row);
+
+    expect(row).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      screen.getByText('12-month price momentum relative to the market.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Significance')).toBeInTheDocument();
   });
 });

@@ -71,6 +71,9 @@ Polygon Starter is live:**
 
 | Date | Version | Headline |
 |---|---|---|
+| 2026-06-15 | 1.12.0 | Backtest UI polish — preview empty state ghosting the real metric tiles + equity curve |
+| 2026-06-15 | 1.11.0 | Factors drill-down — Signal Contribution Waterfall (ranked, net-preserving, floating-bar) |
+| 2026-06-15 | 1.10.0 | Tax page → real data — DB→engine hydration seam, live `/tax/*` wiring, mock fixtures retired to the `?demo=true` link |
 | 2026-06-11 | 1.9.1-1.9.3 | Walkthrough hardening — Vercel POST body relay, optimizer provenance, authed demo leak, Sharpe units, delta caps, persistent seal key |
 | 2026-06-11 | 1.9.0 | Deep trust wave — ForensicSeal (Ed25519 receipts), multi-method consensus, CVRF two-phase episode retrieval |
 | 2026-06-11 | 1.8.0-1.8.1 | Saliency wave — temporal window attribution engine + Signal Timing card |
@@ -98,13 +101,24 @@ In rough priority order. Each is a self-contained scope.
 1. **Cinema studio nav wiring** — Cinema Studio is built (~2.3k LOC,
    TypeScript-clean) but not yet linked from the main app nav. Per the cinema
    buildout roadmap memory, this is a one-session integration.
-2. **Factors page deeper drill-down** — current page renders the 80+ exposures
-   but lacks per-factor explainer and contribution waterfall. Aligns with
-   DASH3-005 / Cognitive Insight v2 surface.
-3. **Backtest UI polish** — page works but the empty state is rough.
-4. **Tax page real data** — currently mock-only. Needs `frontier_tax_events`
-   table seeded plus the realized/unrealized income split per CONTEXT.md
-   feedback note.
+2. ~~**Factors page deeper drill-down**~~ — **DONE.** Contribution waterfall
+   SHIPPED v1.11.0; per-factor click-to-expand explainer (description +
+   contribution / avg exposure / significance / holdings) SHIPPED v1.13.0
+   (2026-06-16). Remaining follow-on (deferred, needs verified per-symbol data):
+   a per-holding breakdown of each factor — the `/portfolio/factors` response
+   may aggregate `symbol`, so confirm the data shape before building.
+3. ~~**Backtest UI polish**~~ — **Preview empty state SHIPPED v1.12.0
+   (2026-06-15)** (`BacktestEmptyState.tsx`): ghosts the six real metric tiles +
+   equity curve so the pre-run surface communicates the payoff. Remaining
+   follow-on (deferred): a ghosted result skeleton during the `isPending` run.
+4. ~~**Tax page real data**~~ — **SHIPPED v1.10.0 (2026-06-15).** Wired to the
+   live `/api/v1/tax/*` routes via a DB→engine hydration seam
+   (`src/tax/taxRowMapper.ts` + `loadTrackerFromDb.ts`); `Tax.tsx` now renders
+   real realized activity from `frontier_tax_events`, with the mock fixtures
+   retired to the `?demo=true` link. Follow-on (deferred): seed open
+   `frontier_tax_lots` for the golden user so the Harvest / Wash-Sales tabs
+   demo with content instead of the honest empty state (touches the shared
+   golden fixture + visual baselines, so out of this scope).
 5. **Mobile portfolio swipe actions (MOBILE-004)** — explicitly deferred to
    "second active user" trigger. Hold.
 6. **Dashboard personalization (DASH3-006)** — same trigger.

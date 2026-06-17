@@ -444,6 +444,29 @@
       "sourceUrl": "internal",
       "lastVerified": "2026-05-10",
       "description": "Test-only — `tests/integration/auth-helper.ts` uses this to point integration tests at a non-localhost API (e.g., a deployed preview). When unset, integration suite hits `http://localhost:3000`."
+    },
+    {
+      "name": "SEAL_PRIVATE_KEY",
+      "required": false,
+      "sourceUrl": "internal",
+      "lastVerified": "2026-06-16",
+      "description": "Optional base64 PKCS8 DER Ed25519 private key for the ForensicSeal (v1.9.0, `src/forensics/ForensicSeal.ts`). When set, receipts are signed in 'persistent' keyMode so the public key stays stable across restarts; when unset, an ephemeral keypair is generated per process. Server only — never ship to client."
+    },
+    {
+      "name": "EXPLAINER_LATENCY_BUDGET_MS",
+      "required": false,
+      "regex": "^[0-9]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-06-16",
+      "description": "Optional latency-budget override (ms) for the substrate-first explainer routing in `src/services/ExplanationService.ts`. Falls back to the in-code default when unset or non-numeric."
+    },
+    {
+      "name": "EXPLAINER_TOKEN_CEILING",
+      "required": false,
+      "regex": "^[0-9]+$",
+      "sourceUrl": "internal",
+      "lastVerified": "2026-06-16",
+      "description": "Optional token-ceiling override for the substrate-first explainer routing in `src/services/ExplanationService.ts`. Falls back to the in-code default when unset or non-numeric."
     }
   ],
   "ignoredEnvNames": [

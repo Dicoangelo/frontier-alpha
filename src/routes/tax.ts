@@ -7,6 +7,7 @@ import type { TaxLotTracker } from '../tax/TaxLotTracker.js';
 import type { HarvestingScanner } from '../tax/HarvestingScanner.js';
 import type { WashSaleDetector } from '../tax/WashSaleDetector.js';
 import type { TaxReportGenerator } from '../tax/TaxReportGenerator.js';
+import { hydrateTaxTracker } from '../tax/loadTrackerFromDb.js';
 
 interface RouteContext {
   server: {
@@ -133,8 +134,12 @@ export async function taxRoutes(fastify: FastifyInstance, opts: RouteContext) {
           }
         }
 
+        const tracker = server.useDatabase
+          ? await hydrateTaxTracker(request.user.id)
+          : server.taxLotTracker;
+
         const result = server.harvestingScanner.scan(
-          server.taxLotTracker,
+          tracker,
           request.user.id,
           currentPrices
         );
@@ -244,8 +249,12 @@ export async function taxRoutes(fastify: FastifyInstance, opts: RouteContext) {
       const start = Date.now();
 
       try {
+        const tracker = server.useDatabase
+          ? await hydrateTaxTracker(request.user.id)
+          : server.taxLotTracker;
+
         const result = server.washSaleDetector.scanTransactionHistory(
-          server.taxLotTracker,
+          tracker,
           request.user.id
         );
 
@@ -302,9 +311,13 @@ export async function taxRoutes(fastify: FastifyInstance, opts: RouteContext) {
       }
 
       try {
+        const tracker = server.useDatabase
+          ? await hydrateTaxTracker(request.user.id)
+          : server.taxLotTracker;
+
         // Build current prices for harvesting scanner (optional enhancement)
         const currentPrices = new Map<string, number>();
-        const openLots = server.taxLotTracker.getOpenLots(request.user.id);
+        const openLots = tracker.getOpenLots(request.user.id);
         const openSymbols = [...new Set(openLots.map(l => l.symbol))];
 
         for (const sym of openSymbols) {
@@ -315,7 +328,7 @@ export async function taxRoutes(fastify: FastifyInstance, opts: RouteContext) {
         }
 
         const report = server.taxReportGenerator.generateReport(
-          server.taxLotTracker,
+          tracker,
           request.user.id,
           taxYear,
           server.washSaleDetector,

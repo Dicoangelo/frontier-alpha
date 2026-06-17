@@ -152,6 +152,56 @@ export class TaxLotTracker {
   }
 
   /**
+   * Bulk-load persisted lots and events into the tracker.
+   *
+   * The tracker is otherwise purely in-memory: a fresh instance knows nothing
+   * about a user's history. This is the hydration seam that lets the route
+   * layer reconstruct a tracker from the `frontier_tax_lots` /
+   * `frontier_tax_events` tables before running a report / harvest / wash-sale
+   * scan. Replaces any existing in-memory state (the tracker is meant to be
+   * per-request when hydrated).
+   *
+   * `nextId` is advanced past any numeric `tl_`/`te_` suffixes found in the
+   * snapshot so subsequent `addLot`/`sellShares` calls on the hydrated tracker
+   * never collide with a loaded id. (DB ids are UUIDs and won't match the
+   * `tl_<n>` pattern, so in practice nextId stays at 1 — but a tracker hydrated
+   * from another tracker's export stays collision-free.)
+   */
+  loadSnapshot(snapshot: { lots?: TaxLot[]; events?: TaxEvent[] }): void {
+    this.lots = new Map();
+    this.events = [];
+
+    let maxNumericId = 0;
+    const trackNumericId = (id: string) => {
+      const match = /^t[le]_(\d+)$/.exec(id);
+      if (match) maxNumericId = Math.max(maxNumericId, Number(match[1]));
+    };
+
+    for (const lot of snapshot.lots ?? []) {
+      const normalized: TaxLot = {
+        ...lot,
+        symbol: lot.symbol.toUpperCase(),
+        purchaseDate: new Date(lot.purchaseDate),
+        soldDate: lot.soldDate ? new Date(lot.soldDate) : null,
+      };
+      this.lots.set(normalized.id, normalized);
+      trackNumericId(normalized.id);
+    }
+
+    for (const event of snapshot.events ?? []) {
+      const normalized: TaxEvent = {
+        ...event,
+        symbol: event.symbol.toUpperCase(),
+        saleDate: new Date(event.saleDate),
+      };
+      this.events.push(normalized);
+      trackNumericId(normalized.id);
+    }
+
+    this.nextId = maxNumericId + 1;
+  }
+
+  /**
    * Get all open (unsold) lots for a user+symbol
    */
   getOpenLots(userId: string, symbol?: string): TaxLot[] {

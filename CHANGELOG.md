@@ -7,6 +7,177 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.13.0] - 2026-06-16
+
+### Factors — per-factor explainer on the waterfall (ROADMAP #2 follow-on)
+
+Completes the "per-factor explainer" half of ROADMAP candidate #2. Each
+Contribution Waterfall row is now a button that expands an inline panel: a
+plain-English description of the factor plus its contribution, average exposure,
+significance verdict (|t| > 1.96), and holding count.
+
+#### Added
+
+- `aggregateContributions()` now also averages `tStat` and `confidence` across
+  holdings (added to `WaterfallStep`).
+- A keyword-fallback `describeFactor()` map so new factor variants still get a
+  sensible description, and a `significanceLabel()` verdict.
+- Click-to-expand explainer panel per row with an accessible `aria-expanded`
+  toggle; the `Other` bucket expands to a short summary only.
+
+#### Tests
+
+- `ContributionWaterfall.test.tsx` +2 (t-stat/confidence averaging, expand
+  interaction) → 10. 266 client tests (+2 net); server unchanged at 966.
+  Typecheck + build clean.
+
+#### Note
+
+- Reads only `tStat` / `confidence` / `exposure` already on every factor row —
+  no new API surface, no dependency on per-row `symbol` (which the API may
+  aggregate). Factors visual baseline still pending the `test:visual:update`
+  pass noted in `[1.11.0]`.
+
+## [1.12.1] - 2026-06-16
+
+### Backtest running skeleton + env-schema CI fix
+
+#### Added
+
+- **`client/src/components/backtest/BacktestRunningSkeleton.tsx`**: completes the
+  v1.12.0 Backtest polish. The page body went blank during a run (only the Run
+  button spinner moved); now an active-shimmer skeleton mirrors the result
+  layout (six metric tiles + equity-curve panel) with an `aria-live` running
+  announcement. Rendered while `isPending`. 2 tests.
+
+#### Fixed
+
+- **Schema-Only env-audit CI job was red** (pre-existing, surfaced by this PR):
+  `SEAL_PRIVATE_KEY` (v1.9.0 ForensicSeal) and `EXPLAINER_LATENCY_BUDGET_MS` /
+  `EXPLAINER_TOKEN_CEILING` (substrate-first explainer) were referenced in `src/`
+  but missing from `schemas/env-schema.json`. Added all three (optional, in-code
+  fallbacks); `npm run env:audit:schema` now passes.
+
+- 264 client tests (+2); server unchanged at 966. Typecheck + build clean.
+
+## [1.12.0] - 2026-06-15
+
+### Backtest page — preview empty state (ROADMAP #3)
+
+The pre-run Backtest surface was a single generic `EmptyState` (icon + one line)
+— a dead end that conveyed none of the payoff. Replaced it with a preview that
+ghosts the actual result surfaces so a first-time user sees what a run produces.
+
+#### Added
+
+- **`client/src/components/backtest/BacktestEmptyState.tsx`**: previews the six
+  real walk-forward metric tiles (Total Return, Annualized, Sharpe, Max
+  Drawdown, Alpha, Duration) as ghosted placeholders plus a dashed equity-curve
+  silhouette, with a footer that points back up to the run controls. On-brand
+  (glass-slab, mono kicker, sovereign accent), pure presentational.
+
+#### Changed
+
+- **`client/src/pages/Backtest.tsx`**: swapped the generic `EmptyState` for
+  `BacktestEmptyState`; dropped the now-unused `EmptyState` + `BarChart3`
+  imports.
+
+#### Tests
+
+- `BacktestEmptyState.test.tsx` (4) — run prompt, the six metric labels match
+  the real results row, equity-curve preview, run-controls pointer. 262 client
+  tests (+4); server unchanged at 966. Typecheck + build clean.
+
+#### Note
+
+- Backtest is **not** in the 9-page visual-regression suite, so no baseline
+  refresh is required for this change.
+
+## [1.11.0] - 2026-06-15
+
+### Factors page — Signal Contribution Waterfall (ROADMAP #2)
+
+The Factors grid renders 80+ raw exposures with equal visual weight, so "which
+factors actually drive my signal?" was unanswerable at a glance. Added a
+drill-down that aggregates each factor's contribution across holdings, ranks by
+impact, and shows a floating-bar waterfall building from zero to the net signal.
+
+#### Added
+
+- **`client/src/components/factors/ContributionWaterfall.tsx`**: a pure,
+  unit-tested `aggregateContributions()` helper (folds per-(symbol, factor)
+  rows into ranked, net-preserving steps with a top-8 + `Other` bucket) plus
+  the floating-bar waterfall card. Positive contributions step the running
+  total right (green), negative left (red); a per-row title surfaces the
+  contribution, average exposure, and holding count. No new API surface — it
+  reads the same `contribution` field the grid already receives.
+- Wired into `client/src/pages/Factors.tsx` between the category grid and the
+  Signal Timing / Method Consensus trust surfaces.
+
+#### Tests
+
+- `ContributionWaterfall.test.tsx` (8) — aggregation across holdings, net
+  invariance, magnitude ranking, top-N bucketing, all-zero empty guard, plus
+  three render assertions. 258 client tests (+8); server unchanged at 966.
+  Typecheck + production build clean.
+
+#### Note
+
+- Factors is one of the 9 pages in the nightly visual-regression suite; this
+  card changes its layout, so the baseline needs a `npm run test:visual:update`
+  pass on the next intentional-design sweep.
+
+## [1.10.0] - 2026-06-15
+
+### Tax page → real data (ROADMAP "Next session candidates" #4)
+
+The Tax Optimization page shipped against a 740-line mock fixture even though
+the full backend (`TaxLotTracker`, `HarvestingScanner`, `WashSaleDetector`,
+`TaxReportGenerator`) and all four routes (`/api/v1/tax/{report,harvest,
+wash-sales,lots}`) already existed. The gap was an architectural seam: the
+report / harvest / wash-sale routes ran against the **in-memory**
+`server.taxLotTracker`, which `buildApp()` instantiates empty and never
+populates from the database — so every realized lot (persisted in
+`frontier_tax_lots` / `frontier_tax_events`) was invisible to the engines.
+
+#### Added
+
+- **DB→engine hydration seam** (`src/tax/taxRowMapper.ts` +
+  `src/tax/loadTrackerFromDb.ts`): `mapTaxRowsToTracker` (pure, env-free,
+  unit-tested) turns persisted rows into a hydrated `TaxLotTracker`;
+  `hydrateTaxTracker(userId)` is the async wrapper that fetches a user's lots +
+  events via the service-role client. Defensive numeric coercion (PostgREST
+  returns numerics as strings) and graceful degradation to an empty tracker on
+  query error (a "no realized activity" page beats a 500).
+- **`TaxLotTracker.loadSnapshot()`**: public bulk-load method (the tracker was
+  otherwise write-only via `addLot`/`sellShares`). Advances `nextId` past any
+  loaded numeric ids so a hydrated tracker stays collision-free.
+- **`client/src/api/tax.ts`**: typed client for all four tax routes plus a
+  `downloadReportCsv` blob helper that streams the server's `?format=csv`
+  Form 8949 export.
+
+#### Changed
+
+- **`src/routes/tax.ts`**: report / harvest / wash-sale handlers now run against
+  a per-request hydrated tracker when `useDatabase`, so the engines operate on
+  real persisted data instead of an empty in-memory instance.
+- **`client/src/pages/Tax.tsx`**: rewired from mock fixtures to the live
+  endpoints via React Query. Real accounts render real realized activity
+  (Summary + Report from `frontier_tax_events`; Harvest + Wash Sales honestly
+  empty until open lots exist); the `?demo=true` shareable link (FF-6) still
+  shows the banner-marked fixtures under the `DataSource<T>` contract. The
+  Report tab's existing client-side CSV/JSON export now operates on real rows.
+
+#### Tests
+
+- `src/tax/loadTrackerFromDb.test.ts` (6) — golden-state hydration, Form 8949
+  event mapping, numeric-string coercion, open-lot mapping, empty-state,
+  `loadSnapshot` id-collision guard.
+- `client/src/api/tax.test.ts` (6) — endpoint + param shaping, envelope
+  unwrapping, CSV blob download.
+- 966 server (+6) + 250 client (+6) green. Typecheck + lint + production build
+  clean. `schemas/arch.json` regenerated (apiModules 9→10, added `tax`).
+
 ## [1.9.3] - 2026-06-11
 
 ### Walkthrough findings — Sharpe units, delta blow-ups, optimize timeout

@@ -5,8 +5,11 @@
  * Harvest (opportunities table with action buttons), Wash Sales (flagged violations
  * with explanation), Report (downloadable annual report in CSV/JSON).
  *
- * All data is mock — ready for API integration with TaxLotTracker, HarvestingScanner,
- * WashSaleDetector, and TaxReportGenerator backend services.
+ * Wired to the live `/api/v1/tax/*` routes, which reconstruct the user's tax
+ * tracker from `frontier_tax_lots` / `frontier_tax_events` on every request
+ * (see `src/tax/loadTrackerFromDb.ts`). Real accounts render real realized
+ * activity; the demo fixtures below are shown ONLY behind the `?demo=true`
+ * shareable link (FF-6) and are always paired with a <MockDataBanner>.
  */
 
 import { useState, useMemo } from 'react';
@@ -29,7 +32,14 @@ import { Button } from '@/components/shared/Button';
 import { ScrollableTable } from '@/components/shared/ScrollableTable';
 import { MockDataBanner } from '@/components/shared/MockDataBanner';
 import { portfolioApi } from '@/api/portfolio';
-import { type DataSource, EMPTY, wrapReal, wrapDemo, isReal } from '@/lib/dataSource';
+import {
+  taxApi,
+  type AnnualTaxReport,
+  type HarvestResult,
+  type WashSaleResult,
+} from '@/api/tax';
+import { detectDemoMode } from '@/lib/demoMode';
+import { type DataSource, EMPTY, wrapReal, wrapDemo } from '@/lib/dataSource';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -87,7 +97,10 @@ interface ReportRow {
   symbol: string;
 }
 
-// ── Mock Data ──────────────────────────────────────────────────
+// ── Demo Fixtures (shareable ?demo=true link only) ─────────────
+// These are NOT shown to real accounts. They render only when
+// detectDemoMode() is true, always under a <MockDataBanner>. Real
+// accounts get live data from the /api/v1/tax/* routes below.
 
 const MOCK_SUMMARY: TaxSummaryData = {
   taxYear: 2026,
@@ -784,39 +797,164 @@ function EmptyTaxSummary({ year }: { year: number }) {
   );
 }
 
+// ── Server → View Mappers ──────────────────────────────────────
+// Translate the live API shapes into the local view types the section
+// components already render. Keeping the mapping here means the polished
+// section UI is untouched by the data-source swap.
+
+/** Federal-rate liability estimate on net positive realized gains. */
+function estimateTaxLiability(summary: AnnualTaxReport['summary']): number {
+  const SHORT_TERM_RATE = 0.37;
+  const LONG_TERM_RATE = 0.2;
+  return (
+    Math.max(0, summary.netShortTerm) * SHORT_TERM_RATE +
+    Math.max(0, summary.netLongTerm) * LONG_TERM_RATE
+  );
+}
+
+function mapReportToSummary(report: AnnualTaxReport): TaxSummaryData {
+  const { summary } = report;
+  return {
+    taxYear: summary.taxYear,
+    shortTermGains: summary.shortTermGains,
+    shortTermLosses: summary.shortTermLosses,
+    longTermGains: summary.longTermGains,
+    longTermLosses: summary.longTermLosses,
+    netShortTerm: summary.netShortTerm,
+    netLongTerm: summary.netLongTerm,
+    totalRealizedGain: summary.totalRealizedGain,
+    estimatedTaxLiability: estimateTaxLiability(summary),
+    harvestingSavings: report.harvestingSavingsEstimate,
+    washSaleAdjustment: report.washSaleDisallowedLosses,
+  };
+}
+
+function mapReportToRows(report: AnnualTaxReport): ReportRow[] {
+  return [...report.shortTermTransactions, ...report.longTermTransactions].map((t) => ({
+    description: t.description,
+    dateAcquired: t.dateAcquired,
+    dateSold: t.dateSold,
+    proceeds: t.proceeds,
+    costBasis: t.costBasis,
+    adjustmentCode: t.adjustmentCode,
+    adjustmentAmount: t.adjustmentAmount,
+    gainOrLoss: t.gainOrLoss,
+    isShortTerm: t.isShortTerm,
+    symbol: t.symbol,
+  }));
+}
+
+function mapHarvest(result: HarvestResult): HarvestOpportunity[] {
+  return result.opportunities.map((o, i) => ({
+    id: `${o.symbol}-${i}`,
+    symbol: o.symbol,
+    shares: o.totalShares,
+    costBasis: o.costBasis,
+    currentPrice: o.currentPrice,
+    unrealizedLoss: o.unrealizedLoss,
+    estimatedTaxSavings: o.estimatedTaxSavings,
+    holdingPeriod: o.shortTermLoss < 0 ? 'short_term' : 'long_term',
+    replacements: o.replacements.map((r) => r.symbol),
+  }));
+}
+
+/** Server sends ISO datetimes; the view formatter expects YYYY-MM-DD. */
+function isoDate(value: string): string {
+  return value.slice(0, 10);
+}
+
+function mapWashSales(result: WashSaleResult): WashSaleEntry[] {
+  return result.violations.map((v, i) => ({
+    id: `${v.saleLotId || v.saleSymbol}-${i}`,
+    saleSymbol: v.saleSymbol,
+    saleDate: isoDate(v.saleDate),
+    saleShares: v.saleShares,
+    saleLoss: v.saleLoss,
+    replacementSymbol: v.replacementSymbol,
+    replacementDate: isoDate(v.replacementDate),
+    replacementShares: v.replacementShares,
+    disallowedLoss: v.disallowedLoss,
+    matchType: v.matchType,
+  }));
+}
+
 // ── Main Page ──────────────────────────────────────────────────
 
 export function Tax() {
   const [activeTab, setActiveTab] = useState<TaxTab>('summary');
+  const isDemo = detectDemoMode();
 
-  // Pull the current portfolio so we can decide whether to show real-zero
-  // ($0 / "no realized activity") or the demo fixture. Realized lots aren't
-  // exposed via the portfolio endpoint yet, so today the heuristic is:
-  // if the user has positions, show the demo fixture as a preview. If they
-  // have zero positions, render the real-zero empty state. Either way,
-  // never invent realized-gain numbers for a brand new account.
+  // Demo mode (?demo=true shareable link, FF-6): render banner-marked
+  // fixtures. Real accounts: live data from the /api/v1/tax/* routes, which
+  // reconstruct the tax tracker from the user's persisted lots + events.
   const { data: portfolio } = useQuery({
     queryKey: ['portfolio'],
     queryFn: portfolioApi.getPortfolio,
     retry: false,
+    enabled: !isDemo,
   });
 
+  const portfolioSymbols = useMemo(
+    () => portfolio?.positions?.map((p) => p.symbol) ?? [],
+    [portfolio],
+  );
+
+  const reportQuery = useQuery({
+    queryKey: ['tax', 'report'],
+    queryFn: () => taxApi.getReport(),
+    retry: false,
+    enabled: !isDemo,
+  });
+  const harvestQuery = useQuery({
+    queryKey: ['tax', 'harvest', portfolioSymbols],
+    queryFn: () => taxApi.getHarvest(portfolioSymbols),
+    retry: false,
+    enabled: !isDemo,
+  });
+  const washSalesQuery = useQuery({
+    queryKey: ['tax', 'wash-sales'],
+    queryFn: () => taxApi.getWashSales(),
+    retry: false,
+    enabled: !isDemo,
+  });
+
+  const report = reportQuery.data;
+  const hasRealActivity = !isDemo && !!report && report.summary.eventCount > 0;
+
+  // DataSource contract: demo fixtures are 'demo' (banner-paired); a report
+  // with realized events is 'real'; everything else (loading, error, fresh
+  // account) is 'empty' so we never synthesize realized-gain numbers.
   const summarySource: DataSource<TaxSummaryData> = useMemo(() => {
-    if (!portfolio) return EMPTY;
-    if (!portfolio.positions || portfolio.positions.length === 0) {
-      return wrapReal(EMPTY_SUMMARY);
-    }
-    // User has positions but realized lots aren't wired to the API yet.
-    // Render the existing fixture as a clearly-banner-marked demo.
-    return wrapDemo(MOCK_SUMMARY);
-  }, [portfolio]);
+    if (isDemo) return wrapDemo(MOCK_SUMMARY);
+    if (hasRealActivity && report) return wrapReal(mapReportToSummary(report));
+    return EMPTY;
+  }, [isDemo, hasRealActivity, report]);
 
   const showDemoBanner = summarySource.kind === 'demo';
-  const activeSummary: TaxSummaryData = isReal(summarySource)
-    ? summarySource.value
-    : summarySource.kind === 'demo'
-      ? summarySource.value
-      : EMPTY_SUMMARY;
+  const activeSummary: TaxSummaryData =
+    summarySource.kind === 'empty' ? EMPTY_SUMMARY : summarySource.value;
+
+  // Per-tab view data. Demo uses fixtures; real uses mapped API rows.
+  const harvestOpportunities = isDemo
+    ? MOCK_HARVEST_OPPORTUNITIES
+    : harvestQuery.data
+      ? mapHarvest(harvestQuery.data)
+      : [];
+  const washSaleEntries = isDemo
+    ? MOCK_WASH_SALES
+    : washSalesQuery.data
+      ? mapWashSales(washSalesQuery.data)
+      : [];
+  const reportRows = isDemo
+    ? MOCK_REPORT_ROWS
+    : report
+      ? mapReportToRows(report)
+      : [];
+
+  const showSummary = isDemo || hasRealActivity;
+  const showHarvest = isDemo || harvestOpportunities.length > 0;
+  const showWashSales = isDemo || washSaleEntries.length > 0;
+  const showReport = isDemo || reportRows.length > 0;
 
   const tabs: { id: TaxTab; label: string; icon: typeof Receipt }[] = [
     { id: 'summary', label: 'Summary', icon: Receipt },
@@ -891,24 +1029,24 @@ export function Tax() {
         style={{ animationDelay: '100ms', animationFillMode: 'both' }}
       >
         {activeTab === 'summary' && (
-          isReal(summarySource)
-            ? <EmptyTaxSummary year={activeSummary.taxYear} />
-            : <SummarySection data={activeSummary} />
+          showSummary
+            ? <SummarySection data={activeSummary} />
+            : <EmptyTaxSummary year={activeSummary.taxYear} />
         )}
         {activeTab === 'harvest' && (
-          isReal(summarySource)
-            ? <EmptyHarvestSection />
-            : <HarvestSection opportunities={MOCK_HARVEST_OPPORTUNITIES} />
+          showHarvest
+            ? <HarvestSection opportunities={harvestOpportunities} />
+            : <EmptyHarvestSection />
         )}
         {activeTab === 'wash_sales' && (
-          isReal(summarySource)
-            ? <EmptyWashSalesSection />
-            : <WashSalesSection violations={MOCK_WASH_SALES} />
+          showWashSales
+            ? <WashSalesSection violations={washSaleEntries} />
+            : <EmptyWashSalesSection />
         )}
         {activeTab === 'report' && (
-          isReal(summarySource)
-            ? <EmptyReportSection year={activeSummary.taxYear} />
-            : <ReportSection rows={MOCK_REPORT_ROWS} summary={activeSummary} />
+          showReport
+            ? <ReportSection rows={reportRows} summary={activeSummary} />
+            : <EmptyReportSection year={activeSummary.taxYear} />
         )}
       </div>
     </div>

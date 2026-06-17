@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-06-11T15:23:49.446Z",
-  "headSha": "a47ea6a4d16fe54f63e22ef186aa0d11263aa907",
-  "version": "1.9.3",
+  "generatedAt": "2026-06-17T00:38:42.907Z",
+  "headSha": "2a6c7f668d611496d9d36ae6ff531571c8cb68f4",
+  "version": "1.13.0",
   "server": {
-    "tsFiles": 142,
-    "tsNonTestFiles": 137,
-    "inSourceTestFiles": 5,
+    "tsFiles": 145,
+    "tsNonTestFiles": 139,
+    "inSourceTestFiles": 6,
     "routeModules": 33,
     "endpoints": 124,
     "migrations": 17,
@@ -14,10 +14,10 @@
   },
   "client": {
     "pages": 25,
-    "components": 117,
+    "components": 120,
     "stores": 6,
     "hooks": 15,
-    "apiModules": 9,
+    "apiModules": 10,
     "appRoutes": 27
   },
   "integrations": [
@@ -279,6 +279,7 @@
     "portfolio",
     "provenance",
     "quotes",
+    "tax",
     "websocket"
   ]
 }

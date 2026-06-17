@@ -101,11 +101,12 @@ In rough priority order. Each is a self-contained scope.
 1. **Cinema studio nav wiring** — Cinema Studio is built (~2.3k LOC,
    TypeScript-clean) but not yet linked from the main app nav. Per the cinema
    buildout roadmap memory, this is a one-session integration.
-2. ~~**Factors page deeper drill-down**~~ — **Contribution waterfall SHIPPED
-   v1.11.0 (2026-06-15)** (`ContributionWaterfall.tsx`): ranked, net-preserving
-   floating-bar build-up with a per-row explainer (contribution, avg exposure,
-   holding count). Remaining follow-on (deferred): a click-through per-factor
-   detail panel with the historical exposure series.
+2. ~~**Factors page deeper drill-down**~~ — **DONE.** Contribution waterfall
+   SHIPPED v1.11.0; per-factor click-to-expand explainer (description +
+   contribution / avg exposure / significance / holdings) SHIPPED v1.13.0
+   (2026-06-16). Remaining follow-on (deferred, needs verified per-symbol data):
+   a per-holding breakdown of each factor — the `/portfolio/factors` response
+   may aggregate `symbol`, so confirm the data shape before building.
 3. ~~**Backtest UI polish**~~ — **Preview empty state SHIPPED v1.12.0
    (2026-06-15)** (`BacktestEmptyState.tsx`): ghosts the six real metric tiles +
    equity curve so the pre-run surface communicates the payoff. Remaining

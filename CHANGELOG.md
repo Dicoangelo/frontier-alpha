@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.13.0] - 2026-06-16
+
+### Factors — per-factor explainer on the waterfall (ROADMAP #2 follow-on)
+
+Completes the "per-factor explainer" half of ROADMAP candidate #2. Each
+Contribution Waterfall row is now a button that expands an inline panel: a
+plain-English description of the factor plus its contribution, average exposure,
+significance verdict (|t| > 1.96), and holding count.
+
+#### Added
+
+- `aggregateContributions()` now also averages `tStat` and `confidence` across
+  holdings (added to `WaterfallStep`).
+- A keyword-fallback `describeFactor()` map so new factor variants still get a
+  sensible description, and a `significanceLabel()` verdict.
+- Click-to-expand explainer panel per row with an accessible `aria-expanded`
+  toggle; the `Other` bucket expands to a short summary only.
+
+#### Tests
+
+- `ContributionWaterfall.test.tsx` +2 (t-stat/confidence averaging, expand
+  interaction) → 10. 266 client tests (+2 net); server unchanged at 966.
+  Typecheck + build clean.
+
+#### Note
+
+- Reads only `tStat` / `confidence` / `exposure` already on every factor row —
+  no new API surface, no dependency on per-row `symbol` (which the API may
+  aggregate). Factors visual baseline still pending the `test:visual:update`
+  pass noted in `[1.11.0]`.
+
 ## [1.12.1] - 2026-06-16
 
 ### Backtest running skeleton + env-schema CI fix

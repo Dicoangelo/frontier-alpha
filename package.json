@@ -1,6 +1,6 @@
 {
   "name": "frontier-alpha",
-  "version": "1.12.1",
+  "version": "1.13.0",
   "description": "💎 AI-Powered Cognitive Factor Intelligence Platform — Portfolio optimization with explainable recommendations",
   "main": "dist/index.js",
   "type": "module",

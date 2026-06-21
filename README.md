@@ -243,7 +243,7 @@ Frontier Alpha runs on Polygon's **free tier (5 requests/min)** by default. The 
 Every subsystem is a **module** — swap implementations with a config change, zero code changes.
 
 ```
-75+ modules · 124 API endpoints (33 route modules) · 960 server + 244 client tests · 22 subsystems · 17 migrations · 13/14 integrations live · Two-tier deploy
+75+ modules · 124 API endpoints (33 route modules) · 966 server + 266 client tests · 22 subsystems · 17 migrations · 13/14 integrations live · Two-tier deploy
 ```
 
 | Subsystem | Module | Ships with | Extend |
@@ -685,7 +685,7 @@ npm run ml:start         # Optional Python ML engine (port 8000)
 | **Billing** | Stripe (Pro $29, Enterprise $99) — checkout, customer portal, webhook |
 | **Email** | Resend (transactional) |
 | **Infrastructure** | Vercel (SPA + REST), Railway (WebSocket + REST), Docker, Sentry |
-| **Testing** | Vitest (205 tests), Testing Library, MSW (Mock Service Worker) |
+| **Testing** | Vitest (1,232 tests), Testing Library, MSW (Mock Service Worker) |
 | **PWA** | Service Worker, Web Push API, offline caching |
 
 </div>

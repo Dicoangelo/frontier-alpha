@@ -8,7 +8,7 @@
  *     telemetry roll-up
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 vi.hoisted(() => {
   process.env.SUPABASE_URL ??= 'http://localhost:54321';
@@ -33,6 +33,12 @@ describe('MemoryCache<T> — in-process key/value with TTL', () => {
 
   beforeEach(() => {
     cache = new MemoryCache<string>({ defaultTtlMs: 1000, maxEntries: 3 });
+  });
+
+  // The TTL tests below `vi.spyOn(Date, 'now')`; restore it after each so the
+  // mocked clock doesn't leak into the SupabaseCache freshness-gate tests.
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('returns null on miss and increments missCount', () => {
@@ -175,17 +181,72 @@ describe('SupabaseCache — durable price cache', () => {
     expect(cache.missCount).toBe(1);
   });
 
-  it('returns rows and bumps hitCount on coverage hit', async () => {
+  it('returns rows oldest-first and bumps hitCount on coverage hit', async () => {
     const days = 5;
-    const rows = Array.from({ length: days }, (_, i) => ({
-      date: `2026-01-0${i + 1}`,
-      open: 100 + i,
-      high: 101 + i,
-      low: 99 + i,
-      close: 100 + i,
-      adjusted_close: 100 + i,
-      volume: 1_000_000,
-    }));
+    // The real query orders DESCENDING, so the stub returns newest-first.
+    const rows = Array.from({ length: days }, (_, i) => {
+      const dayNum = days - i; // 5,4,3,2,1 → dates descending
+      return {
+        date: `2026-01-0${dayNum}`,
+        open: 100 + dayNum,
+        high: 101 + dayNum,
+        low: 99 + dayNum,
+        close: 100 + dayNum,
+        adjusted_close: 100 + dayNum,
+        volume: 1_000_000,
+      };
+    });
+    const stub = makeStubClient(rows);
+    const cache = new SupabaseCache({
+      enabled: true,
+      client: stub as unknown as any,
+      coverage: 0.9,
+      maxStalenessMs: 0, // disable freshness gate to assert ordering on fixed dates
+    });
+    const result = await cache.getPrices('AAPL', days);
+    expect(result).toHaveLength(days);
+    expect(cache.hitCount).toBe(1);
+    // Reversed to oldest-first: 2026-01-01 .. 2026-01-05
+    expect(result?.[0].timestamp.toISOString().slice(0, 10)).toBe('2026-01-01');
+    expect(result?.[days - 1].timestamp.toISOString().slice(0, 10)).toBe('2026-01-05');
+    expect(result?.[0].close).toBe(101); // adjusted_close for 2026-01-01 (100+1)
+  });
+
+  it('returns null and bumps staleCount when newest bar is older than maxStalenessMs', async () => {
+    const days = 5;
+    const rows = Array.from({ length: days }, (_, i) => {
+      const dayNum = days - i;
+      return {
+        date: `2020-01-0${dayNum}`,
+        open: 1, high: 1, low: 1, close: 1, adjusted_close: 1, volume: 100,
+      };
+    });
+    const stub = makeStubClient(rows);
+    const cache = new SupabaseCache({
+      enabled: true,
+      client: stub as unknown as any,
+      coverage: 0.9,
+      maxStalenessMs: 5 * 24 * 60 * 60 * 1000,
+    });
+    const result = await cache.getPrices('AAPL', days);
+    expect(result).toBeNull();
+    expect(cache.staleCount).toBe(1);
+    expect(cache.missCount).toBe(1);
+    expect(cache.hitCount).toBe(0);
+  });
+
+  it('returns rows when newest bar is within maxStalenessMs', async () => {
+    const days = 3;
+    const today = new Date();
+    // newest-first, dated today, yesterday, day-before
+    const rows = Array.from({ length: days }, (_, i) => {
+      const d = new Date(today);
+      d.setUTCDate(d.getUTCDate() - i);
+      return {
+        date: d.toISOString().slice(0, 10),
+        open: 1, high: 1, low: 1, close: 1, adjusted_close: 1, volume: 100,
+      };
+    });
     const stub = makeStubClient(rows);
     const cache = new SupabaseCache({
       enabled: true,
@@ -195,7 +256,7 @@ describe('SupabaseCache — durable price cache', () => {
     const result = await cache.getPrices('AAPL', days);
     expect(result).toHaveLength(days);
     expect(cache.hitCount).toBe(1);
-    expect(result?.[0].close).toBe(100); // adjusted_close routed to close
+    expect(cache.staleCount).toBe(0);
   });
 
   it('setPrices upserts in batches', async () => {

@@ -25,6 +25,7 @@ import { Button } from '@/components/shared/Button';
 import { MockDataBanner } from '@/components/shared/MockDataBanner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { portfolioApi } from '@/api/portfolio';
+import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import {
   UNDERLYING_PRICE,
@@ -89,6 +90,14 @@ export function Options() {
   const [activeTab, setActiveTab] = useState<TabId>('chain');
   const [isLoading, setIsLoading] = useState(true);
 
+  // US-003 auth gate — /portfolio is Bearer-gated. An anonymous visitor (open
+  // front door, no session) must not fire it or it 401s and spams the public
+  // console. With no session the query is disabled, `hasPositions` stays false,
+  // and the page renders the "Awaiting Position" empty state below.
+  const isReady = useAuthStore((state) => state.isReady);
+  const session = useAuthStore((state) => state.session);
+  const authReady = isReady && !!session?.access_token;
+
   // US-002: detect whether the user has any positions wired. Without one,
   // we render an explicit empty state instead of a chain of mock 1.00/1.00
   // strikes for AAPL — those numbers read as live to a brand new account.
@@ -96,6 +105,7 @@ export function Options() {
     queryKey: ['portfolio'],
     queryFn: portfolioApi.getPortfolio,
     retry: false,
+    enabled: authReady,
   });
   const hasPositions = (portfolio?.positions?.length ?? 0) > 0;
 

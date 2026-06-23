@@ -11,6 +11,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Sparkles, TrendingUp, Shield, Target, Info } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import { useToast } from '@/hooks/useToast';
+import { useAuthStore } from '@/stores/authStore';
 import { Spinner } from '@/components/shared/Spinner';
 import { UpgradeGate } from '@/components/shared/UpgradeGate';
 import { SectionErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -56,9 +57,19 @@ function OptimizeContent() {
   const [maxWeight, setMaxWeight] = useState('0.25');
   const { toastSuccess, toastError } = useToast();
 
+  // US-003 auth gate — /portfolio is Bearer-gated. The UpgradeGate renders this
+  // content as a blurred preview for non-pro (incl. anonymous) visitors, so the
+  // query would otherwise fire and 401 in demo mode. Hold it until a real
+  // session exists; with none, `symbols` stays empty and the holdings panel
+  // shows its "No positions in portfolio." state.
+  const isReady = useAuthStore((state) => state.isReady);
+  const session = useAuthStore((state) => state.session);
+  const authReady = isReady && !!session?.access_token;
+
   const { data: portfolio } = useQuery({
     queryKey: ['portfolio'],
     queryFn: () => api.get('/portfolio'),
+    enabled: authReady,
   });
 
   const optimizeMutation = useMutation<{ data: OptimizationResult }, Error, { symbols: string[]; config: OptimizationConfig }>({

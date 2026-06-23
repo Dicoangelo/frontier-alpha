@@ -1,8 +1,44 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Settings, Menu, HelpCircle, Moon, Sun } from 'lucide-react';
 import { AlertDropdown } from '@/components/alerts/AlertDropdown';
 import { HelpKeyboardHint } from '@/components/help';
 import { useThemeStore } from '@/stores/themeStore';
+import { api } from '@/api/client';
+
+/** Default index ticker shown in the header quote tile. */
+const HEADER_QUOTE_SYMBOL = 'SPY';
+
+interface HeaderQuote {
+  symbol: string;
+  last: number;
+  change: number;
+  changePercent: number;
+}
+
+/**
+ * Live delayed quote for the header tile (default: SPY).
+ *
+ * Hits the public REST endpoint `GET /api/v1/quotes/:symbol` (Polygon Stocks
+ * Starter, delayed) rather than the WebSocket stream, so it works on the
+ * Vercel tier where `polygonWebSocket` is degraded by design. The shared axios
+ * client unwraps the response to the JSON body, so `response.data` is the
+ * endpoint's `data` field.
+ */
+function useHeaderQuote() {
+  return useQuery({
+    queryKey: ['header-quote', HEADER_QUOTE_SYMBOL],
+    queryFn: () => api.get(`/quotes/${HEADER_QUOTE_SYMBOL}`),
+    select: (response): HeaderQuote | null => {
+      const data = (response as { data?: HeaderQuote } | undefined)?.data;
+      if (!data || typeof data.last !== 'number') return null;
+      return data;
+    },
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    retry: 1,
+  });
+}
 
 const pageTitleMap: Record<string, string> = {
   '/': 'Dashboard',
@@ -31,6 +67,8 @@ export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
   const { resolved, toggle } = useThemeStore();
   const location = useLocation();
   const pageTitle = pageTitleMap[location.pathname] || '';
+  const { data: quote, isLoading: isQuoteLoading } = useHeaderQuote();
+  const quoteUp = quote ? quote.changePercent >= 0 : true;
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 glass-slab-floating z-50">
@@ -93,6 +131,43 @@ export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Live delayed index quote (default SPY) */}
+          {!(quote == null && !isQuoteLoading) && (
+            <div
+              className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-full glass-slab min-w-[150px]"
+              role="status"
+              aria-label={
+                quote
+                  ? `${quote.symbol} ${quote.last.toFixed(2)}, ${quote.changePercent >= 0 ? 'up' : 'down'} ${Math.abs(quote.changePercent).toFixed(2)} percent`
+                  : `Loading ${HEADER_QUOTE_SYMBOL} quote`
+              }
+            >
+              <span className="text-[9px] text-theme-muted mono tracking-[0.3em] uppercase">
+                {HEADER_QUOTE_SYMBOL}
+              </span>
+              {quote ? (
+                <>
+                  <span className="text-xs font-semibold text-theme tabular-nums">
+                    {quote.last.toFixed(2)}
+                  </span>
+                  <span
+                    className="text-[10px] font-medium tabular-nums"
+                    style={{
+                      color: quoteUp
+                        ? 'var(--color-positive)'
+                        : 'var(--color-negative)',
+                    }}
+                  >
+                    {quoteUp ? '+' : ''}
+                    {quote.changePercent.toFixed(2)}%
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs text-theme-muted tabular-nums">Loading</span>
+              )}
+            </div>
+          )}
+
           <div
             className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full glass-slab"
             role="status"

@@ -9,6 +9,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Edit2, X, Check, Share2, DollarSign, TrendingUp, TrendingDown, BarChart3, Wallet } from 'lucide-react';
 import { api, isNetworkError, getErrorMessage } from '@/api/client';
+import { useAuthStore } from '@/stores/authStore';
 import { useCountUp } from '@/components/portfolio/PortfolioOverview';
 import { Spinner } from '@/components/shared/Spinner';
 import { SkeletonPortfolioPage } from '@/components/shared/Skeleton';
@@ -67,9 +68,18 @@ export function Portfolio() {
   const [mobileFilter, setMobileFilter] = useState<FilterKey>('all');
   const [mobileQuery, setMobileQuery] = useState('');
 
+  // US-003 auth gate — /portfolio is Bearer-gated. An anonymous visitor (open
+  // front door, no session) must not fire it or it 401s and spams the public
+  // console. With no session the query is disabled (no loading, no error) and
+  // `positions` stays empty so the page renders <EmptyPortfolio>.
+  const isReady = useAuthStore((state) => state.isReady);
+  const session = useAuthStore((state) => state.session);
+  const authReady = isReady && !!session?.access_token;
+
   const { data: portfolio, isLoading, error, refetch } = useQuery<{ data: PortfolioData }>({
     queryKey: ['portfolio'],
     queryFn: () => api.get('/portfolio'),
+    enabled: authReady,
   });
 
   const addPositionMutation = useMutation({

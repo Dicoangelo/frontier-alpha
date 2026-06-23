@@ -33,8 +33,18 @@ interface OnboardingProviderProps {
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, initialized } = useAuthStore();
+  const { user, session, initialized } = useAuthStore();
   const { isOnboardingComplete, completeOnboarding, resetOnboarding } = useOnboarding();
+
+  // Auto-launch gate (2026-06-23). The app is now public — unauthenticated
+  // visitors land directly in the app under the demo banner (see
+  // ProtectedRoute). Onboarding (welcome modal + feature tour) must only
+  // auto-run for REAL signed-in users; for anonymous/demo visitors it must
+  // never auto-open or auto-advance. A truthy `session` is the single
+  // authenticated-visitor predicate (`user` is derived from it). Manual
+  // triggers below (startTour / resetOnboarding / the modal's own buttons)
+  // stay ungated so the "?" help flow works for everyone.
+  const isAuthenticated = Boolean(session);
 
   const [showWelcome, setShowWelcome] = useState(false);
   const [showTour, setShowTour] = useState(false);
@@ -49,7 +59,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const portfolioQuery = useQuery({
     queryKey: ['portfolio'],
     queryFn: portfolioApi.getPortfolio,
-    enabled: Boolean(initialized && user && !isOnboardingComplete && !hasShownWelcome),
+    enabled: Boolean(initialized && isAuthenticated && user && !isOnboardingComplete && !hasShownWelcome),
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
@@ -60,6 +70,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   useEffect(() => {
     if (
       initialized &&
+      isAuthenticated &&
       user &&
       !isOnboardingComplete &&
       !hasShownWelcome &&
@@ -77,6 +88,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     }
   }, [
     initialized,
+    isAuthenticated,
     user,
     isOnboardingComplete,
     hasShownWelcome,
@@ -90,6 +102,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   useEffect(() => {
     if (
       initialized &&
+      isAuthenticated &&
       user &&
       !isOnboardingComplete &&
       portfolioReady &&
@@ -97,7 +110,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     ) {
       completeOnboarding();
     }
-  }, [initialized, user, isOnboardingComplete, portfolioReady, hasPositions, completeOnboarding]);
+  }, [initialized, isAuthenticated, user, isOnboardingComplete, portfolioReady, hasPositions, completeOnboarding]);
 
   const handleCloseWelcome = useCallback(() => {
     setShowWelcome(false);

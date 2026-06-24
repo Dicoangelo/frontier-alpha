@@ -19,6 +19,7 @@ import { MarketStatusStrip } from '@/components/dashboard/MarketStatusStrip';
 import { DashZone } from '@/components/dashboard/DashZone';
 import { getDisplayName } from '@/lib/getDisplayName';
 import { type DataSource, EMPTY, wrapReal } from '@/lib/dataSource';
+import { DEMO_HOLDINGS, DEMO_CASH, DEMO_TOTAL_VALUE, DEMO_FACTORS } from '@/lib/demoFixtures';
 
 // Types
 interface Position {
@@ -259,32 +260,21 @@ function generateInsight(factors: FactorExposure[]): string {
   return insights.slice(0, 3).join(' ');
 }
 
-// Demo data for unauthenticated users
+// Demo data for unauthenticated users — sourced from the shared golden-state
+// fixtures so the Dashboard preview matches the Portfolio page exactly.
 function getDemoPortfolio(): Portfolio {
   return {
     id: 'demo',
     name: 'Demo Portfolio',
-    positions: [
-      { symbol: 'NVDA', shares: 50, weight: 0.22, costBasis: 450, currentPrice: 520, unrealizedPnL: 3500 },
-      { symbol: 'MSFT', shares: 30, weight: 0.18, costBasis: 380, currentPrice: 415, unrealizedPnL: 1050 },
-      { symbol: 'AAPL', shares: 100, weight: 0.15, costBasis: 175, currentPrice: 195, unrealizedPnL: 2000 },
-      { symbol: 'GOOGL', shares: 25, weight: 0.14, costBasis: 140, currentPrice: 165, unrealizedPnL: 625 },
-      { symbol: 'AMZN', shares: 40, weight: 0.12, costBasis: 180, currentPrice: 205, unrealizedPnL: 1000 },
-    ],
-    cash: 15000,
-    totalValue: 125000,
+    positions: DEMO_HOLDINGS.map((h) => ({ ...h })),
+    cash: DEMO_CASH,
+    totalValue: DEMO_TOTAL_VALUE,
     currency: 'USD',
   };
 }
 
 function getDemoFactors(): FactorExposure[] {
-  return [
-    { factor: 'momentum_12m', exposure: 0.85, tStat: 2.31, confidence: 0.92, contribution: 0.04 },
-    { factor: 'roe', exposure: 0.62, tStat: 1.89, confidence: 0.85, contribution: 0.02 },
-    { factor: 'low_vol', exposure: -0.42, tStat: -1.45, confidence: 0.78, contribution: 0.01 },
-    { factor: 'value', exposure: -0.28, tStat: -0.92, confidence: 0.65, contribution: -0.01 },
-    { factor: 'sector_tech', exposure: 0.85, tStat: 8.5, confidence: 0.99, contribution: 0.05 },
-  ];
+  return DEMO_FACTORS.map((f) => ({ ...f }));
 }
 
 // Quick action pill component

@@ -36,7 +36,9 @@ function useHeaderQuote() {
     },
     staleTime: 60_000,
     refetchInterval: 60_000,
-    retry: 1,
+    // retry inherits the global QueryClient default (1) in production; not
+    // overridden here so tests can set retry:false for deterministic error
+    // settling without changing prod behavior.
   });
 }
 

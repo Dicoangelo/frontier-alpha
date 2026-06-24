@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { logger } from '../observability/logger.js';
+import { publicRateLimit } from '../middleware/publicRateLimit.js';
 import type { APIResponse, Price, Quote } from '../types/index.js';
 
 interface RouteContext {
@@ -60,6 +61,7 @@ export async function quotesRoutes(fastify: FastifyInstance, opts: RouteContext)
     Reply: APIResponse<{ symbol: string; closes: number[]; timestamps: string[] }>;
   }>(
     '/api/v1/quotes/:symbol/history',
+    { preHandler: publicRateLimit },
     async (request, reply) => {
       const start = Date.now();
       const { symbol } = request.params;
@@ -109,6 +111,7 @@ export async function quotesRoutes(fastify: FastifyInstance, opts: RouteContext)
     Reply: APIResponse<Quote>;
   }>(
     '/api/v1/quotes/:symbol',
+    { preHandler: publicRateLimit },
     async (request, reply) => {
       const start = Date.now();
       const { symbol } = request.params;

@@ -30,6 +30,14 @@ import Redis, { type Redis as RedisClient } from 'ioredis';
 export interface DataProviderConfig {
   polygonApiKey?: string;
   alphaVantageApiKey?: string;
+  // Alpaca Market Data API — provider-independent failover for quotes + daily
+  // bars. Polygon.io was acquired by Massive (2026-06); if a Massive plan
+  // change cuts the Polygon key, Alpaca's free IEX feed keeps the live path
+  // alive with no code change — just set these env vars. Both must be present
+  // for the provider to activate.
+  alpacaApiKey?: string;
+  alpacaApiSecret?: string;
+  alpacaDataUrl?: string;  // Defaults to https://data.alpaca.markets
   cacheTTLSeconds?: number;
   redisUrl?: string;
   allowMockFallback?: boolean;  // Only true in development
@@ -214,7 +222,25 @@ export class MarketDataProvider {
       }
     }
 
-    // 5. Fetch from Alpha Vantage (backup for real quotes)
+    // 5. Fetch from Alpaca (provider-independent failover — survives a Massive
+    //    cutoff of the Polygon key). Free IEX feed, real delayed quotes.
+    if (this.config.alpacaApiKey && this.config.alpacaApiSecret) {
+      try {
+        const quote = await this.fetchAlpacaQuote(upperSymbol);
+        if (quote) {
+          this.quoteCache.set(upperSymbol, { quote, timestamp: now });
+          await Promise.all([
+            this.cacheQuoteToRedis(quote),
+            this.cacheQuoteToSupabase(quote),
+          ]);
+          return quote;
+        }
+      } catch (e) {
+        logger.error({ err: e, symbol: upperSymbol }, 'Alpaca quote error');
+      }
+    }
+
+    // 6. Fetch from Alpha Vantage (backup for real quotes)
     if (this.config.alphaVantageApiKey) {
       try {
         const quote = await this.fetchAlphaVantageQuote(upperSymbol);
@@ -231,15 +257,15 @@ export class MarketDataProvider {
       }
     }
 
-    // 6. PRODUCTION: Throw error, no mock fallback
+    // 7. PRODUCTION: Throw error, no mock fallback
     if (!this.config.allowMockFallback) {
       throw new DataNotAvailableError(
         `Unable to fetch quote for ${upperSymbol}: No data providers available or all failed. ` +
-        `Ensure POLYGON_API_KEY and/or ALPHA_VANTAGE_API_KEY are set.`
+        `Ensure POLYGON_API_KEY, ALPACA_API_KEY/ALPACA_API_SECRET, and/or ALPHA_VANTAGE_API_KEY are set.`
       );
     }
 
-    // 7. DEVELOPMENT ONLY: Generate mock quote
+    // 8. DEVELOPMENT ONLY: Generate mock quote
     logger.warn({ symbol: upperSymbol }, 'Using mock quote (dev fallback)');
     return this.generateMockQuote(upperSymbol);
   }
@@ -364,6 +390,21 @@ export class MarketDataProvider {
         }
       } catch (e) {
         logger.warn({ err: e, symbol: upperSymbol }, 'Polygon historical price error');
+      }
+    }
+
+    // Alpaca daily bars — provider-independent failover before Alpha Vantage.
+    // Free IEX feed has no daily request cap, so it absorbs a Polygon/Massive
+    // outage far better than Alpha Vantage's 25 req/day.
+    if (this.config.alpacaApiKey && this.config.alpacaApiSecret) {
+      try {
+        const prices = await this.fetchAlpacaPrices(upperSymbol, days);
+        if (prices.length > 0) {
+          await this.historicalPriceCache.setPrices(upperSymbol, prices, days);
+          return prices;
+        }
+      } catch (e) {
+        logger.warn({ err: e, symbol: upperSymbol }, 'Alpaca historical price error');
       }
     }
 
@@ -825,6 +866,120 @@ export class MarketDataProvider {
   }
 
   // ============================================================================
+  // ALPACA INTEGRATION (provider-independent failover)
+  // ============================================================================
+  //
+  // Polygon.io was acquired by Massive (2026-06). If a Massive plan change
+  // suspends the Polygon key, these two methods keep the live quote + history
+  // paths working off Alpaca's free IEX feed, which is a separate company and
+  // a separate billing relationship. Both ALPACA_API_KEY and ALPACA_API_SECRET
+  // must be set for the provider to activate; otherwise the chain skips it.
+
+  private alpacaHeaders(): Record<string, string> {
+    return {
+      'APCA-API-KEY-ID': this.config.alpacaApiKey!,
+      'APCA-API-SECRET-KEY': this.config.alpacaApiSecret!,
+    };
+  }
+
+  /**
+   * Fetch a delayed quote from Alpaca's single-symbol snapshot endpoint. The
+   * free IEX feed returns the latest trade plus today's and yesterday's daily
+   * bars in one call, which is everything we need for last + change.
+   */
+  private async fetchAlpacaQuote(symbol: string): Promise<Quote | null> {
+    const dataUrl = this.config.alpacaDataUrl || 'https://data.alpaca.markets';
+    const url =
+      `${dataUrl}/v2/stocks/${encodeURIComponent(symbol)}/snapshot?feed=iex`;
+
+    const response = await fetch(url, { headers: this.alpacaHeaders() });
+    if (!response.ok) {
+      recordUpstreamError('alpaca', classifyHttpStatus(response.status));
+      return null;
+    }
+
+    const data = (await response.json()) as {
+      latestTrade?: { p?: number; t?: string };
+      latestQuote?: { bp?: number; ap?: number };
+      dailyBar?: { c?: number };
+      prevDailyBar?: { c?: number };
+    };
+
+    // Prefer the latest trade, then today's close, then yesterday's close.
+    const last =
+      data.latestTrade?.p && data.latestTrade.p > 0
+        ? data.latestTrade.p
+        : data.dailyBar?.c && data.dailyBar.c > 0
+          ? data.dailyBar.c
+          : (data.prevDailyBar?.c ?? 0);
+
+    if (!last) return null;
+
+    const prevClose = data.prevDailyBar?.c ?? last;
+    const change = last - prevClose;
+    const changePercent = prevClose ? (change / prevClose) * 100 : 0;
+
+    return {
+      symbol,
+      timestamp: data.latestTrade?.t ? new Date(data.latestTrade.t) : new Date(),
+      bid: data.latestQuote?.bp && data.latestQuote.bp > 0 ? data.latestQuote.bp : last * 0.9999,
+      ask: data.latestQuote?.ap && data.latestQuote.ap > 0 ? data.latestQuote.ap : last * 1.0001,
+      last,
+      change,
+      changePercent,
+    };
+  }
+
+  /**
+   * Fetch daily OHLCV bars from Alpaca. Free IEX feed, no daily request cap.
+   * Returns [] on any error so the caller falls through to Alpha Vantage.
+   */
+  private async fetchAlpacaPrices(symbol: string, days: number): Promise<Price[]> {
+    const dataUrl = this.config.alpacaDataUrl || 'https://data.alpaca.markets';
+    const end = new Date();
+    const start = new Date();
+    // Extra calendar days to absorb weekends + holidays so the trading-day
+    // count >= `days` whenever possible (mirrors the Polygon path).
+    const calendarDays = Math.ceil(days * 1.6);
+    start.setDate(end.getDate() - calendarDays);
+
+    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+    const url =
+      `${dataUrl}/v2/stocks/${encodeURIComponent(symbol)}/bars` +
+      `?timeframe=1Day&start=${fmt(start)}&end=${fmt(end)}` +
+      `&adjustment=all&feed=iex&sort=asc&limit=10000`;
+
+    const response = await fetch(url, { headers: this.alpacaHeaders() });
+    if (!response.ok) {
+      const impact = recordUpstreamError('alpaca', classifyHttpStatus(response.status));
+      logger.warn(
+        { symbol, status: response.status, quotaImpact: impact, guidance: BACKOFF_GUIDANCE[impact] },
+        'Alpaca HTTP non-200 for daily bars'
+      );
+      return [];
+    }
+
+    const data = (await response.json()) as {
+      bars?: Array<{ t: string; o: number; h: number; l: number; c: number; v: number }>;
+    };
+
+    const bars = data.bars ?? [];
+    if (bars.length === 0) return [];
+
+    const prices: Price[] = bars.slice(-days).map((b) => ({
+      symbol,
+      timestamp: new Date(b.t),
+      open: b.o,
+      high: b.h,
+      low: b.l,
+      close: b.c,
+      volume: b.v,
+    }));
+
+    return prices;
+  }
+
+  // ============================================================================
   // ALPHA VANTAGE INTEGRATION
   // ============================================================================
 
@@ -1082,6 +1237,11 @@ export class MarketDataProvider {
 export const marketDataProvider = new MarketDataProvider({
   polygonApiKey: process.env.POLYGON_API_KEY,
   alphaVantageApiKey: process.env.ALPHA_VANTAGE_API_KEY,
+  // Alpaca market-data failover — reuses the app-level Alpaca data credentials
+  // when present. No-op until both are set (the chain skips the provider).
+  alpacaApiKey: process.env.ALPACA_API_KEY,
+  alpacaApiSecret: process.env.ALPACA_API_SECRET,
+  alpacaDataUrl: process.env.ALPACA_DATA_URL,
   redisUrl: process.env.REDIS_URL,
   allowMockFallback: process.env.NODE_ENV !== 'production',
 });

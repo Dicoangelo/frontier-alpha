@@ -70,6 +70,18 @@ describe('recordUpstreamError / getQuotaStats', () => {
     expect(stats.providers.alphaVantage.provider_fault).toBe(1);
   });
 
+  it('tracks the alpaca failover provider independently', () => {
+    recordUpstreamError('alpaca', 'provider_fault');
+    recordUpstreamError('alpaca', 'quota_free');
+
+    const stats = getQuotaStats();
+    expect(stats.providers.alpaca.provider_fault).toBe(1);
+    expect(stats.providers.alpaca.quota_free).toBe(1);
+    // Independent from the other providers.
+    expect(stats.providers.polygon.provider_fault).toBe(0);
+    expect(stats.providers.alphaVantage.provider_fault).toBe(0);
+  });
+
   it('surfaces guidance for the dominant error class', () => {
     recordUpstreamError('polygon', 'quota_burned');
     recordUpstreamError('polygon', 'quota_burned');

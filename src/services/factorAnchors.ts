@@ -13,8 +13,8 @@
  * re-running the factor engine. This is the exact pattern the
  * `/api/v1/portfolio/factors/history` endpoint (v1.3.4) uses. The caller passes
  * already-fetched prices and the factor engine; this module makes ZERO market
- * data calls of its own, so it cannot trip the Polygon free-tier 5-req/min
- * ceiling.
+ * data calls of its own, so it adds no upstream load regardless of provider
+ * plan.
  *
  * ## Bounded token growth
  *

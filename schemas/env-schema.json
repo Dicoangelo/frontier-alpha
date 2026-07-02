@@ -40,6 +40,27 @@
       "description": "Polygon REST + WebSocket API key. EXACTLY 32 chars — v1.2.6 incident: echo|vercel env add truncated to 30 chars and silently 401'd for weeks. Always rotate via printf, not echo."
     },
     {
+      "name": "POLYGON_WS_URL",
+      "required": false,
+      "regex": "^wss://.+",
+      "sourceUrl": "https://polygon.io/docs/websocket/getting-started",
+      "lastVerified": "2026-07-02",
+      "description": "Optional Polygon WebSocket cluster override. Defaults in code to wss://delayed.polygon.io/stocks (Stocks Starter is a 15-min-delayed plan, NOT entitled to the real-time cluster wss://socket.polygon.io). Set to the real-time cluster only on a real-time plan."
+    },
+    {
+      "name": "POLYGON_ALERT_THRESHOLD",
+      "required": false,
+      "regex": "^[0-9]+$",
+      "lastVerified": "2026-07-02",
+      "description": "Consecutive failed synthetic-monitor polls before PolygonHealthAlerter fires a debounced alert (E1). Defaults to 3 in code. Auth/plan-tier (401/403) errors escalate immediately regardless."
+    },
+    {
+      "name": "HEALTH_ALERT_RECIPIENT",
+      "required": false,
+      "lastVerified": "2026-07-02",
+      "description": "Optional override for the email address PolygonHealthAlerter sends health-flip alerts to (E1). Defaults to the operator address used by the weekly digest."
+    },
+    {
       "name": "ALPHA_VANTAGE_API_KEY",
       "required": true,
       "regex": "^[A-Z0-9]{8,32}$",

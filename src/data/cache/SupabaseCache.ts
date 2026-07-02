@@ -154,6 +154,57 @@ export class SupabaseCache {
   }
 
   /**
+   * Last-resort read: return whatever rows exist for `symbol`, oldest-first,
+   * WITHOUT the coverage or freshness gates. Used only when every upstream
+   * provider has failed — serving month-old prices with a loud "stale" signal
+   * beats a hard `DataNotAvailableError` that blanks the whole dashboard.
+   * Returns null only when the table genuinely has no rows for the symbol.
+   */
+  async getStalePrices(symbol: string, days: number): Promise<Price[] | null> {
+    if (!this.enabled || !this.client) return null;
+
+    try {
+      const { data, error } = await this.client
+        .from('frontier_historical_prices')
+        .select('*')
+        .eq('symbol', symbol)
+        .order('date', { ascending: false })
+        .limit(days);
+
+      if (error) {
+        logger.warn({ err: error, symbol }, 'SupabaseCache.getStalePrices error');
+        return null;
+      }
+
+      const rows = (data ?? []) as Array<{
+        date: string;
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+        adjusted_close: number;
+        volume: number;
+      }>;
+
+      if (rows.length === 0) return null;
+
+      rows.reverse();
+      return rows.map((r) => ({
+        symbol,
+        timestamp: new Date(r.date),
+        open: r.open,
+        high: r.high,
+        low: r.low,
+        close: r.adjusted_close,
+        volume: r.volume,
+      }));
+    } catch (err) {
+      logger.warn({ err, symbol }, 'SupabaseCache.getStalePrices threw');
+      return null;
+    }
+  }
+
+  /**
    * Upsert price rows for `symbol`. Batches at 100 rows per call to keep
    * upsert payloads small. Errors are logged and swallowed.
    */

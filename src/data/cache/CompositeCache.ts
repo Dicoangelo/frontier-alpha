@@ -71,6 +71,17 @@ export class CompositeCache {
   }
 
   /**
+   * Last-resort stale read (graceful degradation). Goes straight to the
+   * durable Supabase layer — the Memory layer is per-instance and cold on
+   * serverless, so it's usually empty exactly when we need this. Ignores
+   * coverage + freshness gates; returns whatever exists. Returns null only
+   * when the durable table has no rows for the symbol.
+   */
+  async getStalePrices(symbol: string, days: number): Promise<Price[] | null> {
+    return this.supabase.getStalePrices(symbol.toUpperCase(), days);
+  }
+
+  /**
    * Persist prices to BOTH layers. Memory write is synchronous; Supabase
    * write is awaited so callers can rely on durability before returning to
    * end users (matters for the cache warmer cron).

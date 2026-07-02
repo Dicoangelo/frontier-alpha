@@ -677,12 +677,15 @@ export class MarketDataProvider {
     }
 
     return new Promise((resolve, reject) => {
-      // Polygon Stocks Starter is a 15-minute-DELAYED plan and is NOT entitled
-      // to the real-time cluster (wss://socket.polygon.io) — auth there
-      // succeeds but no trade/quote messages ever arrive, so the feed looked
-      // "connected" while silently delivering nothing. The delayed cluster
-      // (wss://delayed.polygon.io) is the entitled endpoint on Starter and
-      // streams the same delayed bars the REST snapshot returns.
+      // Polygon Stocks Starter is a 15-minute-DELAYED plan. Point the stream at
+      // the DELAYED cluster (wss://delayed.polygon.io/stocks) — Polygon's
+      // documented endpoint for delayed plans. NB (verified live 2026-07-02):
+      // auth SUCCEEDS on BOTH the delayed and the realtime cluster
+      // (wss://socket.polygon.io) with a Starter key, so a green auth is not
+      // proof of a working feed. The realtime cluster requires a realtime
+      // subscription to actually deliver data; a delayed plan must use the
+      // delayed cluster to receive the (15-min-delayed) trade/quote messages.
+      // Override via POLYGON_WS_URL only on a real-time plan.
       const wsUrl = this.config.polygonWsUrl || 'wss://delayed.polygon.io/stocks';
       logger.info({ wsUrl }, 'Connecting to Polygon.io WebSocket (delayed cluster)');
 

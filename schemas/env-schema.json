@@ -216,6 +216,14 @@
       "description": "Optional global Alpaca API secret. Pairs with ALPACA_API_KEY."
     },
     {
+      "name": "ALPACA_DATA_URL",
+      "required": false,
+      "regex": "^https?://.+",
+      "sourceUrl": "https://docs.alpaca.markets/docs/about-market-data-api",
+      "lastVerified": "2026-06-30",
+      "description": "Optional override for the Alpaca Market Data host used by MarketDataProvider's quote/history failover. Defaults to https://data.alpaca.markets."
+    },
+    {
       "name": "ALPACA_PAPER_TRADING",
       "required": false,
       "regex": "^(true|false)$",

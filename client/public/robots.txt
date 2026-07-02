@@ -1,8 +1,7 @@
 # Robots.txt for Frontier Alpha
-# https://frontier-alpha-ruby.vercel.app
+# https://frontier-alpha.metaventionsai.com
 
 User-agent: *
 Allow: /
 
-# Sitemap (if available)
-# Sitemap: https://frontier-alpha-ruby.vercel.app/sitemap.xml
+Sitemap: https://frontier-alpha.metaventionsai.com/sitemap.xml

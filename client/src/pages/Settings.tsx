@@ -115,10 +115,22 @@ export function Settings() {
   const { toastSuccess, toastError } = useToast();
   const [hasChanges, setHasChanges] = useState(false);
 
-  const { data: settingsData, isLoading } = useQuery<{ data: UserSettings }>({
+  // US-003 auth gate — /settings is Bearer-gated. An anonymous visitor (open
+  // front door, no session) must not fire it or it 401s and spams the public
+  // console. With no session we skip the fetch and render the page against the
+  // local default form state (the Profile email shows empty; nothing leaks).
+  const isReady = useAuthStore((state) => state.isReady);
+  const session = useAuthStore((state) => state.session);
+  const authReady = isReady && !!session?.access_token;
+
+  const { data: settingsData, isLoading: settingsLoading } = useQuery<{ data: UserSettings }>({
     queryKey: ['settings'],
     queryFn: () => api.get('/settings'),
+    enabled: authReady,
   });
+  // Only hold for the skeleton while a real fetch is in flight. Without a
+  // session the query is disabled (never loads), so we render immediately.
+  const isLoading = authReady && settingsLoading;
 
   const [settings, setSettings] = useState<UserSettings>({
     display_name: '',

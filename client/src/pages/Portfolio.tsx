@@ -9,6 +9,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Edit2, X, Check, Share2, DollarSign, TrendingUp, TrendingDown, BarChart3, Wallet } from 'lucide-react';
 import { api, isNetworkError, getErrorMessage } from '@/api/client';
+import { useAuthStore } from '@/stores/authStore';
+import { DEMO_HOLDINGS, DEMO_CASH, DEMO_TOTAL_VALUE } from '@/lib/demoFixtures';
 import { useCountUp } from '@/components/portfolio/PortfolioOverview';
 import { Spinner } from '@/components/shared/Spinner';
 import { SkeletonPortfolioPage } from '@/components/shared/Skeleton';
@@ -67,9 +69,18 @@ export function Portfolio() {
   const [mobileFilter, setMobileFilter] = useState<FilterKey>('all');
   const [mobileQuery, setMobileQuery] = useState('');
 
+  // US-003 auth gate — /portfolio is Bearer-gated. An anonymous visitor (open
+  // front door, no session) must not fire it or it 401s and spams the public
+  // console. With no session the query is disabled (no loading, no error) and
+  // `positions` stays empty so the page renders <EmptyPortfolio>.
+  const isReady = useAuthStore((state) => state.isReady);
+  const session = useAuthStore((state) => state.session);
+  const authReady = isReady && !!session?.access_token;
+
   const { data: portfolio, isLoading, error, refetch } = useQuery<{ data: PortfolioData }>({
     queryKey: ['portfolio'],
     queryFn: () => api.get('/portfolio'),
+    enabled: authReady,
   });
 
   const addPositionMutation = useMutation({
@@ -195,9 +206,15 @@ export function Portfolio() {
   // Pulled out BEFORE any conditional returns so the hook count stays
   // constant across renders (loading → loaded transition triggered React
   // error #310 because useMemo/useCountUp lived below an early return).
-  const positions = portfolio?.data?.positions || [];
-  const cashBalance = portfolio?.data?.cash || 0;
-  const totalValue = portfolio?.data?.totalValue || 0;
+  // Demo-mode (open front door, no session): show the shared golden-state
+  // holdings so the public Portfolio page mirrors the Dashboard preview
+  // instead of an empty state. Authed users always see their real data.
+  const isDemoView = isReady && !session;
+  const positions: Position[] = isDemoView
+    ? DEMO_HOLDINGS.map((h, i) => ({ id: `demo-${i}`, ...h }))
+    : portfolio?.data?.positions || [];
+  const cashBalance = isDemoView ? DEMO_CASH : portfolio?.data?.cash || 0;
+  const totalValue = isDemoView ? DEMO_TOTAL_VALUE : portfolio?.data?.totalValue || 0;
 
   const mobileVisible = useMemo(() => {
     const q = mobileQuery.trim();

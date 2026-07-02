@@ -40,6 +40,7 @@ import {
 } from '@/api/tax';
 import { detectDemoMode } from '@/lib/demoMode';
 import { type DataSource, EMPTY, wrapReal, wrapDemo } from '@/lib/dataSource';
+import { useAuthStore } from '@/stores/authStore';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -884,6 +885,15 @@ export function Tax() {
   const [activeTab, setActiveTab] = useState<TaxTab>('summary');
   const isDemo = detectDemoMode();
 
+  // US-003 auth gate — the /api/v1/tax/* + /portfolio reads are Bearer-gated.
+  // An anonymous visitor (open front door, no ?demo latch) must NOT fire them
+  // or they 401 and spam the public console. Live data only flows when a real
+  // session exists; otherwise the page falls to its empty / demo states below.
+  const isReady = useAuthStore((state) => state.isReady);
+  const session = useAuthStore((state) => state.session);
+  const authReady = isReady && !!session?.access_token;
+  const fetchEnabled = authReady && !isDemo;
+
   // Demo mode (?demo=true shareable link, FF-6): render banner-marked
   // fixtures. Real accounts: live data from the /api/v1/tax/* routes, which
   // reconstruct the tax tracker from the user's persisted lots + events.
@@ -891,7 +901,7 @@ export function Tax() {
     queryKey: ['portfolio'],
     queryFn: portfolioApi.getPortfolio,
     retry: false,
-    enabled: !isDemo,
+    enabled: fetchEnabled,
   });
 
   const portfolioSymbols = useMemo(
@@ -903,19 +913,19 @@ export function Tax() {
     queryKey: ['tax', 'report'],
     queryFn: () => taxApi.getReport(),
     retry: false,
-    enabled: !isDemo,
+    enabled: fetchEnabled,
   });
   const harvestQuery = useQuery({
     queryKey: ['tax', 'harvest', portfolioSymbols],
     queryFn: () => taxApi.getHarvest(portfolioSymbols),
     retry: false,
-    enabled: !isDemo,
+    enabled: fetchEnabled,
   });
   const washSalesQuery = useQuery({
     queryKey: ['tax', 'wash-sales'],
     queryFn: () => taxApi.getWashSales(),
     retry: false,
-    enabled: !isDemo,
+    enabled: fetchEnabled,
   });
 
   const report = reportQuery.data;

@@ -27,6 +27,7 @@ import {
 import { SectionErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { LineageExplorer } from '@/components/provenance/LineageExplorer';
 import { insightsApi, type InsightLedgerEntry } from '@/api/insights';
+import { useAuthStore } from '@/stores/authStore';
 
 const PAGE_SIZE = 25;
 
@@ -209,11 +210,24 @@ function EmptyHistory() {
 function HistoryBody() {
   const [page, setPage] = useState(0);
 
+  // US-003 auth gate — the insight-ledger history is Bearer-gated. An anonymous
+  // visitor (open front door, no session) must not fire it or it 401s and spams
+  // the public console. With no session we skip the fetch and render the same
+  // "No insights logged yet" empty state a fresh account sees.
+  const isReady = useAuthStore((s) => s.isReady);
+  const session = useAuthStore((s) => s.session);
+  const authReady = isReady && !!session?.access_token;
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ['insights', 'history', page],
     queryFn: () => insightsApi.getHistory({ limit: PAGE_SIZE, offset: page * PAGE_SIZE }),
     retry: false,
+    enabled: authReady,
   });
+
+  if (!authReady) {
+    return <EmptyHistory />;
+  }
 
   if (isLoading) {
     return (

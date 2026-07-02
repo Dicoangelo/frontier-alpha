@@ -19,10 +19,10 @@
  * State predicates documented there — keep that section in sync with this
  * component's branch logic.
  */
-import { Navigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { Spinner } from '@/components/shared/Spinner';
-import { detectDemoMode, clearDemoMode } from '@/lib/demoMode';
+import { clearDemoMode } from '@/lib/demoMode';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -42,18 +42,22 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // Verified-unauthed: demo mode (IDEA-FF-6) mounts the tree anyway under a
-  // persistent banner; otherwise redirect. A real session always wins.
+  // Verified-unauthed: OPEN FRONT DOOR (2026-06-23). Render the full app for
+  // every unauthenticated visitor under a persistent demo banner, instead of
+  // redirecting to /landing. Pre-revenue, discoverability beats gating — when
+  // the app was openly reachable, people actually found it and reached out.
+  // Safe to open: the only usage-metered path (the LLM explainer) stays gated
+  // behind auth + Pro (`requirePlan('pro')`), and public data reads fail to
+  // free-tier rate limits, not to a bill. The marketing page still lives at
+  // /landing; `?demo=true` remains a valid shareable entry. A real session
+  // always wins (this branch only runs when there is none).
   if (!session) {
-    if (detectDemoMode()) {
-      return (
-        <>
-          <DemoModeBanner />
-          {children}
-        </>
-      );
-    }
-    return <Navigate to="/landing" replace />;
+    return (
+      <>
+        <DemoModeBanner />
+        {children}
+      </>
+    );
   }
 
   // Verified-authed: render protected tree (and drop any stale demo latch).
@@ -74,7 +78,7 @@ function DemoModeBanner() {
       style={{ boxShadow: '0 2px 16px color-mix(in srgb, var(--color-accent) 25%, transparent)' }}
     >
       <p className="mono text-[10px] sm:text-xs tracking-[0.2em] uppercase text-theme">
-        Demo Mode — exploring without an account
+        Demo Mode: exploring without an account
       </p>
       <Link
         to="/login"

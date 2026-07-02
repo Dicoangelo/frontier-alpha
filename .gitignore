@@ -49,3 +49,6 @@ tests/visual/playwright-report/
 # Local AI context — kept on disk, never published
 CLAUDE.md
 CLAUDE-DESIGN-BRIEF.md
+
+# Supabase CLI local temp
+supabase/.temp/

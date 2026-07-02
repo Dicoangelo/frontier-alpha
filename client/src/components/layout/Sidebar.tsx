@@ -139,9 +139,13 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       </nav>
 
       <div className="p-4 border-t border-theme glass-slab">
-        <div className="p-3 rounded-sm bg-[image:var(--gradient-sovereign)] text-white animate-press animate-lift shadow-[0_4px_20px_rgba(123,44,255,0.3)] hover:brightness-110 transition-[filter] duration-200 cursor-default">
-          <p className="text-[10px] font-bold mono tracking-[0.3em] uppercase">DQ Score: 0.88</p>
-          <p className="text-[10px] mono mt-1 opacity-80">Powered by 80+ factors</p>
+        {/* DQ Score chip — status surface, not a CTA. The sovereign gradient is
+            demoted to a thin left rail + the numerals only (gradient text) so
+            the brand reads as a refined accent on calm glass, not a candy fill. */}
+        <div className="relative overflow-hidden p-3 rounded-sm glass-slab-floating border border-theme-light animate-press cursor-default before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)]">
+          <p className="mono text-[10px] font-semibold tracking-[0.3em] uppercase text-theme-muted">DQ Score</p>
+          <p className="mt-0.5 text-2xl font-semibold leading-none tabular-nums bg-[image:var(--gradient-sovereign)] bg-clip-text text-transparent">0.88</p>
+          <p className="mt-1.5 mono text-[10px] tracking-[0.15em] uppercase text-theme-muted">Powered by 80+ factors</p>
         </div>
       </div>
     </aside>

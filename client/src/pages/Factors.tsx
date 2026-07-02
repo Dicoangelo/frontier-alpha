@@ -10,6 +10,7 @@ import { Button } from '@/components/shared/Button';
 import { DataQualityBadge } from '@/components/shared/DataQualityBadge';
 import { SkeletonFactorsPage } from '@/components/shared/LoadingSkeleton';
 import { portfolioApi } from '@/api/portfolio';
+import { useAuthStore } from '@/stores/authStore';
 import { useFactorsByCategory, useRefreshFactors, FACTOR_CATEGORY_LABELS, FACTOR_CATEGORY_DESCRIPTIONS } from '@/hooks/useFactors';
 import { DataLoadError, NoFactorData, EmptyState } from '@/components/shared/EmptyState';
 import type { FactorExposureWithCategory } from '@/api/factors';
@@ -75,11 +76,21 @@ const DEMO_SYMBOLS = ['NVDA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN'];
 export function Factors() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+  // US-003 auth gate — /portfolio is Bearer-gated. An anonymous visitor (open
+  // front door, no session) must not fire it or it 401s and spams the public
+  // console. With no session the query is disabled and `symbols` falls back to
+  // the demo set; the factor hook (also session-gated) stays idle so the page
+  // settles into its no-factor-data empty state instead of erroring.
+  const isReady = useAuthStore((state) => state.isReady);
+  const session = useAuthStore((state) => state.session);
+  const authReady = isReady && !!session?.access_token;
+
   // Get portfolio to extract symbols
   const { data: portfolio, isLoading: portfolioLoading } = useQuery({
     queryKey: ['portfolio'],
     queryFn: portfolioApi.getPortfolio,
     retry: false,
+    enabled: authReady,
   });
 
   // Use portfolio symbols if available, otherwise use demo symbols

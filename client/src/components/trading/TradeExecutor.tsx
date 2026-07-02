@@ -80,7 +80,7 @@ export function TradeExecutor({
   // Success/error state
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // Get real-time quote for the symbol
+  // Get the latest (15-minute delayed) quote for the symbol
   const { data: quote } = useQuote(symbol);
 
   // Update default symbol when prop changes

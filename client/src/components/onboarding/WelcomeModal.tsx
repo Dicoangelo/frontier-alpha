@@ -13,7 +13,7 @@ const features = [
   {
     icon: TrendingUp,
     title: 'Factor Analysis',
-    description: '80+ institutional-grade factors analyzed in real-time',
+    description: '80+ institutional-grade factors, analyzed on every refresh',
   },
   {
     icon: BarChart2,

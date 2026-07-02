@@ -16,6 +16,7 @@ import { MockDataBanner } from '@/components/shared/MockDataBanner';
 import { toast } from '@/components/shared/Toast';
 import { api } from '@/api/client';
 import { useEmailDeliveryStatus } from '@/hooks/useIntegrationsHealth';
+import { useAuthStore } from '@/stores/authStore';
 import type { RiskAlert } from '@/types';
 
 interface FactorExposure {
@@ -43,6 +44,15 @@ export function Alerts() {
   const [usingDemoFactors, setUsingDemoFactors] = useState(false);
   const emailStatus = useEmailDeliveryStatus();
   const emailDegraded = emailStatus === 'degraded';
+
+  // US-003 auth gate — /alerts + /portfolio + /portfolio/factors are
+  // Bearer-gated. An anonymous visitor (open front door, no session) must not
+  // fire them or they 401 and spam the public console. With no session we
+  // skip the fetch and fall straight to the "All Clear" / "Awaiting Positions"
+  // empty states below.
+  const isReady = useAuthStore((s) => s.isReady);
+  const session = useAuthStore((s) => s.session);
+  const authReady = isReady && !!session?.access_token;
 
   const loadAlerts = useCallback(async () => {
     setIsLoading(true);
@@ -121,9 +131,15 @@ export function Alerts() {
   }, []);
 
   useEffect(() => {
+    // No session (demo / open front door): don't fire Bearer-gated reads.
+    // Drop the loading skeleton so the empty states render immediately.
+    if (!authReady) {
+      setIsLoading(false);
+      return;
+    }
     loadAlerts();
     loadFactorExposures();
-  }, [loadAlerts, loadFactorExposures]);
+  }, [authReady, loadAlerts, loadFactorExposures]);
 
   // Handle new alerts from factor drift monitor
   const handleFactorDriftAlerts = (newAlerts: Array<{

@@ -10,12 +10,18 @@
  *
  * Counter telemetry (`hitCount`, `missCount`, `staleCount`) follows the
  * same contract as `MemoryCache<T>`:
- *   - `hitCount` — successful read with sufficient row coverage
- *   - `missCount` — no row OR insufficient coverage
- *   - `staleCount` — reserved; this layer has no TTL today (rows are
- *     persisted indefinitely; staleness is enforced by the upper Memory
- *     layer in CompositeCache). Kept on the interface so US-008 telemetry
- *     can roll it up uniformly.
+ *   - `hitCount` — successful read with sufficient row coverage AND a newest
+ *     bar inside the staleness window
+ *   - `missCount` — no row OR insufficient coverage OR stale
+ *   - `staleCount` — newest cached bar older than `maxStalenessMs`. This
+ *     layer persists rows indefinitely (no row-level TTL), so without a
+ *     freshness gate it serves stale prices forever once poisoned — the
+ *     Memory layer that was meant to enforce freshness is per-instance and
+ *     cold on serverless, so it never gates production reads. The gate here
+ *     forces a miss → upstream refetch → write-through, self-healing the
+ *     cache. (Root-caused 2026-06-23: production froze at 15-month-old
+ *     prices because ascending+limit returned the OLDEST rows and nothing
+ *     ever expired them.)
  *
  * Failure mode:
  *   - All Supabase errors are swallowed and logged. The caller receives a
@@ -38,14 +44,24 @@ export interface SupabaseCacheOptions {
   client?: typeof supabaseAdmin;
   /** Disable cache entirely (used when service key isn't wired). */
   enabled?: boolean;
+  /**
+   * Freshness window in milliseconds. A read whose newest bar is older than
+   * this is treated as a miss so the caller refetches from upstream. Set to
+   * 0 to disable the gate (e.g. in tests with fixed historical fixtures).
+   * Default 5 days — wide enough to cover normal Fri→Mon/holiday weekends
+   * for daily bars, tight enough to catch real staleness.
+   */
+  maxStalenessMs?: number;
 }
 
 const DEFAULT_COVERAGE = 0.9;
+const DEFAULT_MAX_STALENESS_MS = 5 * 24 * 60 * 60 * 1000; // 5 days
 
 export class SupabaseCache {
   private client: typeof supabaseAdmin | null;
   private coverage: number;
   private enabled: boolean;
+  private maxStalenessMs: number;
 
   hitCount = 0;
   missCount = 0;
@@ -57,6 +73,7 @@ export class SupabaseCache {
     this.enabled = opts.enabled ?? Boolean(process.env.SUPABASE_SERVICE_KEY);
     this.client = opts.client ?? (this.enabled ? supabaseAdmin : null);
     this.coverage = opts.coverage ?? DEFAULT_COVERAGE;
+    this.maxStalenessMs = opts.maxStalenessMs ?? DEFAULT_MAX_STALENESS_MS;
   }
 
   /**
@@ -71,11 +88,15 @@ export class SupabaseCache {
     }
 
     try {
+      // Fetch the MOST RECENT `days` rows (descending), then reverse below to
+      // the oldest-first order downstream consumers expect. Ascending+limit
+      // returns the OLDEST rows in the table — the bug that froze production
+      // at the dawn of the cached window once the table held > `days` rows.
       const { data, error } = await this.client
         .from('frontier_historical_prices')
         .select('*')
         .eq('symbol', symbol)
-        .order('date', { ascending: true })
+        .order('date', { ascending: false })
         .limit(days);
 
       if (error) {
@@ -99,7 +120,21 @@ export class SupabaseCache {
         return null;
       }
 
+      // Freshness gate: rows are newest-first, so rows[0] is the latest bar.
+      // If it predates the staleness window, treat as a miss so the caller
+      // refetches from upstream and write-through replaces the stale window.
+      if (this.maxStalenessMs > 0) {
+        const newest = new Date(rows[0].date).getTime();
+        if (Number.isFinite(newest) && Date.now() - newest > this.maxStalenessMs) {
+          this.staleCount += 1;
+          this.missCount += 1;
+          return null;
+        }
+      }
+
       this.hitCount += 1;
+      // Reverse to oldest-first (chronological) for factor math + charting.
+      rows.reverse();
       return rows.map((r) => ({
         symbol,
         timestamp: new Date(r.date),

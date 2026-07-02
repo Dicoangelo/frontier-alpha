@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Calendar, AlertCircle } from 'lucide-react';
 import { portfolioApi } from '@/api/portfolio';
+import { useAuthStore } from '@/stores/authStore';
 import { EarningsCalendar } from '@/components/earnings/EarningsCalendar';
 import { EarningsForecast } from '@/components/earnings/EarningsForecast';
 import { EarningsHeatmap } from '@/components/earnings/EarningsHeatmap';
@@ -20,11 +21,20 @@ export function Earnings() {
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
   const [daysAhead, setDaysAhead] = useState(30);
 
+  // US-003 auth gate — /portfolio is Bearer-gated. An anonymous visitor (open
+  // front door, no session) must not fire it or it 401s and spams the public
+  // console. With no session the query is disabled, `symbols` stays empty, and
+  // the page settles into its "No positions to track" empty state.
+  const isReady = useAuthStore((state) => state.isReady);
+  const session = useAuthStore((state) => state.session);
+  const authReady = isReady && !!session?.access_token;
+
   // Get portfolio to extract symbols
   const { data: portfolio, isLoading: portfolioLoading } = useQuery({
     queryKey: ['portfolio'],
     queryFn: portfolioApi.getPortfolio,
     retry: false,
+    enabled: authReady,
   });
 
   // Use portfolio symbols only — empty array surfaces the empty-state

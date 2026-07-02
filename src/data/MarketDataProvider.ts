@@ -769,7 +769,13 @@ export class MarketDataProvider {
   // ============================================================================
 
   private async fetchPolygonQuote(symbol: string): Promise<Quote | null> {
-    const url = `https://api.polygon.io/v2/last/trade/${symbol}?apiKey=${this.config.polygonApiKey}`;
+    // Polygon Stocks Starter is 15-min delayed and is NOT entitled to the
+    // real-time `/v2/last/trade` endpoint (it 403s). The snapshot endpoint is
+    // entitled on Starter and returns the delayed last price plus today's
+    // change/changePercent in a single call.
+    const url =
+      `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers/` +
+      `${encodeURIComponent(symbol)}?apiKey=${this.config.polygonApiKey}`;
 
     const response = await fetch(url);
     if (!response.ok) {
@@ -777,19 +783,44 @@ export class MarketDataProvider {
       return null;
     }
 
-    const data = await response.json() as { results?: { t: number; p: number } };
-    const trade = data.results;
+    const data = (await response.json()) as {
+      status?: string;
+      ticker?: {
+        todaysChange?: number;
+        todaysChangePerc?: number;
+        updated?: number; // unix nanoseconds
+        day?: { c?: number };
+        min?: { c?: number };
+        prevDay?: { c?: number };
+      };
+    };
 
-    if (!trade) return null;
+    const t = data.ticker;
+    if (!t) return null;
+
+    // Prefer the freshest delayed price available: intraday minute close, then
+    // the current day close, then the previous day close as a floor. (The
+    // real-time lastTrade field is absent on the delayed Starter plan.)
+    const last =
+      t.min?.c && t.min.c > 0
+        ? t.min.c
+        : t.day?.c && t.day.c > 0
+          ? t.day.c
+          : (t.prevDay?.c ?? 0);
+
+    if (!last) return null;
+
+    // `updated` is unix nanoseconds; convert to ms. Fall back to now if absent.
+    const timestamp = t.updated ? new Date(Math.floor(t.updated / 1e6)) : new Date();
 
     return {
       symbol,
-      timestamp: new Date(trade.t),
-      bid: trade.p * 0.9999,  // Approximate
-      ask: trade.p * 1.0001,
-      last: trade.p,
-      change: 0,
-      changePercent: 0,
+      timestamp,
+      bid: last * 0.9999, // Approximate (no real-time bid/ask on delayed plan)
+      ask: last * 1.0001,
+      last,
+      change: t.todaysChange ?? 0,
+      changePercent: t.todaysChangePerc ?? 0,
     };
   }
 

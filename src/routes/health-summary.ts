@@ -24,6 +24,8 @@ import type {
 } from 'fastify';
 import { errorCounter } from '../observability/ErrorCounter.js';
 import { logger } from '../observability/logger.js';
+import { getQuotaStats } from '../data/QuotaClassifier.js';
+import { getCacheTelemetry } from '../data/cache/index.js';
 import type {
   APIResponse,
   IntegrationHealthEntry,
@@ -182,8 +184,17 @@ export async function healthSummaryRoutes(
       }
     }
 
-    // ── Cache hit ratio (placeholder until US-006) ────────────────────────
-    const cacheHitRatio: number | null = null;
+    // ── Cache hit ratio (US-006 — real telemetry) ────────────────────────
+    // CompositeCache rolls up memory + supabase hits/misses. Ratio is
+    // hits / (hits + misses); null when nothing has been read yet so the
+    // template renders "n/a" rather than a misleading 0%.
+    const cacheTelemetry = getCacheTelemetry();
+    const cacheReads = cacheTelemetry.total.hits + cacheTelemetry.total.misses;
+    const cacheHitRatio: number | null =
+      cacheReads > 0 ? cacheTelemetry.total.hits / cacheReads : null;
+
+    // ── Provider quota + error-kind stats (IDEA-CIN-5) ────────────────────
+    const quota = getQuotaStats();
 
     // ── Deploy id ─────────────────────────────────────────────────────────
     const deployId = resolveDeployId();
@@ -218,6 +229,7 @@ export async function healthSummaryRoutes(
         badEntries,
       },
       cacheHitRatio,
+      quota,
       deployId,
       sentryConfigured,
       errorsEndpointUrl,

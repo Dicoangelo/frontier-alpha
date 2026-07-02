@@ -731,27 +731,21 @@ async function checkDatabase(): Promise<{ status: 'ok' | 'error'; message?: stri
 }
 
 async function checkExternalApis(): Promise<{ status: 'ok' | 'error'; message?: string }> {
-  const polygonKey = process.env.POLYGON_API_KEY;
-
-  if (!polygonKey) {
-    return { status: 'error', message: 'Polygon API not configured' };
+  // E4: delegate to probePolygon() so the 429 semantics stay CONSISTENT with
+  // the /api/v1/health/integrations path. Previously this treated HTTP 429 as
+  // `{ status: 'ok', message: 'Rate limited (normal)' }` while probePolygon
+  // reported 429 as `degraded`. Now that Polygon Starter is unlimited, a 429 is
+  // a real signal (something is wrong), so it must NOT read as healthy here.
+  // probePolygon maps: live → ok; degraded/offline (incl. 429, missing key,
+  // 5xx, non-OK body) → error, preserving the reason for the deep health check.
+  const result = await probePolygon();
+  if (result.status === 'live') {
+    return { status: 'ok' };
   }
-
-  try {
-    const response = await fetch(
-      `https://api.polygon.io/v2/aggs/ticker/AAPL/prev?adjusted=true&apiKey=${polygonKey}`
-    );
-
-    if (response.ok) {
-      return { status: 'ok' };
-    }
-    if (response.status === 429) {
-      return { status: 'ok', message: 'Rate limited (normal)' };
-    }
-    return { status: 'error', message: `HTTP ${response.status}` };
-  } catch {
-    return { status: 'error', message: 'Connection failed' };
-  }
+  return {
+    status: 'error',
+    message: result.reason ?? result.lastError ?? `polygon ${result.status}`,
+  };
 }
 
 export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext) {

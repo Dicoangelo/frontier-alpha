@@ -143,9 +143,16 @@ export class EarningsOracle {
   }
 
   /**
-   * Fetch historical daily prices from Polygon.io
+   * Fetch historical daily prices from Polygon.io.
+   *
+   * Defaults to 5 years — the full window the Polygon Stocks Starter plan is
+   * entitled to (the free tier was ~2yr). A wider window strictly improves the
+   * earnings-reaction stats: more historical earnings dates get matched price
+   * data, so beat-rate / expected-move / volatility-trend are computed off more
+   * samples. `buildEarningsPattern` folds prices against earnings dates, so
+   * extra history only adds coverage, never skews a fixed-size window.
    */
-  async fetchHistoricalPrices(symbol: string, years: number = 2): Promise<DailyPrice[]> {
+  async fetchHistoricalPrices(symbol: string, years: number = 5): Promise<DailyPrice[]> {
     // Check cache first
     const cached = this.priceCache.get(symbol);
     if (cached && cached.length > 0) {

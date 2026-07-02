@@ -32,11 +32,14 @@ import { MarketDataProvider } from './MarketDataProvider.js';
 export const DEV_USER_ID = '3ea07211-a7a6-43cd-ae10-0dc112d03ce5';
 
 /**
- * Max concurrent upstream Polygon calls in flight. Polygon free tier is
- * 5 req/min — 4 leaves a 1-req cushion for synchronous user traffic. Any
- * higher and a burst from the warmer can starve a paying user.
+ * Max concurrent upstream calls in flight from the warmer. This is now a
+ * FAIRNESS bound, not a rate cap: Polygon Stocks Starter has no per-minute
+ * call ceiling (the old value of 4 dated from the free tier's 5-req/min
+ * limit). We keep a bound so a warmer burst doesn't monopolize the event
+ * loop / socket pool ahead of synchronous user traffic, but it can be higher
+ * now. (B2 will further reduce fan-out via Polygon grouped-daily.)
  */
-const MAX_CONCURRENT_UPSTREAM = 4;
+const MAX_CONCURRENT_UPSTREAM = 8;
 
 /**
  * Hand-rolled FIFO concurrency limiter. We avoid the `p-queue` dependency

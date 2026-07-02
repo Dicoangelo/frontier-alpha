@@ -2,12 +2,21 @@
  * FRONTIER ALPHA - Market Data Provider
  *
  * Production-grade market data integration:
- * - Polygon.io: Real-time quotes via WebSocket streaming (<20ms latency)
+ * - Polygon.io: streaming (15-minute delayed) quotes via WebSocket + REST
+ * - Alpaca: provider-independent failover (free IEX delayed feed)
  * - Alpha Vantage: Historical prices (5yr), fundamentals, earnings
  * - Ken French Data Library: Factor returns (30+ years)
  * - Redis: 5-minute quote cache layer
  *
- * NO MOCK DATA IN PRODUCTION - All data from real APIs or throws errors
+ * Reliability posture (harden/data-provider-cdf):
+ * - fetchWithRetry: bounded retry + jittered backoff on transient upstream
+ *   failures (429/5xx/network) before failing over to the next provider.
+ * - CircuitBreaker: per-provider fast-fail so a down/rate-limited provider is
+ *   skipped for a cooldown instead of hammered on every request.
+ * - Graceful degradation: when every provider fails, serve last-resort stale
+ *   cache rows instead of throwing (historical path).
+ *
+ * NO MOCK DATA IN PRODUCTION - All data from real APIs, stale cache, or throws.
  */
 
 import type { Price, Quote, Asset } from '../types/index.js';
@@ -15,11 +24,13 @@ import { supabaseAdmin } from '../lib/supabase.js';
 import { logger } from '../lib/logger.js';
 import { marketDataCache, type CompositeCache } from './cache/index.js';
 import {
-  classifyHttpStatus,
   classifyErrorBody,
   recordUpstreamError,
+  recordProviderError,
+  isAlertableErrorKind,
   BACKOFF_GUIDANCE,
 } from './QuotaClassifier.js';
+import { fetchWithRetry, getBreaker } from './resilience.js';
 import WebSocket from 'ws';
 import Redis, { type Redis as RedisClient } from 'ioredis';
 
@@ -29,6 +40,13 @@ import Redis, { type Redis as RedisClient } from 'ioredis';
 
 export interface DataProviderConfig {
   polygonApiKey?: string;
+  /**
+   * Polygon WebSocket cluster URL. Defaults to the DELAYED cluster
+   * (wss://delayed.polygon.io/stocks), which is what the Stocks Starter plan
+   * is entitled to. Override to wss://socket.polygon.io/stocks only on a
+   * real-time plan.
+   */
+  polygonWsUrl?: string;
   alphaVantageApiKey?: string;
   // Alpaca Market Data API — provider-independent failover for quotes + daily
   // bars. Polygon.io was acquired by Massive (2026-06); if a Massive plan
@@ -87,7 +105,7 @@ export class MarketDataProvider {
   /**
    * In-flight promise dedup — when N parallel callers (e.g. dashboard
    * sparklines) ask for the same symbol's history simultaneously, only one
-   * upstream Polygon/AV call goes out. Saves the free-tier rate limit and
+   * upstream Polygon/AV call goes out. Cuts redundant upstream load and
    * eliminates "5 of 5 symbols 502'd in parallel" UX on first paint.
    *
    * NOTE: kept separate from the cache layer because request coalescing is
@@ -95,6 +113,13 @@ export class MarketDataProvider {
    * need to wait on the SAME upstream fetch; that's not what a cache does.
    */
   private inflightHistoricalPrices: Map<string, Promise<Price[]>> = new Map();
+  /**
+   * In-flight quote dedup (D3). Mirrors `inflightHistoricalPrices` for the
+   * quote path — parallel callers asking for the same symbol on a cache miss
+   * (e.g. the dashboard header + a widget) coalesce onto one upstream fetch
+   * instead of each hitting Polygon independently.
+   */
+  private inflightQuotes: Map<string, Promise<Quote | null>> = new Map();
   private quoteCache: Map<string, { quote: Quote; timestamp: number }> = new Map();
   private useSupabaseCache: boolean = !!process.env.SUPABASE_SERVICE_KEY;
 
@@ -205,59 +230,94 @@ export class MarketDataProvider {
       }
     }
 
-    // 4. Fetch from Polygon.io (primary real-time source)
+    // 4. Cache miss — fetch upstream, coalescing concurrent callers (D3) so a
+    //    dashboard-wide miss fires one upstream request per symbol, not N.
+    const existing = this.inflightQuotes.get(upperSymbol);
+    if (existing) return existing;
+
+    const fetcher = this.doFetchQuoteUpstream(upperSymbol, now);
+    this.inflightQuotes.set(upperSymbol, fetcher);
+    try {
+      return await fetcher;
+    } finally {
+      this.inflightQuotes.delete(upperSymbol);
+    }
+  }
+
+  /**
+   * Upstream quote chain: Polygon -> Alpaca -> Alpha Vantage, each guarded by
+   * a per-provider circuit breaker (skip a provider whose breaker is open
+   * instead of hammering it). Throws DataNotAvailableError in production when
+   * every provider is exhausted; falls back to a mock quote only in dev.
+   */
+  private async doFetchQuoteUpstream(upperSymbol: string, now: number): Promise<Quote | null> {
+    const persist = async (quote: Quote): Promise<Quote> => {
+      this.quoteCache.set(upperSymbol, { quote, timestamp: now });
+      await Promise.all([
+        this.cacheQuoteToRedis(quote),
+        this.cacheQuoteToSupabase(quote),
+      ]);
+      return quote;
+    };
+
+    // 4a. Polygon.io (primary delayed source)
     if (this.config.polygonApiKey) {
-      try {
-        const quote = await this.fetchPolygonQuote(upperSymbol);
-        if (quote) {
-          this.quoteCache.set(upperSymbol, { quote, timestamp: now });
-          await Promise.all([
-            this.cacheQuoteToRedis(quote),
-            this.cacheQuoteToSupabase(quote),
-          ]);
-          return quote;
+      const breaker = getBreaker('polygon');
+      if (breaker.canAttempt()) {
+        try {
+          const quote = await this.fetchPolygonQuote(upperSymbol);
+          if (quote) {
+            breaker.recordSuccess();
+            return await persist(quote);
+          }
+          breaker.recordFailure();
+        } catch (e) {
+          breaker.recordFailure();
+          logger.error({ err: e, symbol: upperSymbol }, 'Polygon quote error');
         }
-      } catch (e) {
-        logger.error({ err: e, symbol: upperSymbol }, 'Polygon quote error');
+      } else {
+        logger.warn({ symbol: upperSymbol }, 'Polygon breaker open — skipping to failover');
       }
     }
 
-    // 5. Fetch from Alpaca (provider-independent failover — survives a Massive
-    //    cutoff of the Polygon key). Free IEX feed, real delayed quotes.
+    // 4b. Alpaca (provider-independent failover — survives a Massive cutoff of
+    //     the Polygon key). Free IEX feed, real delayed quotes.
     if (this.config.alpacaApiKey && this.config.alpacaApiSecret) {
-      try {
-        const quote = await this.fetchAlpacaQuote(upperSymbol);
-        if (quote) {
-          this.quoteCache.set(upperSymbol, { quote, timestamp: now });
-          await Promise.all([
-            this.cacheQuoteToRedis(quote),
-            this.cacheQuoteToSupabase(quote),
-          ]);
-          return quote;
+      const breaker = getBreaker('alpaca');
+      if (breaker.canAttempt()) {
+        try {
+          const quote = await this.fetchAlpacaQuote(upperSymbol);
+          if (quote) {
+            breaker.recordSuccess();
+            return await persist(quote);
+          }
+          breaker.recordFailure();
+        } catch (e) {
+          breaker.recordFailure();
+          logger.error({ err: e, symbol: upperSymbol }, 'Alpaca quote error');
         }
-      } catch (e) {
-        logger.error({ err: e, symbol: upperSymbol }, 'Alpaca quote error');
       }
     }
 
-    // 6. Fetch from Alpha Vantage (backup for real quotes)
+    // 4c. Alpha Vantage (backup)
     if (this.config.alphaVantageApiKey) {
-      try {
-        const quote = await this.fetchAlphaVantageQuote(upperSymbol);
-        if (quote) {
-          this.quoteCache.set(upperSymbol, { quote, timestamp: now });
-          await Promise.all([
-            this.cacheQuoteToRedis(quote),
-            this.cacheQuoteToSupabase(quote),
-          ]);
-          return quote;
+      const breaker = getBreaker('alphaVantage');
+      if (breaker.canAttempt()) {
+        try {
+          const quote = await this.fetchAlphaVantageQuote(upperSymbol);
+          if (quote) {
+            breaker.recordSuccess();
+            return await persist(quote);
+          }
+          breaker.recordFailure();
+        } catch (e) {
+          breaker.recordFailure();
+          logger.error({ err: e, symbol: upperSymbol }, 'Alpha Vantage quote error');
         }
-      } catch (e) {
-        logger.error({ err: e, symbol: upperSymbol }, 'Alpha Vantage quote error');
       }
     }
 
-    // 7. PRODUCTION: Throw error, no mock fallback
+    // 5. PRODUCTION: Throw error, no mock fallback
     if (!this.config.allowMockFallback) {
       throw new DataNotAvailableError(
         `Unable to fetch quote for ${upperSymbol}: No data providers available or all failed. ` +
@@ -265,7 +325,7 @@ export class MarketDataProvider {
       );
     }
 
-    // 8. DEVELOPMENT ONLY: Generate mock quote
+    // 6. DEVELOPMENT ONLY: Generate mock quote
     logger.warn({ symbol: upperSymbol }, 'Using mock quote (dev fallback)');
     return this.generateMockQuote(upperSymbol);
   }
@@ -315,8 +375,11 @@ export class MarketDataProvider {
   private async fetchAlphaVantageQuote(symbol: string): Promise<Quote | null> {
     const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${this.config.alphaVantageApiKey}`;
 
-    const response = await fetch(url);
-    if (!response.ok) return null;
+    const response = await fetchWithRetry(url, undefined);
+    if (!response.ok) {
+      recordProviderError('alphaVantage', response.status);
+      return null;
+    }
 
     const data = await response.json();
     const globalQuote = data['Global Quote'];
@@ -382,14 +445,22 @@ export class MarketDataProvider {
     // hammer Polygon first to preserve the AV quota. Successful upstream
     // fetches write through both cache layers via `setPrices()`.
     if (this.config.polygonApiKey) {
-      try {
-        const prices = await this.fetchPolygonPrices(upperSymbol, days);
-        if (prices.length > 0) {
-          await this.historicalPriceCache.setPrices(upperSymbol, prices, days);
-          return prices;
+      const breaker = getBreaker('polygon');
+      if (breaker.canAttempt()) {
+        try {
+          const prices = await this.fetchPolygonPrices(upperSymbol, days);
+          if (prices.length > 0) {
+            breaker.recordSuccess();
+            await this.historicalPriceCache.setPrices(upperSymbol, prices, days);
+            return prices;
+          }
+          breaker.recordFailure();
+        } catch (e) {
+          breaker.recordFailure();
+          logger.warn({ err: e, symbol: upperSymbol }, 'Polygon historical price error');
         }
-      } catch (e) {
-        logger.warn({ err: e, symbol: upperSymbol }, 'Polygon historical price error');
+      } else {
+        logger.warn({ symbol: upperSymbol }, 'Polygon breaker open — skipping to failover');
       }
     }
 
@@ -397,34 +468,63 @@ export class MarketDataProvider {
     // Free IEX feed has no daily request cap, so it absorbs a Polygon/Massive
     // outage far better than Alpha Vantage's 25 req/day.
     if (this.config.alpacaApiKey && this.config.alpacaApiSecret) {
-      try {
-        const prices = await this.fetchAlpacaPrices(upperSymbol, days);
-        if (prices.length > 0) {
-          await this.historicalPriceCache.setPrices(upperSymbol, prices, days);
-          return prices;
+      const breaker = getBreaker('alpaca');
+      if (breaker.canAttempt()) {
+        try {
+          const prices = await this.fetchAlpacaPrices(upperSymbol, days);
+          if (prices.length > 0) {
+            breaker.recordSuccess();
+            await this.historicalPriceCache.setPrices(upperSymbol, prices, days);
+            return prices;
+          }
+          breaker.recordFailure();
+        } catch (e) {
+          breaker.recordFailure();
+          logger.warn({ err: e, symbol: upperSymbol }, 'Alpaca historical price error');
         }
-      } catch (e) {
-        logger.warn({ err: e, symbol: upperSymbol }, 'Alpaca historical price error');
       }
     }
 
     if (this.config.alphaVantageApiKey) {
-      try {
-        const prices = await this.fetchAlphaVantagePrices(upperSymbol, days);
-        if (prices.length > 0) {
-          await this.historicalPriceCache.setPrices(upperSymbol, prices, days);
-          return prices;
+      const breaker = getBreaker('alphaVantage');
+      if (breaker.canAttempt()) {
+        try {
+          const prices = await this.fetchAlphaVantagePrices(upperSymbol, days);
+          if (prices.length > 0) {
+            breaker.recordSuccess();
+            await this.historicalPriceCache.setPrices(upperSymbol, prices, days);
+            return prices;
+          }
+          breaker.recordFailure();
+        } catch (e) {
+          breaker.recordFailure();
+          logger.error({ err: e, symbol: upperSymbol }, 'Alpha Vantage price error');
         }
-      } catch (e) {
-        logger.error({ err: e, symbol: upperSymbol }, 'Alpha Vantage price error');
       }
+    }
+
+    // Graceful degradation (C2): every provider failed (or every breaker is
+    // open). Before hard-failing, serve last-resort stale cache rows — a
+    // month-old price series with a loud warning beats a blank dashboard.
+    const stale = await this.historicalPriceCache.getStalePrices(upperSymbol, days);
+    if (stale && stale.length > 0) {
+      const newest = stale[stale.length - 1]?.timestamp;
+      logger.warn(
+        {
+          symbol: upperSymbol,
+          rows: stale.length,
+          newestBar: newest instanceof Date ? newest.toISOString() : null,
+        },
+        'All upstream providers failed — serving STALE cached prices (graceful degradation)'
+      );
+      return stale;
     }
 
     // PRODUCTION: Throw error, no mock fallback
     if (!this.config.allowMockFallback) {
       throw new DataNotAvailableError(
-        `Unable to fetch historical prices for ${upperSymbol}: Alpha Vantage API key required. ` +
-        `Ensure ALPHA_VANTAGE_API_KEY is set.`
+        `Unable to fetch historical prices for ${upperSymbol}: all providers failed and no ` +
+        `cached data is available. Ensure POLYGON_API_KEY / ALPACA_API_KEY / ALPHA_VANTAGE_API_KEY are set.`
       );
     }
 
@@ -577,8 +677,14 @@ export class MarketDataProvider {
     }
 
     return new Promise((resolve, reject) => {
-      const wsUrl = 'wss://socket.polygon.io/stocks';
-      logger.info('Connecting to Polygon.io WebSocket');
+      // Polygon Stocks Starter is a 15-minute-DELAYED plan and is NOT entitled
+      // to the real-time cluster (wss://socket.polygon.io) — auth there
+      // succeeds but no trade/quote messages ever arrive, so the feed looked
+      // "connected" while silently delivering nothing. The delayed cluster
+      // (wss://delayed.polygon.io) is the entitled endpoint on Starter and
+      // streams the same delayed bars the REST snapshot returns.
+      const wsUrl = this.config.polygonWsUrl || 'wss://delayed.polygon.io/stocks';
+      logger.info({ wsUrl }, 'Connecting to Polygon.io WebSocket (delayed cluster)');
 
       this.polygonWs = new WebSocket(wsUrl);
 
@@ -818,9 +924,12 @@ export class MarketDataProvider {
       `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers/` +
       `${encodeURIComponent(symbol)}?apiKey=${this.config.polygonApiKey}`;
 
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url, undefined);
     if (!response.ok) {
-      recordUpstreamError('polygon', classifyHttpStatus(response.status));
+      const { kind } = recordProviderError('polygon', response.status);
+      if (isAlertableErrorKind(kind)) {
+        logger.error({ symbol, status: response.status, kind }, 'Polygon quote auth/plan-tier failure');
+      }
       return null;
     }
 
@@ -892,9 +1001,12 @@ export class MarketDataProvider {
     const url =
       `${dataUrl}/v2/stocks/${encodeURIComponent(symbol)}/snapshot?feed=iex`;
 
-    const response = await fetch(url, { headers: this.alpacaHeaders() });
+    const response = await fetchWithRetry(url, { headers: this.alpacaHeaders() });
     if (!response.ok) {
-      recordUpstreamError('alpaca', classifyHttpStatus(response.status));
+      const { kind } = recordProviderError('alpaca', response.status);
+      if (isAlertableErrorKind(kind)) {
+        logger.error({ symbol, status: response.status, kind }, 'Alpaca quote auth/plan-tier failure');
+      }
       return null;
     }
 
@@ -949,11 +1061,11 @@ export class MarketDataProvider {
       `?timeframe=1Day&start=${fmt(start)}&end=${fmt(end)}` +
       `&adjustment=all&feed=iex&sort=asc&limit=10000`;
 
-    const response = await fetch(url, { headers: this.alpacaHeaders() });
+    const response = await fetchWithRetry(url, { headers: this.alpacaHeaders() });
     if (!response.ok) {
-      const impact = recordUpstreamError('alpaca', classifyHttpStatus(response.status));
+      const { impact, kind } = recordProviderError('alpaca', response.status);
       logger.warn(
-        { symbol, status: response.status, quotaImpact: impact, guidance: BACKOFF_GUIDANCE[impact] },
+        { symbol, status: response.status, quotaImpact: impact, kind, guidance: BACKOFF_GUIDANCE[impact] },
         'Alpaca HTTP non-200 for daily bars'
       );
       return [];
@@ -984,11 +1096,12 @@ export class MarketDataProvider {
   // ============================================================================
 
   /**
-   * Polygon REST historical aggregates — preferred path because the free tier
-   * is 5 req/min (vs Alpha Vantage's 25 req/day). The Polygon `aggs` endpoint
-   * returns daily OHLCV with one HTTP call per symbol.
+   * Polygon REST historical aggregates — preferred path. On the Stocks Starter
+   * plan Polygon has no per-minute call ceiling (unlike Alpha Vantage's
+   * 25 req/day free cap), so it's the primary and highest-volume source. The
+   * `aggs` endpoint returns daily OHLCV with one HTTP call per symbol.
    *
-   * Returns [] on any error so the caller falls through to Alpha Vantage.
+   * Returns [] on any error so the caller falls through to Alpaca / Alpha Vantage.
    */
   private async fetchPolygonPrices(symbol: string, days: number): Promise<Price[]> {
     const end = new Date();
@@ -1004,11 +1117,11 @@ export class MarketDataProvider {
       `/range/1/day/${fmt(start)}/${fmt(end)}` +
       `?adjusted=true&sort=asc&limit=5000&apiKey=${this.config.polygonApiKey}`;
 
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url, undefined);
     if (!response.ok) {
-      const impact = recordUpstreamError('polygon', classifyHttpStatus(response.status));
+      const { impact, kind } = recordProviderError('polygon', response.status);
       logger.warn(
-        { symbol, status: response.status, quotaImpact: impact, guidance: BACKOFF_GUIDANCE[impact] },
+        { symbol, status: response.status, quotaImpact: impact, kind, guidance: BACKOFF_GUIDANCE[impact] },
         'Polygon HTTP non-200 for historical aggregates'
       );
       return [];
@@ -1058,11 +1171,11 @@ export class MarketDataProvider {
     const outputsize = days > 100 ? 'full' : 'compact';
     const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&outputsize=${outputsize}&apikey=${this.config.alphaVantageApiKey}`;
 
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url, undefined);
     if (!response.ok) {
-      const impact = recordUpstreamError('alphaVantage', classifyHttpStatus(response.status));
+      const { impact, kind } = recordProviderError('alphaVantage', response.status);
       logger.warn(
-        { symbol, status: response.status, quotaImpact: impact, guidance: BACKOFF_GUIDANCE[impact] },
+        { symbol, status: response.status, quotaImpact: impact, kind, guidance: BACKOFF_GUIDANCE[impact] },
         'Alpha Vantage HTTP non-200'
       );
       return [];
@@ -1236,6 +1349,9 @@ export class MarketDataProvider {
 // Default export with environment configuration
 export const marketDataProvider = new MarketDataProvider({
   polygonApiKey: process.env.POLYGON_API_KEY,
+  // Delayed cluster by default (Starter entitlement); override via env only on
+  // a real-time Polygon plan.
+  polygonWsUrl: process.env.POLYGON_WS_URL,
   alphaVantageApiKey: process.env.ALPHA_VANTAGE_API_KEY,
   // Alpaca market-data failover — reuses the app-level Alpaca data credentials
   // when present. No-op until both are set (the chain skips the provider).

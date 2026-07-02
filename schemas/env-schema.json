@@ -40,6 +40,14 @@
       "description": "Polygon REST + WebSocket API key. EXACTLY 32 chars — v1.2.6 incident: echo|vercel env add truncated to 30 chars and silently 401'd for weeks. Always rotate via printf, not echo."
     },
     {
+      "name": "POLYGON_WS_URL",
+      "required": false,
+      "regex": "^wss://.+",
+      "sourceUrl": "https://polygon.io/docs/websocket/getting-started",
+      "lastVerified": "2026-07-02",
+      "description": "Optional Polygon WebSocket cluster override. Defaults in code to wss://delayed.polygon.io/stocks (Stocks Starter is a 15-min-delayed plan, NOT entitled to the real-time cluster wss://socket.polygon.io). Set to the real-time cluster only on a real-time plan."
+    },
+    {
       "name": "ALPHA_VANTAGE_API_KEY",
       "required": true,
       "regex": "^[A-Z0-9]{8,32}$",

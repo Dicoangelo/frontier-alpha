@@ -427,6 +427,24 @@ export async function syntheticMonitorRoutes(
       }
     }
 
+    // E1: debounced Polygon/synthetic health alerting. Best-effort — the whole
+    // evaluation is wrapped so an alerting fault never throws into the cron
+    // path (which must always return a 200 status report).
+    try {
+      const { evaluatePolygonHealth } = await import(
+        '../observability/PolygonHealthAlerter.js'
+      );
+      await evaluatePolygonHealth({
+        passed,
+        failed,
+        failingRoutes: results
+          .filter((r) => r.error !== null || !r.schemaValid)
+          .map((r) => ({ route: r.route, error: r.error })),
+      });
+    } catch (err) {
+      logger.warn({ err }, 'synthetic-monitor: health-alert evaluation failed');
+    }
+
     if (failed > 0) {
       logger.warn(
         {

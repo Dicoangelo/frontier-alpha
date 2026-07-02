@@ -45,6 +45,28 @@ export interface IntegrationStatusEntry {
   reason?: string | null;
 }
 
+/** Per-provider quota + operational error-kind counts (IDEA-CIN-5). Shape
+ * mirrors one provider entry of `getQuotaStats().providers`. */
+export interface ProviderQuotaSummary {
+  quota_burned: number;
+  quota_free: number;
+  provider_fault: number;
+  guidance: string | null;
+  errorKinds: {
+    rate_limit: number;
+    auth: number;
+    plan_tier: number;
+    client_error: number;
+    server_fault: number;
+  };
+}
+
+/** Full quota snapshot passed from `getQuotaStats()`. */
+export interface QuotaDigestSection {
+  since: string;
+  providers: Record<string, ProviderQuotaSummary>;
+}
+
 export interface WeeklyHealthDigestData {
   dateRange: string; // "May 4 – May 10, 2026"
   /** Total errors counted in the rolling 1-hour window. */
@@ -58,8 +80,12 @@ export interface WeeklyHealthDigestData {
     offline: number;
     badEntries: IntegrationStatusEntry[];
   };
-  /** Placeholder until US-006 wires real cache stats. `null` ⇒ N/A. */
+  /** Real cache hit ratio from CompositeCache telemetry (US-006). `null` ⇒
+   * nothing read yet this window (renders "n/a"). */
   cacheHitRatio: number | null;
+  /** Per-provider upstream quota + error-kind counts. Optional; omitted ⇒
+   * the quota card is not rendered (back-compat with older callers/tests). */
+  quota?: QuotaDigestSection | null;
   /** Most-recent deploy id (Vercel commit SHA, Railway revision, or null). */
   deployId: string | null;
   /** Whether Sentry is configured. False ⇒ counter is sole source. */
@@ -121,6 +147,32 @@ function integrationListRow(entry: IntegrationStatusEntry): string {
         </td>
         <td align="right" valign="top" style="padding:6px 0;white-space:nowrap;">
           <span style="font-family:${FONT_MONO};color:${color};font-size:11px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;">${escapeHtml(entry.status)}</span>
+        </td>
+      </tr>
+    </table>`;
+}
+
+/** One provider row in the quota card: rate-limit / auth / plan-tier counts. */
+function quotaProviderRow(name: string, p: ProviderQuotaSummary): string {
+  const k = p.errorKinds;
+  // Alertable kinds (auth/plan-tier) go red when non-zero; rate-limit is amber.
+  const authColor = k.auth > 0 ? NEG : COLORS.textMuted;
+  const planColor = k.plan_tier > 0 ? NEG : COLORS.textMuted;
+  const rateColor = k.rate_limit > 0 ? WARN : COLORS.textMuted;
+  const guidance = p.guidance
+    ? `<div style="font-family:${FONT_SANS};color:${COLORS.textDim};font-size:11px;line-height:1.4;">${escapeHtml(p.guidance)}</div>`
+    : '';
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="padding:6px 0;border-bottom:1px solid ${COLORS.border};">
+          <div style="font-family:${FONT_MONO};color:${COLORS.text};font-size:12px;">${escapeHtml(name)}</div>
+          ${guidance}
+        </td>
+        <td align="right" valign="top" style="padding:6px 0;border-bottom:1px solid ${COLORS.border};white-space:nowrap;">
+          <span style="font-family:${FONT_MONO};font-size:11px;font-variant-numeric:tabular-nums;color:${rateColor};">rate ${k.rate_limit}</span>
+          <span style="font-family:${FONT_MONO};font-size:11px;font-variant-numeric:tabular-nums;color:${authColor};margin-left:10px;">auth ${k.auth}</span>
+          <span style="font-family:${FONT_MONO};font-size:11px;font-variant-numeric:tabular-nums;color:${planColor};margin-left:10px;">plan ${k.plan_tier}</span>
         </td>
       </tr>
     </table>`;
@@ -192,6 +244,20 @@ export function renderWeeklyHealthDigest(
     ${summaryRow('Cache hit ratio', cacheValue, COLORS.white)}
     ${summaryRow('Latest deploy', deployValue, COLORS.white)}`;
 
+  // --- Provider quota card (optional) -------------------------------------
+  const quotaProviders = data.quota
+    ? Object.entries(data.quota.providers)
+    : [];
+  const quotaBlock =
+    quotaProviders.length === 0
+      ? null
+      : `
+    ${monoKicker('Upstream Quota · Error Kinds', COLORS.textMuted)}
+    ${spacer(6)}
+    <div style="font-family:${FONT_SANS};color:${COLORS.textMuted};font-size:12px;line-height:1.5;">Per-provider request outcomes since ${escapeHtml(data.quota!.since)}. rate = 429 rate-limits · auth = 401 revoked/invalid key · plan = 403 plan-tier block.</div>
+    ${spacer(10)}
+    ${quotaProviders.map(([name, p]) => quotaProviderRow(name, p)).join('')}`;
+
   // --- Caveat -------------------------------------------------------------
   const caveatText = data.sentryConfigured
     ? 'Sentry is configured. The error counter and Sentry are dual sources; cross-reference via X-Request-Id tag for any specific incident.'
@@ -214,6 +280,7 @@ export function renderWeeklyHealthDigest(
         ${spacer(16)}
         ${card({ body: infraBlock })}
         ${spacer(16)}
+        ${quotaBlock ? `${card({ body: quotaBlock })}${spacer(16)}` : ''}
         ${card({ body: caveatBlock, padding: '16px 20px' })}
         ${spacer(24)}
         ${cta({ href: data.errorsEndpointUrl, label: 'Open /health/errors', accent: 'halo' })}
@@ -243,6 +310,16 @@ export function renderWeeklyHealthDigest(
         .join('\n')
     : '  (all live)';
 
+  const textQuota =
+    quotaProviders.length === 0
+      ? null
+      : quotaProviders
+          .map(
+            ([name, p]) =>
+              `  ${name.padEnd(13)} rate ${p.errorKinds.rate_limit} · auth ${p.errorKinds.auth} · plan ${p.errorKinds.plan_tier}${p.guidance ? ` — ${p.guidance}` : ''}`
+          )
+          .join('\n');
+
   const text = [
     `FRONTIER ALPHA · WEEKLY HEALTH DIGEST · ${data.dateRange}`,
     '',
@@ -255,6 +332,9 @@ export function renderWeeklyHealthDigest(
     '',
     `Cache hit ratio: ${cacheValue}`,
     `Latest deploy: ${deployValue}`,
+    ...(textQuota
+      ? ['', `Upstream quota (since ${data.quota!.since}):`, textQuota]
+      : []),
     '',
     caveatText,
     '',

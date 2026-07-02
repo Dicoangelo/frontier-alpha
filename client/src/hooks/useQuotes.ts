@@ -4,7 +4,7 @@ import { useQuotesStore } from '@/stores/quotesStore';
 import type { Quote } from '@/types';
 
 /**
- * Hook for subscribing to real-time quote streaming.
+ * Hook for subscribing to streaming (15-minute delayed) quotes.
  *
  * Connects to the SSE/WebSocket quote stream, subscribes to the given symbols,
  * and updates the Zustand quote store automatically.

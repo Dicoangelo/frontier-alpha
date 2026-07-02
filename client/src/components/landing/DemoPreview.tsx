@@ -113,7 +113,7 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
               )}
             </h2>
             <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-              Mock scoring with our factor cores. Sign up to wire live data, save portfolios, and unlock real-time risk.
+              Mock scoring with our factor cores. Sign up to wire live data, save portfolios, and unlock live risk analysis.
             </p>
           </div>
 
@@ -263,7 +263,7 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
             </div>
 
             <p className="mt-4 mono text-[9px] tracking-[0.3em] uppercase text-[var(--color-text-muted)]">
-              Demo · Cached factor scoring. Live mode adds: real-time quotes · CVRF beliefs · regime detection · alerts.
+              Demo · Cached factor scoring. Live mode adds: streaming (delayed) quotes · CVRF beliefs · regime detection · alerts.
             </p>
           </div>
         </div>

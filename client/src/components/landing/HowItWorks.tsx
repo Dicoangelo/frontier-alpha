@@ -203,7 +203,7 @@ export function HowItWorks({ onCTAClick }: HowItWorksProps): React.JSX.Element {
               index={0}
               kicker="01 · INGEST"
               title="Paste your portfolio"
-              body="Up to 20 symbols. We pull live quotes, fundamentals, and news in real time."
+              body="Up to 20 symbols. We pull live (delayed) quotes, fundamentals, and news."
               accent="var(--color-accent)"
               sectionInView={sectionInView}
               reducedMotion={reducedMotion}

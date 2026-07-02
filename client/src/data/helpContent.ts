@@ -168,7 +168,7 @@ The dashboard provides a comprehensive view of your portfolio:
 - Helps identify trends and drawdown periods
 
 ### Position List
-- All your holdings with real-time prices
+- All your holdings with live (15-minute delayed) prices
 - Sort by value, P&L, or weight
 - Quick access to individual stock details
 
@@ -832,7 +832,7 @@ Each alert has relevant quick actions:
 export const faqs: FAQ[] = [
   {
     question: 'How often is data updated?',
-    answer: 'Stock quotes update in real-time during market hours via WebSocket connection. Portfolio calculations refresh every few seconds. Factor data and risk metrics are recalculated when quotes change or you modify positions.',
+    answer: 'Stock quotes stream continuously during market hours via WebSocket connection. Quote data is 15-minute delayed (Polygon Stocks Starter feed), not real-time exchange data. Portfolio calculations refresh every few seconds. Factor data and risk metrics are recalculated when quotes change or you modify positions.',
     category: 'general',
   },
   {

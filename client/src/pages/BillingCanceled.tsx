@@ -18,7 +18,7 @@ const FAQS: FAQ[] = [
   },
   {
     q: 'What does Free include?',
-    a: 'Five positions, five core factors, real-time risk alerts, and the basic earnings calendar — enough to feel the engine.',
+    a: 'Five positions, five core factors, live risk alerts, and the basic earnings calendar — enough to feel the engine.',
   },
   {
     q: 'Refund policy on Pro?',

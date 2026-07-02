@@ -12,10 +12,12 @@ export type TransportType = 'websocket' | 'sse' | 'polling' | null;
 const MAX_WS_RECONNECTS_BEFORE_OFFLINE = 3;
 
 /**
- * Real-time quote client.
+ * Streaming quote client. Note: quote *data* is 15-minute delayed (Polygon
+ * Stocks Starter feed); the transports below describe delivery latency of that
+ * delayed data, not real-time exchange data.
  *
  * Transport priority:
- * 1. WebSocket → ws://server:port/ws/quotes (persistent, <20ms latency)
+ * 1. WebSocket → ws://server:port/ws/quotes (persistent, low-latency delivery)
  * 2. SSE → /api/v1/quotes/stream?sse=true (30s timeout, auto-reconnect)
  * 3. Polling → /api/v1/quotes/stream (10s interval fallback)
  *

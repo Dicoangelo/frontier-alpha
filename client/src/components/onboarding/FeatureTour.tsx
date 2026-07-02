@@ -28,7 +28,7 @@ const tourSteps: TourStep[] = [
     id: 'positions',
     target: '[data-tour="positions"]',
     title: 'Position List',
-    content: 'Every holding with real-time prices, portfolio weights, and unrealized P&L.',
+    content: 'Every holding with live (15-minute delayed) prices, portfolio weights, and unrealized P&L.',
     position: 'right',
   },
   {

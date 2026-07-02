@@ -435,6 +435,17 @@ export class MarketDataProvider {
     }
   }
 
+  /**
+   * The composite historical-price cache (Memory + Supabase). Exposed so the
+   * grouped-daily freshness sync (`CacheWarmer.warmLatestDayAllSymbols`) can
+   * write-through the latest bar for warmed symbols WITHOUT re-reading through
+   * the provider chain. Kept an accessor (not a public field) so tests can
+   * still override the private `historicalPriceCache` slot.
+   */
+  getHistoricalCache(): CompositeCache {
+    return this.historicalPriceCache;
+  }
+
   private async doFetchHistoricalPrices(
     upperSymbol: string,
     days: number,
@@ -1157,6 +1168,104 @@ export class MarketDataProvider {
     }));
 
     return prices;
+  }
+
+  /**
+   * Polygon grouped-daily aggregates (B2 freshness sync).
+   *
+   * The grouped-daily endpoint returns EVERY US ticker's OHLCV for ONE trading
+   * day in a SINGLE HTTP call. That makes it a big win for DAILY FRESHNESS
+   * (refresh the latest bar for all warmed symbols in one request instead of N
+   * per-symbol calls) but NOT for deep backfill — a 300-day history would need
+   * 300 grouped calls. So this COMPLEMENTS the per-symbol `fetchPolygonPrices`
+   * backfill; it does not replace it. See `CacheWarmer.warmLatestDayAllSymbols`.
+   *
+   * Response shape: `{ status, results: [{ T, o, h, l, c, v, t }, ...] }` where
+   * `T` is the ticker symbol and `t` is the bar's ms timestamp.
+   *
+   * Returns a map of `symbol -> single-day Price[]`. On any non-OK HTTP status,
+   * an `ERROR` body, or empty results (e.g. a market holiday), returns an EMPTY
+   * map so the caller treats it as "no freshness data this run" and leaves the
+   * backfilled history untouched. Guarded by the shared `polygon` breaker; note
+   * we accept both `OK` and the delayed Starter plan's `DELAYED` status (we key
+   * off the presence of `results`, not a strict `status === 'OK'`).
+   */
+  async fetchGroupedDaily(date: Date): Promise<Map<string, Price[]>> {
+    const empty = new Map<string, Price[]>();
+    if (!this.config.polygonApiKey) return empty;
+
+    const breaker = getBreaker('polygon');
+    if (!breaker.canAttempt()) {
+      logger.warn('Polygon breaker open — skipping grouped-daily freshness sync');
+      return empty;
+    }
+
+    const day = date.toISOString().slice(0, 10);
+    const url =
+      `https://api.polygon.io/v2/aggs/grouped/locale/us/market/stocks/${day}` +
+      `?adjusted=true&apiKey=${this.config.polygonApiKey}`;
+
+    try {
+      const response = await fetchWithRetry(url, undefined);
+      if (!response.ok) {
+        const { impact, kind } = recordProviderError('polygon', response.status);
+        logger.warn(
+          { day, status: response.status, quotaImpact: impact, kind, guidance: BACKOFF_GUIDANCE[impact] },
+          'Polygon HTTP non-200 for grouped-daily'
+        );
+        breaker.recordFailure();
+        return empty;
+      }
+
+      const data = (await response.json()) as {
+        status?: string;
+        error?: string;
+        results?: Array<{ T: string; o: number; h: number; l: number; c: number; v: number; t: number }>;
+      };
+
+      if (data.status === 'ERROR' || data.error) {
+        const reason = String(data.error ?? data.status).slice(0, 240);
+        const impact = recordUpstreamError('polygon', classifyErrorBody(reason));
+        logger.warn(
+          { day, reason, quotaImpact: impact, guidance: BACKOFF_GUIDANCE[impact] },
+          'Polygon refused grouped-daily (key invalid or rate-limited)'
+        );
+        breaker.recordFailure();
+        return empty;
+      }
+
+      const results = data.results ?? [];
+      // A valid response with no rows (market holiday / weekend) is NOT a
+      // provider failure — record success so the breaker doesn't trip on quiet
+      // days, and return an empty map.
+      if (results.length === 0) {
+        breaker.recordSuccess();
+        return empty;
+      }
+
+      const map = new Map<string, Price[]>();
+      for (const r of results) {
+        if (!r.T) continue;
+        const symbol = r.T.toUpperCase();
+        map.set(symbol, [
+          {
+            symbol,
+            timestamp: new Date(r.t),
+            open: r.o,
+            high: r.h,
+            low: r.l,
+            close: r.c,
+            volume: r.v,
+          },
+        ]);
+      }
+      breaker.recordSuccess();
+      return map;
+    } catch (e) {
+      breaker.recordFailure();
+      logger.warn({ err: e, day }, 'Polygon grouped-daily fetch error');
+      return empty;
+    }
   }
 
   private async fetchAlphaVantagePrices(

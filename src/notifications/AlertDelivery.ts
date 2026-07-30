@@ -159,10 +159,16 @@ export class AlertDelivery {
     fromEmail?: string;
     appUrl?: string;
   }) {
-    const providerType = config?.provider || process.env.EMAIL_PROVIDER || 'console';
-    const apiKey = config?.apiKey || process.env.EMAIL_API_KEY || '';
-    this.fromEmail = config?.fromEmail || process.env.EMAIL_FROM || 'alerts@frontier-alpha.com';
-    this.appUrl = config?.appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://frontier-alpha.com';
+    // Trim every env read. `vercel env add` fed by `echo` stores a trailing
+    // newline (see the rotation runbook in CLAUDE.md), and EMAIL_PROVIDER is
+    // matched by VALUE in the switch below — so "resend\n" silently selected
+    // ConsoleProvider and every email was logged instead of sent, while
+    // health.ts (which does trim) reported emailDelivery "live". The API key
+    // and from-address have the same hazard once they reach HTTP headers.
+    const providerType = (config?.provider || process.env.EMAIL_PROVIDER || 'console').trim();
+    const apiKey = (config?.apiKey || process.env.EMAIL_API_KEY || '').trim();
+    this.fromEmail = (config?.fromEmail || process.env.EMAIL_FROM || 'alerts@frontier-alpha.com').trim();
+    this.appUrl = (config?.appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://frontier-alpha.com').trim();
 
     switch (providerType) {
       case 'resend':

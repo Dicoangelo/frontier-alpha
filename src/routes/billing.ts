@@ -33,8 +33,16 @@ function getStripe(): Stripe {
   });
 }
 
-function getPlanFromPriceId(priceId: string): 'pro' | 'enterprise' {
-  if (priceId === process.env.STRIPE_ENTERPRISE_PRICE_ID) return 'enterprise';
+/** Exported for tests — the webhook path that uses it is not directly callable. */
+export function getPlanFromPriceId(priceId: string): 'pro' | 'enterprise' {
+  // Trim both sides. This is an exact-equality check against an env var, and
+  // STRIPE_ENTERPRISE_PRICE_ID was stored in Vercel with a trailing newline
+  // (the `echo` vs `printf` corruption class in CLAUDE.md's rotation runbook).
+  // A single stray byte made the enterprise branch unreachable, so every
+  // enterprise subscription was silently written to the DB as 'pro' — and the
+  // fallback returning a VALID plan is exactly why nothing ever errored.
+  const enterprisePriceId = process.env.STRIPE_ENTERPRISE_PRICE_ID?.trim();
+  if (enterprisePriceId && priceId.trim() === enterprisePriceId) return 'enterprise';
   return 'pro';
 }
 

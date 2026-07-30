@@ -16,6 +16,31 @@
 #   1. 20260610_insight_ledger.sql     (frontier_insight_ledger)     [applied 2026-06-11]
 #   2. 20260610_forensic_events.sql    (frontier_forensic_events)    [applied 2026-06-11]
 #   3. 20260611_provenance_nodes.sql   (frontier_provenance_nodes)
+#   4. 20260209_ml_models.sql          (frontier_model_versions)     [added 2026-07-30]
+#   5. 20260209_shared_portfolios.sql  (frontier_shared_portfolios)  [added 2026-07-30]
+#   6. 002_portfolio_sharing.sql       (frontier_portfolio_shares)   [added 2026-07-30]
+#
+# 4-6 were found on 2026-07-30 by the `databaseSchema` probe on
+# /api/v1/health/integrations: the server queries those three tables and none of
+# them exist in production. Portfolio sharing (routes/portfolio.ts,
+# services/SharingService.ts) and the ML model registry (routes/ml.ts) are
+# therefore non-functional — and silently so, because every one of those queries
+# sits inside a try/catch. Their migrations were simply never applied.
+#
+# Safety review before adding them:
+#   - all three use CREATE TABLE IF NOT EXISTS, so re-running is a no-op
+#   - 002 declares DELETE statements, but only inside the body of
+#     CREATE OR REPLACE FUNCTION cleanup_expired_cache(); they run when that
+#     function is CALLED, never at migration time, and each has a WHERE clause
+#   - 002's CREATE TRIGGER has no IF NOT EXISTS, which is fine on first apply
+#     (the table does not exist yet, so neither does the trigger) but WILL error
+#     if the table is later dropped and recreated by hand
+#   - 002's only foreign keys are auth.users and frontier_portfolios, both of
+#     which already exist in production
+#
+# NOT fixed by this script: services/SharingService.ts:206,236 queries a bare
+# `portfolio_shares` table that has no CREATE TABLE in ANY migration. That is a
+# code bug (a half-finished rename to frontier_portfolio_shares), not drift.
 
 set -euo pipefail
 
@@ -25,6 +50,9 @@ MIGRATIONS=(
   "$REPO_ROOT/supabase/migrations/20260610_insight_ledger.sql"
   "$REPO_ROOT/supabase/migrations/20260610_forensic_events.sql"
   "$REPO_ROOT/supabase/migrations/20260611_provenance_nodes.sql"
+  "$REPO_ROOT/supabase/migrations/20260209_ml_models.sql"
+  "$REPO_ROOT/supabase/migrations/20260209_shared_portfolios.sql"
+  "$REPO_ROOT/supabase/migrations/002_portfolio_sharing.sql"
 )
 
 # --- Token: Supabase CLI stores it in the macOS keychain via go-keyring,
@@ -68,9 +96,9 @@ for file in "${MIGRATIONS[@]}"; do
   fi
 done
 
-# --- Verify both tables exist (harmless catalog read).
+# --- Verify every table exists (harmless catalog read).
 echo "→ Verifying tables ..."
-verify_body='{"query":"SELECT tablename FROM pg_tables WHERE tablename IN ('"'"'frontier_insight_ledger'"'"','"'"'frontier_forensic_events'"'"','"'"'frontier_provenance_nodes'"'"');"}'
+verify_body='{"query":"SELECT tablename FROM pg_tables WHERE tablename IN ('"'"'frontier_insight_ledger'"'"','"'"'frontier_forensic_events'"'"','"'"'frontier_provenance_nodes'"'"','"'"'frontier_model_versions'"'"','"'"'frontier_shared_portfolios'"'"','"'"'frontier_portfolio_shares'"'"') ORDER BY tablename;"}'
 curl -sS -X POST \
   "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
   -H "Authorization: Bearer $TOKEN" \

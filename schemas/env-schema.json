@@ -358,11 +358,11 @@
     },
     {
       "name": "VITE_API_URL",
-      "required": true,
-      "regex": "^https?://[^\\s]+$",
+      "required": false,
+      "regex": "^(https?://[^\\s]+)?$",
       "sourceUrl": "internal",
-      "lastVerified": "2026-05-09",
-      "description": "REST API origin baked into the SPA bundle. Must NOT have trailing whitespace — feedback_vercel_env_newline.md."
+      "lastVerified": "2026-07-30",
+      "description": "REST API origin baked into the SPA bundle. Deliberately EMPTY in production so the SPA calls its own origin, where api/fastify.ts serves the API as Vercel serverless — see client/.env.production. It is therefore absent from Vercel's env list on purpose; marking it required made `npm run env:audit` fail on every run, which is how a real 17-variable newline corruption sat unnoticed in the same report. Set it only to point the bundle at a different origin (e.g. the Railway tier). Must NOT have trailing whitespace — feedback_vercel_env_newline.md."
     },
     {
       "name": "VITE_WS_URL",

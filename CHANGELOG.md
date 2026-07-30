@@ -7,6 +7,153 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.14.0] - 2026-07-30
+
+### Silent-failure sweep — production was green while five features were dead
+
+A single symptom (`/api/edge/quotes` returning `{"success":true,"data":null}`)
+opened into a class of bug that every layer of monitoring reported as healthy.
+Thirteen fixes. The common shape is not a swallowed exception — error handling
+in this codebase is disciplined — but a **successful-looking response**: a 403
+exiting through a success path, a `switch` falling to `default`, a missing table
+inside a `try/catch` returning empty, a check pointed at a different endpoint
+than the feature it covered.
+
+#### Fixed — market data
+
+- **Quotes were dead in production and reported success.** `/v2/snapshot/...` is
+  NOT entitled on the Polygon (now Massive) Stocks Starter plan — it returns 403
+  — while `/v2/aggs/...` is. A prior fix had swapped `/v2/last/trade` for
+  snapshot on the assumption that snapshot was entitled, and wrote that
+  assumption into a code comment and into CLAUDE.md, so nobody re-measured it.
+  `api/edge/quotes.ts` and `MarketDataProvider.fetchPolygonQuote` now derive
+  quotes from the two most recent daily bars, and a 401/403 returns
+  `502 PROVIDER_NOT_ENTITLED` instead of an empty success. (`ea98623`)
+- **The health probe validated a different endpoint than the feature.**
+  `probePolygon` called `/v2/aggs/ticker/AAPL/prev` (entitled) while the quote
+  path called snapshot (not entitled), so `polygon: "live"` was reported
+  throughout the outage. The probe now issues the same call the quote path
+  makes, accepts `DELAYED` as well as `OK`, and treats a 200 with zero bars as
+  degraded. (`87dd586`)
+- **Quote failover was silent.** `Quote` now carries `source`
+  (`polygon | alpaca | alphaVantage | polygon-websocket | cache | mock`). The
+  Fastify tier had been quietly serving from Alpaca's IEX feed — and 500ing on
+  the symbols IEX does not cover (PEP, CAT) — while the edge function, which has
+  no fallback, returned null. (`87dd586`)
+- **Tier 2 cache warming had no call site.** `warmLatestDayAllSymbols` was
+  implemented, unit-tested, and documented as running on boot and on the hourly
+  cron; nothing called it. One grouped-daily call now refreshes every warmed
+  symbol (12,479 tickers) instead of N per-symbol calls. (`332e022`)
+- **The freshness sync targeted a day with no data.** On a weekday before the
+  close, `mostRecentTradingDay` returns today, whose grouped bar does not exist
+  yet — so Tier 2 did nothing for most of every day. Now walks back up to 4
+  trading days, which also covers market holidays. (`6558112`)
+
+#### Fixed — env corruption (17 production variables)
+
+`npm run env:audit` had never been run against production. It flagged 17
+variables stored with a trailing newline (the documented `echo`-vs-`printf`
+class), each exactly one byte too long. Most are harmless in HTTP headers, but
+two were compared **by value**, where one byte changes the branch:
+
+- **`EMAIL_PROVIDER="resend\n"`** fell through `switch` to `default:` →
+  `ConsoleProvider`. Every transactional email — welcome, alert-fired,
+  subscription-confirmed, weekly digest — was logged instead of sent. Invisible
+  because `health.ts` *does* trim its own read, so `emailDelivery` reported
+  "live" the entire time.
+- **`STRIPE_ENTERPRISE_PRICE_ID="price_...\n"`** made the enterprise branch of
+  `getPlanFromPriceId` unreachable, so every enterprise subscription was written
+  to the database as `pro`. Nothing errored — the fallback returns a *valid*
+  plan.
+
+Both now trim at the point of use. All 17 stored values were rotated with
+`vercel env add --value`, which avoids the stdin newline trap entirely and is a
+better default than the `printf` pattern in the runbook. Audit went from
+14 clean / 21 corrupted to 32 clean / 0. (`3fd7f64`)
+
+#### Fixed — monitoring that lied
+
+Three separate checks had been failing on *every* run long enough to read as
+normal. That is why the 17-variable corruption sat unnoticed inside one of them.
+
+- **The synthetic monitor was mailing real users every 15 minutes.** Its
+  `digestRun` probe pointed at `/api/v1/digest/run` without `&probe=true`, so
+  each poll actually sent the weekly digest — ~96 real mailings a day. The guard
+  already existed and `health.ts` already used it. Dormant for months because
+  `EMAIL_PROVIDER` was swallowing the sends; repairing email turned it into a
+  flood. (`a30e849`)
+- **Two `api-shape.json` assertions could never pass.** `healthIntegrations`
+  required a `{success,data}` envelope from a route that deliberately returns a
+  bare object (and whose two clients depend on that), and `alerts` asserted
+  `minItems: 3` against a golden-state fixture whose user does not exist in the
+  production project. Monitor: `failed: 2` → `failed: 0`. (`3682732`)
+- **`env:audit` exited non-zero on every run** because `VITE_API_URL` is marked
+  required while production deliberately leaves it empty for same-origin
+  serving. Now exits 0 against a clean environment, so it can be trusted as a
+  gate. (`bc3d0b5`)
+- **Prometheus cache counters were registered and never incremented.**
+  `cache_hits_total` / `cache_misses_total` served HELP/TYPE with zero samples
+  while `CompositeCache` tracked real per-layer counts internally. (`e63831a`)
+
+#### Fixed — database schema drift
+
+- **Four tables the server queries do not exist in production.** Verified by
+  PostgREST introspection: `frontier_shared_portfolios`,
+  `frontier_portfolio_shares`, `portfolio_shares`, `frontier_model_versions`.
+  Portfolio sharing and the ML model registry are non-functional, silently —
+  every one of those queries sits inside a `try/catch`. A new `databaseSchema`
+  probe on `/api/v1/health/integrations` now reports drift by table name.
+  (`84768f6`)
+- **`portfolio_shares` had no `CREATE TABLE` in any migration** — and
+  `createPortfolioShare` / `getPortfolioShareByToken` are the *live* sharing
+  path, so portfolio sharing has never worked for any user. Neither existing
+  share table fits (one requires a `portfolio_id` FK this path lacks, the other
+  has no `expires_at`), so `20260730_portfolio_shares.sql` defines exactly the
+  columns the code already uses, with service-role-only RLS. (`73e73fe`)
+
+Applying these is an operator action against a SHARED Supabase project:
+`bash scripts/apply-pending-migrations.sh` (all seven queued, idempotent).
+(`aea3f8f`)
+
+#### Removed
+
+- `src/core/FactorDriftMonitor.ts` → `.graveyard/` — 299-line stateful engine,
+  zero imports, superseded by the stateless `checkDrift`/`generateAlerts` inside
+  `routes/alerts.ts`. (`e63831a`)
+- `src/lib/stripe.ts` → `.graveyard/` — zero importers; `routes/billing.ts`
+  builds its own Stripe client and `routes/health.ts` deliberately avoids this
+  module. It carried a module-level `throw` that would crash any process that
+  imported it without `STRIPE_SECRET_KEY`. (`e93ee4a`)
+
+#### Fixed — developer experience
+
+- `npm run dev` and `npm start` used `--env-file .env`, which does not exist
+  (only `.env.local`), so the server could not boot locally at all. Both now use
+  `--env-file-if-exists` for each. (`ea98623`)
+
+#### Tests
+
+960 → **1056** server tests. New suites assert the *connection*, not the
+behaviour, because unit tests cannot catch a missing call site:
+`CacheWarmer.wiring.test.ts`, `CompositeCache.metrics.test.ts`,
+`AlertDelivery.envHygiene.test.ts`, `billing-plan-resolution.test.ts`,
+`synthetic-monitor-probes.test.ts` (which fails if any probe targets a
+side-effecting endpoint). Every guard was verified to fail when its fix is
+reverted.
+
+#### Known / not fixed here
+
+- The Supabase MCP is bound to a **different project** (`bfiyuwsnwlizaauktjpa`)
+  than production (`rqidgeittsjkpkykmdrz`). Applying a migration through it
+  would silently target the wrong database.
+- Railway's env store is unaudited — its CLI does not support
+  `variables --json`. The `.trim()` fixes protect the app regardless.
+- `VERCEL_TOKEN` is unset, so `env-audit.yml` and `deploy.yml` cannot run in CI.
+- The golden-state user does not exist in production, so the stricter
+  `minItems: 3` alerts assertion stays disabled.
+
+---
+
 ## [1.13.0] - 2026-06-16
 
 ### Factors — per-factor explainer on the waterfall (ROADMAP #2 follow-on)

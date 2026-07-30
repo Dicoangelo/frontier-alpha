@@ -222,6 +222,94 @@ async function probePolygon(): Promise<Partial<IntegrationHealthEntry> & { statu
   }
 }
 
+/**
+ * Tables the server queries that MUST exist for a feature to work. A tracked
+ * migration is not proof of an applied one: this project shares a Supabase
+ * instance whose migration history does not match the repo (see CLAUDE.md), so
+ * `supabase/migrations/*.sql` can define a table that production has never
+ * seen. Every query below sits inside a try/catch, so a missing table degrades
+ * the feature silently and nothing surfaces it — this probe is what surfaces it.
+ *
+ * Verified missing in production on 2026-07-30: frontier_shared_portfolios,
+ * portfolio_shares, frontier_portfolio_shares (portfolio sharing) and
+ * frontier_model_versions (ML model registry). Their migrations exist and were
+ * never applied, and scripts/apply-pending-migrations.sh does not cover them.
+ */
+const REQUIRED_TABLES = [
+  'frontier_portfolios',
+  'frontier_positions',
+  'frontier_risk_alerts',
+  'frontier_subscriptions',
+  'frontier_user_settings',
+  'frontier_historical_prices',
+  'frontier_quote_cache',
+  'frontier_tax_lots',
+  'frontier_tax_events',
+  'frontier_shared_portfolios',
+  'frontier_portfolio_shares',
+  'portfolio_shares',
+  'frontier_model_versions',
+] as const;
+
+async function probeDatabaseSchema(): Promise<Partial<IntegrationHealthEntry> & { status: IntegrationHealthEntry['status'] }> {
+  const supabaseUrl = process.env.SUPABASE_URL?.trim() || process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = process.env.SUPABASE_SERVICE_KEY?.trim();
+  if (!supabaseUrl || !key) {
+    return {
+      status: 'degraded',
+      via: null,
+      reason: 'SUPABASE_URL / SUPABASE_SERVICE_KEY not set',
+      fallback: 'schema drift undetectable',
+      lastError: 'supabase env not configured',
+    };
+  }
+
+  try {
+    // PostgREST exposes the table list on the API root; one call covers every
+    // table instead of N HEAD requests.
+    const resp = await fetchWithTimeout(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/`, {
+      method: 'GET',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: 'application/openapi+json' },
+    });
+    if (!resp.ok) {
+      return {
+        status: 'degraded',
+        via: 'SUPABASE_SERVICE_KEY',
+        reason: `schema introspection returned HTTP ${resp.status}`,
+        lastError: `HTTP ${resp.status}`,
+      };
+    }
+
+    const spec = (await resp.json()) as { definitions?: Record<string, unknown>; paths?: Record<string, unknown> };
+    const present = new Set([
+      ...Object.keys(spec.definitions ?? {}),
+      ...Object.keys(spec.paths ?? {}).map((p) => p.replace(/^\//, '')),
+    ]);
+    const missing = REQUIRED_TABLES.filter((t) => !present.has(t));
+
+    if (missing.length > 0) {
+      return {
+        status: 'degraded',
+        via: 'SUPABASE_SERVICE_KEY',
+        mode: 'postgrest-introspection',
+        reason: `${missing.length} queried table(s) absent from production: ${missing.join(', ')}`,
+        impact: 'features touching these tables fail silently — their queries are inside try/catch',
+        fallback: 'apply the tracked migration for each missing table',
+        lastError: `missing tables: ${missing.join(', ')}`,
+      };
+    }
+
+    return { status: 'live', via: 'SUPABASE_SERVICE_KEY', mode: 'postgrest-introspection' };
+  } catch (err) {
+    return {
+      status: 'degraded',
+      via: 'SUPABASE_SERVICE_KEY',
+      reason: 'schema introspection failed',
+      lastError: errMessage(err),
+    };
+  }
+}
+
 async function probeAlphaVantage(): Promise<Partial<IntegrationHealthEntry> & { status: IntegrationHealthEntry['status'] }> {
   const key = process.env.ALPHA_VANTAGE_API_KEY?.trim();
   if (!key) {
@@ -893,6 +981,7 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
       connectAlpacaEntry,
       weeklyDigestCronEntry,
       llmExplainerEntry,
+      databaseSchemaEntry,
     ] = await Promise.all([
       runProbe('supabase', probeSupabase),
       runProbe('polygon', probePolygon),
@@ -902,6 +991,7 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
       runProbe('connectAlpaca', probeConnectAlpaca),
       runProbe('weeklyDigestCron', () => probeWeeklyDigestCron(port)),
       runProbe('llmExplainer', probeLLMExplainer),
+      runProbe('databaseSchema', probeDatabaseSchema),
     ]);
 
     integrations.supabase = supabaseEntry;
@@ -912,6 +1002,7 @@ export async function healthRoutes(fastify: FastifyInstance, opts: RouteContext)
     integrations.connectAlpaca = connectAlpacaEntry;
     integrations.weeklyDigestCron = weeklyDigestCronEntry;
     integrations.llmExplainer = llmExplainerEntry;
+    integrations.databaseSchema = databaseSchemaEntry;
 
     // --- Static / no-network entries (still standardized shape) -----------
 

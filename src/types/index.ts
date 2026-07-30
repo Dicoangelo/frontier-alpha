@@ -21,6 +21,19 @@ export interface Price {
   volume: number;
 }
 
+/**
+ * Which upstream actually served a quote. Failover between these is silent by
+ * design, so without attribution a dead primary looks identical to a healthy
+ * one — that is how a Polygon outage hid behind Alpaca on the Fastify tier.
+ */
+export type QuoteSource =
+  | 'polygon'
+  | 'alpaca'
+  | 'alphaVantage'
+  | 'polygon-websocket'
+  | 'cache'
+  | 'mock';
+
 export interface Quote {
   symbol: string;
   timestamp: Date;
@@ -29,6 +42,8 @@ export interface Quote {
   last: number;
   change: number;
   changePercent: number;
+  /** Upstream that served this quote. Optional for backward compatibility. */
+  source?: QuoteSource;
 }
 
 export type FactorCategory = 'style' | 'macro' | 'sector' | 'volatility' | 'sentiment' | 'quality';

@@ -152,7 +152,18 @@ async function probePolygon(): Promise<Partial<IntegrationHealthEntry> & { statu
     };
   }
   try {
-    const url = `https://api.polygon.io/v2/aggs/ticker/AAPL/prev?adjusted=true&apiKey=${encodeURIComponent(key)}`;
+    // Probe the SAME call `MarketDataProvider.fetchPolygonQuote` makes, not a
+    // cheaper one. This probe used `/v2/aggs/ticker/AAPL/prev` while the quote
+    // path used `/v2/snapshot/...`; `prev` is entitled on Stocks Starter and
+    // snapshot is not, so this reported "live" for months while every quote
+    // 403'd. A health check that exercises a different endpoint than the
+    // feature it covers is not a health check.
+    const to = new Date();
+    const from = new Date(to.getTime() - 10 * 24 * 60 * 60 * 1000);
+    const url =
+      `https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/` +
+      `${from.toISOString().slice(0, 10)}/${to.toISOString().slice(0, 10)}` +
+      `?adjusted=true&sort=desc&limit=2&apiKey=${encodeURIComponent(key)}`;
     const resp = await fetchWithTimeout(url, { method: 'GET' });
     if (resp.status === 429) {
       return {
@@ -174,8 +185,10 @@ async function probePolygon(): Promise<Partial<IntegrationHealthEntry> & { statu
         lastError: `HTTP ${resp.status}`,
       };
     }
-    const data = (await resp.json()) as { status?: string };
-    if (data?.status !== 'OK') {
+    const data = (await resp.json()) as { status?: string; results?: unknown[] };
+    // Aggregates answer "OK" or "DELAYED" (the Starter plan is 15-min delayed);
+    // both mean entitled. Anything else is a refusal.
+    if (data?.status !== 'OK' && data?.status !== 'DELAYED') {
       return {
         status: 'offline',
         via: 'POLYGON_API_KEY',
@@ -183,6 +196,18 @@ async function probePolygon(): Promise<Partial<IntegrationHealthEntry> & { statu
         reason: `Polygon body status="${data?.status ?? 'unknown'}"`,
         impact: 'live REST quotes unavailable',
         lastError: `body status=${data?.status ?? 'unknown'}`,
+      };
+    }
+    // A 200 with no bars still yields no quote — treat it as degraded rather
+    // than reporting green on an empty payload.
+    if (!data.results?.length) {
+      return {
+        status: 'degraded',
+        via: 'POLYGON_API_KEY',
+        mode: 'rest',
+        reason: 'entitled but returned zero bars',
+        fallback: 'cached quotes',
+        lastError: 'empty results',
       };
     }
     return { status: 'live', via: 'POLYGON_API_KEY', mode: 'rest' };

@@ -76,7 +76,7 @@ function restoreEnv(...keys: string[]) {
   }
 }
 
-const POLYGON_PREV = 'https://api.polygon.io/v2/aggs/ticker/AAPL/prev';
+const POLYGON_AGGS = 'https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/:from/:to';
 const SUPABASE_REST = 'http://localhost:54321/rest/v1/';
 
 let app: FastifyInstance;
@@ -112,7 +112,7 @@ describe('E4: Polygon 429 is degraded in both health-check paths', () => {
 
   it('probePolygon path (/health/integrations): 429 → degraded', async () => {
     server.use(
-      http.get(POLYGON_PREV, () => new HttpResponse(null, { status: 429 })),
+      http.get(POLYGON_AGGS, () => new HttpResponse(null, { status: 429 })),
     );
     const res = await app.inject({ method: 'GET', url: '/api/v1/health/integrations' });
     const body = res.json() as {
@@ -124,7 +124,7 @@ describe('E4: Polygon 429 is degraded in both health-check paths', () => {
 
   it('checkExternalApis path (/api/v1/health): 429 → error (not "ok / normal") → overall degraded', async () => {
     server.use(
-      http.get(POLYGON_PREV, () => new HttpResponse(null, { status: 429 })),
+      http.get(POLYGON_AGGS, () => new HttpResponse(null, { status: 429 })),
       // Keep the DB check green so the ONLY error is the external Polygon 429,
       // which must drop overall health to `degraded` (one error), proving the
       // 429 is no longer swallowed as "ok".
@@ -148,8 +148,8 @@ describe('E4: Polygon 429 is degraded in both health-check paths', () => {
 
   it('checkExternalApis path: healthy Polygon → external ok', async () => {
     server.use(
-      http.get(POLYGON_PREV, () =>
-        HttpResponse.json({ status: 'OK', resultsCount: 1, results: [] }),
+      http.get(POLYGON_AGGS, () =>
+        HttpResponse.json({ status: 'OK', resultsCount: 1, results: [{ o: 1, h: 2, l: 1, c: 1.5, v: 10, t: Date.now() }] }),
       ),
       http.get(SUPABASE_REST, () => HttpResponse.json({}, { status: 200 })),
     );

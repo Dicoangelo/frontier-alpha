@@ -191,8 +191,8 @@ describe('polygon probe', () => {
     _probeCacheForTests.clear();
 
     server.use(
-      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/prev', () =>
-        HttpResponse.json({ status: 'OK', resultsCount: 1, results: [] }),
+      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/:from/:to', () =>
+        HttpResponse.json({ status: 'OK', resultsCount: 1, results: [{ o: 1, h: 2, l: 1, c: 1.5, v: 10, t: Date.now() }] }),
       ),
     );
 
@@ -200,12 +200,65 @@ describe('polygon probe', () => {
     expect(body.integrations.polygon.status).toBe('live');
   });
 
+  it('accepts status:"DELAYED" as live (Stocks Starter is 15-min delayed)', async () => {
+    process.env[POLYGON_KEY] = 'test-polygon-key';
+    _probeCacheForTests.clear();
+
+    server.use(
+      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/:from/:to', () =>
+        HttpResponse.json({
+          status: 'DELAYED',
+          results: [{ o: 1, h: 2, l: 1, c: 1.5, v: 10, t: Date.now() }],
+        }),
+      ),
+    );
+
+    const { body } = await getIntegrations(app);
+    expect(body.integrations.polygon.status).toBe('live');
+  });
+
+  it('200 with zero bars → degraded, not live', async () => {
+    process.env[POLYGON_KEY] = 'test-polygon-key';
+    _probeCacheForTests.clear();
+
+    server.use(
+      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/:from/:to', () =>
+        HttpResponse.json({ status: 'OK', resultsCount: 0, results: [] }),
+      ),
+    );
+
+    const { body } = await getIntegrations(app);
+    expect(body.integrations.polygon.status).toBe('degraded');
+  });
+
+  // Regression: the production outage this probe failed to catch. The quote
+  // path called an endpoint the plan does not include and got 403, while this
+  // probe called a cheaper entitled endpoint and reported "live". The probe now
+  // exercises the same call the quote path makes, so a plan-tier 403 surfaces.
+  it('plan-tier 403 on the quote endpoint → offline', async () => {
+    process.env[POLYGON_KEY] = 'test-polygon-key';
+    _probeCacheForTests.clear();
+
+    server.use(
+      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/:from/:to', () =>
+        HttpResponse.json(
+          { status: 'NOT_AUTHORIZED', message: 'You are not entitled to this data.' },
+          { status: 403 },
+        ),
+      ),
+    );
+
+    const { body } = await getIntegrations(app);
+    expect(body.integrations.polygon.status).toBe('offline');
+    expect(body.integrations.polygon.lastError).toContain('403');
+  });
+
   it('rate limited → degraded on HTTP 429', async () => {
     process.env[POLYGON_KEY] = 'test-polygon-key';
     _probeCacheForTests.clear();
 
     server.use(
-      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/prev', () =>
+      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/:from/:to', () =>
         new HttpResponse(null, { status: 429 }),
       ),
     );
@@ -221,7 +274,7 @@ describe('polygon probe', () => {
     _probeCacheForTests.clear();
 
     server.use(
-      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/prev', () =>
+      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/:from/:to', () =>
         new HttpResponse(null, { status: 503 }),
       ),
     );
@@ -235,7 +288,7 @@ describe('polygon probe', () => {
     _probeCacheForTests.clear();
 
     server.use(
-      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/prev', () =>
+      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/:from/:to', () =>
         HttpResponse.json({ status: 'ERROR', error: 'invalid api key' }),
       ),
     );
@@ -609,9 +662,9 @@ describe('probe cache (60s TTL)', () => {
 
     let callCount = 0;
     server.use(
-      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/prev', () => {
+      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/:from/:to', () => {
         callCount++;
-        return HttpResponse.json({ status: 'OK', resultsCount: 1, results: [] });
+        return HttpResponse.json({ status: 'OK', resultsCount: 1, results: [{ o: 1, h: 2, l: 1, c: 1.5, v: 10, t: Date.now() }] });
       }),
     );
 
@@ -633,8 +686,8 @@ describe('probe cache (60s TTL)', () => {
     _probeCacheForTests.clear();
 
     server.use(
-      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/prev', () =>
-        HttpResponse.json({ status: 'OK', resultsCount: 1, results: [] }),
+      http.get('https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/:from/:to', () =>
+        HttpResponse.json({ status: 'OK', resultsCount: 1, results: [{ o: 1, h: 2, l: 1, c: 1.5, v: 10, t: Date.now() }] }),
       ),
     );
 

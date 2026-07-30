@@ -19,7 +19,7 @@
  * NO MOCK DATA IN PRODUCTION - All data from real APIs, stale cache, or throws.
  */
 
-import type { Price, Quote, Asset } from '../types/index.js';
+import type { Price, Quote, QuoteSource, Asset } from '../types/index.js';
 import { supabaseAdmin } from '../lib/supabase.js';
 import { logger } from '../lib/logger.js';
 import { marketDataCache, type CompositeCache } from './cache/index.js';
@@ -219,6 +219,7 @@ export class MarketDataProvider {
               last: cachedQuote.price,
               change: cachedQuote.change,
               changePercent: cachedQuote.change_percent,
+              source: 'cache',
             };
             this.quoteCache.set(upperSymbol, { quote, timestamp: now });
             await this.cacheQuoteToRedis(quote);
@@ -251,13 +252,20 @@ export class MarketDataProvider {
    * every provider is exhausted; falls back to a mock quote only in dev.
    */
   private async doFetchQuoteUpstream(upperSymbol: string, now: number): Promise<Quote | null> {
-    const persist = async (quote: Quote): Promise<Quote> => {
-      this.quoteCache.set(upperSymbol, { quote, timestamp: now });
+    // Tag every quote with the upstream that produced it. Failover here is
+    // silent, so without this a dead primary is indistinguishable from a
+    // healthy one to every caller and dashboard downstream.
+    const persist = async (quote: Quote, source: QuoteSource): Promise<Quote> => {
+      const tagged: Quote = { ...quote, source };
+      this.quoteCache.set(upperSymbol, { quote: tagged, timestamp: now });
       await Promise.all([
-        this.cacheQuoteToRedis(quote),
-        this.cacheQuoteToSupabase(quote),
+        this.cacheQuoteToRedis(tagged),
+        this.cacheQuoteToSupabase(tagged),
       ]);
-      return quote;
+      if (source !== 'polygon') {
+        logger.warn({ symbol: upperSymbol, source }, 'Quote served by failover provider, not Polygon');
+      }
+      return tagged;
     };
 
     // 4a. Polygon.io (primary delayed source)
@@ -268,7 +276,7 @@ export class MarketDataProvider {
           const quote = await this.fetchPolygonQuote(upperSymbol);
           if (quote) {
             breaker.recordSuccess();
-            return await persist(quote);
+            return await persist(quote, 'polygon');
           }
           breaker.recordFailure();
         } catch (e) {
@@ -289,7 +297,7 @@ export class MarketDataProvider {
           const quote = await this.fetchAlpacaQuote(upperSymbol);
           if (quote) {
             breaker.recordSuccess();
-            return await persist(quote);
+            return await persist(quote, 'alpaca');
           }
           breaker.recordFailure();
         } catch (e) {
@@ -307,7 +315,7 @@ export class MarketDataProvider {
           const quote = await this.fetchAlphaVantageQuote(upperSymbol);
           if (quote) {
             breaker.recordSuccess();
-            return await persist(quote);
+            return await persist(quote, 'alphaVantage');
           }
           breaker.recordFailure();
         } catch (e) {
@@ -827,6 +835,7 @@ export class MarketDataProvider {
       last: msg.p!,
       change,
       changePercent,
+      source: 'polygon-websocket',
     };
 
     this.broadcastQuote(quote);
@@ -1345,6 +1354,7 @@ export class MarketDataProvider {
       last: price,
       change,
       changePercent: noise * 100,
+      source: 'mock',
     };
   }
 

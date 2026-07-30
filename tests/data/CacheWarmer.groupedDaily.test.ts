@@ -187,6 +187,62 @@ describe('warmLatestDayAllSymbols — freshness sync', () => {
     expect((aaplBars as Price[])[0].close).toBe(200);
   });
 
+  // Regression: on a weekday before the close, today IS a trading day but its
+  // grouped bar does not exist yet, so the sync targeted an empty day and
+  // refreshed nothing for most of every day. It now walks back to the most
+  // recent day that actually has a bar. The same path covers market holidays.
+  it('walks back to the previous trading day when today has no bar yet', async () => {
+    const empty = new Set(['2026-06-19']); // "today", pre-close
+    server.use(
+      http.get(POLY_GROUPED, ({ params }) => {
+        const date = String((params as { date: string }).date);
+        return empty.has(date)
+          ? HttpResponse.json({ status: 'OK', results: [] })
+          : groupedOK({ AAPL: 200, MSFT: 400 });
+      }),
+    );
+
+    const provider = makeProvider();
+    const cache = stubCache();
+    (provider as unknown as { historicalPriceCache: CompositeCache }).historicalPriceCache = cache;
+
+    const result = await warmLatestDayAllSymbols(
+      provider,
+      ['AAPL', 'MSFT'],
+      new Date('2026-06-19T12:00:00Z'),
+    );
+
+    expect(result.date).toBe('2026-06-18'); // fell back one day
+    expect(result.tickersInGroup).toBe(2);
+    expect(result.updated).toBe(2);
+    expect(cache.setPrices).toHaveBeenCalledTimes(2);
+  });
+
+  it('gives up after the bounded lookback instead of walking forever', async () => {
+    let calls = 0;
+    server.use(
+      http.get(POLY_GROUPED, () => {
+        calls += 1;
+        return HttpResponse.json({ status: 'OK', results: [] });
+      }),
+    );
+
+    const provider = makeProvider();
+    const cache = stubCache();
+    (provider as unknown as { historicalPriceCache: CompositeCache }).historicalPriceCache = cache;
+
+    const result = await warmLatestDayAllSymbols(
+      provider,
+      ['AAPL'],
+      new Date('2026-06-19T12:00:00Z'),
+    );
+
+    expect(result.updated).toBe(0);
+    expect(cache.setPrices).not.toHaveBeenCalled();
+    // 1 initial attempt + MAX_FRESHNESS_LOOKBACK_DAYS walk-backs.
+    expect(calls).toBe(5);
+  });
+
   it('is a no-op (no cache writes) when grouped-daily returns nothing', async () => {
     server.use(
       http.get(POLY_GROUPED, () => HttpResponse.json({ status: 'OK', results: [] })),

@@ -275,6 +275,13 @@ export async function warmTopHeldSymbols(
 /**
  * Result of a grouped-daily freshness sync (Tier 2).
  */
+/**
+ * How many trading days back the freshness sync will walk looking for a
+ * grouped-daily bar. Covers a pre-close weekday plus a long weekend with a
+ * holiday attached (e.g. Thanksgiving Thu/Fri, Sat, Sun -> Wednesday).
+ */
+const MAX_FRESHNESS_LOOKBACK_DAYS = 4;
+
 export interface FreshnessResult {
   /** The trading day (YYYY-MM-DD) the grouped-daily call targeted. */
   date: string;
@@ -324,8 +331,8 @@ export async function warmLatestDayAllSymbols(
   symbols: string[],
   refDate: Date = new Date(),
 ): Promise<FreshnessResult> {
-  const tradingDay = mostRecentTradingDay(refDate);
-  const dateStr = tradingDay.toISOString().slice(0, 10);
+  let tradingDay = mostRecentTradingDay(refDate);
+  let dateStr = tradingDay.toISOString().slice(0, 10);
 
   if (symbols.length === 0) {
     return { date: dateStr, tickersInGroup: 0, updated: 0, symbols: [] };
@@ -333,11 +340,27 @@ export async function warmLatestDayAllSymbols(
 
   logger.info({ date: dateStr, symbolCount: symbols.length }, 'CacheWarmer: grouped-daily freshness sync starting');
 
-  const group = await provider.fetchGroupedDaily(tradingDay);
+  // Walk back to the most recent day that actually has a grouped bar.
+  //
+  // On a weekday BEFORE the close, today is a valid trading day but its
+  // grouped-daily file does not exist yet, so the sync targeted an empty day
+  // and refreshed nothing — for most of every day. The same happens on market
+  // holidays, which `mostRecentTradingDay` deliberately does not model. One
+  // bounded walk-back covers both without needing a holiday calendar.
+  let group = await provider.fetchGroupedDaily(tradingDay);
+  for (let back = 0; group.size === 0 && back < MAX_FRESHNESS_LOOKBACK_DAYS; back++) {
+    tradingDay = mostRecentTradingDay(
+      new Date(tradingDay.getTime() - 24 * 60 * 60 * 1000),
+    );
+    dateStr = tradingDay.toISOString().slice(0, 10);
+    logger.info({ date: dateStr }, 'CacheWarmer: no grouped bar yet, trying previous trading day');
+    group = await provider.fetchGroupedDaily(tradingDay);
+  }
+
   if (group.size === 0) {
     logger.info(
-      { date: dateStr },
-      'CacheWarmer: grouped-daily returned no rows (holiday, provider error, or breaker open)',
+      { date: dateStr, lookbackDays: MAX_FRESHNESS_LOOKBACK_DAYS },
+      'CacheWarmer: grouped-daily returned no rows (provider error, or breaker open)',
     );
     return { date: dateStr, tickersInGroup: 0, updated: 0, symbols: [] };
   }

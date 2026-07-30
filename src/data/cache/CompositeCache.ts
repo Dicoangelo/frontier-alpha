@@ -27,6 +27,11 @@
 import type { Price } from '../../types/index.js';
 import { MemoryCache, type MemoryCacheOptions } from './MemoryCache.js';
 import { SupabaseCache, type SupabaseCacheOptions } from './SupabaseCache.js';
+// `cache_hits_total` / `cache_misses_total` were registered on /api/v1/metrics
+// but never incremented — the recorders had no call site, so the counters
+// exposed HELP/TYPE with zero samples while the layers tracked real hit/miss
+// counts internally. Mirror the per-layer telemetry into Prometheus here.
+import { recordCacheHit, recordCacheMiss } from '../../observability/metrics.js';
 
 export interface CompositeCacheOptions {
   memory?: MemoryCacheOptions;
@@ -57,15 +62,19 @@ export class CompositeCache {
 
     const cached = this.memory.get(memKey);
     if (cached && cached.length >= days) {
+      recordCacheHit('memory');
       return cached.slice(-days);
     }
+    recordCacheMiss('memory');
 
     const fromSupabase = await this.supabase.getPrices(upper, days);
     if (fromSupabase && fromSupabase.length >= days * 0.9) {
+      recordCacheHit('supabase');
       // Write-through into memory so the next caller skips the DB.
       this.memory.set(memKey, fromSupabase);
       return fromSupabase;
     }
+    recordCacheMiss('supabase');
 
     return null;
   }

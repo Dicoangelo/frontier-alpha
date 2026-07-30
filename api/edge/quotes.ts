@@ -27,27 +27,14 @@ interface QuoteResult {
   timestamp: string;
 }
 
-interface PolygonSnapshotTicker {
-  ticker: string;
-  todaysChange: number;
-  todaysChangePerc: number;
-  day: {
-    o: number;
-    h: number;
-    l: number;
-    c: number;
-    v: number;
-    vw: number;
-  };
-  lastTrade?: {
-    p: number;
-    t: number;
-  };
-  prevDay?: {
-    c: number;
-    v: number;
-  };
-  updated: number;
+/** One daily OHLCV bar from `/v2/aggs/ticker/{T}/range/1/day/...`. */
+interface PolygonAggBar {
+  o: number;
+  h: number;
+  l: number;
+  c: number;
+  v: number;
+  t: number; // unix milliseconds
 }
 
 interface CacheEntry {
@@ -67,50 +54,76 @@ const STALE_MAX_MS = 30_000; // 30 seconds — serve stale while revalidating
 // Polygon.io fetch
 // ---------------------------------------------------------------------------
 
+/** Outcome of a provider fetch — quotes plus any upstream rejection. */
+interface PolygonFetchOutcome {
+  quotes: Map<string, QuoteResult>;
+  /** HTTP status of the first plan-tier/auth rejection, if any. */
+  deniedStatus?: number;
+}
+
+/**
+ * Fetch quotes from Polygon **daily aggregates**.
+ *
+ * Do NOT use the Snapshot endpoint here. `/v2/snapshot/...` is NOT entitled on
+ * the Stocks Starter plan — it returns HTTP 403 NOT_AUTHORIZED (verified
+ * 2026-07-30 against the production key). Neither is `/v2/last/trade`.
+ * Aggregates ARE entitled, so the quote is derived from the two most recent
+ * daily bars: the latest close is the price, and the prior close gives
+ * change / changePercent.
+ *
+ * Prices are 15-minute delayed on this plan; that is a plan property, not a bug.
+ */
 async function fetchFromPolygon(
   symbols: string[],
   apiKey: string,
-): Promise<Map<string, QuoteResult>> {
-  const results = new Map<string, QuoteResult>();
+): Promise<PolygonFetchOutcome> {
+  const quotes = new Map<string, QuoteResult>();
+  let deniedStatus: number | undefined;
 
-  // Polygon Snapshot endpoint supports multiple tickers via comma-separated
-  // GET /v2/snapshot/locale/us/markets/stocks/tickers?tickers=AAPL,MSFT
-  const tickerParam = symbols.join(',');
-  const url = `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers?tickers=${tickerParam}&apiKey=${apiKey}`;
+  // A 10-day calendar window always contains at least two trading sessions,
+  // even across a long weekend plus a market holiday.
+  const to = new Date();
+  const from = new Date(to.getTime() - 10 * 24 * 60 * 60 * 1000);
+  const range = `${from.toISOString().slice(0, 10)}/${to.toISOString().slice(0, 10)}`;
 
-  const response = await fetch(url, {
-    headers: { 'Accept': 'application/json' },
-  });
+  await Promise.all(
+    symbols.map(async (symbol) => {
+      const url =
+        `https://api.polygon.io/v2/aggs/ticker/${symbol}/range/1/day/${range}` +
+        `?adjusted=true&sort=desc&limit=2&apiKey=${apiKey}`;
 
-  if (!response.ok) {
-    // If Polygon returns an error, return whatever we can
-    console.error(`Polygon API error: ${response.status} ${response.statusText}`);
-    return results;
-  }
+      const response = await fetch(url, { headers: { Accept: 'application/json' } });
 
-  const json = await response.json() as {
-    status: string;
-    tickers?: PolygonSnapshotTicker[];
-  };
+      if (!response.ok) {
+        // 401/403 mean the key or the plan is the problem — that is an outage,
+        // not an empty result, and the handler must not report success.
+        if (response.status === 401 || response.status === 403) {
+          deniedStatus ??= response.status;
+        }
+        console.error(`Polygon API error for ${symbol}: ${response.status} ${response.statusText}`);
+        return;
+      }
 
-  if (json.tickers) {
-    for (const t of json.tickers) {
-      const price = t.lastTrade?.p ?? t.day?.c ?? 0;
-      const quote: QuoteResult = {
-        symbol: t.ticker,
-        price,
-        change: t.todaysChange ?? 0,
-        changePercent: t.todaysChangePerc ?? 0,
-        volume: t.day?.v ?? 0,
-        timestamp: t.updated
-          ? new Date(t.updated / 1e6).toISOString() // Polygon timestamps are in nanoseconds
-          : new Date().toISOString(),
-      };
-      results.set(t.ticker, quote);
-    }
-  }
+      const json = (await response.json()) as { results?: PolygonAggBar[] };
+      // `limit` bounds the aggregation window, not the row count, so slice.
+      const [latest, prior] = (json.results ?? []).slice(0, 2);
+      if (!latest || !latest.c) return;
 
-  return results;
+      const prevClose = prior?.c ?? latest.o;
+      const change = latest.c - prevClose;
+
+      quotes.set(symbol, {
+        symbol,
+        price: latest.c,
+        change,
+        changePercent: prevClose ? (change / prevClose) * 100 : 0,
+        volume: latest.v ?? 0,
+        timestamp: new Date(latest.t).toISOString(), // aggregate `t` is milliseconds
+      });
+    }),
+  );
+
+  return { quotes, deniedStatus };
 }
 
 // ---------------------------------------------------------------------------
@@ -212,10 +225,20 @@ export default async function handler(request: Request): Promise<Response> {
 
   const apiKey = process.env.POLYGON_API_KEY;
   let fetchedQuotes = new Map<string, QuoteResult>();
+  let providerFailed = false;
+  let deniedStatus: number | undefined;
+
+  if (needsFetch.length > 0 && !apiKey) {
+    providerFailed = true;
+    console.error('POLYGON_API_KEY is not set in this environment');
+  }
 
   if (needsFetch.length > 0 && apiKey) {
     try {
-      fetchedQuotes = await fetchFromPolygon(needsFetch, apiKey);
+      const outcome = await fetchFromPolygon(needsFetch, apiKey);
+      fetchedQuotes = outcome.quotes;
+      deniedStatus = outcome.deniedStatus;
+      if (deniedStatus || fetchedQuotes.size === 0) providerFailed = true;
 
       // Update cache
       const fetchTime = Date.now();
@@ -223,6 +246,7 @@ export default async function handler(request: Request): Promise<Response> {
         quoteCache.set(sym, { data: quote, fetchedAt: fetchTime });
       }
     } catch (err) {
+      providerFailed = true;
       console.error('Polygon fetch error:', err);
       // Fall through — serve whatever stale data we have
     }
@@ -256,11 +280,31 @@ export default async function handler(request: Request): Promise<Response> {
   const latencyMs = Date.now() - start;
   const isSingle = symbols.length === 1;
 
+  // A request that resolved zero quotes because the provider rejected us is an
+  // upstream failure, not an empty result set. Reporting success:true here is
+  // what let a plan-tier 403 masquerade as "no data" in production for months.
+  if (quotes.length === 0 && providerFailed) {
+    return jsonResponse(
+      {
+        success: false,
+        error: {
+          code: deniedStatus ? 'PROVIDER_NOT_ENTITLED' : 'PROVIDER_UNAVAILABLE',
+          message: deniedStatus
+            ? `Polygon rejected the request (HTTP ${deniedStatus}). The API key or plan tier is not entitled to this data.`
+            : 'Upstream market data provider returned no data.',
+        },
+        meta: { requested: symbols.length, latencyMs, timestamp: new Date().toISOString(), edge: true },
+      },
+      deniedStatus ? 502 : 503,
+    );
+  }
+
   return jsonResponse(
     {
       success: true,
       data: isSingle ? (quotes[0] ?? null) : quotes,
       meta: {
+        degraded: providerFailed || undefined,
         count: quotes.length,
         requested: symbols.length,
         cacheStatus,

@@ -930,13 +930,21 @@ export class MarketDataProvider {
   // ============================================================================
 
   private async fetchPolygonQuote(symbol: string): Promise<Quote | null> {
-    // Polygon Stocks Starter is 15-min delayed and is NOT entitled to the
-    // real-time `/v2/last/trade` endpoint (it 403s). The snapshot endpoint is
-    // entitled on Starter and returns the delayed last price plus today's
-    // change/changePercent in a single call.
+    // Endpoint entitlement on the Stocks Starter plan, measured against the
+    // production key on 2026-07-30 — do not "upgrade" this to a richer endpoint
+    // without re-measuring, because the failures are silent:
+    //   /v2/last/trade            -> 403 NOT_AUTHORIZED (real-time)
+    //   /v2/snapshot/...          -> 403 NOT_AUTHORIZED  <-- previously used here
+    //   /v3/snapshot/options/...  -> 403 NOT_AUTHORIZED (needs Options plan)
+    //   /v2/aggs/...              -> 200 OK, 15-min delayed  <-- entitled
+    // So the quote is derived from the two most recent daily bars: the latest
+    // close is the price, and the prior close gives change / changePercent.
+    const to = new Date();
+    const from = new Date(to.getTime() - 10 * 24 * 60 * 60 * 1000); // >= 2 sessions
     const url =
-      `https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers/` +
-      `${encodeURIComponent(symbol)}?apiKey=${this.config.polygonApiKey}`;
+      `https://api.polygon.io/v2/aggs/ticker/${encodeURIComponent(symbol)}` +
+      `/range/1/day/${from.toISOString().slice(0, 10)}/${to.toISOString().slice(0, 10)}` +
+      `?adjusted=true&sort=desc&limit=2&apiKey=${this.config.polygonApiKey}`;
 
     const response = await fetchWithRetry(url, undefined);
     if (!response.ok) {
@@ -949,42 +957,27 @@ export class MarketDataProvider {
 
     const data = (await response.json()) as {
       status?: string;
-      ticker?: {
-        todaysChange?: number;
-        todaysChangePerc?: number;
-        updated?: number; // unix nanoseconds
-        day?: { c?: number };
-        min?: { c?: number };
-        prevDay?: { c?: number };
-      };
+      results?: Array<{ o: number; h: number; l: number; c: number; v: number; t: number }>;
     };
 
-    const t = data.ticker;
-    if (!t) return null;
+    // `limit` bounds the aggregation window rather than the row count, so slice.
+    const [latest, prior] = (data.results ?? []).slice(0, 2);
+    if (!latest?.c) return null;
 
-    // Prefer the freshest delayed price available: intraday minute close, then
-    // the current day close, then the previous day close as a floor. (The
-    // real-time lastTrade field is absent on the delayed Starter plan.)
-    const last =
-      t.min?.c && t.min.c > 0
-        ? t.min.c
-        : t.day?.c && t.day.c > 0
-          ? t.day.c
-          : (t.prevDay?.c ?? 0);
-
-    if (!last) return null;
-
-    // `updated` is unix nanoseconds; convert to ms. Fall back to now if absent.
-    const timestamp = t.updated ? new Date(Math.floor(t.updated / 1e6)) : new Date();
+    const last = latest.c;
+    // With only one bar available (freshly listed ticker), fall back to that
+    // bar's open so change is intraday rather than a fabricated zero.
+    const prevClose = prior?.c ?? latest.o;
+    const change = last - prevClose;
 
     return {
       symbol,
-      timestamp,
+      timestamp: new Date(latest.t), // aggregate `t` is unix milliseconds
       bid: last * 0.9999, // Approximate (no real-time bid/ask on delayed plan)
       ask: last * 1.0001,
       last,
-      change: t.todaysChange ?? 0,
-      changePercent: t.todaysChangePerc ?? 0,
+      change,
+      changePercent: prevClose ? (change / prevClose) * 100 : 0,
     };
   }
 

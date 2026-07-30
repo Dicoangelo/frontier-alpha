@@ -31,22 +31,22 @@ import { resetQuotaStats, getErrorKindCount } from '../../src/data/QuotaClassifi
 const POLY_KEY = 'x'.repeat(32);
 
 // URL matchers for MSW.
-const POLY_SNAPSHOT = 'https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers/:symbol';
+// Quotes are derived from daily aggregates, not the snapshot endpoint —
+// `/v2/snapshot/...` is not entitled on the Stocks Starter plan (403).
 const POLY_AGGS = 'https://api.polygon.io/v2/aggs/ticker/:symbol/range/1/day/:from/:to';
+const POLY_QUOTE = POLY_AGGS;
 const ALPACA_SNAPSHOT = 'https://data.alpaca.markets/v2/stocks/:symbol/snapshot';
 const ALPACA_BARS = 'https://data.alpaca.markets/v2/stocks/:symbol/bars';
 
-function polygonSnapshotOK(last: number) {
+/** Two daily bars, newest first — the shape `fetchPolygonQuote` parses. */
+function polygonQuoteAggsOK(last: number) {
+  const day = 24 * 60 * 60 * 1000;
   return HttpResponse.json({
     status: 'OK',
-    ticker: {
-      todaysChange: 1.5,
-      todaysChangePerc: 1.0,
-      updated: Date.now() * 1e6,
-      min: { c: last },
-      day: { c: last - 1 },
-      prevDay: { c: last - 2 },
-    },
+    results: [
+      { o: last - 0.5, h: last + 1, l: last - 1, c: last, v: 1_000_000, t: Date.now() },
+      { o: last - 2, h: last, l: last - 3, c: last - 1.5, v: 900_000, t: Date.now() - day },
+    ],
   });
 }
 
@@ -93,7 +93,7 @@ describe('getQuote — failover + retry', () => {
   it('retries a Polygon 429, then falls over to Alpaca', async () => {
     let polyHits = 0;
     server.use(
-      http.get(POLY_SNAPSHOT, () => {
+      http.get(POLY_QUOTE, () => {
         polyHits += 1;
         return new HttpResponse('rate limited', { status: 429 });
       }),
@@ -109,7 +109,7 @@ describe('getQuote — failover + retry', () => {
 
   it('classifies a Polygon 401 as an auth failure and still serves via Alpaca', async () => {
     server.use(
-      http.get(POLY_SNAPSHOT, () => new HttpResponse('bad key', { status: 401 })),
+      http.get(POLY_QUOTE, () => new HttpResponse('bad key', { status: 401 })),
       http.get(ALPACA_SNAPSHOT, () => alpacaSnapshotOK(321)),
     );
 
@@ -123,7 +123,7 @@ describe('getQuote — failover + retry', () => {
   it('does not retry a 401 (single Polygon hit)', async () => {
     let polyHits = 0;
     server.use(
-      http.get(POLY_SNAPSHOT, () => {
+      http.get(POLY_QUOTE, () => {
         polyHits += 1;
         return new HttpResponse('bad key', { status: 401 });
       }),
@@ -139,11 +139,11 @@ describe('getQuote — dedup (D3)', () => {
   it('coalesces concurrent same-symbol callers onto one upstream fetch', async () => {
     let polyHits = 0;
     server.use(
-      http.get(POLY_SNAPSHOT, async () => {
+      http.get(POLY_QUOTE, async () => {
         polyHits += 1;
         // Small delay so the second caller arrives while the first is inflight.
         await new Promise((r) => setTimeout(r, 20));
-        return polygonSnapshotOK(150);
+        return polygonQuoteAggsOK(150);
       }),
     );
 
@@ -160,9 +160,9 @@ describe('getQuote — circuit breaker (D2)', () => {
   it('skips Polygon entirely once its breaker is open', async () => {
     let polyHits = 0;
     server.use(
-      http.get(POLY_SNAPSHOT, () => {
+      http.get(POLY_QUOTE, () => {
         polyHits += 1;
-        return polygonSnapshotOK(999);
+        return polygonQuoteAggsOK(999);
       }),
       http.get(ALPACA_SNAPSHOT, () => alpacaSnapshotOK(42)),
     );

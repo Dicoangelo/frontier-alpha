@@ -226,7 +226,19 @@ function buildProbes(): Probe[] {
     { shape: 'brokerStatus', pathname: '/api/v1/broker/status' },
     { shape: 'alerts', pathname: '/api/v1/alerts' },
     { shape: 'earningsUpcoming', pathname: '/api/v1/earnings/upcoming' },
-    { shape: 'digestRun', pathname: `/api/v1/digest/run?key=${cronSecret}`, authMode: 'cron' },
+    // `&probe=true` is REQUIRED here. This monitor runs every 15 minutes (see
+    // vercel.json crons), and /api/v1/digest/run without the flag actually
+    // sends the weekly digest to every subscribed recipient — roughly 96 runs
+    // a day, each mailing real users. The flag short-circuits after the auth
+    // gate and returns zeroed counts, which still satisfies the digestRun
+    // shape, so the probe keeps verifying reachability + CRON_SECRET without
+    // the side effect. routes/health.ts already probes it this way.
+    //
+    // This was invisible until 2026-07-30 because EMAIL_PROVIDER carried a
+    // trailing newline, so every one of those sends silently hit
+    // ConsoleProvider. Fixing email delivery turned a dormant bug into a
+    // mail flood. Never point a probe at a side-effecting endpoint.
+    { shape: 'digestRun', pathname: `/api/v1/digest/run?key=${cronSecret}&probe=true`, authMode: 'cron' },
     { shape: 'healthErrors', pathname: '/api/v1/health/errors', authMode: 'service-role' },
     { shape: 'warmCache', pathname: `/api/v1/cron/warm-cache?key=${cronSecret}`, authMode: 'cron', allowNotShipped: true },
   ];
@@ -379,6 +391,12 @@ async function runProbe(
 }
 
 // ─── Route ────────────────────────────────────────────────────────────────
+
+/**
+ * Test-only seam so the probe list can be asserted without running the
+ * monitor. Guards that no probe points at a side-effecting endpoint.
+ */
+export const __testHooks = { buildProbes };
 
 export async function syntheticMonitorRoutes(
   fastify: FastifyInstance,

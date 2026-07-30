@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-30T08:45:25.226Z",
-  "headSha": "e93ee4abf798fe5cfbf9a4ced80963f2505bbb64",
+  "generatedAt": "2026-07-30T09:17:44.486Z",
+  "headSha": "bc3d0b5b5c463a4f9527b74146b7d2a7a2d715d2",
   "version": "1.13.0",
   "server": {
     "tsFiles": 146,
@@ -10,7 +10,7 @@
     "endpoints": 124,
     "migrations": 17,
     "vercelApiFiles": 4,
-    "testFiles": 61
+    "testFiles": 62
   },
   "client": {
     "pages": 25,

@@ -15,7 +15,11 @@
 import type { FastifyInstance } from 'fastify';
 import { logger } from '../observability/logger.js';
 import type { APIResponse } from '../types/index.js';
-import { warmTopHeldSymbols } from '../data/CacheWarmer.js';
+import {
+  warmTopHeldSymbols,
+  warmLatestDayAllSymbols,
+  type FreshnessResult,
+} from '../data/CacheWarmer.js';
 import type { AppServer } from '../app.js';
 
 interface RouteContext {
@@ -85,11 +89,30 @@ export async function cronWarmCacheRoutes(
 
     try {
       const result = await warmTopHeldSymbols(server.dataProvider, limit);
-      logger.info({ ...result, latencyMs: Date.now() - start }, 'Cache warmer cron complete');
+
+      // TIER 2 — grouped-daily freshness sync. One call refreshes the newest
+      // bar for every warmed symbol, instead of N per-symbol fetches. This was
+      // implemented and tested but never invoked from anywhere: both this cron
+      // and the boot path called Tier 1 only, so the documented "two-tier"
+      // strategy ran as one tier. Additive and best-effort — a failure here
+      // must not fail the cron, since Tier 1 has already done the real work.
+      let freshness: FreshnessResult | null = null;
+      try {
+        if (result.symbols.length > 0) {
+          freshness = await warmLatestDayAllSymbols(server.dataProvider, result.symbols);
+        }
+      } catch (err) {
+        logger.warn({ err }, 'Grouped-daily freshness sync failed (Tier 1 already succeeded)');
+      }
+
+      logger.info(
+        { ...result, freshness, latencyMs: Date.now() - start },
+        'Cache warmer cron complete',
+      );
 
       return {
         success: true,
-        data: result,
+        data: { ...result, freshness },
         meta: {
           timestamp: new Date(),
           requestId: request.id,

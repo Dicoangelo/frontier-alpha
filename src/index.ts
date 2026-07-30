@@ -11,7 +11,7 @@ import { readFileSync } from 'fs';
 import type { FastifyInstance } from 'fastify';
 import { buildApp, type AppServer } from './app.js';
 import { logger } from './observability/logger.js';
-import { warmTopHeldSymbols } from './data/CacheWarmer.js';
+import { warmTopHeldSymbols, warmLatestDayAllSymbols } from './data/CacheWarmer.js';
 
 const pkg = JSON.parse(
   readFileSync(new URL('../package.json', import.meta.url), 'utf-8')
@@ -78,7 +78,7 @@ export class FrontierAlphaServer {
   private kickOffWarmCache(server: AppServer): void {
     logger.info('CacheWarmer: boot-time warm scheduled (non-blocking)');
     void warmTopHeldSymbols(server.dataProvider, 20)
-      .then((result) => {
+      .then(async (result) => {
         logger.info(
           {
             attempted: result.attempted,
@@ -87,6 +87,16 @@ export class FrontierAlphaServer {
           },
           'CacheWarmer: boot-time warm finished',
         );
+
+        // TIER 2 — one grouped-daily call refreshes the newest bar for every
+        // warmed symbol. Best-effort: Tier 1 has already done the real work.
+        if (result.symbols.length === 0) return;
+        try {
+          const freshness = await warmLatestDayAllSymbols(server.dataProvider, result.symbols);
+          logger.info({ ...freshness }, 'CacheWarmer: grouped-daily freshness sync finished');
+        } catch (err) {
+          logger.warn({ err }, 'CacheWarmer: grouped-daily freshness sync threw');
+        }
       })
       .catch((err) => {
         logger.warn({ err }, 'CacheWarmer: boot-time warm threw');

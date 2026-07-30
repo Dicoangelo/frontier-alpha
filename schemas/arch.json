@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-30T09:17:44.486Z",
-  "headSha": "bc3d0b5b5c463a4f9527b74146b7d2a7a2d715d2",
+  "generatedAt": "2026-07-30T10:51:25.724Z",
+  "headSha": "aea3f8f366bf7dfd104e98e77a691898d1b05e86",
   "version": "1.13.0",
   "server": {
     "tsFiles": 146,
@@ -8,7 +8,7 @@
     "inSourceTestFiles": 6,
     "routeModules": 33,
     "endpoints": 124,
-    "migrations": 17,
+    "migrations": 18,
     "vercelApiFiles": 4,
     "testFiles": 62
   },
@@ -25,6 +25,7 @@
     "alphaVantage",
     "compGuard",
     "connectAlpaca",
+    "databaseSchema",
     "emailDelivery",
     "llmExplainer",
     "mlSentiment",
@@ -187,7 +188,8 @@
     "20260510_enable_rls_public_read.sql",
     "20260610_forensic_events.sql",
     "20260610_insight_ledger.sql",
-    "20260611_provenance_nodes.sql"
+    "20260611_provenance_nodes.sql",
+    "20260730_portfolio_shares.sql"
   ],
   "pages": [
     "Alerts",

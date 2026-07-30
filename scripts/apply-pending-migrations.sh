@@ -19,6 +19,7 @@
 #   4. 20260209_ml_models.sql          (frontier_model_versions)     [added 2026-07-30]
 #   5. 20260209_shared_portfolios.sql  (frontier_shared_portfolios)  [added 2026-07-30]
 #   6. 002_portfolio_sharing.sql       (frontier_portfolio_shares)   [added 2026-07-30]
+#   7. 20260730_portfolio_shares.sql   (portfolio_shares)            [added 2026-07-30]
 #
 # 4-6 were found on 2026-07-30 by the `databaseSchema` probe on
 # /api/v1/health/integrations: the server queries those three tables and none of
@@ -38,9 +39,15 @@
 #   - 002's only foreign keys are auth.users and frontier_portfolios, both of
 #     which already exist in production
 #
-# NOT fixed by this script: services/SharingService.ts:206,236 queries a bare
-# `portfolio_shares` table that has no CREATE TABLE in ANY migration. That is a
-# code bug (a half-finished rename to frontier_portfolio_shares), not drift.
+# 7 is new, written 2026-07-30. services/SharingService.ts:206,236 queried a
+# bare `portfolio_shares` table that had no CREATE TABLE in ANY migration — and
+# those two functions are the LIVE sharing path (routes/social.ts imports them
+# for POST /api/v1/portfolio/share and GET /api/v1/portfolio/shared/:token), so
+# sharing has never worked in production. Neither existing share table fits:
+# frontier_portfolio_shares requires a portfolio_id FK this path does not have,
+# and frontier_shared_portfolios has no expires_at. The new migration defines
+# exactly the columns the code already inserts and selects, service-role RLS
+# only (the anon key must never read snapshots directly).
 
 set -euo pipefail
 
@@ -53,6 +60,7 @@ MIGRATIONS=(
   "$REPO_ROOT/supabase/migrations/20260209_ml_models.sql"
   "$REPO_ROOT/supabase/migrations/20260209_shared_portfolios.sql"
   "$REPO_ROOT/supabase/migrations/002_portfolio_sharing.sql"
+  "$REPO_ROOT/supabase/migrations/20260730_portfolio_shares.sql"
 )
 
 # --- Token: Supabase CLI stores it in the macOS keychain via go-keyring,
@@ -98,7 +106,7 @@ done
 
 # --- Verify every table exists (harmless catalog read).
 echo "→ Verifying tables ..."
-verify_body='{"query":"SELECT tablename FROM pg_tables WHERE tablename IN ('"'"'frontier_insight_ledger'"'"','"'"'frontier_forensic_events'"'"','"'"'frontier_provenance_nodes'"'"','"'"'frontier_model_versions'"'"','"'"'frontier_shared_portfolios'"'"','"'"'frontier_portfolio_shares'"'"') ORDER BY tablename;"}'
+verify_body='{"query":"SELECT tablename FROM pg_tables WHERE tablename IN ('"'"'frontier_insight_ledger'"'"','"'"'frontier_forensic_events'"'"','"'"'frontier_provenance_nodes'"'"','"'"'frontier_model_versions'"'"','"'"'frontier_shared_portfolios'"'"','"'"'frontier_portfolio_shares'"'"','"'"'portfolio_shares'"'"') ORDER BY tablename;"}'
 curl -sS -X POST \
   "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
   -H "Authorization: Bearer $TOKEN" \

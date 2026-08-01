@@ -83,7 +83,7 @@ function DemoModeBanner() {
       <Link
         to="/login"
         onClick={clearDemoMode}
-        className="mono text-[10px] sm:text-xs tracking-[0.2em] uppercase px-3 py-1 rounded-sm text-white bg-[image:var(--gradient-sovereign)] animate-press whitespace-nowrap"
+        className="mono text-[10px] sm:text-xs tracking-[0.2em] uppercase px-4 py-1 min-h-[44px] inline-flex items-center justify-center rounded-sm text-white bg-[image:var(--gradient-sovereign)] animate-press whitespace-nowrap"
       >
         Sign Up Free
       </Link>

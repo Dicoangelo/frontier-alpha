@@ -103,7 +103,7 @@ export function AlertDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-theme-muted hover:text-theme-secondary hover:bg-theme-secondary rounded-lg transition-colors duration-200 animate-press"
+        className="relative p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-theme-muted hover:text-theme-secondary hover:bg-theme-secondary rounded-lg transition-colors duration-200 animate-press"
         aria-label={`Alerts${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
         aria-expanded={isOpen}
         aria-haspopup="true"

@@ -81,7 +81,7 @@ export function SignalTiming({ symbols }: SignalTimingProps) {
                 key={s}
                 onClick={() => setSelected(i)}
                 aria-pressed={i === selected}
-                className={`px-2 py-0.5 mono text-[10px] tracking-wider uppercase rounded-md animate-press transition-[background-color,color] duration-200 ${
+                className={`px-2 py-0.5 min-h-[32px] inline-flex items-center justify-center mono text-[10px] tracking-wider uppercase rounded-md animate-press transition-[background-color,color] duration-200 ${
                   i === selected
                     ? 'bg-theme shadow text-theme'
                     : 'text-theme-secondary hover:text-theme'

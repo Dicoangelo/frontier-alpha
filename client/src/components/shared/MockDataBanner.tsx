@@ -134,7 +134,7 @@ export function MockDataBanner({
       {dismissible && (
         <button
           onClick={handleDismiss}
-          className="p-1 text-[var(--color-warning)] hover:bg-[var(--color-bg-tertiary)] hover:opacity-80 animate-press rounded-sm transition-[opacity,background-color] duration-200 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-warning)]"
+          className="p-1 min-h-[24px] min-w-[24px] inline-flex items-center justify-center text-[var(--color-warning)] hover:bg-[var(--color-bg-tertiary)] hover:opacity-80 animate-press rounded-sm transition-[opacity,background-color] duration-200 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-warning)]"
           aria-label="Dismiss mock data banner"
         >
           <X className="w-3.5 h-3.5" />

@@ -62,7 +62,7 @@ export function FilterBar({ sort, onSortChange, filter, onFilterChange, query, o
                 key={s.id}
                 type="button"
                 onClick={() => onSortChange(s.id)}
-                className={`px-2 py-1 text-[10px] mono tracking-[0.2em] uppercase rounded-sm transition-colors animate-press ${
+                className={`px-2 py-1 min-h-[32px] inline-flex items-center justify-center text-[10px] mono tracking-[0.2em] uppercase rounded-sm transition-colors animate-press ${
                   active
                     ? 'text-[var(--color-accent-secondary-text)] bg-[color-mix(in_srgb,var(--color-accent-secondary)_12%,transparent)]'
                     : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
@@ -86,7 +86,7 @@ export function FilterBar({ sort, onSortChange, filter, onFilterChange, query, o
                 key={f.id}
                 type="button"
                 onClick={() => onFilterChange(f.id)}
-                className={`px-2 py-1 text-[10px] mono tracking-[0.2em] uppercase rounded-sm transition-colors animate-press ${
+                className={`px-2 py-1 min-h-[32px] inline-flex items-center justify-center text-[10px] mono tracking-[0.2em] uppercase rounded-sm transition-colors animate-press ${
                   active ? '' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
                 }`}
                 style={active ? {

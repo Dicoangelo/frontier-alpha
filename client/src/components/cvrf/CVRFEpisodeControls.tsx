@@ -111,7 +111,7 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
           New Decision
         </p>
         <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
-          <PlusCircle className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+          <PlusCircle className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
           Record Trading Decision
         </h3>
 
@@ -195,7 +195,7 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
         {/* Confidence Slider */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-theme-secondary mb-1">
-            Confidence: <span className="text-[var(--color-accent)] font-bold tabular-nums">{confidence}%</span>
+            Confidence: <span className="text-[var(--color-accent-text)] font-bold tabular-nums">{confidence}%</span>
           </label>
           <input
             type="range"
@@ -536,7 +536,7 @@ export function CVRFEpisodeControls() {
       {/* Active Episode Info */}
       {hasActiveEpisode && activeEpisode && (
         <div className="mt-3 glass-slab-floating rounded-xl p-3 text-sm">
-          <div className="flex items-center justify-between text-[var(--color-accent)]">
+          <div className="flex items-center justify-between text-[var(--color-accent-text)]">
             <span className="mono text-[10px] tracking-[0.3em] uppercase">Decisions recorded</span>
             <span className="font-bold tabular-nums">{activeEpisode.decisionsCount}</span>
           </div>

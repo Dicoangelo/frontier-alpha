@@ -84,7 +84,7 @@ function generateInsights(symbols: string[], factors: FactorExposure[]): Insight
     const sectors = sectorFactors.map(f => f.factor.replace('sector_', '').replace('_', ' ')).join(', ');
     insights.push({
       type: 'factor',
-      icon: <Zap className="w-4 h-4 text-[var(--color-accent)]" />,
+      icon: <Zap className="w-4 h-4 text-[var(--color-accent-text)]" />,
       title: 'Multi-Sector Exposure',
       content: `Your portfolio has significant exposure to multiple sectors: ${sectors}. This diversification helps reduce idiosyncratic risk while maintaining growth potential.`,
       confidence: 0.8,

@@ -278,7 +278,7 @@ function VolSurfaceInner({ points }: VolSurfaceProps) {
             Volatility Surface
           </p>
           <h2 className="mt-1 text-lg font-semibold text-theme flex items-center gap-2">
-            <Activity className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Activity className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             {UNDERLYING_SYMBOL}
           </h2>
         </div>

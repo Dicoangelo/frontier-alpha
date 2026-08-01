@@ -134,7 +134,7 @@ export function Earnings() {
             className="p-2.5 rounded-lg flex-shrink-0"
             style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
           >
-            <Calendar className="w-5 h-5 text-[var(--color-accent)]" />
+            <Calendar className="w-5 h-5 text-[var(--color-accent-text)]" />
           </div>
           <div className="min-w-0">
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Total Upcoming</p>

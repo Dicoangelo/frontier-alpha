@@ -191,11 +191,11 @@ export function WelcomeModal({
             >
               <div className="flex items-start gap-3">
                 <Sparkles
-                  className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent)]"
+                  className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent-text)]"
                   aria-hidden="true"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] font-semibold">
+                  <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)] font-semibold">
                     FROM YOUR PREVIEW
                   </p>
                   <p className="text-sm font-semibold text-theme mt-1">
@@ -256,7 +256,7 @@ export function WelcomeModal({
                 key={feature.title}
                 className="glass-slab rounded-2xl p-4 animate-enter"
               >
-                <feature.icon className="w-6 h-6 text-[var(--color-accent)] mb-2" aria-hidden="true" />
+                <feature.icon className="w-6 h-6 text-[var(--color-accent-text)] mb-2" aria-hidden="true" />
                 <h3 className="font-semibold text-theme text-sm">{feature.title}</h3>
                 <p className="text-xs text-theme-secondary leading-relaxed mt-1">{feature.description}</p>
               </div>

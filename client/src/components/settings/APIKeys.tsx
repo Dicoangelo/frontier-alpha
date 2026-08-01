@@ -248,7 +248,7 @@ export function APIKeys() {
                   aria-pressed={newKeyPermissions === 'read'}
                   className={`flex-1 py-2.5 px-3 rounded-lg border-2 text-sm mono tracking-[0.1em] capitalize animate-press transition-[border-color,background-color,color] duration-200 ${
                     newKeyPermissions === 'read'
-                      ? 'border-[var(--color-accent)] bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                      ? 'border-[var(--color-accent)] bg-[var(--color-accent-light)] text-[var(--color-accent-text)]'
                       : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] hover:text-[var(--color-text)]'
                   }`}
                 >
@@ -260,7 +260,7 @@ export function APIKeys() {
                   aria-pressed={newKeyPermissions === 'readwrite'}
                   className={`flex-1 py-2.5 px-3 rounded-lg border-2 text-sm mono tracking-[0.1em] capitalize animate-press transition-[border-color,background-color,color] duration-200 ${
                     newKeyPermissions === 'readwrite'
-                      ? 'border-[var(--color-accent)] bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                      ? 'border-[var(--color-accent)] bg-[var(--color-accent-light)] text-[var(--color-accent-text)]'
                       : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] hover:text-[var(--color-text)]'
                   }`}
                 >

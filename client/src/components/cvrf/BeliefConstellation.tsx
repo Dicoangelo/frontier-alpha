@@ -483,7 +483,7 @@ export const BeliefConstellation = React.memo(function BeliefConstellation() {
             Force Graph
           </p>
           <h3 className="font-semibold text-theme flex items-center gap-2">
-            <Orbit className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Orbit className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Belief Constellation
           </h3>
         </div>
@@ -505,7 +505,7 @@ export const BeliefConstellation = React.memo(function BeliefConstellation() {
           Force Graph
         </p>
         <h3 className="font-semibold text-theme flex items-center gap-2 mb-2">
-          <Orbit className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+          <Orbit className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
           Belief Constellation
         </h3>
         <p className="text-sm text-[var(--color-negative)]">Failed to load belief data</p>
@@ -518,7 +518,7 @@ export const BeliefConstellation = React.memo(function BeliefConstellation() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-[var(--color-border)]">
         <div className="flex items-center gap-3">
-          <Orbit className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+          <Orbit className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
           <div>
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">
               Force Graph

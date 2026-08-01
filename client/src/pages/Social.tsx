@@ -207,8 +207,8 @@ function UserProfileCard({ profile, onToggleFollow }: {
               <span className="text-theme-muted">return</span>
             </div>
             <div className="flex items-center gap-1">
-              <Shield className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
-              <span className="text-[var(--color-accent)] font-bold mono">{profile.sharpe_ratio.toFixed(2)}</span>
+              <Shield className="w-4 h-4 text-[var(--color-accent-text)]" aria-hidden="true" />
+              <span className="text-[var(--color-accent-text)] font-bold mono">{profile.sharpe_ratio.toFixed(2)}</span>
               <span className="text-theme-muted">Sharpe</span>
             </div>
           </div>
@@ -261,7 +261,7 @@ function LeaderboardTab({ entries, onToggleFollow }: {
                     key={col.key}
                     className={`px-4 py-3 text-left text-[10px] mono tracking-[0.3em] font-medium uppercase ${
                       col.sortable ? 'cursor-pointer select-none hover:text-theme animate-press' : ''
-                    } ${isActive ? 'text-[var(--color-accent)]' : 'text-theme-muted'}`}
+                    } ${isActive ? 'text-[var(--color-accent-text)]' : 'text-theme-muted'}`}
                     onClick={() => handleSort(col)}
                     aria-sort={isActive ? (sortDir === 'desc' ? 'descending' : 'ascending') : undefined}
                   >
@@ -310,8 +310,8 @@ function LeaderboardTab({ entries, onToggleFollow }: {
                         onClick={() => onToggleFollow(entry.user_id)}
                         className={`flex-shrink-0 p-1 rounded-full transition-colors min-h-[28px] min-w-[28px] flex items-center justify-center animate-press ${
                           entry.is_following
-                            ? 'text-[var(--color-accent)] hover:text-[var(--color-negative)]'
-                            : 'text-theme-muted hover:text-[var(--color-accent)]'
+                            ? 'text-[var(--color-accent-text)] hover:text-[var(--color-negative)]'
+                            : 'text-theme-muted hover:text-[var(--color-accent-text)]'
                         }`}
                         aria-label={entry.is_following ? `Unfollow ${entry.display_name}` : `Follow ${entry.display_name}`}
                       >
@@ -564,7 +564,7 @@ export function Social() {
           </p>
         </div>
         <div className="glass-slab inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-theme-secondary self-start sm:self-end">
-          <Users className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
+          <Users className="w-4 h-4 text-[var(--color-accent-text)]" aria-hidden="true" />
           <span>Following <strong className="text-theme mono">{followingCount}</strong> traders</span>
         </div>
       </header>

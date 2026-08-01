@@ -132,7 +132,7 @@ export function Terms() {
               Questions about these terms can be sent to{' '}
               <a
                 href="mailto:dicoangelo@metaventionsai.com"
-                className="text-[var(--color-accent)] hover:underline"
+                className="text-[var(--color-accent-text)] hover:underline"
               >
                 dicoangelo@metaventionsai.com
               </a>

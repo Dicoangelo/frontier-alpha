@@ -45,7 +45,7 @@ export function CVRFStatsCard() {
             CVRF Intelligence
           </p>
           <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
-            <Brain className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Brain className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Belief Snapshot
           </h3>
         </div>
@@ -104,7 +104,7 @@ export function CVRFStatsCard() {
             <Target className="w-4 h-4" aria-hidden="true" />
             <span className="mono text-[10px] tracking-[0.3em] uppercase">Learning Rate</span>
           </div>
-          <p className="text-2xl font-bold text-[var(--color-accent)] tabular-nums">{stats.cvrf.avgLearningRate}</p>
+          <p className="text-2xl font-bold text-[var(--color-accent-text)] tabular-nums">{stats.cvrf.avgLearningRate}</p>
           <p className="text-xs text-theme-muted tabular-nums">τ: {stats.cvrf.avgDecisionOverlap}</p>
         </div>
       </div>
@@ -122,7 +122,7 @@ export function CVRFStatsCard() {
             Object.entries(stats.factors?.weights ?? {}).map(([factor, weight]) => (
               <span
                 key={factor}
-                className="px-2 py-1 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)] text-xs rounded-full mono tracking-[0.05em] tabular-nums"
+                className="px-2 py-1 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent-text)] text-xs rounded-full mono tracking-[0.05em] tabular-nums"
               >
                 {factor}: {weight}
               </span>

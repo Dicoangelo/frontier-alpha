@@ -112,7 +112,7 @@ export function CVRFBeliefDisplay() {
             Belief State
           </p>
           <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
-            <Scale className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Scale className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Active Posture
           </h3>
         </div>
@@ -163,7 +163,7 @@ export function CVRFBeliefDisplay() {
             label="Risk Tolerance"
             value={`${(beliefs.riskTolerance * 100).toFixed(0)}%`}
             icon={<Gauge className="w-3.5 h-3.5" />}
-            color="text-[var(--color-accent)]"
+            color="text-[var(--color-accent-text)]"
           />
           <ConstraintRow
             label="Max Drawdown"

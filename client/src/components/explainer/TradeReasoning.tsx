@@ -32,7 +32,7 @@ interface TradeReasoningChain {
 const STEP_ICONS = [Zap, Activity, GitBranch, Target];
 const STEP_COLORS = [
   'text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)]',
-  'text-[var(--color-accent)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]',
+  'text-[var(--color-accent-text)] bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]',
   'text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_10%,transparent)]',
   'text-[var(--color-positive)] bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)]',
 ];
@@ -45,7 +45,7 @@ function RecommendationBadge({ rec }: { rec: string }) {
   const styles: Record<string, string> = {
     buy: 'bg-[var(--color-positive)]/10 text-[var(--color-positive)]',
     add: 'bg-[var(--color-positive)]/10 text-[var(--color-positive)]',
-    hold: 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]',
+    hold: 'bg-[var(--color-accent)]/10 text-[var(--color-accent-text)]',
     sell: 'bg-[var(--color-negative)]/10 text-[var(--color-negative)]',
     reduce: 'bg-[var(--color-warning)]/10 text-[var(--color-warning)]',
   };
@@ -126,7 +126,7 @@ function ChainStep({ step, index }: { step: TradeReasoningStep; index: number })
             <div className="glass-slab-floating rounded-lg p-3 space-y-1">
               {step.dataPoints.map((point, i) => (
                 <div key={i} className="flex items-start gap-1.5 text-xs leading-relaxed text-theme-muted">
-                  <span className="text-[var(--color-accent)] mt-0.5" aria-hidden="true">•</span>
+                  <span className="text-[var(--color-accent-text)] mt-0.5" aria-hidden="true">•</span>
                   {point}
                 </div>
               ))}
@@ -163,7 +163,7 @@ export function TradeReasoning({ symbol, isOpen, onClose }: TradeReasoningProps)
           <div className="flex items-center justify-between border-b border-theme-light pb-4 mb-4 -mx-6 px-6 -mt-6 pt-7">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-[var(--color-accent)]/10 rounded-lg">
-                <Brain className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+                <Brain className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
               </div>
               <div>
                 <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
@@ -198,7 +198,7 @@ export function TradeReasoning({ symbol, isOpen, onClose }: TradeReasoningProps)
                 </p>
                 <button
                   onClick={() => { reset(); fetchChain(symbol); }}
-                  className="mt-3 text-sm text-[var(--color-accent)] hover:underline animate-press transition-[opacity] duration-200"
+                  className="mt-3 text-sm text-[var(--color-accent-text)] hover:underline animate-press transition-[opacity] duration-200"
                 >
                   Try again
                 </button>
@@ -255,7 +255,7 @@ export function WhyButton({ symbol, onClick }: { symbol: string; onClick: (symbo
         e.stopPropagation();
         onClick(symbol);
       }}
-      className="p-1.5 min-w-[44px] min-h-[44px] text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 rounded-lg flex items-center justify-center gap-1 mono text-[10px] tracking-[0.2em] uppercase font-medium animate-press transition-[background-color] duration-200"
+      className="p-1.5 min-w-[44px] min-h-[44px] text-[var(--color-accent-text)] hover:bg-[var(--color-accent)]/10 rounded-lg flex items-center justify-center gap-1 mono text-[10px] tracking-[0.2em] uppercase font-medium animate-press transition-[background-color] duration-200"
       title={`Why ${symbol}?`}
       aria-label={`Explain ${symbol} reasoning`}
     >

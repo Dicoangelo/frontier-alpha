@@ -208,7 +208,7 @@ export function TradeExecutor({
             Order Ticket
           </p>
           <h3 className="mt-1 font-semibold text-theme flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <ShoppingCart className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Place Order
           </h3>
         </div>
@@ -370,7 +370,7 @@ export function TradeExecutor({
                 type="checkbox"
                 checked={extendedHours}
                 onChange={(e) => setExtendedHours(e.target.checked)}
-                className="w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]"
+                className="w-4 h-4 rounded border-[var(--color-border)] text-[var(--color-accent-text)] focus:ring-2 focus:ring-[var(--color-accent)]"
               />
               <span className="text-sm text-theme-secondary">Extended hours trading</span>
             </label>

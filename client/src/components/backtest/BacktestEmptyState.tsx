@@ -93,7 +93,7 @@ export function BacktestEmptyState() {
       </div>
 
       <p className="flex items-center gap-2 mt-5 text-sm text-theme-secondary">
-        <ArrowUp className="w-4 h-4 text-[var(--color-accent)] shrink-0" aria-hidden="true" />
+        <ArrowUp className="w-4 h-4 text-[var(--color-accent-text)] shrink-0" aria-hidden="true" />
         Set your symbols, date range, and strategy above, then{' '}
         <span className="font-semibold text-theme">Run Backtest</span>.
       </p>

@@ -46,11 +46,11 @@ export function UpgradeBanner() {
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <Sparkles
-            className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent)]"
+            className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent-text)]"
             aria-hidden="true"
           />
           <div className="flex-1 min-w-0">
-            <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)]">
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)]">
               Free Plan ·{' '}
               <span className="text-[color:var(--color-accent-secondary)]">Limited</span>
             </p>

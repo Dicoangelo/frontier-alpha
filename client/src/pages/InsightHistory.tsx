@@ -57,7 +57,7 @@ function SubstrateBadge({ substrate }: { substrate: string | null }) {
   const label = substrate ?? 'unknown';
   return (
     <span
-      className="mono uppercase px-1.5 py-0.5 text-[10px] tracking-[0.2em] rounded text-[var(--color-accent)]"
+      className="mono uppercase px-1.5 py-0.5 text-[10px] tracking-[0.2em] rounded text-[var(--color-accent-text)]"
       style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
     >
       {label}

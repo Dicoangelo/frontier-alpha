@@ -638,7 +638,7 @@ export function Portfolio() {
                             <WhyButton symbol={position.symbol} onClick={setWhySymbol} />
                             <button
                               onClick={() => startEdit(position)}
-                              className="p-2.5 min-w-[44px] min-h-[44px] text-theme-muted hover:text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-sm flex items-center justify-center touch-manipulation animate-press transition-colors duration-200"
+                              className="p-2.5 min-w-[44px] min-h-[44px] text-theme-muted hover:text-[var(--color-accent-text)] hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-sm flex items-center justify-center touch-manipulation animate-press transition-colors duration-200"
                               aria-label={`Edit ${position.symbol}`}
                             >
                               <Edit2 className="w-5 h-5" aria-hidden="true" />
@@ -766,7 +766,7 @@ export function Portfolio() {
                               <WhyButton symbol={position.symbol} onClick={setWhySymbol} />
                               <button
                                 onClick={() => startEdit(position)}
-                                className="p-2.5 min-w-[44px] min-h-[44px] text-theme-muted hover:text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-sm flex items-center justify-center animate-press transition-colors duration-200"
+                                className="p-2.5 min-w-[44px] min-h-[44px] text-theme-muted hover:text-[var(--color-accent-text)] hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-sm flex items-center justify-center animate-press transition-colors duration-200"
                                 aria-label={`Edit ${position.symbol}`}
                               >
                                 <Edit2 className="w-5 h-5" aria-hidden="true" />

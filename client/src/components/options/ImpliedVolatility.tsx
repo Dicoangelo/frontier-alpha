@@ -217,7 +217,7 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
             Implied Volatility
           </p>
           <h3 className="mt-1 text-lg font-semibold text-theme flex items-center gap-2">
-            <Activity className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Activity className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Volatility surface
           </h3>
         </div>
@@ -392,7 +392,7 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="mono text-2xl font-bold tabular-nums text-[var(--color-accent)]">{iv.atmIV}%</span>
+                    <span className="mono text-2xl font-bold tabular-nums text-[var(--color-accent-text)]">{iv.atmIV}%</span>
                     <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">ATM IV</p>
                   </div>
                 </div>
@@ -450,17 +450,17 @@ export const ImpliedVolatility = React.memo(function ImpliedVolatility({
                     <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px] bg-[image:var(--gradient-sovereign)]" />
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <BarChart3 className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
-                        <span className="mono text-[10px] tracking-[0.2em] uppercase font-medium text-[var(--color-accent)]">
+                        <BarChart3 className="w-4 h-4 text-[var(--color-accent-text)]" aria-hidden="true" />
+                        <span className="mono text-[10px] tracking-[0.2em] uppercase font-medium text-[var(--color-accent-text)]">
                           Options-Implied Earnings Move
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="mono text-lg font-bold tabular-nums text-[var(--color-accent)]">
+                        <span className="mono text-lg font-bold tabular-nums text-[var(--color-accent-text)]">
                           ±{iv.expectedMove.earnings}%
                         </span>
                         {iv.straddlePrice && (
-                          <p className="mono text-[10px] tabular-nums text-[var(--color-accent)]">
+                          <p className="mono text-[10px] tabular-nums text-[var(--color-accent-text)]">
                             Straddle: ${iv.straddlePrice}
                           </p>
                         )}
@@ -563,7 +563,7 @@ export function ImpliedVolatilityCompact({
       <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: railColor }} />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Activity className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+          <Activity className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
           <div>
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Portfolio IV</p>
             <p className="mt-0.5 mono text-xs tabular-nums text-theme-secondary">
@@ -572,7 +572,7 @@ export function ImpliedVolatilityCompact({
           </div>
         </div>
         <div className="text-right">
-          <p className="mono text-2xl font-bold tabular-nums text-[var(--color-accent)]">{portfolioIV.averageIV}%</p>
+          <p className="mono text-2xl font-bold tabular-nums text-[var(--color-accent-text)]">{portfolioIV.averageIV}%</p>
           <p className="mono text-[10px] tabular-nums text-theme-muted">HV: {portfolioIV.averageHV}%</p>
         </div>
       </div>
@@ -641,14 +641,14 @@ export function EarningsIV({
     >
       <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: railColor }} />
       <div className="flex items-center gap-2 mb-3">
-        <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+        <BarChart3 className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
         <h4 className="mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme">Options-Implied Move</h4>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-3">
         <div>
           <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Options Pricing</p>
-          <p className="mt-0.5 mono text-xl font-bold tabular-nums text-[var(--color-accent)]">±{optionsMove.toFixed(1)}%</p>
+          <p className="mt-0.5 mono text-xl font-bold tabular-nums text-[var(--color-accent-text)]">±{optionsMove.toFixed(1)}%</p>
           {ivData.straddlePrice && ivData.currentPrice > 0 && (
             <p className="mono text-[10px] tabular-nums text-theme-muted">
               ${ivData.straddlePrice} straddle

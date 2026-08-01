@@ -171,7 +171,7 @@ export function BrokerSection() {
             href="https://app.alpaca.markets/paper/dashboard/overview"
             target="_blank"
             rel="noopener noreferrer"
-            className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-secondary)] hover:text-[var(--color-accent)] transition-colors inline-flex items-center gap-1"
+            className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-secondary)] hover:text-[var(--color-accent-text)] transition-colors inline-flex items-center gap-1"
           >
             Get keys at Alpaca <ExternalLink className="w-3 h-3" />
           </a>

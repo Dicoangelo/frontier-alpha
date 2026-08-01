@@ -337,7 +337,7 @@ function OptimizeContent() {
                     >
                       <span className="mono text-xs tracking-[0.2em] uppercase text-theme">{symbol}</span>
                       {weight !== undefined && (
-                        <span className="mono text-xs tabular-nums text-[var(--color-accent)] font-semibold">
+                        <span className="mono text-xs tabular-nums text-[var(--color-accent-text)] font-semibold">
                           {(weight * 100).toFixed(1)}%
                         </span>
                       )}

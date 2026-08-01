@@ -192,7 +192,7 @@ export function Options() {
           label="ATM IV"
           value={`${(getATMIV(MOCK_VOL_SURFACE) * 100).toFixed(1)}%`}
           icon={<Activity className="w-4 h-4" />}
-          color="text-[var(--color-accent)]"
+          color="text-[var(--color-accent-text)]"
         />
         <MetricCard
           label="IV Skew"
@@ -234,7 +234,7 @@ export function Options() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md min-h-[44px] mono text-[11px] tracking-[0.2em] uppercase font-semibold animate-press transition-colors duration-200 ${
                 isActive
-                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent-text)]'
                   : 'text-theme-secondary hover:text-theme'
               }`}
             >

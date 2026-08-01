@@ -28,6 +28,11 @@
     --color-accent-hover: #6920e0;
     --color-accent-light: rgba(123, 44, 255, 0.08);
     --color-accent-secondary: #18E6FF;
+    /* Accent used as TEXT. On light surfaces the brand violet is already
+     * readable (5.76:1 on white), so this matches --color-accent here and
+     * only diverges in dark mode. Split out because --color-accent also backs
+     * borders, glows and gradient stops, which must keep the exact brand hue. */
+    --color-accent-text: #7B2CFF;
 
     /* Semantic state — LIGHT THEME.
      *
@@ -125,6 +130,12 @@
     --color-accent-hover: #9454ff;
     --color-accent-light: rgba(123, 44, 255, 0.15);
     --color-accent-secondary: #18E6FF;
+    /* Accent used as TEXT on dark surfaces. The brand violet #7B2CFF only
+     * reaches 2.85:1 on a dark card — below the readable floor at the 10-12px
+     * sizes it is used at. violet-400 keeps the hue and clears AA at 6.03:1.
+     * --color-accent itself is unchanged so borders, glows and the sovereign
+     * gradient keep the exact brand colour. */
+    --color-accent-text: #a78bfa;
 
     /* Semantic state — DARK THEME. Already contrast-correct on #0f1219. */
     --color-positive: #34d399;

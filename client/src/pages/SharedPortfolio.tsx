@@ -264,7 +264,7 @@ export function SharedPortfolio() {
           <Card className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-lg">
-                <PieChart className="w-6 h-6 text-[var(--color-accent)]" />
+                <PieChart className="w-6 h-6 text-[var(--color-accent-text)]" />
               </div>
               <div>
                 <p className="text-sm text-[var(--color-text-muted)]">Positions</p>

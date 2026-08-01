@@ -263,7 +263,7 @@ export function Settings() {
                     onClick={() => handleChange('risk_tolerance', level)}
                     className={`flex-1 py-3 px-4 min-h-[44px] rounded-lg border-2 capitalize mono text-sm tracking-[0.1em] transition-[border-color,background-color,color] duration-200 animate-press ${
                       active
-                        ? 'border-[var(--color-accent)] bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                        ? 'border-[var(--color-accent)] bg-[var(--color-accent-light)] text-[var(--color-accent-text)]'
                         : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-hover)] hover:text-[var(--color-text)]'
                     }`}
                     aria-pressed={active}
@@ -389,7 +389,7 @@ export function Settings() {
           <div>
             <p className="text-sm text-[var(--color-text-secondary)]">
               Current Plan:{' '}
-              <span className="capitalize text-[var(--color-accent)] font-semibold">{plan}</span>
+              <span className="capitalize text-[var(--color-accent-text)] font-semibold">{plan}</span>
             </p>
             <p className="text-xs text-[var(--color-text-muted)] mt-1">
               Status: <span className="capitalize">{status}</span>
@@ -542,7 +542,7 @@ function AppearanceCard() {
               title={opt.description}
               className={`flex flex-col items-center justify-center gap-1.5 py-3 px-3 rounded-md transition-colors duration-200 animate-press ${
                 isActive
-                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent-text)]'
                   : 'text-theme-secondary hover:text-theme'
               }`}
             >

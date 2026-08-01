@@ -126,12 +126,12 @@ const filingTypeIcons: Record<string, string> = {
 };
 
 const filingTypeBadgeColors: Record<string, string> = {
-  '8-K': 'bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)]',
+  '8-K': 'bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent-text)]',
   '10-K': 'bg-[color-mix(in_srgb,var(--color-positive)_12%,transparent)] text-[var(--color-positive)]',
   '10-Q': 'bg-[color-mix(in_srgb,var(--color-info)_12%,transparent)] text-[var(--color-info)]',
-  '4': 'bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)]',
+  '4': 'bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent-text)]',
   'SC 13D': 'bg-[color-mix(in_srgb,var(--color-negative)_12%,transparent)] text-[var(--color-negative)]',
-  'SC 13G': 'bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)]',
+  'SC 13G': 'bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent-text)]',
   '13F-HR': 'bg-theme-tertiary text-theme-secondary',
   'DEF 14A': 'bg-[color-mix(in_srgb,var(--color-positive)_12%,transparent)] text-[var(--color-positive)]',
   'S-1': 'bg-[color-mix(in_srgb,var(--color-positive)_12%,transparent)] text-[var(--color-positive)]',
@@ -359,7 +359,7 @@ function FilingCard({ alert, expanded, onToggle, compact = false }: FilingCardPr
 
           <div className="glass-slab rounded-lg p-3 text-sm text-theme">
             <div className="flex items-start gap-2">
-              <TrendingUp className="w-4 h-4 mt-0.5 text-[var(--color-accent)]" aria-hidden="true" />
+              <TrendingUp className="w-4 h-4 mt-0.5 text-[var(--color-accent-text)]" aria-hidden="true" />
               <div>
                 <p className={`mono text-[10px] tracking-[0.3em] uppercase ${severityText[alert.severity]} mb-1`}>
                   Suggested Action

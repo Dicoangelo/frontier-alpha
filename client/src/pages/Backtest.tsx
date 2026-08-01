@@ -126,7 +126,7 @@ function MetricCard({ label, value, subtitle, icon, color = 'text-[var(--color-t
         className="p-2.5 rounded-lg flex-shrink-0"
         style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)' }}
       >
-        <span className="text-[var(--color-accent)]">{icon}</span>
+        <span className="text-[var(--color-accent-text)]">{icon}</span>
       </div>
       <div className="min-w-0">
         <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">{label}</p>
@@ -407,7 +407,7 @@ export function Backtest() {
                 label="Sharpe Ratio"
                 value={result.walkForward.sharpe.toFixed(2)}
                 icon={<Target className="w-4 h-4" />}
-                color="text-[var(--color-accent)]"
+                color="text-[var(--color-accent-text)]"
               />
               <MetricCard
                 label="Max Drawdown"

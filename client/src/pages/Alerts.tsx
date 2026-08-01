@@ -399,7 +399,7 @@ export function Alerts() {
           <button
             onClick={() => setSeverityFilter('all')}
             aria-label="Clear severity filter"
-            className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-[color:var(--color-border)] text-[var(--color-accent)] mono text-[10px] tracking-[0.3em] uppercase animate-press hover:border-[var(--color-accent)] transition-[color,border-color] duration-200"
+            className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-[color:var(--color-border)] text-[var(--color-accent-text)] mono text-[10px] tracking-[0.3em] uppercase animate-press hover:border-[var(--color-accent)] transition-[color,border-color] duration-200"
           >
             Clear filter
           </button>

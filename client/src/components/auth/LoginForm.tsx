@@ -63,7 +63,7 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           </label>
           <Link
             to="/reset-password"
-            className="text-[10px] mono tracking-[0.2em] uppercase text-[var(--color-accent-secondary)] hover:text-[var(--color-accent)] transition-colors"
+            className="text-[10px] mono tracking-[0.2em] uppercase text-[var(--color-accent-secondary)] hover:text-[var(--color-accent-text)] transition-colors"
           >
             Forgot?
           </Link>
@@ -96,7 +96,7 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         <button
           type="button"
           onClick={onSwitchToSignup}
-          className="text-[var(--color-accent-secondary)] hover:text-[var(--color-accent)] font-medium transition-colors animate-press"
+          className="text-[var(--color-accent-secondary)] hover:text-[var(--color-accent-text)] font-medium transition-colors animate-press"
         >
           Sign up
         </button>

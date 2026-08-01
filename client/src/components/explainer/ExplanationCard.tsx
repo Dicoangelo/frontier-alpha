@@ -72,7 +72,7 @@ const TYPE_CONFIG: Record<ExplanationType, {
   earnings: {
     label: 'Earnings Forecast',
     icon: <Layers className="w-4 h-4" />,
-    color: 'text-[var(--color-accent)]',
+    color: 'text-[var(--color-accent-text)]',
   },
   risk_alert: {
     label: 'Risk Alert',
@@ -87,13 +87,13 @@ const TYPE_CONFIG: Record<ExplanationType, {
 };
 
 const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
-  ai_model: { label: 'AI Model', color: 'bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] text-[var(--color-accent)] border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)]' },
+  ai_model: { label: 'AI Model', color: 'bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] text-[var(--color-accent-text)] border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)]' },
   factor_engine: { label: 'Factor Engine', color: 'bg-[color-mix(in_srgb,var(--color-info)_20%,transparent)] text-[var(--color-info)] border-[color-mix(in_srgb,var(--color-info)_30%,transparent)]' },
   market_data: { label: 'Market Data', color: 'bg-[color-mix(in_srgb,var(--color-positive)_20%,transparent)] text-[var(--color-positive)] border-[color-mix(in_srgb,var(--color-positive)_30%,transparent)]' },
   sentiment_analysis: { label: 'Sentiment', color: 'bg-[color-mix(in_srgb,var(--color-warning)_20%,transparent)] text-[var(--color-warning)] border-[color-mix(in_srgb,var(--color-warning)_30%,transparent)]' },
   earnings_calendar: { label: 'Earnings', color: 'bg-[color-mix(in_srgb,var(--color-info)_20%,transparent)] text-[var(--color-info)] border-[color-mix(in_srgb,var(--color-info)_30%,transparent)]' },
   risk_engine: { label: 'Risk Engine', color: 'bg-[color-mix(in_srgb,var(--color-negative)_20%,transparent)] text-[var(--color-negative)] border-[color-mix(in_srgb,var(--color-negative)_30%,transparent)]' },
-  portfolio_optimizer: { label: 'Optimizer', color: 'bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] text-[var(--color-accent)] border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)]' },
+  portfolio_optimizer: { label: 'Optimizer', color: 'bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] text-[var(--color-accent-text)] border-[color-mix(in_srgb,var(--color-accent)_30%,transparent)]' },
   system: { label: 'System', color: 'bg-[color-mix(in_srgb,var(--color-text-muted)_20%,transparent)] text-[var(--color-text-muted)] border-[color-mix(in_srgb,var(--color-text-muted)_30%,transparent)]' },
 };
 
@@ -269,7 +269,7 @@ export function ExplanationCard({
               )}
 
               {isAIPowered ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full mono text-[10px] tracking-[0.2em] uppercase font-medium bg-[color-mix(in_srgb,var(--color-accent)_15%,transparent)] text-[var(--color-accent)] border border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)]">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full mono text-[10px] tracking-[0.2em] uppercase font-medium bg-[color-mix(in_srgb,var(--color-accent)_15%,transparent)] text-[var(--color-accent-text)] border border-[color-mix(in_srgb,var(--color-accent)_25%,transparent)]">
                   <Sparkles className="w-3 h-3" aria-hidden="true" />
                   AI-powered
                 </span>

@@ -122,7 +122,7 @@ function EpisodeCard({ episode, isActive }: EpisodeCardProps) {
           </div>
 
           {isActive && (
-            <div className="mt-3 p-2 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded mono text-[10px] tracking-[0.2em] uppercase text-[var(--color-accent)] text-center">
+            <div className="mt-3 p-2 bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded mono text-[10px] tracking-[0.2em] uppercase text-[var(--color-accent-text)] text-center">
               Recording decisions · close episode to run CVRF cycle
             </div>
           )}

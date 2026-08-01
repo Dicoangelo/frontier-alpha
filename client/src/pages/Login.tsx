@@ -48,7 +48,7 @@ export function Login() {
             href="/terms"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline underline-offset-2 hover:text-[var(--color-accent)] transition-colors"
+            className="underline underline-offset-2 hover:text-[var(--color-accent-text)] transition-colors"
           >
             Terms of Service
           </a>
@@ -57,7 +57,7 @@ export function Login() {
             href="/privacy"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline underline-offset-2 hover:text-[var(--color-accent)] transition-colors"
+            className="underline underline-offset-2 hover:text-[var(--color-accent-text)] transition-colors"
           >
             Privacy Policy
           </a>

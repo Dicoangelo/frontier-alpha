@@ -239,7 +239,7 @@ export function PositionList({ positions, quotes }: PositionListProps) {
 
   const SortArrow = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <span className="ml-1 opacity-20">↕</span>;
-    return <span className="ml-1 text-[var(--color-accent)]">{sortDir === 'asc' ? '↑' : '↓'}</span>;
+    return <span className="ml-1 text-[var(--color-accent-text)]">{sortDir === 'asc' ? '↑' : '↓'}</span>;
   };
 
   const SortTh = ({

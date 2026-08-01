@@ -166,11 +166,11 @@ export function CVRFDashboard() {
         <div className="mt-8 pt-4 border-t border-[var(--color-border-light)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
             Based on{' '}
-            <a href="#" className="text-[var(--color-accent)] hover:underline">FinCon</a>
+            <a href="#" className="text-[var(--color-accent-text)] hover:underline">FinCon</a>
             {' · '}
-            <a href="#" className="text-[var(--color-accent)] hover:underline">TextGrad</a>
+            <a href="#" className="text-[var(--color-accent-text)] hover:underline">TextGrad</a>
             {' · '}
-            <a href="#" className="text-[var(--color-accent)] hover:underline">FLAG-Trader</a>
+            <a href="#" className="text-[var(--color-accent-text)] hover:underline">FLAG-Trader</a>
             {' research'}
           </p>
           <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">

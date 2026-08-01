@@ -59,7 +59,7 @@ function EpisodeSelector({ label, selected, episodes, onSelect, onClear }: Episo
       <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1.5">{label}</p>
       {selected ? (
         <div className="flex items-center gap-2 p-2 rounded-lg bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-accent)_20%,transparent)]">
-          <span className="text-sm font-medium text-[var(--color-accent)] tabular-nums">Episode {selected.episodeNumber}</span>
+          <span className="text-sm font-medium text-[var(--color-accent-text)] tabular-nums">Episode {selected.episodeNumber}</span>
           <span className="mono text-[10px] tracking-[0.1em] text-theme-muted tabular-nums">
             {selected.portfolioReturn !== undefined
               ? `${(selected.portfolioReturn * 100).toFixed(2)}%`
@@ -70,7 +70,7 @@ function EpisodeSelector({ label, selected, episodes, onSelect, onClear }: Episo
             className="ml-auto p-0.5 hover:bg-[color-mix(in_srgb,var(--color-accent)_20%,transparent)] rounded animate-press transition-[background-color] duration-150"
             aria-label="Clear selection"
           >
-            <X className="w-3 h-3 text-[var(--color-accent)]" aria-hidden="true" />
+            <X className="w-3 h-3 text-[var(--color-accent-text)]" aria-hidden="true" />
           </button>
         </div>
       ) : (
@@ -121,7 +121,7 @@ export function EpisodeComparisonView() {
           Side-by-Side
         </p>
         <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
-          <GitCompare className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+          <GitCompare className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
           Episode Comparison
         </h3>
       </div>
@@ -188,11 +188,11 @@ export function EpisodeComparisonView() {
           {/* Detailed Metrics */}
           <div className="glass-slab-floating rounded-xl p-4">
             <div className="grid grid-cols-3 gap-3 mb-3 text-center">
-              <div className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] tabular-nums">
+              <div className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)] tabular-nums">
                 Episode {episodeA.episodeNumber}
               </div>
               <div className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Metric</div>
-              <div className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] tabular-nums">
+              <div className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)] tabular-nums">
                 Episode {episodeB.episodeNumber}
               </div>
             </div>

@@ -113,7 +113,7 @@ export function Privacy() {
               full data export or deletion, email{' '}
               <a
                 href="mailto:dicoangelo@metaventionsai.com"
-                className="text-[var(--color-accent)] hover:underline"
+                className="text-[var(--color-accent-text)] hover:underline"
               >
                 dicoangelo@metaventionsai.com
               </a>
@@ -153,7 +153,7 @@ export function Privacy() {
               Privacy questions and data requests:{' '}
               <a
                 href="mailto:dicoangelo@metaventionsai.com"
-                className="text-[var(--color-accent)] hover:underline"
+                className="text-[var(--color-accent-text)] hover:underline"
               >
                 dicoangelo@metaventionsai.com
               </a>

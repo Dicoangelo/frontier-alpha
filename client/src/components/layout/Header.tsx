@@ -82,7 +82,7 @@ export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
           {/* Mobile menu button */}
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 -ml-2 text-theme-secondary hover:text-[var(--color-accent)] hover:bg-[var(--color-bg-tertiary)] animate-press rounded-sm transition-[color,background-color] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            className="lg:hidden p-2 -ml-2 text-theme-secondary hover:text-[var(--color-accent-text)] hover:bg-[var(--color-bg-tertiary)] animate-press rounded-sm transition-[color,background-color] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             aria-label="Toggle navigation"
           >
             <Menu className="w-6 h-6" />
@@ -195,7 +195,7 @@ export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
           {/* Dark mode toggle */}
           <button
             onClick={toggle}
-            className="p-2 text-theme-secondary hover:text-[var(--color-accent)] hover:bg-[var(--color-bg-tertiary)] animate-press rounded-sm transition-[color,background-color] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            className="p-2 text-theme-secondary hover:text-[var(--color-accent-text)] hover:bg-[var(--color-bg-tertiary)] animate-press rounded-sm transition-[color,background-color] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             aria-label={`Switch to ${resolved === 'dark' ? 'light' : 'dark'} mode`}
             title={`${resolved === 'dark' ? 'Light' : 'Dark'} mode`}
           >
@@ -206,7 +206,7 @@ export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
           <HelpKeyboardHint />
           <button
             onClick={onHelpClick}
-            className="p-2 text-theme-secondary hover:text-[var(--color-accent)] hover:bg-[var(--color-bg-tertiary)] animate-press rounded-sm transition-[color,background-color] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            className="p-2 text-theme-secondary hover:text-[var(--color-accent-text)] hover:bg-[var(--color-bg-tertiary)] animate-press rounded-sm transition-[color,background-color] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             aria-label="Open help (press ? key)"
             title="Help (press ?)"
           >
@@ -216,7 +216,7 @@ export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
           {/* Settings */}
           <Link
             to="/settings"
-            className="hidden lg:flex p-2 text-theme-secondary hover:text-[var(--color-accent)] hover:bg-[var(--color-bg-tertiary)] animate-press rounded-sm transition-[color,background-color] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            className="hidden lg:flex p-2 text-theme-secondary hover:text-[var(--color-accent-text)] hover:bg-[var(--color-bg-tertiary)] animate-press rounded-sm transition-[color,background-color] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             aria-label="Settings"
           >
             <Settings className="w-5 h-5" aria-hidden="true" />

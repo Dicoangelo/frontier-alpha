@@ -70,7 +70,7 @@ export function KeyboardHelpModal({ isOpen, onClose }: KeyboardHelpModalProps) {
                 className="p-2 rounded-lg shrink-0"
                 style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)' }}
               >
-                <Keyboard className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+                <Keyboard className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
               </div>
               <div>
                 <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">

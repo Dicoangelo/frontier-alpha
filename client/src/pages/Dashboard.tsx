@@ -285,7 +285,7 @@ function QuickAction({ to, icon, label }: { to: string; icon: React.ReactNode; l
       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
         bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]
         border border-[var(--color-border-light)]
-        hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]
+        hover:border-[var(--color-accent)] hover:text-[var(--color-accent-text)]
         transition-[border-color,color,background-color] duration-200 animate-press"
     >
       {icon}

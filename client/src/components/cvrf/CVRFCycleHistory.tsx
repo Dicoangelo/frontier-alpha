@@ -63,11 +63,11 @@ function CycleCard({ cycle, index }: CycleCardProps) {
         </div>
         <div className="p-2 bg-[var(--color-bg)] rounded">
           <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Insights</p>
-          <p className="font-bold text-[var(--color-accent)] tabular-nums">{cycle.insightsCount}</p>
+          <p className="font-bold text-[var(--color-accent-text)] tabular-nums">{cycle.insightsCount}</p>
         </div>
         <div className="p-2 bg-[var(--color-bg)] rounded">
           <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Updates</p>
-          <p className="font-bold text-[var(--color-accent)] tabular-nums">{cycle.beliefUpdatesCount}</p>
+          <p className="font-bold text-[var(--color-accent-text)] tabular-nums">{cycle.beliefUpdatesCount}</p>
         </div>
       </div>
 
@@ -75,7 +75,7 @@ function CycleCard({ cycle, index }: CycleCardProps) {
       {cycle.newRegime && (
         <div className="mt-3 flex items-center gap-2 text-xs">
           <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">New Regime:</span>
-          <span className="px-2 py-0.5 bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)] rounded-full capitalize mono tracking-[0.1em]">
+          <span className="px-2 py-0.5 bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent-text)] rounded-full capitalize mono tracking-[0.1em]">
             {cycle.newRegime}
           </span>
         </div>
@@ -127,7 +127,7 @@ export function CVRFCycleHistory() {
             Reinforcement Loop
           </p>
           <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
-            <History className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <History className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             CVRF Cycles
           </h3>
         </div>
@@ -140,11 +140,11 @@ export function CVRFCycleHistory() {
       {cycles.length > 0 && (
         <div className="grid grid-cols-2 gap-3 mb-4 animate-stagger">
           <div className="glass-slab-floating rounded-xl p-3 animate-enter">
-            <div className="flex items-center gap-1.5 text-[var(--color-accent)] mb-1">
+            <div className="flex items-center gap-1.5 text-[var(--color-accent-text)] mb-1">
               <Lightbulb className="w-4 h-4" aria-hidden="true" />
               <span className="mono text-[10px] tracking-[0.3em] uppercase">Total Insights</span>
             </div>
-            <p className="text-2xl font-bold text-[var(--color-accent)] tabular-nums">{totalInsights}</p>
+            <p className="text-2xl font-bold text-[var(--color-accent-text)] tabular-nums">{totalInsights}</p>
           </div>
           <div className="glass-slab-floating rounded-xl p-3 animate-enter">
             <div className="flex items-center gap-1.5 text-[var(--color-positive)] mb-1">

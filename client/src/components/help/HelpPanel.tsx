@@ -163,7 +163,7 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
                 className="p-2 rounded-lg shrink-0"
                 style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)' }}
               >
-                <BookOpen className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+                <BookOpen className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
               </div>
             )}
             <div className="min-w-0">
@@ -283,7 +283,7 @@ function SectionList({ sections, expandedSections, onToggleSection, onSelectTopi
                 className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                 style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
               >
-                <Icon className="w-5 h-5 text-[var(--color-accent)]" />
+                <Icon className="w-5 h-5 text-[var(--color-accent-text)]" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-theme">{section.title}</h3>
@@ -362,7 +362,7 @@ function SearchResults({ query, results, hasResults, onSelectTopic }: SearchResu
         </p>
         <Link
           to="/help"
-          className="text-[var(--color-accent)] hover:brightness-125 font-medium animate-press"
+          className="text-[var(--color-accent-text)] hover:brightness-125 font-medium animate-press"
         >
           Browse all help topics
         </Link>

@@ -368,7 +368,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                             <span
                               className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded ${
                                 share.permissions === 'edit'
-                                  ? 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)]'
+                                  ? 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent-text)]'
                                   : 'bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] text-[var(--color-info)]'
                               }`}
                             >

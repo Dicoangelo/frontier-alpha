@@ -192,7 +192,7 @@ export function EarningsForecast({
 
         {/* AI Explanation */}
         <div className="glass-slab gradient-brand-subtle relative overflow-hidden rounded-xl p-4 pl-5 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] animate-enter">
-          <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] mb-2">AI Analysis</p>
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)] mb-2">AI Analysis</p>
           <p className="text-sm text-theme-secondary leading-relaxed">{forecast.explanation}</p>
         </div>
 

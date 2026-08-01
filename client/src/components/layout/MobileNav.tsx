@@ -49,7 +49,7 @@ function navButtonClass(isActive: boolean) {
     before:content-[''] before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2
     before:h-[3px] before:w-8 before:rounded-full
     ${isActive
-      ? 'text-[var(--color-accent)] before:bg-[image:var(--gradient-sovereign)]'
+      ? 'text-[var(--color-accent-text)] before:bg-[image:var(--gradient-sovereign)]'
       : 'text-theme-secondary hover:text-theme before:bg-transparent'
     }
   `;
@@ -135,7 +135,7 @@ export function MobileNav() {
                   touch-manipulation animate-press
                   transition-colors duration-200
                   ${isActive
-                    ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                    ? 'bg-[var(--color-accent-light)] text-[var(--color-accent-text)]'
                     : 'text-theme-secondary hover:bg-[var(--color-bg-tertiary)] hover:text-theme'
                   }
                 `}

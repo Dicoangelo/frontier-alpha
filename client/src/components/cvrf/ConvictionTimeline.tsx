@@ -238,7 +238,7 @@ function BeliefDiffPanel({ selected }: { selected: TimelineNode | null }) {
         </div>
         <div className="glass-slab-floating rounded-xl p-3 text-center animate-enter">
           <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Insights</p>
-          <p className="text-lg font-bold text-[var(--color-accent)] tabular-nums mt-0.5">{cycle.insightsCount}</p>
+          <p className="text-lg font-bold text-[var(--color-accent-text)] tabular-nums mt-0.5">{cycle.insightsCount}</p>
         </div>
         <div className="glass-slab-floating rounded-xl p-3 text-center animate-enter">
           <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Belief Updates</p>
@@ -249,7 +249,7 @@ function BeliefDiffPanel({ selected }: { selected: TimelineNode | null }) {
       {/* Regime change */}
       {cycle.newRegime && (
         <div className="flex items-center gap-2 glass-slab-floating rounded-xl p-3">
-          <ArrowRight className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
+          <ArrowRight className="w-4 h-4 text-[var(--color-accent-text)]" aria-hidden="true" />
           <span className="text-sm text-theme">
             Regime shifted to <span className="font-semibold capitalize">{cycle.newRegime}</span>
           </span>
@@ -377,7 +377,7 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
             Belief Drift
           </p>
           <h3 className="font-semibold text-theme flex items-center gap-2">
-            <Clock className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Clock className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Conviction Timeline
           </h3>
         </div>
@@ -396,7 +396,7 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
             Belief Drift
           </p>
           <h3 className="font-semibold text-theme flex items-center gap-2">
-            <Clock className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Clock className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Conviction Timeline
           </h3>
         </div>
@@ -416,7 +416,7 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-[var(--color-border)]">
         <div className="flex items-center gap-3">
-          <Clock className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+          <Clock className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
           <div>
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">
               Belief Drift
@@ -438,7 +438,7 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
               onClick={() => setViewMode('chart')}
               className={`px-3 py-1.5 min-h-[32px] text-[10px] mono tracking-[0.2em] uppercase rounded-md animate-press transition-[color,background-color] duration-200 ${
                 viewMode === 'chart'
-                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent-text)]'
                   : 'text-theme-secondary hover:text-theme'
               }`}
               aria-pressed={viewMode === 'chart'}
@@ -449,7 +449,7 @@ export const ConvictionTimeline = React.memo(function ConvictionTimeline() {
               onClick={() => setViewMode('nodes')}
               className={`px-3 py-1.5 min-h-[32px] text-[10px] mono tracking-[0.2em] uppercase rounded-md animate-press transition-[color,background-color] duration-200 ${
                 viewMode === 'nodes'
-                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent-text)]'
                   : 'text-theme-secondary hover:text-theme'
               }`}
               aria-pressed={viewMode === 'nodes'}

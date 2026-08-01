@@ -251,7 +251,7 @@ export function Help() {
         <div className="mb-8 animate-fade-in">
           <button
             onClick={clearTopic}
-            className="flex items-center gap-2 text-[var(--color-accent)] hover:brightness-125 mb-4 animate-press"
+            className="flex items-center gap-2 text-[var(--color-accent-text)] hover:brightness-125 mb-4 animate-press"
           >
             <ChevronRight className="w-4 h-4 rotate-180" />
             Back to all topics
@@ -363,7 +363,7 @@ export function Help() {
                           className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                           style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
                         >
-                          <Icon className="w-6 h-6 text-[var(--color-accent)]" aria-hidden="true" />
+                          <Icon className="w-6 h-6 text-[var(--color-accent-text)]" aria-hidden="true" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-theme">{section.title}</h3>
@@ -457,7 +457,7 @@ export function Help() {
                       const result = getTopicById('sharpe-volatility');
                       if (result) selectTopic(result.topic);
                     }}
-                    className="w-full mt-4 text-sm text-[var(--color-accent)] hover:brightness-125 font-medium animate-press"
+                    className="w-full mt-4 text-sm text-[var(--color-accent-text)] hover:brightness-125 font-medium animate-press"
                   >
                     View all metrics
                   </button>
@@ -484,7 +484,7 @@ export function Help() {
                       const result = getTopicById('what-are-factors');
                       if (result) selectTopic(result.topic);
                     }}
-                    className="w-full mt-4 text-sm text-[var(--color-accent)] hover:brightness-125 font-medium animate-press"
+                    className="w-full mt-4 text-sm text-[var(--color-accent-text)] hover:brightness-125 font-medium animate-press"
                   >
                     Learn about factors
                   </button>
@@ -506,7 +506,7 @@ export function Help() {
                   className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
                   style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)' }}
                 >
-                  <MessageCircle className="w-6 h-6 text-[var(--color-accent)]" aria-hidden="true" />
+                  <MessageCircle className="w-6 h-6 text-[var(--color-accent-text)]" aria-hidden="true" />
                 </div>
                 <p className={kickerClass}>SUPPORT</p>
                 <h2 className="text-2xl font-bold text-gradient-brand mt-1 mb-2">Still need help?</h2>
@@ -552,7 +552,7 @@ export function Help() {
                 onClick={openShortcutsModal}
                 className="glass-slab inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-theme animate-press animate-lift hover:border-[color:var(--color-border-hover)] self-start"
               >
-                <Keyboard className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
+                <Keyboard className="w-4 h-4 text-[var(--color-accent-text)]" aria-hidden="true" />
                 Open keyboard shortcuts
               </button>
             </div>
@@ -589,7 +589,7 @@ function QuickStartCard({
         className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
         style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)' }}
       >
-        <Icon className="w-6 h-6 text-[var(--color-accent)]" aria-hidden="true" />
+        <Icon className="w-6 h-6 text-[var(--color-accent-text)]" aria-hidden="true" />
       </div>
       <h3 className="font-semibold text-theme mb-1">{title}</h3>
       <p className="text-sm text-theme-secondary leading-relaxed">{description}</p>

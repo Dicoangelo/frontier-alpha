@@ -99,7 +99,7 @@ export function MetaPromptCard() {
             Self-Update
           </p>
           <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Sparkles className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Meta-Prompt
           </h3>
         </div>
@@ -152,7 +152,7 @@ export function MetaPromptCard() {
 
       {/* Optimization Direction */}
       <div className="relative mb-4 glass-slab-floating rounded-xl p-4">
-        <div className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] font-medium mb-2 flex items-center gap-1">
+        <div className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)] font-medium mb-2 flex items-center gap-1">
           <Lightbulb className="w-3.5 h-3.5" aria-hidden="true" />
           Optimization Direction
         </div>
@@ -168,7 +168,7 @@ export function MetaPromptCard() {
           <div className="space-y-1.5">
             {keyLearnings.slice(0, expanded ? undefined : 3).map((learning: string, idx: number) => (
               <div key={idx} className="flex items-start gap-2 text-sm text-theme-secondary">
-                <CheckCircle2 className="w-4 h-4 text-[var(--color-accent)] mt-0.5 shrink-0" aria-hidden="true" />
+                <CheckCircle2 className="w-4 h-4 text-[var(--color-accent-text)] mt-0.5 shrink-0" aria-hidden="true" />
                 <span>{learning}</span>
               </div>
             ))}
@@ -176,7 +176,7 @@ export function MetaPromptCard() {
           {keyLearnings.length > 3 && (
             <button
               onClick={() => setExpanded(!expanded)}
-              className="mt-2 mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] flex items-center gap-1 animate-press transition-[opacity] duration-150 hover:opacity-80"
+              className="mt-2 mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)] flex items-center gap-1 animate-press transition-[opacity] duration-150 hover:opacity-80"
               aria-expanded={expanded}
             >
               {expanded ? (

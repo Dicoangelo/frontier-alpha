@@ -149,7 +149,7 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
                       }`}
                     >
                       <span className="flex items-center gap-3 min-w-0">
-                        <span className={`mono font-bold text-sm ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text)]'}`}>
+                        <span className={`mono font-bold text-sm ${isActive ? 'text-[var(--color-accent-text)]' : 'text-[var(--color-text)]'}`}>
                           {r.symbol}
                         </span>
                         <span className="mono text-[9px] tracking-[0.25em] uppercase text-[var(--color-text-muted)] truncate">

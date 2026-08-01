@@ -42,7 +42,7 @@ function FactorCategoryCard({ category, factors }: FactorCategoryCardProps) {
     <Card className="hover:shadow-lg transition-shadow duration-200">
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 rounded-lg" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}>
-          <Icon className="w-5 h-5 text-[var(--color-accent)]" />
+          <Icon className="w-5 h-5 text-[var(--color-accent-text)]" />
         </div>
         <div>
           <h3 className="font-semibold text-[var(--color-text)]">{FACTOR_CATEGORY_LABELS[category]}</h3>
@@ -167,7 +167,7 @@ export function Factors() {
           </div>
           <div className="min-w-0">
             <p className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">Significant</p>
-            <p className="text-xl font-bold text-[var(--color-accent)] mt-0.5">{significantFactors}</p>
+            <p className="text-xl font-bold text-[var(--color-accent-text)] mt-0.5">{significantFactors}</p>
           </div>
         </div>
         <div className="flex items-center gap-3 p-4 rounded-xl bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)]">
@@ -283,8 +283,8 @@ export function Factors() {
             animationDelay: '200ms',
           }}
         >
-          <p className="text-sm font-medium text-[var(--color-accent)] mb-2">AI Insight</p>
-          <p className="text-sm text-[var(--color-accent)]">{insight}</p>
+          <p className="text-sm font-medium text-[var(--color-accent-text)] mb-2">AI Insight</p>
+          <p className="text-sm text-[var(--color-accent-text)]">{insight}</p>
         </div>
       )}
     </div>

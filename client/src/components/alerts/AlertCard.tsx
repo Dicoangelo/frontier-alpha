@@ -53,7 +53,7 @@ const ALERT_CONFIG: Record<string, {
     ],
   },
   factor_drift: {
-    icon: <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />,
+    icon: <BarChart3 className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />,
     rail: 'before:bg-[image:var(--gradient-sovereign)]',
     iconTint: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
     actions: [

@@ -272,9 +272,9 @@ export default function Trading() {
             className="glass-slab-floating relative overflow-hidden mb-6 rounded-xl pl-5 pr-4 py-4 flex items-start gap-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)] animate-fade-in-up"
             style={{ animationDelay: '20ms', animationFillMode: 'both' }}
           >
-            <Info className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Info className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent-text)]" aria-hidden="true" />
             <div className="flex-1">
-              <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)]">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)]">
                 Trading · Read-Only Demo Mode
               </p>
               <p className="text-sm mt-1 text-theme-secondary">
@@ -290,9 +290,9 @@ export default function Trading() {
             className="glass-slab-floating relative overflow-hidden mb-6 rounded-xl pl-5 pr-4 py-4 flex items-start gap-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)] animate-fade-in-up"
             style={{ animationDelay: '20ms', animationFillMode: 'both' }}
           >
-            <Sparkles className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Sparkles className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent-text)]" aria-hidden="true" />
             <div className="flex-1">
-              <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)]">
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)]">
                 Paper Trading · Frontier Alpha Engine
               </p>
               <p className="text-sm mt-1 text-theme-secondary">
@@ -341,10 +341,10 @@ export default function Trading() {
             <div
               className="glass-slab-floating relative overflow-hidden mb-6 rounded-xl pl-5 pr-4 py-4 flex items-start gap-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)]"
             >
-              <Info className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent)]" />
+              <Info className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent-text)]" />
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)]">Paper Trading Mode</p>
+                  <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)]">Paper Trading Mode</p>
                   <Badge variant="info">
                     {brokerType === 'alpaca' ? 'Alpaca Paper' : 'Demo'}
                   </Badge>
@@ -433,7 +433,7 @@ export default function Trading() {
                   className="p-2 rounded-lg shrink-0"
                   style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
                 >
-                  <Clock className="w-4 h-4 text-[var(--color-accent)]" />
+                  <Clock className="w-4 h-4 text-[var(--color-accent-text)]" />
                 </div>
                 <div>
                   <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Session</p>
@@ -467,7 +467,7 @@ export default function Trading() {
                     className="p-2 rounded-lg shrink-0"
                     style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
                   >
-                    <BarChart3 className="w-4 h-4 text-[var(--color-accent)]" />
+                    <BarChart3 className="w-4 h-4 text-[var(--color-accent-text)]" />
                   </div>
                   <div>
                     <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Holdings</p>
@@ -499,7 +499,7 @@ export default function Trading() {
                       boxShadow: '0 0 30px rgba(123,44,255,0.2)',
                     }}
                   >
-                    <Activity className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+                    <Activity className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
                   </div>
                   <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">
                     HOLDINGS · Empty
@@ -916,7 +916,7 @@ function ConnectionSettingsModal({
               href="https://app.alpaca.markets/paper/dashboard/overview"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[var(--color-accent)] hover:underline animate-press"
+              className="text-[var(--color-accent-text)] hover:underline animate-press"
             >
               Alpaca Dashboard
             </a>

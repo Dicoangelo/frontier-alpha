@@ -177,7 +177,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
         <button
           type="button"
           onClick={onSwitchToLogin}
-          className="text-[var(--color-accent-secondary)] hover:text-[var(--color-accent)] font-medium transition-colors animate-press"
+          className="text-[var(--color-accent-secondary)] hover:text-[var(--color-accent-text)] font-medium transition-colors animate-press"
         >
           Sign in
         </button>

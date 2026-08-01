@@ -66,7 +66,7 @@ function StrategySelectorInner() {
             Strategy P&amp;L
           </p>
           <h2 className="mt-1 text-lg font-semibold text-theme flex items-center gap-2">
-            <Target className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Target className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             {strategy.name}
           </h2>
         </div>
@@ -95,7 +95,7 @@ function StrategySelectorInner() {
         <div className="text-sm text-theme leading-relaxed">{strategy.description}</div>
         <div className="mt-3 flex flex-wrap gap-2">
           <span
-            className="px-2.5 py-1 mono text-[10px] tracking-[0.2em] uppercase rounded-full border bg-[var(--color-accent)]/12 text-[var(--color-accent)] border-[var(--color-accent)]/22"
+            className="px-2.5 py-1 mono text-[10px] tracking-[0.2em] uppercase rounded-full border bg-[var(--color-accent)]/12 text-[var(--color-accent-text)] border-[var(--color-accent)]/22"
           >
             {strategy.outlook}
           </span>

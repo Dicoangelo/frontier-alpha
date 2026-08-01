@@ -38,7 +38,7 @@ const colors = {
   },
   info: {
     rail: 'before:bg-[image:var(--gradient-sovereign)]',
-    icon: 'text-[var(--color-accent)]',
+    icon: 'text-[var(--color-accent-text)]',
     glow: 'shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)]',
   },
   warning: {

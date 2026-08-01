@@ -188,7 +188,7 @@ export function Landing() {
       <footer className="mt-auto border-t border-[var(--color-border-light)] py-6 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-[10px] text-[var(--color-text-muted)] mono tracking-[0.2em] uppercase">
-            Powered by <span className="text-[var(--color-accent)]">Metaventions AI</span> — institutional-grade factor models
+            Powered by <span className="text-[var(--color-accent-text)]">Metaventions AI</span> — institutional-grade factor models
           </div>
           <nav className="flex gap-6" aria-label="Footer navigation">
             <button

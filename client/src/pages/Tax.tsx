@@ -213,7 +213,7 @@ function SummarySection({ data }: { data: TaxSummaryData }) {
           label="Harvesting Savings"
           value={formatCurrency(data.harvestingSavings)}
           subtext={`${MOCK_HARVEST_OPPORTUNITIES.length} opportunities available`}
-          color="text-[var(--color-accent)]"
+          color="text-[var(--color-accent-text)]"
           icon={Scissors}
         />
         <MetricCard
@@ -307,7 +307,7 @@ function HarvestSection({ opportunities }: { opportunities: HarvestOpportunity[]
             className="p-2 rounded-lg shrink-0"
             style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
           >
-            <Scissors className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Scissors className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
           </div>
           <div>
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
@@ -315,7 +315,7 @@ function HarvestSection({ opportunities }: { opportunities: HarvestOpportunity[]
             </p>
             <p className="text-sm text-theme-secondary mt-1">
               Total estimated savings:{' '}
-              <span className="mono tabular-nums font-bold text-[var(--color-accent)]">{formatCurrency(totalSavings)}</span>
+              <span className="mono tabular-nums font-bold text-[var(--color-accent-text)]">{formatCurrency(totalSavings)}</span>
             </p>
           </div>
         </div>
@@ -374,7 +374,7 @@ function HarvestSection({ opportunities }: { opportunities: HarvestOpportunity[]
                     <td className="px-4 py-3 text-right mono tabular-nums text-theme">${opp.costBasis.toFixed(2)}</td>
                     <td className="px-4 py-3 text-right mono tabular-nums text-theme">${opp.currentPrice.toFixed(2)}</td>
                     <td className="px-4 py-3 text-right mono tabular-nums text-[var(--color-negative)] font-bold">{formatCurrency(opp.unrealizedLoss, true)}</td>
-                    <td className="px-4 py-3 text-right mono tabular-nums text-[var(--color-accent)] font-bold">{formatCurrency(opp.estimatedTaxSavings)}</td>
+                    <td className="px-4 py-3 text-right mono tabular-nums text-[var(--color-accent-text)] font-bold">{formatCurrency(opp.estimatedTaxSavings)}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {opp.replacements.map((sym) => (
@@ -481,7 +481,7 @@ function WashSalesSection({ violations }: { violations: WashSaleEntry[] }) {
                         className={`mono uppercase px-1.5 py-0.5 text-[10px] tracking-[0.2em] rounded ${
                           v.matchType === 'same_ticker'
                             ? 'text-[var(--color-warning)]'
-                            : 'text-[var(--color-accent)]'
+                            : 'text-[var(--color-accent-text)]'
                         }`}
                         style={{
                           backgroundColor:
@@ -718,7 +718,7 @@ function ReportSection({ rows, summary }: { rows: ReportRow[]; summary: TaxSumma
           <div className="mt-4 text-center">
             <button
               onClick={() => setShowAll((prev) => !prev)}
-              className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)] hover:underline min-h-[44px] animate-press"
+              className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)] hover:underline min-h-[44px] animate-press"
             >
               {showAll ? 'Show less' : `Show all ${rows.length} transactions`}
             </button>
@@ -994,7 +994,7 @@ export function Tax() {
           </p>
         </div>
         <div className="glass-slab-floating rounded-xl px-4 py-2.5 flex items-center gap-2">
-          <DollarSign className="w-4 h-4 text-[var(--color-accent)]" aria-hidden="true" />
+          <DollarSign className="w-4 h-4 text-[var(--color-accent-text)]" aria-hidden="true" />
           <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Tax Year</span>
           <strong className="mono tabular-nums text-sm font-bold text-theme">{activeSummary.taxYear}</strong>
         </div>
@@ -1019,7 +1019,7 @@ export function Tax() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md min-h-[44px] mono text-[11px] tracking-[0.2em] uppercase font-semibold animate-press transition-colors duration-200 whitespace-nowrap ${
                 isActive
-                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent-text)]'
                   : 'text-theme-secondary hover:text-theme'
               }`}
             >

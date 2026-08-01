@@ -127,7 +127,7 @@ export function EpisodePerformanceChart() {
             Performance Curve
           </p>
           <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <BarChart3 className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Episode Performance
           </h3>
         </div>
@@ -151,7 +151,7 @@ export function EpisodePerformanceChart() {
             Performance Curve
           </p>
           <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <BarChart3 className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Episode Performance
           </h3>
         </div>
@@ -167,7 +167,7 @@ export function EpisodePerformanceChart() {
               onClick={() => setMetric(m)}
               className={`px-3 py-1.5 min-h-[32px] text-[10px] mono tracking-[0.2em] uppercase rounded-md animate-press transition-[color,background-color] duration-200 ${
                 metric === m
-                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent-text)]'
                   : 'text-theme-secondary hover:text-theme'
               }`}
               aria-pressed={metric === m}
@@ -196,7 +196,7 @@ export function EpisodePerformanceChart() {
         </div>
         <div className="glass-slab-floating rounded-xl p-3 text-center animate-enter">
           <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Avg Sharpe</p>
-          <p className="text-xl font-bold text-[var(--color-accent)] tabular-nums mt-0.5">{avgSharpe.toFixed(2)}</p>
+          <p className="text-xl font-bold text-[var(--color-accent-text)] tabular-nums mt-0.5">{avgSharpe.toFixed(2)}</p>
         </div>
       </div>
 

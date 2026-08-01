@@ -166,7 +166,7 @@ export function EarningsHeatmap({ earnings, onSelect, selectedSymbol }: Earnings
             {(viewMonth !== today.getMonth() || viewYear !== today.getFullYear()) && (
               <button
                 onClick={goToday}
-                className="mono text-[10px] tracking-[0.2em] uppercase font-semibold px-2 py-1 rounded bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent)] hover:bg-[color-mix(in_srgb,var(--color-accent)_18%,transparent)] transition-colors duration-200 animate-press"
+                className="mono text-[10px] tracking-[0.2em] uppercase font-semibold px-2 py-1 rounded bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] text-[var(--color-accent-text)] hover:bg-[color-mix(in_srgb,var(--color-accent)_18%,transparent)] transition-colors duration-200 animate-press"
               >
                 Today
               </button>
@@ -333,7 +333,7 @@ export function EarningsHeatmap({ earnings, onSelect, selectedSymbol }: Earnings
                         {/* BMO/AMC timing badge */}
                         {hasEarnings && <TimingBadge timing={primaryTiming} />}
 
-                        <span className={`mono tabular-nums text-xs ${isToday ? 'font-bold text-[var(--color-accent)]' : hasEarnings ? 'font-semibold text-theme' : ''}`}>
+                        <span className={`mono tabular-nums text-xs ${isToday ? 'font-bold text-[var(--color-accent-text)]' : hasEarnings ? 'font-semibold text-theme' : ''}`}>
                           {date.getDate()}
                         </span>
 

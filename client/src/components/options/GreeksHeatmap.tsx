@@ -70,7 +70,7 @@ function GreeksHeatmapInner({ cells }: GreeksHeatmapProps) {
             Greeks Heatmap
           </p>
           <h2 className="mt-1 text-lg font-semibold text-theme flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <BarChart3 className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             {greekLabels[selectedGreek]} surface
           </h2>
         </div>
@@ -166,7 +166,7 @@ function GreeksHeatmapInner({ cells }: GreeksHeatmapProps) {
                   <tr key={strike} className="border-b border-theme-light">
                     <td
                       className={`px-2 py-2 mono font-medium tabular-nums sticky left-0 bg-[var(--color-bg-secondary)] z-10 ${
-                        isATM ? 'text-[var(--color-accent)] font-bold' : 'text-theme'
+                        isATM ? 'text-[var(--color-accent-text)] font-bold' : 'text-theme'
                       }`}
                     >
                       {strike.toFixed(1)}

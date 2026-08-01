@@ -190,7 +190,7 @@ export function PortfolioExport({ portfolio, onOpenShareModal }: PortfolioExport
                 }}
                 className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-[var(--color-bg-tertiary)]"
               >
-                <Link2 className="h-5 w-5 text-[var(--color-accent)]" />
+                <Link2 className="h-5 w-5 text-[var(--color-accent-text)]" />
                 <div>
                   <p className="font-medium text-[var(--color-text-secondary)]">Create Share Link</p>
                   <p className="text-xs text-[var(--color-text-muted)]">Generate secure share URL</p>

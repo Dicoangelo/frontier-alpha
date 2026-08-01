@@ -31,7 +31,7 @@ export function HelpButton({
         onClick={onClick}
         className={`
           glass-slab flex items-center gap-2 px-3 py-2 rounded-lg
-          text-theme-secondary hover:text-[var(--color-accent)]
+          text-theme-secondary hover:text-[var(--color-accent-text)]
           hover:border-[color:var(--color-border-hover)]
           animate-press animate-lift
           focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/40
@@ -50,7 +50,7 @@ export function HelpButton({
       onClick={onClick}
       className={`
         glass-slab ${sizeClasses[size]} flex items-center justify-center rounded-full
-        text-theme-muted hover:text-[var(--color-accent)]
+        text-theme-muted hover:text-[var(--color-accent-text)]
         hover:border-[color:var(--color-border-hover)]
         animate-press animate-lift
         focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/40
@@ -87,7 +87,7 @@ export function FloatingHelpButton({
         glass-slab-floating fixed ${positionClasses[position]} z-40
         w-12 h-12 rounded-full
         flex items-center justify-center
-        text-[var(--color-accent)]
+        text-[var(--color-accent-text)]
         animate-press animate-lift
         shadow-[0_10px_40px_-10px_rgba(123,44,255,0.55)]
         hover:shadow-[0_18px_60px_-12px_rgba(123,44,255,0.75)]

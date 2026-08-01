@@ -84,7 +84,7 @@ function ModelVersionsInner({ models }: ModelVersionsProps) {
             Model Registry
           </p>
           <h2 className="text-lg font-semibold text-theme flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Cpu className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Model Performance
           </h2>
         </div>

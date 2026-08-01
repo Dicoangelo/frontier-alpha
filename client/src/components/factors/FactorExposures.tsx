@@ -255,7 +255,7 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
               <span className="text-lg" aria-hidden="true">🧠</span>
             </div>
             <div>
-              <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)]">AI Insight</p>
+              <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)]">AI Insight</p>
               <p className="text-sm text-theme-secondary mt-1 leading-relaxed">{insight}</p>
             </div>
           </div>

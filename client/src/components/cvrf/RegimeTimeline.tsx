@@ -55,7 +55,7 @@ export function RegimeTimeline() {
             Regime Stream
           </p>
           <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
-            <Clock className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Clock className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Regime Timeline
           </h3>
         </div>
@@ -110,7 +110,7 @@ export function RegimeTimeline() {
             Regime Stream
           </p>
           <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
-            <Clock className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Clock className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Regime Timeline
           </h3>
         </div>

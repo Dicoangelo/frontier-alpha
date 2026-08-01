@@ -56,7 +56,7 @@ function OptionsChainInner({ contracts }: OptionsChainProps) {
             Options Chain
           </p>
           <h2 className="mt-1 text-lg font-semibold text-theme flex items-center gap-2">
-            <Layers className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Layers className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             <span>{UNDERLYING_SYMBOL}</span>
             <span className="mono text-xs tabular-nums text-theme-muted">
               @ ${UNDERLYING_PRICE.toFixed(2)}
@@ -169,7 +169,7 @@ function OptionsChainInner({ contracts }: OptionsChainProps) {
                     {/* Strike */}
                     <td
                       className={`text-center mono px-3 py-2 text-xs font-bold tabular-nums border-r border-theme-light ${
-                        isATM ? 'text-[var(--color-accent)]' : 'text-theme'
+                        isATM ? 'text-[var(--color-accent-text)]' : 'text-theme'
                       }`}
                     >
                       {strike.toFixed(1)}

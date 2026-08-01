@@ -125,8 +125,8 @@ export function PullToRefresh({
           <RefreshCw
             className={`
               w-5 h-5
-              ${isRefreshing ? 'animate-spin text-[var(--color-accent)]' : ''}
-              ${!isRefreshing && ready ? 'text-[var(--color-accent)]' : ''}
+              ${isRefreshing ? 'animate-spin text-[var(--color-accent-text)]' : ''}
+              ${!isRefreshing && ready ? 'text-[var(--color-accent-text)]' : ''}
               ${!isRefreshing && !ready ? 'text-theme-muted' : ''}
             `}
             aria-hidden="true"

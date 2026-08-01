@@ -441,7 +441,7 @@ export const EquityCurve = React.memo(function EquityCurve({
               onClick={() => setSelectedTimeframe(tf)}
               className={`px-3 py-1.5 min-h-[32px] text-[10px] mono tracking-[0.2em] uppercase rounded-md animate-press transition-[color,background-color] duration-200 touch-manipulation ${
                 selectedTimeframe === tf
-                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)]'
+                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent-text)]'
                   : 'text-theme-secondary hover:text-theme'
               }`}
               aria-pressed={selectedTimeframe === tf}

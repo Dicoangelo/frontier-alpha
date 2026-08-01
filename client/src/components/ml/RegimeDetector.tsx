@@ -84,7 +84,7 @@ function RegimeDetectorInner({ regime }: RegimeDetectorProps) {
             Live Regime
           </p>
           <h2 className="text-lg font-semibold text-theme flex items-center gap-2">
-            <Gauge className="w-5 h-5 text-[var(--color-accent)]" aria-hidden="true" />
+            <Gauge className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
             Market Regime
           </h2>
         </div>

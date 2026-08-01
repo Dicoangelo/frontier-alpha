@@ -219,7 +219,7 @@ export function PerformanceAttribution({ symbols }: PerformanceAttributionProps)
           <div
             className="glass-slab-floating rounded-xl p-4 bg-[var(--color-accent)]/8"
           >
-            <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent)]">Specific Return</p>
+            <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)]">Specific Return</p>
             <p className={`mt-1 mono text-xl font-bold tabular-nums ${data.factor.specificReturn >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}`}>
               {formatPercent(data.factor.specificReturn)}
             </p>

@@ -54,8 +54,11 @@ const REGIME_CONFIG: Record<
     icon: Activity,
   },
   volatile: {
+    // `color` is rendered as TEXT (MetricCard value, regime label), so it uses
+    // the text-safe accent; `bgColor` stays on the raw brand violet because a
+    // 12% tint is decorative and should keep the exact hue.
     label: 'Volatile',
-    color: 'var(--color-accent)',
+    color: 'var(--color-accent-text)',
     bgColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
     icon: Zap,
   },

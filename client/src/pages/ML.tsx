@@ -279,12 +279,15 @@ export function ML() {
             icon={<Activity className="w-4 h-4" />}
             color={REGIME_CONFIG[regime.regime].color}
           />
+          {/* MetricCard paints `color` onto the value text as well as the icon
+              chip, so this passes the text-safe accent: the raw brand violet
+              renders at 2.95:1 on a dark card. */}
           <MetricCard
             label="Best Accuracy"
             value={`${(bestAccuracy * 100).toFixed(1)}%`}
             subtitle="Deployed model"
             icon={<Target className="w-4 h-4" />}
-            color="var(--color-accent)"
+            color="var(--color-accent-text)"
           />
           <MetricCard
             label="Sharpe Improvement"

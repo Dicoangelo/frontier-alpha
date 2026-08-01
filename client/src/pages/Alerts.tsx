@@ -275,7 +275,7 @@ export function Alerts() {
       >
         <div>
           <p className={kickerClass}>
-            Alerts · <span className="text-[color:var(--color-accent-secondary)]">Live Watchtower</span>
+            Alerts · <span className="text-[color:var(--color-accent-secondary-text)]">Live Watchtower</span>
           </p>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight">

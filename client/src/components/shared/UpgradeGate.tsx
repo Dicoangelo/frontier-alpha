@@ -123,7 +123,7 @@ export function UpgradeGate({
           {/* Mono kicker */}
           <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-3">
             {PLAN_LABEL[resolvedPlan].toUpperCase()} ·{' '}
-            <span className="text-[color:var(--color-accent-secondary)]">Required</span>
+            <span className="text-[color:var(--color-accent-secondary-text)]">Required</span>
           </p>
 
           {/* Title */}
@@ -139,7 +139,7 @@ export function UpgradeGate({
           {plan !== 'free' && plan !== resolvedPlan && (
             <p className="mt-3 text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">
               You are on{' '}
-              <span className="text-[color:var(--color-accent-secondary)] capitalize">
+              <span className="text-[color:var(--color-accent-secondary-text)] capitalize">
                 {plan}
               </span>
             </p>

@@ -185,7 +185,7 @@ export function Pricing() {
 
           <div className="text-center max-w-3xl mx-auto animate-fade-in-up">
             <p className="text-[10px] sm:text-xs mono tracking-[0.5em] uppercase text-theme-muted mb-5">
-              Pricing · <span className="text-[color:var(--color-accent-secondary)]">Sovereign Tiers</span>
+              Pricing · <span className="text-[color:var(--color-accent-secondary-text)]">Sovereign Tiers</span>
             </p>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[0.95] tracking-tight text-theme">
@@ -329,7 +329,7 @@ export function Pricing() {
           <div className="glass-slab-floating rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
             <div className="max-w-xl">
               <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted mb-2">
-                Need <span className="text-[color:var(--color-accent-secondary)]">More</span>
+                Need <span className="text-[color:var(--color-accent-secondary-text)]">More</span>
               </p>
               <h2 className="text-xl sm:text-2xl font-bold text-theme tracking-tight">
                 <span className="text-gradient-brand">Custom factor models</span> and dedicated infrastructure.

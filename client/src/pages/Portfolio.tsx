@@ -341,7 +341,7 @@ export function Portfolio() {
       >
         <div>
           <p className={kickerClass}>
-            Positions · <span className="text-[color:var(--color-accent-secondary)]">Live</span>
+            Positions · <span className="text-[color:var(--color-accent-secondary-text)]">Live</span>
           </p>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
             <span className="text-gradient-brand">Portfolio</span>

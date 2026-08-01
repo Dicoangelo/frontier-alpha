@@ -52,7 +52,7 @@ export function UpgradeBanner() {
           <div className="flex-1 min-w-0">
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)]">
               Free Plan ·{' '}
-              <span className="text-[color:var(--color-accent-secondary)]">Limited</span>
+              <span className="text-[color:var(--color-accent-secondary-text)]">Limited</span>
             </p>
             <p className="text-sm mt-1 text-theme leading-relaxed">
               Unlock the{' '}

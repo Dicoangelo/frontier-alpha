@@ -32,7 +32,7 @@ export function CVRF() {
             style={{ animationFillMode: 'both' }}
           >
             <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
-              CVRF · <span className="text-[color:var(--color-accent-secondary)]">Cognitive Variance Reduction Framework</span>
+              CVRF · <span className="text-[color:var(--color-accent-secondary-text)]">Cognitive Variance Reduction Framework</span>
             </p>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.05] tracking-tight">

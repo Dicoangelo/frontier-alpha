@@ -173,7 +173,7 @@ export function Backtest() {
       >
         <div>
           <p className={kickerClass}>
-            Backtest · <span className="text-[color:var(--color-accent-secondary)]">Walk-Forward Validation</span>
+            Backtest · <span className="text-[color:var(--color-accent-secondary-text)]">Walk-Forward Validation</span>
           </p>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
             <span className="text-gradient-brand">Historical</span>{' '}

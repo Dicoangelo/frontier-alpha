@@ -119,7 +119,7 @@ function OptimizeContent() {
       >
         <div>
           <p className={kickerClass}>
-            Optimize · <span className="text-[color:var(--color-accent-secondary)]">Monte Carlo</span>
+            Optimize · <span className="text-[color:var(--color-accent-secondary-text)]">Monte Carlo</span>
           </p>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
             <span className="text-gradient-brand">Portfolio</span>{' '}

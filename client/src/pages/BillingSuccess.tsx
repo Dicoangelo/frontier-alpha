@@ -128,9 +128,9 @@ export function BillingSuccess() {
         {/* ── Hero ───────────────────────────────────────────────────── */}
         <section className="text-center max-w-3xl mx-auto animate-fade-in-up">
           <div className="inline-flex items-center gap-2 mb-6">
-            <Sparkles className="w-4 h-4 text-[color:var(--color-accent-secondary)]" aria-hidden="true" />
+            <Sparkles className="w-4 h-4 text-[color:var(--color-accent-secondary-text)]" aria-hidden="true" />
             <p className="mono text-[10px] sm:text-xs tracking-[0.5em] uppercase text-theme-muted">
-              Checkout · <span className="text-[color:var(--color-accent-secondary)]">Confirmed</span>
+              Checkout · <span className="text-[color:var(--color-accent-secondary-text)]">Confirmed</span>
             </p>
           </div>
 
@@ -165,7 +165,7 @@ export function BillingSuccess() {
                       className="w-10 h-10 rounded-xl inline-flex items-center justify-center bg-[color:var(--color-accent)]/10 border border-[color:var(--color-border)]"
                       aria-hidden="true"
                     >
-                      <Icon className="w-5 h-5 text-[color:var(--color-accent)]" />
+                      <Icon className="w-5 h-5 text-[color:var(--color-accent-text)]" />
                     </span>
                     <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
                       {feature.kicker}

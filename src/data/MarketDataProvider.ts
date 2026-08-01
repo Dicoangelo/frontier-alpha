@@ -1212,6 +1212,27 @@ export class MarketDataProvider {
 
     try {
       const response = await fetchWithRetry(url, undefined);
+
+      // A 403 here is NOT a plan misconfiguration — it is the delayed plan
+      // saying "that session isn't published to you yet". Grouped-daily 403s
+      // for today and yesterday on Stocks Starter and 200s from T-2 back
+      // (measured 2026-08-01). Recording it as an alertable `plan_tier` error
+      // made the freshness sync page the operator: PolygonHealthAlerter fires
+      // on any new plan_tier count, its dedupe watermark is module state that
+      // resets on every serverless instance, and Vercel reuses one warm
+      // instance across the hourly warm-cache cron and the 15-minute synthetic
+      // monitor — so the monitor kept re-reading the warmer's 403s and emailed
+      // "key/plan action required" every 15 minutes. Treat it as a miss and let
+      // the caller walk back a day.
+      if (response.status === 403) {
+        logger.info(
+          { day },
+          'Grouped-daily not yet available for this date on the delayed plan (expected) — walking back',
+        );
+        breaker.recordSuccess();
+        return empty;
+      }
+
       if (!response.ok) {
         const { impact, kind } = recordProviderError('polygon', response.status);
         logger.warn(

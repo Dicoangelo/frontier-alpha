@@ -160,6 +160,31 @@ export async function evaluatePolygonHealth(
   const planTierCount = getErrorKindCount('polygon', 'plan_tier');
   const newAuth = authCount > lastAlertedAuthCount;
   const newPlanTier = planTierCount > lastAlertedPlanTierCount;
+
+  // Require the run to be actually failing before paging on an error COUNT.
+  //
+  // The watermarks above are module state. On Vercel that resets with every
+  // serverless instance, so `count > 0` is effectively always "new" and any
+  // stray 403 recorded anywhere in the same warm instance pages the operator —
+  // which is exactly what happened: the hourly warm-cache cron and this
+  // 15-minute monitor share a warm instance, the warmer's expected
+  // grouped-daily 403s landed in the counter, and this emailed
+  // "key/plan action required" every 15 minutes while all 13 probes passed.
+  //
+  // A real revoked key or plan downgrade takes probes down with it, so gating
+  // on `summary.failed > 0` keeps the alert for genuine breakage and drops the
+  // false pages. The 403 source is fixed at origin too (see fetchGroupedDaily),
+  // this is the belt to that braces.
+  if ((newAuth || newPlanTier) && summary.failed === 0) {
+    logger.info(
+      { authCount, planTierCount, passed: summary.passed },
+      'Polygon auth/plan-tier errors recorded but every probe passed — not alerting',
+    );
+    lastAlertedAuthCount = authCount;
+    lastAlertedPlanTierCount = planTierCount;
+    return { alerted: false, reason: null, consecutiveFailures };
+  }
+
   if (newAuth || newPlanTier) {
     const kind: ProviderErrorKind = newAuth ? 'auth' : 'plan_tier';
     // isAlertableErrorKind is true by construction here, but keep the guard

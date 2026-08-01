@@ -89,7 +89,11 @@ export function EmptyState({
         ${className}
       `}
     >
-      <div className="flex flex-col items-center justify-center">
+      {/* w-full matters: this is a column flex with items-center, so children
+          size to their CONTENT on the cross axis. A child carrying max-w-md
+          therefore renders at the full 448px rather than treating it as a cap,
+          and the wrapper's overflow-hidden clips it instead of wrapping. */}
+      <div className="flex flex-col items-center justify-center w-full">
         {icon && (
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 animate-fade-in"
@@ -116,7 +120,7 @@ export function EmptyState({
           {title}
         </h3>
         <p
-          className="text-sm text-theme-secondary max-w-md mx-auto leading-relaxed mb-6 animate-fade-in-up"
+          className="text-sm text-theme-secondary w-full max-w-md mx-auto leading-relaxed mb-6 animate-fade-in-up"
           style={{ animationDelay: '100ms', animationFillMode: 'both' }}
         >
           {description}

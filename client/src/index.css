@@ -29,13 +29,32 @@
     --color-accent-light: rgba(123, 44, 255, 0.08);
     --color-accent-secondary: #18E6FF;
 
-    /* Semantic state */
-    --color-positive: #10b981;
-    --color-negative: #ef4444;
-    --color-success: #10b981;
-    --color-danger: #ef4444;
-    --color-warning: #f59e0b;
-    --color-info: #3b82f6;
+    /* Semantic state — LIGHT THEME.
+     *
+     * These are read as TEXT (gain/loss figures, badges, status labels), so
+     * they are held to WCAG AA 4.5:1 against the light surfaces, not to the
+     * dark-theme palette they were copied from. The vivid 500-weights below
+     * were inherited from `.dark` and fail badly on white:
+     *   #10b981 positive -> 2.54:1   #ef4444 negative -> 3.76:1
+     *   #f59e0b warning  -> 2.15:1   #3b82f6 info     -> 3.68:1
+     * Every "+$3,500.00" and "-8.03%" in the app rendered below the readable
+     * floor in light mode. Measured against #f8fafc (page) and #fff (card).
+     *
+     * The --chart-* palette below is deliberately NOT darkened: chart strokes
+     * and fills are not text, and keeping the 500-weights preserves the
+     * product's visual identity. Dark theme is unaffected (.dark overrides). */
+    --color-positive: #047857; /* emerald-700  5.48:1 on card */
+    --color-negative: #b91c1c; /* red-700      6.47:1 */
+    --color-success: #047857;
+    --color-danger: #b91c1c;
+    --color-warning: #b45309;  /* amber-700    5.02:1 */
+    --color-info: #1d4ed8;     /* blue-700     6.70:1 */
+
+    /* Live/streaming status TEXT. The brand teal (#00FFC6) is theme-invariant
+     * by design and renders at 1.30:1 on a light card — effectively invisible.
+     * Decorative uses (the pulsing dot, glows) keep the brand teal; anything
+     * carrying meaning as text uses this. */
+    --color-live: #0f766e;     /* teal-700     5.47:1 */
 
     /* Chart Palette */
     --chart-primary: #3b82f6;
@@ -107,13 +126,16 @@
     --color-accent-light: rgba(123, 44, 255, 0.15);
     --color-accent-secondary: #18E6FF;
 
-    /* Semantic state */
+    /* Semantic state — DARK THEME. Already contrast-correct on #0f1219. */
     --color-positive: #34d399;
     --color-negative: #f87171;
     --color-success: #34d399;
     --color-danger: #f87171;
     --color-warning: #fbbf24;
     --color-info: #60a5fa;
+
+    /* Live status text — the brand teal is readable on dark, so it stands. */
+    --color-live: #00FFC6;
 
     /* Chart Palette */
     --chart-primary: #60a5fa;

@@ -179,8 +179,11 @@ export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
               className="w-1.5 h-1.5 bg-[var(--color-brand-teal)] rounded-full animate-pulse-green shadow-[0_0_8px_var(--color-brand-teal)]"
               aria-hidden="true"
             />
+            {/* Text uses --color-live, not the brand teal: #00FFC6 renders at
+                1.30:1 on a light card. The dot above keeps the brand teal —
+                it is decorative, so the contrast floor does not apply. */}
             <span
-              className="text-[9px] text-[var(--color-brand-teal)] mono tracking-[0.4em] uppercase"
+              className="text-[9px] text-[var(--color-live)] mono tracking-[0.4em] uppercase"
               aria-hidden="true"
             >
               Live

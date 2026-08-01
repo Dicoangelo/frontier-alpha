@@ -161,7 +161,7 @@ export function BrokerSection() {
   return (
     <div className="space-y-5">
       <div className="glass-slab rounded-xl p-4 flex items-start gap-3">
-        <Server className="w-4 h-4 text-[var(--color-accent-secondary)] mt-0.5 flex-shrink-0" />
+        <Server className="w-4 h-4 text-[var(--color-accent-secondary-text)] mt-0.5 flex-shrink-0" />
         <div className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
           <p className="mb-1">
             Currently using <span className="text-[var(--color-text)] font-medium">Frontier Alpha&apos;s simulated broker</span>.
@@ -171,7 +171,7 @@ export function BrokerSection() {
             href="https://app.alpaca.markets/paper/dashboard/overview"
             target="_blank"
             rel="noopener noreferrer"
-            className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-secondary)] hover:text-[var(--color-accent-text)] transition-colors inline-flex items-center gap-1"
+            className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-secondary-text)] hover:text-[var(--color-accent-text)] transition-colors inline-flex items-center gap-1"
           >
             Get keys at Alpaca <ExternalLink className="w-3 h-3" />
           </a>

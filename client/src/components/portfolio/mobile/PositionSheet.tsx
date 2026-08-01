@@ -111,7 +111,7 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
           <button
             type="button"
             onClick={() => { onClose(); navigate(`/trade?symbol=${position.symbol}`); }}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-sm border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent-secondary)] hover:border-[var(--color-accent-secondary)] transition-colors animate-press"
+            className="flex flex-col items-center gap-1.5 p-3 rounded-sm border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent-secondary-text)] hover:border-[var(--color-accent-secondary)] transition-colors animate-press"
           >
             <Zap className="w-4 h-4" />
             <span className="text-[10px] mono tracking-[0.2em] uppercase">Trade</span>
@@ -119,7 +119,7 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
           <button
             type="button"
             onClick={() => { onClose(); navigate(`/alerts?symbol=${position.symbol}`); }}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-sm border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent-secondary)] hover:border-[var(--color-accent-secondary)] transition-colors animate-press"
+            className="flex flex-col items-center gap-1.5 p-3 rounded-sm border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent-secondary-text)] hover:border-[var(--color-accent-secondary)] transition-colors animate-press"
           >
             <Bell className="w-4 h-4" />
             <span className="text-[10px] mono tracking-[0.2em] uppercase">Alert</span>
@@ -127,7 +127,7 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
           <button
             type="button"
             onClick={() => { onEdit?.(position.symbol); }}
-            className="flex flex-col items-center gap-1.5 p-3 rounded-sm border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent-secondary)] hover:border-[var(--color-accent-secondary)] transition-colors animate-press"
+            className="flex flex-col items-center gap-1.5 p-3 rounded-sm border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent-secondary-text)] hover:border-[var(--color-accent-secondary)] transition-colors animate-press"
           >
             <Pencil className="w-4 h-4" />
             <span className="text-[10px] mono tracking-[0.2em] uppercase">Edit</span>

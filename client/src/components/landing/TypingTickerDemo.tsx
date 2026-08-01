@@ -128,7 +128,7 @@ export function TypingTickerDemo() {
           key={`${scene.symbol}-because`}
           className="text-xs sm:text-sm text-[var(--color-text-secondary)] caption-cycle"
         >
-          <span className="text-[var(--color-accent-secondary)] mono text-[10px] tracking-[0.3em] uppercase mr-2">
+          <span className="text-[var(--color-accent-secondary-text)] mono text-[10px] tracking-[0.3em] uppercase mr-2">
             Because
           </span>{' '}
           {scene.because.replace(/^because\s/i, '')}

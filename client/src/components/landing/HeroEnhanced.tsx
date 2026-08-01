@@ -350,7 +350,7 @@ export function HeroEnhanced({ onAnalyze, onLoadDemo, isAnalyzing }: HeroEnhance
               />
               <span className="text-[10px] mono tracking-[0.5em] uppercase text-[var(--color-text-muted)]">
                 Metaventions{' '}
-                <span className="text-[var(--color-accent-secondary)]">AI</span>
+                <span className="text-[var(--color-accent-secondary-text)]">AI</span>
               </span>
             </div>
 
@@ -392,7 +392,7 @@ export function HeroEnhanced({ onAnalyze, onLoadDemo, isAnalyzing }: HeroEnhance
               </button>
               <button
                 onClick={onLoadDemo}
-                className="px-8 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] hover:border-[var(--color-accent-secondary)] hover:text-[var(--color-accent-secondary)] rounded-sm mono text-[10px] font-bold tracking-[0.3em] uppercase animate-press animate-lift transition-[background-color,border-color,color] duration-200 min-w-[140px]"
+                className="px-8 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] hover:border-[var(--color-accent-secondary)] hover:text-[var(--color-accent-secondary-text)] rounded-sm mono text-[10px] font-bold tracking-[0.3em] uppercase animate-press animate-lift transition-[background-color,border-color,color] duration-200 min-w-[140px]"
               >
                 Load Mag 7 Demo
               </button>
@@ -485,7 +485,7 @@ function MetricChip({ metric, start }: { metric: MetricTile; start: boolean }) {
   return (
     <div className="glass-slab-floating rounded-sm p-3 sm:p-4 animate-fade-in-up flex flex-col gap-1">
       <span className="flex items-center gap-2 text-[9px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)]">
-        <Icon className="w-3 h-3 text-[var(--color-accent-secondary)]" aria-hidden="true" />
+        <Icon className="w-3 h-3 text-[var(--color-accent-secondary-text)]" aria-hidden="true" />
         {metric.label}
       </span>
       <span className="text-2xl sm:text-3xl font-black text-[var(--color-text)] tabular-nums leading-none">

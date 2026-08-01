@@ -166,7 +166,7 @@ export function Landing() {
                     setTickers(portfolio.symbols);
                     runDemo(portfolio.symbols);
                   }}
-                  className="px-3 py-1 text-[10px] mono tracking-[0.2em] uppercase bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary)] rounded-sm transition-colors border border-[var(--color-border-light)] animate-press"
+                  className="px-3 py-1 text-[10px] mono tracking-[0.2em] uppercase bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary-text)] rounded-sm transition-colors border border-[var(--color-border-light)] animate-press"
                 >
                   {portfolio.name}
                 </button>
@@ -193,13 +193,13 @@ export function Landing() {
           <nav className="flex gap-6" aria-label="Footer navigation">
             <button
               onClick={() => navigate('/login')}
-              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary)] mono tracking-[0.2em] uppercase transition-colors"
+              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary-text)] mono tracking-[0.2em] uppercase transition-colors"
             >
               Sign In
             </button>
             <button
               onClick={() => navigate('/help')}
-              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary)] mono tracking-[0.2em] uppercase transition-colors"
+              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary-text)] mono tracking-[0.2em] uppercase transition-colors"
             >
               Documentation
             </button>
@@ -207,7 +207,7 @@ export function Landing() {
               href="/api/v1/openapi"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary)] mono tracking-[0.2em] uppercase transition-colors"
+              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary-text)] mono tracking-[0.2em] uppercase transition-colors"
             >
               API
             </a>
@@ -215,7 +215,7 @@ export function Landing() {
               href="/terms"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary)] mono tracking-[0.2em] uppercase transition-colors"
+              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary-text)] mono tracking-[0.2em] uppercase transition-colors"
             >
               Terms
             </a>
@@ -223,7 +223,7 @@ export function Landing() {
               href="/privacy"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary)] mono tracking-[0.2em] uppercase transition-colors"
+              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary-text)] mono tracking-[0.2em] uppercase transition-colors"
             >
               Privacy
             </a>

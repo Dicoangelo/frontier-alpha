@@ -33,6 +33,10 @@
      * only diverges in dark mode. Split out because --color-accent also backs
      * borders, glows and gradient stops, which must keep the exact brand hue. */
     --color-accent-text: #7B2CFF;
+    /* Secondary accent as TEXT. Brand cyan #18E6FF is 1.52:1 on white —
+     * effectively invisible for the "Required" field markers and inline links
+     * that use it. cyan-700 holds the hue and clears AA at 5.36:1. */
+    --color-accent-secondary-text: #0e7490;
 
     /* Semantic state — LIGHT THEME.
      *
@@ -136,6 +140,8 @@
      * --color-accent itself is unchanged so borders, glows and the sovereign
      * gradient keep the exact brand colour. */
     --color-accent-text: #a78bfa;
+    /* Brand cyan is already 10.79:1 on a dark card, so it stands as text here. */
+    --color-accent-secondary-text: #18E6FF;
 
     /* Semantic state — DARK THEME. Already contrast-correct on #0f1219. */
     --color-positive: #34d399;

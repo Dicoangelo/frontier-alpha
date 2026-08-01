@@ -439,7 +439,7 @@ function IngestVisual({
                 transition: `opacity 280ms ease ${i * 40}ms, transform 280ms ease ${i * 40}ms`,
               }}
             >
-              <span className="text-[var(--color-accent-secondary)]">›</span>
+              <span className="text-[var(--color-accent-secondary-text)]">›</span>
               <span className="text-[var(--color-text)] tracking-[0.15em]">{sym}</span>
               <span className="ml-auto text-[var(--color-positive)]">✓</span>
             </div>
@@ -447,7 +447,7 @@ function IngestVisual({
         })}
         {/* Cursor line */}
         <div className="flex items-center gap-2 pt-1">
-          <span className="text-[var(--color-accent-secondary)]">›</span>
+          <span className="text-[var(--color-accent-secondary-text)]">›</span>
           <span
             aria-hidden="true"
             className="ho-blink inline-block w-1.5 h-3 bg-[var(--color-accent-secondary)]"
@@ -502,7 +502,7 @@ function DecomposeVisual({
         >
           {focusFactor ? (
             <>
-              <span className="text-[var(--color-accent-secondary)]">{focusFactor.name}</span>
+              <span className="text-[var(--color-accent-secondary-text)]">{focusFactor.name}</span>
               <span className="mx-1.5 text-theme-muted">·</span>
               <span className="text-[var(--color-positive)]">
                 +{Math.round(focusFactor.weight * 100)}
@@ -602,7 +602,7 @@ function ExplainVisual({
           key={`because-${idx}`}
           className="text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed caption-cycle"
         >
-          <span className="text-[var(--color-accent-secondary)] mono text-[10px] tracking-[0.3em] uppercase mr-2">
+          <span className="text-[var(--color-accent-secondary-text)] mono text-[10px] tracking-[0.3em] uppercase mr-2">
             Because
           </span>{' '}
           {current}

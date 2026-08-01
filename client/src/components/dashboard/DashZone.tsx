@@ -91,7 +91,7 @@ export function DashZone({
             onClick={() => setCollapsed((v) => !v)}
             aria-expanded={!collapsed}
             aria-controls={`${id}-body`}
-            className="shrink-0 w-7 h-7 rounded-sm flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
+            className="shrink-0 w-7 h-7 rounded-sm flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary-text)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
             title={collapsed ? 'Expand zone' : 'Collapse zone'}
           >
             <ChevronDown

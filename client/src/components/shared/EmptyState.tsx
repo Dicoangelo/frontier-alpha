@@ -44,7 +44,7 @@ const toneStyles: Record<
     glow: 'shadow-[0_24px_80px_-20px_rgba(255,61,242,0.45)]',
     halo: '0 0 50px rgba(255,61,242,0.35)',
     iconColor: 'var(--color-accent-secondary)',
-    kicker: 'text-[var(--color-accent-secondary)]',
+    kicker: 'text-[var(--color-accent-secondary-text)]',
   },
 };
 

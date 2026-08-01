@@ -146,7 +146,7 @@ export function ResetPassword() {
                 Remembered?{' '}
                 <Link
                   to="/login"
-                  className="text-[var(--color-accent-secondary)] hover:text-[var(--color-accent-text)] font-medium transition-colors"
+                  className="text-[var(--color-accent-secondary-text)] hover:text-[var(--color-accent-text)] font-medium transition-colors"
                 >
                   Back to sign in
                 </Link>

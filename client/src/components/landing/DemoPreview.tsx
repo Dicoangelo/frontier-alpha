@@ -192,7 +192,7 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
               </div>
               <div className="text-right">
                 <p className="mono text-[9px] tracking-[0.3em] uppercase text-[var(--color-text-muted)]">Regime</p>
-                <p className="mono text-[11px] sm:text-xs font-semibold text-[var(--color-accent-secondary)] uppercase tracking-[0.2em] mt-0.5">
+                <p className="mono text-[11px] sm:text-xs font-semibold text-[var(--color-accent-secondary-text)] uppercase tracking-[0.2em] mt-0.5">
                   {current.regime}
                 </p>
               </div>
@@ -256,7 +256,7 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
               <button
                 type="button"
                 onClick={onSignin}
-                className="px-6 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent-secondary)] hover:text-[var(--color-accent-secondary)] rounded-sm mono text-[10px] font-bold tracking-[0.3em] uppercase animate-press animate-lift transition-[background-color,border-color,color] duration-200"
+                className="px-6 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent-secondary)] hover:text-[var(--color-accent-secondary-text)] rounded-sm mono text-[10px] font-bold tracking-[0.3em] uppercase animate-press animate-lift transition-[background-color,border-color,color] duration-200"
               >
                 Sign In
               </button>

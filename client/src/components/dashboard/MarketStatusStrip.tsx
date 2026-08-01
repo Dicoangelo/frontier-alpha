@@ -234,7 +234,7 @@ export function MarketStatusStrip({ isConnected, lastUpdate }: MarketStatusStrip
           <button
             type="button"
             onClick={() => setHelpOpen((v) => !v)}
-            className="hidden sm:inline w-5 h-5 rounded-full text-theme-muted hover:text-[var(--color-accent-secondary)] animate-press transition-[color] duration-200"
+            className="hidden sm:inline w-5 h-5 rounded-full text-theme-muted hover:text-[var(--color-accent-secondary-text)] animate-press transition-[color] duration-200"
             aria-label="Show market strip help (press ? key)"
             title="Press ? for help"
           >

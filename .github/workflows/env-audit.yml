@@ -82,18 +82,30 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Confirm VERCEL_TOKEN secret is present
+      # A missing VERCEL_TOKEN means "not configured yet", not "the env is broken".
+      # On the weekly cron that must not turn the repo red every Monday — it just
+      # skips and warns. A manual dispatch is a deliberate request for the value
+      # audit, so there it still fails loudly.
+      - name: Check for VERCEL_TOKEN secret
+        id: token_check
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
-            echo "::error::VERCEL_TOKEN repo secret is not set."
-            echo "::error::Add it at Settings → Secrets → Actions → New repository secret."
-            echo "::error::Create the token at https://vercel.com/account/tokens"
-            exit 1
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::VERCEL_TOKEN repo secret is not set — skipping the value audit."
+            echo "::warning::Add it at Settings → Secrets → Actions → New repository secret."
+            echo "::warning::Create the token at https://vercel.com/account/tokens"
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              echo "::error::Manual dispatch explicitly requested the value audit, but VERCEL_TOKEN is absent."
+              exit 1
+            fi
+          else
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Link Vercel project
+        if: steps.token_check.outputs.has_token == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -109,6 +121,7 @@ jobs:
           fi
 
       - name: Run env audit against Vercel production
+        if: steps.token_check.outputs.has_token == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: node scripts/audit-env.mjs

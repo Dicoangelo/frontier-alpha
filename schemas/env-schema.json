@@ -3,8 +3,8 @@
   "$id": "https://frontier-alpha.metaventionsai.com/schemas/env-schema.json",
   "title": "Frontier Alpha Environment Variable Contract",
   "description": "Machine-checkable contract for every env var referenced by frontier-alpha. New env in code without an entry here makes CI fail (US-009). Audit script reads this to validate Vercel + Railway env values for whitespace, length, and regex compliance.",
-  "version": "1.0.0",
-  "lastFullAudit": "2026-05-09",
+  "version": "1.1.0",
+  "lastFullAudit": "2026-08-17",
   "vars": [
     {
       "name": "SUPABASE_URL",
@@ -17,18 +17,18 @@
     {
       "name": "SUPABASE_SERVICE_KEY",
       "required": true,
-      "regex": "^eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$",
+      "regex": "^(eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+|sb_secret_[A-Za-z0-9_-]{20,})$",
       "sourceUrl": "https://supabase.com/dashboard/project/_/settings/api",
-      "lastVerified": "2026-05-09",
-      "description": "Supabase service-role JWT (server only — never ship to client)."
+      "lastVerified": "2026-08-17",
+      "description": "Supabase service-role JWT (server only — never ship to client). Accepts BOTH the legacy JWT (eyJ…) and the current Supabase key format (sb_secret_… / sb_publishable_…). Legacy JWT keys are being disabled by Supabase — an 'Invalid API key' in CI means this one died, not that the code broke."
     },
     {
       "name": "SUPABASE_ANON_KEY",
       "required": false,
-      "regex": "^eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$",
+      "regex": "^(eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+|sb_publishable_[A-Za-z0-9_-]{20,})$",
       "sourceUrl": "https://supabase.com/dashboard/project/_/settings/api",
-      "lastVerified": "2026-05-09",
-      "description": "Supabase public anon JWT. Server may not always read it — VITE_SUPABASE_ANON_KEY is the client-facing copy."
+      "lastVerified": "2026-08-17",
+      "description": "Supabase public anon JWT. Server may not always read it — VITE_SUPABASE_ANON_KEY is the client-facing copy. Accepts BOTH the legacy JWT (eyJ…) and the current Supabase key format (sb_secret_… / sb_publishable_…). Legacy JWT keys are being disabled by Supabase — an 'Invalid API key' in CI means this one died, not that the code broke."
     },
     {
       "name": "POLYGON_API_KEY",
@@ -319,10 +319,10 @@
     {
       "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
       "required": false,
-      "regex": "^eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$",
+      "regex": "^(eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+|sb_publishable_[A-Za-z0-9_-]{20,})$",
       "sourceUrl": "https://supabase.com/dashboard/project/_/settings/api",
-      "lastVerified": "2026-05-09",
-      "description": "Legacy Next-prefixed Supabase anon key retained for backward-compat shims."
+      "lastVerified": "2026-08-17",
+      "description": "Legacy Next-prefixed Supabase anon key retained for backward-compat shims. Accepts BOTH the legacy JWT (eyJ…) and the current Supabase key format (sb_secret_… / sb_publishable_…). Legacy JWT keys are being disabled by Supabase — an 'Invalid API key' in CI means this one died, not that the code broke."
     },
     {
       "name": "TEST_API_URL",
@@ -351,10 +351,10 @@
     {
       "name": "VITE_SUPABASE_ANON_KEY",
       "required": true,
-      "regex": "^eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+$",
+      "regex": "^(eyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+|sb_publishable_[A-Za-z0-9_-]{20,})$",
       "sourceUrl": "https://supabase.com/dashboard/project/_/settings/api",
-      "lastVerified": "2026-05-09",
-      "description": "Client-side Supabase anon JWT injected at build time."
+      "lastVerified": "2026-08-17",
+      "description": "Client-side Supabase anon JWT injected at build time. Accepts BOTH the legacy JWT (eyJ…) and the current Supabase key format (sb_secret_… / sb_publishable_…). Legacy JWT keys are being disabled by Supabase — an 'Invalid API key' in CI means this one died, not that the code broke."
     },
     {
       "name": "VITE_API_URL",

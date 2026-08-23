@@ -83,15 +83,26 @@ export default defineConfig({
           branches: 60,
           functions: 80,
         },
+        // DEBT REPAID. The belief pathway (the CVRF integration) was entirely
+        // untested, which is what dragged branches to ~45%. With
+        // PortfolioOptimizer.beliefs.test.ts it now measures 100 / 86.95 / 100,
+        // so the original gate is restored with ~27 points of headroom on
+        // branches. Raise it further if you want a tighter ratchet — the room
+        // is real, it is just not my standard to set.
         'src/optimizer/PortfolioOptimizer.ts': {
           statements: 80,
-          branches: 40, // debt — intent is 60 (honest: ~44, CI ~43.5)
+          branches: 60,
           functions: 80,
         },
+        // DEBT REPAID. The statistics path — the map/filter/reduce turning raw
+        // quarters into beat rates and average moves — had never run: the suite
+        // never mocked fetch, so every call 401'd and only the mock fallback was
+        // covered. With EarningsOracle.pattern.test.ts it measures
+        // 87.35 / 81.89 / 100, all clear of the original gate.
         'src/earnings/EarningsOracle.ts': {
-          statements: 68, // debt — intent is 80 (honest: ~72.4)
+          statements: 80,
           branches: 60,
-          functions: 68, // debt — intent is 80 (honest: ~73.1)
+          functions: 80,
         },
       },
     },
@@ -101,11 +112,9 @@ export default defineConfig({
 
     // Parallel execution
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: false,
-      },
-    },
+    // `poolOptions` was removed in vitest 4 (options moved top-level). The only
+    // setting here was `singleThread: false`, which is already the default, so
+    // dropping the block preserves behaviour and clears the deprecation warning.
 
     // Environment variables for tests
     env: {

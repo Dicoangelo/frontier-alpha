@@ -35,9 +35,14 @@ vi.hoisted(() => {
 // never need a real Stripe key and we can control balance.retrieve().
 vi.mock('stripe', () => {
   const balanceRetrieveFn = vi.fn().mockResolvedValue({ object: 'balance' });
-  const StripeMock = vi.fn().mockImplementation(() => ({
-    balance: { retrieve: balanceRetrieveFn },
-  }));
+  // NB: a `function` expression, not an arrow. src/routes/health.ts calls
+  // `new StripeMod(...)`, and vitest 4 constructs the implementation rather
+  // than calling it and taking the return value the way vitest 1 did. An arrow
+  // is not constructible, so it fails with "... is not a constructor". Returning
+  // an object from a constructor overrides `this`, so the shape is unchanged.
+  const StripeMock = vi.fn().mockImplementation(function () {
+    return { balance: { retrieve: balanceRetrieveFn } };
+  });
   // Expose the inner fn so tests can override it per case.
   (StripeMock as unknown as Record<string, unknown>)._balanceRetrieve = balanceRetrieveFn;
   return { default: StripeMock };

@@ -8,9 +8,12 @@ import { render } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BeliefConstellation } from './BeliefConstellation';
 
-// jsdom does not implement ResizeObserver — provide a no-op stub
+// jsdom does not implement ResizeObserver — provide a no-op stub.
+// `globalThis`, not `global`: vitest 4 no longer pulls Node's globals into the
+// client test type context, so `global` fails `tsc -b` in the client build even
+// though the test passes at runtime.
 beforeAll(() => {
-  global.ResizeObserver = class {
+  globalThis.ResizeObserver = class {
     observe() {}
     unobserve() {}
     disconnect() {}

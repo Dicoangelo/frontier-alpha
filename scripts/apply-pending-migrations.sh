@@ -20,6 +20,16 @@
 #   5. 20260209_shared_portfolios.sql  (frontier_shared_portfolios)  [added 2026-07-30]
 #   6. 002_portfolio_sharing.sql       (frontier_portfolio_shares)   [added 2026-07-30]
 #   7. 20260730_portfolio_shares.sql   (portfolio_shares)            [added 2026-07-30]
+#   8. 20260823_risk_alerts_portfolio_id.sql
+#                                      (frontier_risk_alerts.portfolio_id)
+#                                                                    [added 2026-08-23]
+#
+# 8 is the first COLUMN-level drift found, not a missing table. The
+# `databaseSchema` probe gained column checking on 2026-08-23 after the
+# integration smoke suite failed on a portfolio_id insert while the probe still
+# reported `databaseSchema: live` — it had only ever checked table presence.
+# Uses ADD COLUMN IF NOT EXISTS, so it honours the idempotency contract above,
+# and issues NOTIFY pgrst so PostgREST reloads its schema cache immediately.
 #
 # 4-6 were found on 2026-07-30 by the `databaseSchema` probe on
 # /api/v1/health/integrations: the server queries those three tables and none of
@@ -61,6 +71,7 @@ MIGRATIONS=(
   "$REPO_ROOT/supabase/migrations/20260209_shared_portfolios.sql"
   "$REPO_ROOT/supabase/migrations/002_portfolio_sharing.sql"
   "$REPO_ROOT/supabase/migrations/20260730_portfolio_shares.sql"
+  "$REPO_ROOT/supabase/migrations/20260823_risk_alerts_portfolio_id.sql"
 )
 
 # --- Token: Supabase CLI stores it in the macOS keychain via go-keyring,

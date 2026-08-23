@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-23T02:21:31.211Z",
-  "headSha": "a48a6741de1ab8368f5e37fb7ac7f6e4b8111532",
+  "generatedAt": "2026-08-23T03:28:11.316Z",
+  "headSha": "76698fd157d06d664da09c3f7aa243a27aaa0621",
   "version": "1.14.0",
   "server": {
     "tsFiles": 148,
@@ -8,9 +8,9 @@
     "inSourceTestFiles": 8,
     "routeModules": 33,
     "endpoints": 124,
-    "migrations": 18,
+    "migrations": 19,
     "vercelApiFiles": 4,
-    "testFiles": 62
+    "testFiles": 63
   },
   "client": {
     "pages": 25,
@@ -189,7 +189,8 @@
     "20260610_forensic_events.sql",
     "20260610_insight_ledger.sql",
     "20260611_provenance_nodes.sql",
-    "20260730_portfolio_shares.sql"
+    "20260730_portfolio_shares.sql",
+    "20260823_risk_alerts_portfolio_id.sql"
   ],
   "pages": [
     "Alerts",

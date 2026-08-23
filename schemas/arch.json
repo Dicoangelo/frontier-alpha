@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-07-30T11:28:39.900Z",
-  "headSha": "73e73fe3eb6cc961854968be00e81224d49afe95",
+  "generatedAt": "2026-08-23T02:21:31.211Z",
+  "headSha": "a48a6741de1ab8368f5e37fb7ac7f6e4b8111532",
   "version": "1.14.0",
   "server": {
-    "tsFiles": 146,
+    "tsFiles": 148,
     "tsNonTestFiles": 140,
-    "inSourceTestFiles": 6,
+    "inSourceTestFiles": 8,
     "routeModules": 33,
     "endpoints": 124,
     "migrations": 18,

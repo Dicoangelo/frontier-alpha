@@ -52,11 +52,49 @@ support@alphavantage.co asking them to deactivate the old one. Free tier is
 25 req/day so the exposure is bounded, but **you cannot kill it yourself, and
 rewriting git history will not un-leak it.**
 
+## Verified live exposure (2026-08-23)
+
+Not inferred. An **anonymous** request — no token, no login — returns the keys:
+
+```
+GET https://api.github.com/repos/Dicoangelo/frontier-alpha
+  -> HTTP 200, visibility: public
+
+GET .../git/blobs/577b3955…   -> HTTP 200, contains POLYGON + ALPHA_VANTAGE
+GET .../git/blobs/ab636304…   -> HTTP 200, contains POLYGON
+```
+
+Anyone on the internet can fetch both keys with one command, today.
+
+### The forks make the rewrite insufficient
+
+The repo has **three public forks**, all created after the leak commit. A fork
+carries its own copy of the object graph, and **you cannot rewrite a repository
+you do not own.** Checked directly:
+
+| Fork | Leaked blob | Serves the key |
+|---|---|---|
+| `hahzterry/frontier-alpha` | HTTP 200 | **yes** |
+| `dorucioclea/frontier-alpha` | HTTP 200 | **yes** |
+| `zhenhaip/frontier-alpha` | HTTP 404 | no |
+
+Two accounts outside your control are serving the live Polygon key right now.
+`git filter-repo` on the origin, a force-push, and a GitHub Support cache purge
+do nothing to them.
+
+**Therefore rotation is not the first of several remediations — it is the only
+one that works.** The history rewrite is still worth doing so the origin stops
+being a source, but treating it as the fix would leave the key live.
+
+Clean, for the record: the deployed client bundle at
+`frontier-alpha.metaventionsai.com` and the local `dist/` contain neither key.
+Exposure is git history only, never the browser.
+
 ## Order of operations
 
-Rotation comes first. Rewriting history stops *future* scrapes; it does nothing
-about anyone who already has the key. Doing the rewrite first just adds delay
-before the key is dead.
+Rotation comes first. Rewriting history stops *future* scrapes from the origin;
+it does nothing about anyone who already has the key, and nothing about the
+forks. Doing the rewrite first just adds delay before the key is dead.
 
 ### 1. Rotate at the provider
 
@@ -71,22 +109,25 @@ before the key is dead.
 401s silently. That is the v1.2.6 incident, already recorded in
 `schemas/env-schema.json`.
 
+Rotating kills the old key instantly, so production is broken until every
+surface carries the new one. Use the script — it validates the value against
+`schemas/env-schema.json` BEFORE distributing, then writes all four surfaces:
+
 ```bash
-NEW_POLYGON='...'   # 32 chars
-
-# a) Vercel — all three environments
-for env in production preview development; do
-  printf "%s" "$NEW_POLYGON" | vercel env add POLYGON_API_KEY "$env" --force
-done
-
-# b) Railway — the always-on WebSocket tier. Easy to forget; it holds these too.
-railway variables set POLYGON_API_KEY="$NEW_POLYGON"
-
-# c) local
-#    edit .env.local by hand
-
-# d) GitHub Actions — see step 3
+./scripts/rotate-key.sh POLYGON_API_KEY     # prompts, input hidden
+./scripts/rotate-key.sh ALPHA_VANTAGE_API_KEY
 ```
+
+The pre-flight validation is the point. It rejects both incidents this repo has
+already had:
+
+```
+30-char key        -> ✗ length 30, schema says 32; does not match /^[A-Za-z0-9_]{32}$/
+trailing literal \n -> ✗ literal \n; does not match /^https://[a-z0-9-]+\.supabase\.co/?$/
+```
+
+Distributing first and validating later is how three GitHub secrets ended up
+with `\n`.
 
 Repeat for `ALPHA_VANTAGE_API_KEY`. Then redeploy both tiers and confirm:
 
@@ -198,6 +239,11 @@ Force-pushing removes the refs, but old commits stay reachable by URL until
 GitHub garbage-collects. Open a support request naming the repo and asking for
 cached views of the removed objects to be purged.
 
+Ask them about the forks in the same request. `hahzterry/frontier-alpha` and
+`dorucioclea/frontier-alpha` serve the leaked blob and you have no way to rewrite
+them yourself — Support can act on a fork network for a credential leak. Do not
+wait on that answer before rotating; assume the key stays public forever.
+
 ## Why no tooling caught any of this
 
 Verified in the GitHub UI on 2026-08-18: `secret_scanning` and `push_protection`
@@ -212,12 +258,10 @@ So rotation is the entire remediation. There is no detection to fall back on.
 
 ## Checklist
 
-- [ ] Polygon key regenerated
+- [ ] Polygon key regenerated  ← the only step that actually closes this
 - [ ] Alpha Vantage new key claimed
 - [ ] Alpha Vantage support emailed to deactivate the old key
-- [ ] Vercel updated (production / preview / development)
-- [ ] Railway updated
-- [ ] `.env.local` updated
+- [ ] propagated via `scripts/rotate-key.sh` (Vercel x3, Railway, GitHub, .env.local)
 - [ ] GitHub `SUPABASE_URL` repaired (literal `\n`)
 - [ ] GitHub `SUPABASE_SERVICE_KEY` repaired (literal `\n`)
 - [ ] GitHub `SUPABASE_ANON_KEY` repaired (literal `\n`)
@@ -229,4 +273,4 @@ So rotation is the entire remediation. There is no detection to fall back on.
 - [ ] history rewritten and force-pushed
 - [ ] doc SHAs fixed up
 - [ ] Dependabot PRs closed and recreated
-- [ ] GitHub Support asked to purge cached views
+- [ ] GitHub Support asked to purge cached views AND the fork network

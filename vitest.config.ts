@@ -83,9 +83,15 @@ export default defineConfig({
           branches: 60,
           functions: 80,
         },
+        // DEBT REPAID. The belief pathway (the CVRF integration) was entirely
+        // untested, which is what dragged branches to ~45%. With
+        // PortfolioOptimizer.beliefs.test.ts it now measures 100 / 86.95 / 100,
+        // so the original gate is restored with ~27 points of headroom on
+        // branches. Raise it further if you want a tighter ratchet — the room
+        // is real, it is just not my standard to set.
         'src/optimizer/PortfolioOptimizer.ts': {
           statements: 80,
-          branches: 40, // debt — intent is 60 (honest: ~44, CI ~43.5)
+          branches: 60,
           functions: 80,
         },
         'src/earnings/EarningsOracle.ts': {

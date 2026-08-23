@@ -99,29 +99,61 @@ curl -s https://frontier-alpha.metaventionsai.com/api/v1/health/integrations \
 ### 3. Repair the GitHub Actions secret store
 
 Independent of the leak, this store is broken and has kept CI red since
-2026-08-18:
+2026-08-18. **Measured** by dispatching the `secrets-audit` job on 2026-08-23
+(run `32609303298`) — not inferred:
 
-- `SUPABASE_URL` carries a trailing `/n`. The failing request goes to
-  `https://<ref>.supabase.co/n/auth/v1/admin/users`, the gateway rejects it, and
-  supabase-js reports the misleading `Invalid API key`.
-- `CRON_SECRET` is referenced by `integration-tests.yml` but **absent** from the
-  repo's secrets entirely.
-- `VERCEL_TOKEN` is absent, so the weekly value audit has never actually run —
-  it warns and skips.
+| Secret | State | Length |
+|---|---|---|
+| `SUPABASE_URL` | literal `\n` appended | 42 |
+| `SUPABASE_SERVICE_KEY` | literal `\n` appended | 221 |
+| `SUPABASE_ANON_KEY` | literal `\n` appended | 210 |
+| `CRON_SECRET` | absent / empty | — |
+| `VITE_SUPABASE_URL` | clean | 40 |
+| `VITE_SUPABASE_ANON_KEY` | clean | 208 |
 
-A real newline would be invisible here: WHATWG URL parsing strips tab/newline
-from URLs, so only mangled forms like `/n` survive to break routing.
+**Three** secrets are corrupted, not one. Each ends in the two characters
+`\` + `n` — classic `echo` interpolation. All three were written at
+`2026-06-17T01:36:36-37Z`, seconds apart: one scripted batch. The `VITE_` pair
+was written a second later by some other path and is clean.
+
+Two consequences worth being precise about:
+
+- The wire showed `https://<ref>.supabase.co/n/auth/v1/admin/users` because the
+  WHATWG URL parser **normalizes backslash to forward slash**. That is why a
+  literal `\n` surfaced as `/n`. A *real* newline would have been stripped
+  entirely and been invisible.
+- `SUPABASE_SERVICE_KEY` also carries `\n`, so `Invalid API key` was **literally
+  true**. Repairing only the URL would not have turned CI green. Fix all three.
+
+`VERCEL_TOKEN` is also absent, so the weekly Vercel value audit has never run —
+it warns and skips.
 
 ```bash
-# printf, not echo — same rule, same reason
-printf "%s" "https://rqidgeittsjkpkykmdrz.supabase.co" | gh secret set SUPABASE_URL
-printf "%s" "$(openssl rand -hex 32)"                   | gh secret set CRON_SECRET
-printf "%s" "$VERCEL_TOKEN"                             | gh secret set VERCEL_TOKEN
+# printf, not echo — echo is what put the \n there in the first place.
+# Pull the true values from Vercel, which the audit shows is the clean copy:
+vercel env pull .env.tmp --environment=production
+
+# Then set all THREE corrupted secrets plus the two missing ones.
+printf "%s" "$SUPABASE_URL"         | gh secret set SUPABASE_URL
+printf "%s" "$SUPABASE_SERVICE_KEY" | gh secret set SUPABASE_SERVICE_KEY
+printf "%s" "$SUPABASE_ANON_KEY"    | gh secret set SUPABASE_ANON_KEY
+printf "%s" "$CRON_SECRET"          | gh secret set CRON_SECRET
+printf "%s" "$VERCEL_TOKEN"         | gh secret set VERCEL_TOKEN
+rm -f .env.tmp
 
 # CRON_SECRET must MATCH the value Vercel already uses, or the synthetic monitor
-# rejects CI's calls. Pull it rather than generating a fresh one:
-#   vercel env pull .env.tmp --environment=production && grep CRON_SECRET .env.tmp
+# rejects CI's calls. Never generate a fresh one here.
 ```
+
+Confirm the repair without waiting for a cron:
+
+```bash
+gh workflow run env-audit.yml && sleep 60 \
+  && gh run list --workflow=env-audit.yml --limit 1
+```
+
+The `secrets-audit` job prints one line per secret and exits non-zero on any
+`✗`, so a clean run is the proof.
 
 Verify without waiting for the 13:00 UTC cron:
 
@@ -186,7 +218,9 @@ So rotation is the entire remediation. There is no detection to fall back on.
 - [ ] Vercel updated (production / preview / development)
 - [ ] Railway updated
 - [ ] `.env.local` updated
-- [ ] GitHub `SUPABASE_URL` repaired
+- [ ] GitHub `SUPABASE_URL` repaired (literal `\n`)
+- [ ] GitHub `SUPABASE_SERVICE_KEY` repaired (literal `\n`)
+- [ ] GitHub `SUPABASE_ANON_KEY` repaired (literal `\n`)
 - [ ] GitHub `CRON_SECRET` added, matching Vercel
 - [ ] GitHub `VERCEL_TOKEN` added
 - [ ] both tiers redeployed, `/health/integrations` green

@@ -311,6 +311,12 @@ function auditValueAgainstSchema(entry, schemaVar) {
   if (entry.trailingNewline) {
     findings.push({ severity: 'fail', label: 'trailing newline (use printf "%s", not echo)' });
   }
+  if (entry.trailingSlashN) {
+    findings.push({
+      severity: 'fail',
+      label: 'trailing `/n` — a mangled newline that URL parsing will NOT strip (v1.14 CI incident)',
+    });
+  }
   if (entry.leadingNewline) {
     findings.push({ severity: 'fail', label: 'leading newline' });
   }
@@ -454,21 +460,162 @@ function runValueAudit() {
   }
 }
 
+// ---------- from-env mode (audit the values a runtime actually consumes) ----------
+
+/**
+ * Build an audit entry from a live `process.env` value.
+ *
+ * The Vercel path parses a dotenv FILE, where corruption is encoded (quoted
+ * multi-line blocks, literal `\n` escapes). Here the value is already a decoded
+ * JS string, so corruption is present as real characters and we test it directly.
+ *
+ * Why this mode exists: `--schema-only` proves a var is DECLARED and the default
+ * Vercel audit proves the value is clean IN VERCEL. Neither one looks at the
+ * secret store a given runtime actually reads. GitHub Actions secrets are
+ * write-only over the API — they cannot be audited from outside — so the only
+ * place to validate them is inside a job that has them injected as env.
+ */
+function entryFromProcessEnv(key, value) {
+  return {
+    key,
+    rawLine: value,
+    value,
+    wasQuoted: false,
+    hasLiteralBackslashN: /\\n/.test(value),
+    trailingNewline: /\n\s*$/.test(value),
+    leadingNewline: /^\s*\n/.test(value),
+    trailingWhitespace: /[ \t]+$/.test(value),
+    leadingWhitespace: /^[ \t]+/.test(value),
+    trailingSlashN: /\/n$/.test(value),
+    quotedEmpty: false,
+  };
+}
+
+function runFromEnvAudit(only) {
+  const schema = loadSchema();
+  let exitCode = 0;
+
+  // `--only` scopes the audit to the vars a particular surface is expected to
+  // carry. Without it a GitHub Actions job would be marked red for every schema
+  // var that legitimately lives only in Vercel. The scope IS the contract: the
+  // workflow declares what that job consumes, and the audit holds it to exactly
+  // that list — absent means broken, not "probably fine elsewhere".
+  const scoped = only ? schema.vars.filter((v) => only.has(v.name)) : schema.vars;
+
+  if (only) {
+    const unknown = [...only].filter((n) => !schema.vars.some((v) => v.name === n));
+    if (unknown.length) {
+      console.error(
+        c('red', `\u2717 --only names ${unknown.length} var(s) absent from the schema: ${unknown.join(', ')}`),
+      );
+      console.error(c('dim', '  Add them to schemas/env-schema.json first, or fix the typo.'));
+      process.exit(1);
+    }
+  }
+
+  // A var absent from the environment is "not configured on this surface", which
+  // is reported separately rather than silently passing. Under --only every named
+  // var is treated as required for that surface regardless of its global flag.
+  const present = [];
+  const missingRequired = [];
+  for (const v of scoped) {
+    const raw = process.env[v.name];
+    if (raw === undefined) {
+      if (v.required || only) missingRequired.push(v.name);
+      continue;
+    }
+    present.push([v, raw]);
+  }
+
+  console.log('');
+  console.log(c('bold', `process.env audit — ${present.length}/${scoped.length} vars present`));
+  console.log(c('dim', only ? `  scope: --only (${scoped.length} vars)` : `  scope: entire schema (${schema.vars.length} vars)`));
+  console.log('');
+
+  let cleanCount = 0;
+  let warnCount = 0;
+  let failCount = 0;
+
+  for (const [schemaVar, raw] of present) {
+    const entry = entryFromProcessEnv(schemaVar.name, raw);
+    const findings = auditValueAgainstSchema(entry, schemaVar);
+    const fail = findings.some((f) => f.severity === 'fail');
+    const warn = findings.some((f) => f.severity === 'warn');
+    const masked = maskValue(entry.value);
+
+    if (fail) {
+      failCount += 1;
+      console.log(`${c('red', '\u2717')} ${c('bold', entry.key)} ${c('dim', masked)}`);
+      for (const f of findings) {
+        const prefix = f.severity === 'fail' ? c('red', '    \u2717') : c('yellow', '    \u26a0');
+        console.log(`${prefix} ${f.label}`);
+      }
+      if (schemaVar.sourceUrl) console.log(`    ${c('dim', `source: ${schemaVar.sourceUrl}`)}`);
+      exitCode = 1;
+    } else if (warn) {
+      warnCount += 1;
+      console.log(`${c('yellow', '\u26a0')} ${c('bold', entry.key)} ${c('dim', masked)}`);
+      for (const f of findings) console.log(`${c('yellow', '    \u26a0')} ${f.label}`);
+    } else {
+      cleanCount += 1;
+      console.log(`${c('green', '\u2713')} ${c('bold', entry.key)} ${c('dim', masked)}`);
+    }
+  }
+
+  if (missingRequired.length) {
+    console.log('');
+    console.log(
+      c('red', `\u2717 ${missingRequired.length} required schema vars absent from this environment:`),
+    );
+    for (const name of missingRequired) console.log(`  ${c('red', '\u2717')} ${name}`);
+    exitCode = 1;
+    failCount += missingRequired.length;
+  }
+
+  console.log('');
+  console.log(
+    c('bold', 'Summary:') +
+      ` ${c('green', `${cleanCount} clean`)}, ${c('yellow', `${warnCount} suspicious`)}, ${c('red', `${failCount} corrupted`)}`,
+  );
+
+  process.exit(exitCode);
+}
+
 function main() {
   const args = process.argv.slice(2);
   if (args.includes('--schema-only')) {
     runSchemaOnly();
     return;
   }
+  const fromEnv = args.find((a) => a === '--from-env' || a.startsWith('--from-env='));
+  if (fromEnv) {
+    const onlyArg = args.find((a) => a.startsWith('--only='));
+    const only = onlyArg
+      ? new Set(
+          onlyArg
+            .slice('--only='.length)
+            .split(',')
+            .map((x) => x.trim())
+            .filter(Boolean),
+        )
+      : null;
+    runFromEnvAudit(only);
+    return;
+  }
   if (args.includes('--help') || args.includes('-h')) {
     console.log(`Usage:
-  node scripts/audit-env.mjs [--schema-only]
+  node scripts/audit-env.mjs [--schema-only|--from-env [--only=A,B,C]]
 
 Modes:
   default        Pull Vercel production envs, validate against schemas/env-schema.json,
                  report ✓ clean / ⚠ suspicious / ✗ corrupted, exit 1 on any ✗.
   --schema-only  Grep every env reference and fail if any is missing from the schema.
                  Runs in CI on every PR — needs no Vercel access.
+  --from-env     Validate the values already present in process.env against the
+                 schema. Used inside CI to audit the GitHub Actions secret store,
+                 which is write-only over the API and cannot be audited remotely.
+  --only=A,B,C   Scope --from-env to these vars. Each is then required: absent
+                 fails. Use it so a job is held to exactly the secrets it reads.
 
 Schema:        schemas/env-schema.json
 Audit file:    .env.audit (deleted on exit)

@@ -64,8 +64,40 @@ function requireEnv(name: string): string {
   return v;
 }
 
+/**
+ * Supabase URL, trimmed and shape-checked.
+ *
+ * A malformed project URL does not fail as "bad URL" — supabase-js concatenates
+ * it into every request path, so the gateway rejects the resulting request and
+ * the SDK surfaces a flat "Invalid API key". That is indistinguishable from a
+ * genuinely revoked key, and it cost this repo days of red CI: the GitHub
+ * Actions SUPABASE_URL secret carried a trailing `/n` while the Vercel copy was
+ * clean, so every env audit passed while every CI run failed.
+ *
+ * WHATWG URL parsing strips real tab/newline characters, so a true newline is
+ * invisible on the wire — only mangled forms like `/n` survive to break routing.
+ * Both are rejected here, against the same regex `schemas/env-schema.json` uses.
+ */
+const SUPABASE_URL_SHAPE = /^https:\/\/[a-z0-9-]+\.supabase\.co$/;
+
+function requireSupabaseUrl(): string {
+  const raw = requireEnv('SUPABASE_URL');
+  const url = raw.trim().replace(/\/+$/, '');
+  if (!SUPABASE_URL_SHAPE.test(url)) {
+    const seen = JSON.stringify(raw.length > 60 ? `${raw.slice(0, 60)}…` : raw);
+    throw new Error(
+      `[auth-helper] SUPABASE_URL is malformed: ${seen}. ` +
+        `Expected https://<project-ref>.supabase.co — no trailing slash, path, or whitespace. ` +
+        `A stray newline pasted into the secret store shows up here, and if it reaches ` +
+        `supabase-js it surfaces as the misleading error "Invalid API key". ` +
+        `Re-set the secret with printf "%s" (never echo).`,
+    );
+  }
+  return url;
+}
+
 function getAdmin(): SupabaseClient {
-  const url = requireEnv('SUPABASE_URL');
+  const url = requireSupabaseUrl();
   const key = requireEnv('SUPABASE_SERVICE_KEY');
   return createClient(url, key, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -136,7 +168,7 @@ export async function mintTestSession(): Promise<TestSession> {
   }
 
   // 2. Sign in to mint a real JWT (service-role keys can't authenticate as a user).
-  const url = requireEnv('SUPABASE_URL');
+  const url = requireSupabaseUrl();
   const anonKey = process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY;
   if (!anonKey) {
     throw new Error(

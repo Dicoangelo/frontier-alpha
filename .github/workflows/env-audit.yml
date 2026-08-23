@@ -63,6 +63,47 @@ jobs:
       - name: Verify every env reference has a schema entry
         run: node scripts/audit-env.mjs --schema-only
 
+  # The GitHub Actions secret store, audited from inside a job.
+  #
+  # This is the surface CI actually reads, and it is the one nothing was
+  # checking. `schema-only` proves a var is DECLARED; `value-audit` proves the
+  # VERCEL copy is clean. Neither looks here — and neither could from outside,
+  # because Actions secrets are write-only over the API. A job that has them
+  # injected as env is the only vantage point that exists.
+  #
+  # It cost 5 days of red CI: SUPABASE_URL here carried a trailing `/n` while
+  # Vercel's copy was clean, so every audit passed while every run failed.
+  #
+  # Needs no VERCEL_TOKEN, so unlike value-audit this actually runs.
+  secrets-audit:
+    name: GitHub Actions Secret Store
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      # --only names exactly the secrets the CI workflows consume, so each is
+      # required here: absent fails rather than passing quietly. Keep this list
+      # in step with the env: blocks in integration-tests.yml and
+      # visual-regression.yml.
+      - name: Audit the secrets CI consumes
+        run: >-
+          node scripts/audit-env.mjs --from-env
+          --only=SUPABASE_URL,SUPABASE_SERVICE_KEY,SUPABASE_ANON_KEY,VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,CRON_SECRET
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
   # Expensive cron-time check. Requires VERCEL_TOKEN. Pulls production envs and
   # validates them against the schema. Skipped when the secret is absent (so
   # forks running CI don't fail on missing creds).

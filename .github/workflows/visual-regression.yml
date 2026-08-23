@@ -59,6 +59,20 @@ jobs:
       - name: Install Playwright (chromium only)
         run: npx playwright install --with-deps chromium
 
+      # Same preflight as integration-tests.yml: both suites mint a test session
+      # through tests/*/auth-helper.ts, so both fail identically ("Invalid API
+      # key") on a malformed Supabase secret. Fail on the cause instead.
+      - name: Preflight — audit secret values against the schema
+        run: >-
+          node scripts/audit-env.mjs --from-env
+          --only=SUPABASE_URL,SUPABASE_SERVICE_KEY,SUPABASE_ANON_KEY,VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
       - name: Run visual regression suite
         run: npm run test:visual
         env: &e2e_env

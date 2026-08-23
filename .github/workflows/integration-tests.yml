@@ -38,6 +38,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Validate the secret VALUES before the suite runs. Without this the job
+      # dies deep inside supabase-js as "Invalid API key", which is what a
+      # malformed SUPABASE_URL and a genuinely bad key look like from there —
+      # indistinguishable, and neither names the real problem. GitHub Actions
+      # secrets are write-only over the API, so inside the job is the only place
+      # this surface can be audited at all.
+      - name: Preflight — audit secret values against the schema
+        run: >-
+          node scripts/audit-env.mjs --from-env
+          --only=SUPABASE_URL,SUPABASE_SERVICE_KEY,SUPABASE_ANON_KEY,CRON_SECRET
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
       - name: Run integration smoke suite
         run: npm run test:integration
         env:

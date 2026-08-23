@@ -1,0 +1,61 @@
+name: ML Engine Check
+
+# ml/ had no CI at all. That is why an unused dependency carrying a security
+# advisory (scikit-learn) sat in requirements.txt unnoticed, and why nothing
+# would have caught a requirements change that broke the import graph.
+#
+# Deliberately small: install the pinned requirements on the SAME Python the
+# Dockerfile uses (3.11-slim), then import the app. That proves the pins resolve
+# together and every module-level import in main.py is satisfied — which is
+# exactly the class of breakage a requirements edit causes.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ml/**'
+      - '.github/workflows/ml-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'ml/**'
+  workflow_dispatch:
+
+jobs:
+  imports:
+    name: Install pins + import the app (py3.11)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      # Must match ml/Dockerfile.ml (`FROM python:3.11-slim`). pandas==2.1.4
+      # predates 3.12 and has no wheel for newer interpreters, so a mismatch
+      # here fails for reasons that have nothing to do with the change.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: ml/requirements.txt
+
+      - name: Install pinned requirements
+        run: pip install -r ml/requirements.txt
+
+      - name: Import the FastAPI app
+        working-directory: ml
+        run: python -c "import main; print('imported', main.app.title, main.app.version)"
+
+      - name: Report anything installed but never imported
+        working-directory: ml
+        # Advisory only. A package can be legitimately transitive-but-pinned —
+        # numpy is, because PyPortfolioOpt requires numpy<2.0.0 — so this warns
+        # rather than fails.
+        run: |
+          for pkg in $(grep -oE '^[A-Za-z0-9_.-]+' requirements.txt); do
+            mod=$(echo "$pkg" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
+            if ! grep -rqiE "(import|from)[[:space:]]+($mod|${mod%%_*})" ./*.py; then
+              echo "::warning::$pkg is pinned but never imported in ml/*.py"
+            fi
+          done

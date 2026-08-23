@@ -2,8 +2,11 @@ fastapi==0.109.0
 uvicorn[standard]==0.27.0
 pandas==2.1.4
 numpy==1.26.3
-scikit-learn==1.4.0
 PyPortfolioOpt==1.5.5
-yfinance==0.2.35
 httpx==0.27.0
 # transformers + torch removed — /sentiment delegates to DeepSeek (cheaper, no 3GB torch image)
+# scikit-learn + yfinance removed — neither is imported anywhere in ml/.
+# scikit-learn carried a medium advisory (TfidfVectorizer data leakage) for a
+# package this service never loads; PyPortfolioOpt only wants it under the
+# `optionals` extra, which is not installed here. numpy stays pinned even
+# though it is not imported directly: PyPortfolioOpt requires numpy<2.0.0.

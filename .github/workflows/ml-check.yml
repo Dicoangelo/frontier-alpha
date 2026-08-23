@@ -49,13 +49,35 @@ jobs:
 
       - name: Report anything installed but never imported
         working-directory: ml
-        # Advisory only. A package can be legitimately transitive-but-pinned —
-        # numpy is, because PyPortfolioOpt requires numpy<2.0.0 — so this warns
-        # rather than fails.
+        # Advisory only. A pin can be legitimately unimported — numpy is,
+        # because PyPortfolioOpt requires numpy<2.0.0 — so this warns rather
+        # than fails.
+        #
+        # Resolve the real MODULE name from installed metadata instead of
+        # guessing from the package name. They differ often enough that guessing
+        # produces false alarms (PyPortfolioOpt imports as `pypfopt`), and a
+        # check that cries wolf is a check people learn to ignore.
         run: |
-          for pkg in $(grep -oE '^[A-Za-z0-9_.-]+' requirements.txt); do
-            mod=$(echo "$pkg" | tr '[:upper:]' '[:lower:]' | tr '-' '_')
-            if ! grep -rqiE "(import|from)[[:space:]]+($mod|${mod%%_*})" ./*.py; then
-              echo "::warning::$pkg is pinned but never imported in ml/*.py"
-            fi
-          done
+          python - <<'PY'
+          import re, pathlib
+          from importlib.metadata import packages_distributions
+
+          src = "\n".join(p.read_text() for p in pathlib.Path(".").glob("*.py"))
+          imported = set(re.findall(r"^\s*(?:import|from)\s+([A-Za-z0-9_]+)", src, re.M))
+
+          # module -> [distribution]; invert to distribution -> {modules}
+          dist_modules = {}
+          for mod, dists in packages_distributions().items():
+              for d in dists:
+                  dist_modules.setdefault(d.lower(), set()).add(mod)
+
+          for line in pathlib.Path("requirements.txt").read_text().splitlines():
+              line = line.strip()
+              if not line or line.startswith("#"):
+                  continue
+              pkg = re.split(r"[=<>\[;]", line)[0].strip()
+              mods = dist_modules.get(pkg.lower(), {pkg.lower().replace("-", "_")})
+              if not (mods & imported):
+                  print(f"::warning::{pkg} is pinned but never imported "
+                        f"(module{'s' if len(mods) > 1 else ''}: {', '.join(sorted(mods))})")
+          PY

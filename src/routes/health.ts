@@ -251,6 +251,42 @@ const REQUIRED_TABLES = [
   'frontier_model_versions',
 ] as const;
 
+/**
+ * Columns the application WRITES, per table.
+ *
+ * REQUIRED_TABLES catches a missing table. It cannot catch a missing COLUMN on a
+ * table that exists, and that gap is not hypothetical: on 2026-08-23 the
+ * integration smoke suite failed with
+ *
+ *   Could not find the 'portfolio_id' column of 'frontier_risk_alerts'
+ *   in the schema cache
+ *
+ * while this very probe reported `databaseSchema: live`. The table was there;
+ * the column was not. `001_initial_schema.sql:72` declares it, so production has
+ * drifted from the tracked migration.
+ *
+ * The consequence is worse than a failed test. RiskAlertSystem.persistAlert
+ * inserts exactly this shape, inside a try/catch, inside a `.catch()` — so every
+ * production alert insert fails and is swallowed twice. Nothing surfaces it.
+ *
+ * Only list columns the code actually depends on. A column present in a
+ * migration but never read or written is not worth failing a health check over.
+ */
+const REQUIRED_COLUMNS: Record<string, readonly string[]> = {
+  // src/core/RiskAlertSystem.ts::persistAlert
+  frontier_risk_alerts: [
+    'id',
+    'user_id',
+    'portfolio_id',
+    'alert_type',
+    'severity',
+    'title',
+    'message',
+    'metadata',
+    'created_at',
+  ],
+};
+
 async function probeDatabaseSchema(): Promise<Partial<IntegrationHealthEntry> & { status: IntegrationHealthEntry['status'] }> {
   const supabaseUrl = process.env.SUPABASE_URL?.trim() || process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const key = process.env.SUPABASE_SERVICE_KEY?.trim();
@@ -287,6 +323,21 @@ async function probeDatabaseSchema(): Promise<Partial<IntegrationHealthEntry> & 
     ]);
     const missing = REQUIRED_TABLES.filter((t) => !present.has(t));
 
+    // Column-level drift, for tables that DO exist. PostgREST's OpenAPI spec
+    // already carries each table's properties, so this costs nothing extra —
+    // the information was in the response all along, just never read.
+    const definitions = (spec.definitions ?? {}) as Record<
+      string,
+      { properties?: Record<string, unknown> }
+    >;
+    const missingColumns: string[] = [];
+    for (const [table, columns] of Object.entries(REQUIRED_COLUMNS)) {
+      if (!present.has(table) || !definitions[table]) continue; // table-level miss already reported
+      const actual = new Set(Object.keys(definitions[table].properties ?? {}));
+      const absent = columns.filter((c) => !actual.has(c));
+      if (absent.length > 0) missingColumns.push(`${table}.{${absent.join(',')}}`);
+    }
+
     if (missing.length > 0) {
       return {
         status: 'degraded',
@@ -296,6 +347,19 @@ async function probeDatabaseSchema(): Promise<Partial<IntegrationHealthEntry> & 
         impact: 'features touching these tables fail silently — their queries are inside try/catch',
         fallback: 'apply the tracked migration for each missing table',
         lastError: `missing tables: ${missing.join(', ')}`,
+      };
+    }
+
+    if (missingColumns.length > 0) {
+      return {
+        status: 'degraded',
+        via: 'SUPABASE_SERVICE_KEY',
+        mode: 'postgrest-introspection',
+        reason: `column drift on existing table(s): ${missingColumns.join('; ')}`,
+        impact:
+          'writes including these columns are rejected by PostgREST and swallowed by the callers\' try/catch — the feature fails silently',
+        fallback: 'apply the tracked migration that declares the column',
+        lastError: `missing columns: ${missingColumns.join('; ')}`,
       };
     }
 

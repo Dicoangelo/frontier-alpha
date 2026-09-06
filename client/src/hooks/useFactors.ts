@@ -7,19 +7,26 @@ import {
 import { toast } from '@/components/shared/Toast';
 import { useAuthStore } from '@/stores/authStore';
 
+/**
+ * `/portfolio/factors/:symbols` and `/portfolio/factors/history/:symbols` are
+ * PUBLIC routes (no auth preHandler; public rate limit). The hooks used to
+ * require an access token anyway, so anonymous visitors on the open front door
+ * saw an empty Factors page and a permanently "degraded" Factor Deltas card
+ * while the Dashboard (which used a raw fetch) showed the same symbols' real
+ * exposures. We still wait for auth hydration (`isReady`) so a signed-in user
+ * does not fire an anonymous request and then a second one with the token.
+ */
+function useHydrated(): boolean {
+  return useAuthStore((s) => s.isReady);
+}
+
 export function useFactors(symbols: string[]) {
-  // US-003: gate on auth readiness so the request doesn't race with
-  // Supabase session hydration on cold load. Without this, /factors
-  // returns 401 → the page falls into its empty branch even though the
-  // user is signed in.
-  const isReady = useAuthStore((s) => s.isReady);
-  const session = useAuthStore((s) => s.session);
-  const authReady = isReady && !!session?.access_token;
+  const hydrated = useHydrated();
 
   return useQuery({
     queryKey: ['factors', symbols.sort().join(',')],
     queryFn: () => factorsApi.getFactors(symbols),
-    enabled: authReady && symbols.length > 0,
+    enabled: hydrated && symbols.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
   });
@@ -49,7 +56,7 @@ export function useFactorsByCategory(symbols: string[]) {
  * Backs the FactorDeltas card's "Strategy 1" path so the user does not have
  * to wait a UTC day for the localStorage baseline to accumulate.
  *
- * Auth-gated identically to useFactors — the same race conditions apply.
+ * Public route, hydration-gated like useFactors (see note above).
  * Errors fall through to React Query's `error` field so callers can decide
  * whether to fall back to the localStorage baseline.
  */
@@ -57,14 +64,12 @@ export function useFactorsHistory(
   symbols: string[],
   window: FactorHistoryWindow = '1d',
 ) {
-  const isReady = useAuthStore((s) => s.isReady);
-  const session = useAuthStore((s) => s.session);
-  const authReady = isReady && !!session?.access_token;
+  const hydrated = useHydrated();
 
   return useQuery({
     queryKey: ['factors-history', window, symbols.sort().join(',')],
     queryFn: () => factorsApi.getFactorsHistory(symbols, window),
-    enabled: authReady && symbols.length > 0,
+    enabled: hydrated && symbols.length > 0,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 1,

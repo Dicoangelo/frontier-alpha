@@ -97,6 +97,9 @@ async function fetchPortfolio(): Promise<Portfolio | null> {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
     signedIn = Boolean(token);
+    // Anonymous visitor: the endpoint can only 401. Go straight to the demo
+    // fixture instead of logging a failed request on every public page load.
+    if (!token) return getDemoPortfolio();
     const response = await fetch('/api/v1/portfolio', {
       headers: {
         'Authorization': token ? `Bearer ${token}` : '',

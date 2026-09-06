@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { usePortfolio } from '@/hooks/usePortfolio';
 import { RefreshCw, TrendingUp, Layers, Globe, Activity, MessageSquare } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { FactorBar } from '@/components/factors/FactorBar';
@@ -9,8 +9,6 @@ import { ContributionWaterfall } from '@/components/factors/ContributionWaterfal
 import { Button } from '@/components/shared/Button';
 import { DataQualityBadge } from '@/components/shared/DataQualityBadge';
 import { SkeletonFactorsPage } from '@/components/shared/LoadingSkeleton';
-import { portfolioApi } from '@/api/portfolio';
-import { useAuthStore } from '@/stores/authStore';
 import { useFactorsByCategory, useRefreshFactors, FACTOR_CATEGORY_LABELS, FACTOR_CATEGORY_DESCRIPTIONS } from '@/hooks/useFactors';
 import { DataLoadError, NoFactorData, EmptyState } from '@/components/shared/EmptyState';
 import type { FactorExposureWithCategory } from '@/api/factors';
@@ -81,17 +79,9 @@ export function Factors() {
   // console. With no session the query is disabled and `symbols` falls back to
   // the demo set; the factor hook (also session-gated) stays idle so the page
   // settles into its no-factor-data empty state instead of erroring.
-  const isReady = useAuthStore((state) => state.isReady);
-  const session = useAuthStore((state) => state.session);
-  const authReady = isReady && !!session?.access_token;
 
   // Get portfolio to extract symbols
-  const { data: portfolio, isLoading: portfolioLoading } = useQuery({
-    queryKey: ['portfolio'],
-    queryFn: portfolioApi.getPortfolio,
-    retry: false,
-    enabled: authReady,
-  });
+  const { data: portfolio, isLoading: portfolioLoading } = usePortfolio({ retry: false });
 
   // Use portfolio symbols if available, otherwise use demo symbols
   const symbols = useMemo(() => {

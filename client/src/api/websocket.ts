@@ -28,6 +28,20 @@ const MAX_WS_RECONNECTS_BEFORE_OFFLINE = 3;
  * - Max 10 attempts before polling fallback
  * - Reconnect countdown emitted on each attempt
  */
+/**
+ * SSE is parked, not deleted. `GET /api/v1/quotes/stream?sse=true` has no
+ * event-stream branch on the server (it returns the JSON batch regardless), and
+ * the Vercel tier answers through `fastify.inject()` which cannot stream at all.
+ * Every SSE attempt therefore produced a browser-level
+ * "EventSource's response has a MIME type ("application/json")" error and a
+ * ~15s gap before quotes appeared. Flip this on only once a streaming tier
+ * actually emits `text/event-stream`.
+ */
+const SSE_ENABLED = false;
+
+/** Polling cadence. Quotes are 15-minute delayed upstream; 15s is plenty. */
+const POLL_INTERVAL_MS = 15_000;
+
 class QuoteStreamClient {
   private ws: WebSocket | null = null;
   private eventSource: EventSource | null = null;
@@ -89,19 +103,30 @@ class QuoteStreamClient {
     // US-006: If WS has been abandoned for the session, skip straight to the
     // fallback chain. This is the "polling is the live transport" reality.
     if (this.wsAbandoned) {
-      if (typeof EventSource !== 'undefined') {
-        this.connectSSE();
-      } else {
-        this.startPolling();
-      }
+      this.startFallback();
       return;
     }
 
-    // Try WebSocket first (connects to Fastify server)
+    // Try WebSocket first (connects to Fastify server) — but do not make the
+    // user wait on the handshake. A dead WS tier used to cost 15-30s of blank
+    // prices while three attempts timed out; one immediate REST poll puts
+    // quotes on screen now, and the WS (if it ever opens) simply takes over.
     const wsUrl = this.getWebSocketUrl();
     if (wsUrl) {
       this.connectWebSocket(wsUrl);
-    } else if (typeof EventSource !== 'undefined') {
+      void this.pollOnce();
+    } else {
+      this.startFallback();
+    }
+  }
+
+  /**
+   * Fallback transport selector. SSE only when a streaming tier exists (see
+   * SSE_ENABLED); otherwise polling, which is the honest transport for
+   * 15-minute delayed data served from a serverless REST tier.
+   */
+  private startFallback() {
+    if (SSE_ENABLED && typeof EventSource !== 'undefined') {
       this.connectSSE();
     } else {
       this.startPolling();
@@ -145,6 +170,9 @@ class QuoteStreamClient {
       this.transport = 'websocket';
 
       this.ws.onopen = () => {
+        // WS delivers pushes now — the bootstrap/fallback poll is redundant.
+        this.stopPolling();
+        this.transport = 'websocket';
         this.isConnected = true;
         this.setConnectionState('connected');
         this.reconnectAttempts = 0;
@@ -201,23 +229,17 @@ class QuoteStreamClient {
         this.attemptReconnect();
       };
 
-      this.ws.onerror = (err) => {
-        console.warn('WebSocket error, falling back to SSE:', err);
+      this.ws.onerror = () => {
+        // onclose follows and owns the retry/abandon bookkeeping; here we only
+        // make sure quotes keep flowing while that plays out.
         this.ws?.close();
         this.ws = null;
-        this.transport = null;
         this.stopHeartbeat();
-
-        // Fall back to SSE — onclose will run too and increment counters.
-        if (typeof EventSource !== 'undefined') {
-          this.connectSSE();
-        } else {
-          this.startPolling();
-        }
+        this.startFallback();
       };
     } catch {
       // WebSocket constructor can throw (e.g., invalid URL)
-      this.connectSSE();
+      this.startFallback();
     }
   }
 
@@ -310,39 +332,68 @@ class QuoteStreamClient {
   }
 
   /**
-   * Fallback polling for environments without SSE/WebSocket
+   * One REST fetch of the batch quote endpoint. Used both as the bootstrap
+   * while a WebSocket handshake is in flight and as the polling tick.
+   *
+   * A successful poll IS a connected state for everything the UI cares about
+   * (fresh numbers are arriving), so it clears any reconnecting/offline banner
+   * and labels the transport honestly as `polling`.
    */
-  private startPolling() {
-    this.transport = 'polling';
-    const apiUrl = import.meta.env.VITE_API_URL || '';
+  private async pollOnce(): Promise<void> {
+    if (this.subscribedSymbols.length === 0) return;
+    const apiUrl = (import.meta.env.VITE_API_URL || '').trim();
 
-    const poll = async () => {
-      if (this.subscribedSymbols.length === 0) return;
+    try {
+      const symbolsParam = this.subscribedSymbols.join(',');
+      const response = await fetch(`${apiUrl}/api/v1/quotes/stream?symbols=${symbolsParam}`);
+      if (!response.ok) throw new Error(`quotes/stream ${response.status}`);
 
-      try {
-        const symbolsParam = this.subscribedSymbols.join(',');
-        const response = await fetch(`${apiUrl}/api/v1/quotes/stream?symbols=${symbolsParam}`);
+      const result = await response.json() as { success: boolean; data?: unknown[] };
+      if (!result.success || !Array.isArray(result.data)) return;
 
-        if (response.ok) {
-          const result = await response.json() as { success: boolean; data?: unknown[] };
-          if (result.success && Array.isArray(result.data)) {
-            this.isConnected = true;
-            this.notifyHandlers('connected', { connected: true });
-
-            for (const quote of result.data) {
-              this.notifyHandlers('quote', quote);
-            }
-          }
+      // Do not clobber a live WebSocket that opened while this poll was in
+      // flight — its onopen already owns the transport label.
+      if (this.ws?.readyState !== WebSocket.OPEN) {
+        this.transport = 'polling';
+        if (!this.isConnected || this._connectionState !== 'connected') {
+          this.isConnected = true;
+          this.setConnectionState('connected');
         }
-      } catch (error) {
-        console.error('Polling error:', error);
+        this.notifyHandlers('connected', { connected: true });
+      }
+
+      for (const quote of result.data) {
+        this.notifyHandlers('quote', quote);
+      }
+    } catch (error) {
+      // Only a *polling* transport reports the outage — while WS is still
+      // negotiating, a failed bootstrap poll is not the user's problem yet.
+      if (this.transport === 'polling') {
+        console.warn('[wsClient] polling error:', error);
         this.isConnected = false;
+        this.setConnectionState('disconnected');
         this.notifyHandlers('connected', { connected: false });
       }
-    };
+    }
+  }
 
-    poll();
-    this.pollingInterval = setInterval(poll, 10000);
+  /**
+   * Polling transport. Idempotent: a second call while an interval is already
+   * running is a no-op, so the WS error/close/abandon paths can all "ensure
+   * polling" without stacking timers.
+   */
+  private startPolling() {
+    if (this.pollingInterval !== null) return;
+    this.transport = 'polling';
+    void this.pollOnce();
+    this.pollingInterval = setInterval(() => void this.pollOnce(), POLL_INTERVAL_MS);
+  }
+
+  private stopPolling() {
+    if (this.pollingInterval !== null) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
   }
 
   /**
@@ -419,10 +470,9 @@ class QuoteStreamClient {
   private abandonWebSocket() {
     if (this.wsAbandoned) return;
     this.wsAbandoned = true;
-    this.transport = null;
 
     console.warn(
-      `[wsClient] WebSocket abandoned for session after ${this.wsFailureCount} failed attempts (last close code=${this.lastCloseCode ?? 'n/a'}). Falling back to SSE/polling.`,
+      `[wsClient] WebSocket abandoned for session after ${this.wsFailureCount} failed attempts (last close code=${this.lastCloseCode ?? 'n/a'}). Polling is the transport for this session.`,
     );
 
     // Cancel any pending reconnect timer.
@@ -432,9 +482,17 @@ class QuoteStreamClient {
     }
     this.pendingReconnectAt = null;
 
-    // Surface the terminal banner state. The component reads `transport=null`
-    // along with `state='offline'` to render the "Live feed offline · using
-    // polling fallback" copy.
+    // If polling is already delivering quotes, this is not an outage from the
+    // user's point of view — keep the 'connected · polling' state and do not
+    // flash the offline pill. Only a session with NO working transport shows
+    // the terminal state (the next failed poll will set it).
+    if (this.pollingInterval !== null && this.isConnected) {
+      this.transport = 'polling';
+      this.setConnectionState('connected');
+      return;
+    }
+
+    this.transport = null;
     this._connectionState = 'offline';
     this.notifyHandlers('connectionState', {
       state: this._connectionState,
@@ -443,11 +501,9 @@ class QuoteStreamClient {
     });
     this.notifyHandlers('connected', { connected: false });
 
-    // Kick the fallback chain so the rest of the app keeps getting quotes.
-    if (typeof EventSource !== 'undefined' && this.subscribedSymbols.length > 0) {
-      this.connectSSE();
-    } else if (this.subscribedSymbols.length > 0) {
-      this.startPolling();
+    // Kick the fallback so the rest of the app keeps getting quotes.
+    if (this.subscribedSymbols.length > 0) {
+      this.startFallback();
     }
   }
 
@@ -585,10 +641,7 @@ class QuoteStreamClient {
       this.eventSource = null;
     }
 
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
-      this.pollingInterval = null;
-    }
+    this.stopPolling();
 
     // US-028: Clean up all timers
     this.stopHeartbeat();

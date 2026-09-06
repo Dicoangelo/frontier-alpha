@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-23T02:21:31.211Z",
-  "headSha": "a48a6741de1ab8368f5e37fb7ac7f6e4b8111532",
-  "version": "1.14.0",
+  "generatedAt": "2026-09-06T16:43:02.360Z",
+  "headSha": "6dc42c5ba036d9d936c98eeced027ba8e827507a",
+  "version": "1.15.0",
   "server": {
     "tsFiles": 148,
     "tsNonTestFiles": 140,
@@ -10,13 +10,13 @@
     "endpoints": 124,
     "migrations": 18,
     "vercelApiFiles": 4,
-    "testFiles": 62
+    "testFiles": 65
   },
   "client": {
     "pages": 25,
     "components": 120,
     "stores": 6,
-    "hooks": 15,
+    "hooks": 17,
     "apiModules": 10,
     "appRoutes": 27
   },
@@ -262,10 +262,12 @@
     "useEarnings",
     "useFactorDeltas",
     "useFactors",
+    "useFeedStatus",
     "useIntegrationsHealth",
     "useIsMobile",
     "useKeyboardShortcuts",
     "useNotifications",
+    "usePortfolio",
     "useQuotes",
     "useStagger",
     "useSubscription",

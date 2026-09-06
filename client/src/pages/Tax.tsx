@@ -13,6 +13,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import { usePortfolio } from '@/hooks/usePortfolio';
 import { useQuery } from '@tanstack/react-query';
 import {
   Receipt,
@@ -31,7 +32,6 @@ import {
 import { Button } from '@/components/shared/Button';
 import { ScrollableTable } from '@/components/shared/ScrollableTable';
 import { MockDataBanner } from '@/components/shared/MockDataBanner';
-import { portfolioApi } from '@/api/portfolio';
 import {
   taxApi,
   type AnnualTaxReport,
@@ -897,12 +897,7 @@ export function Tax() {
   // Demo mode (?demo=true shareable link, FF-6): render banner-marked
   // fixtures. Real accounts: live data from the /api/v1/tax/* routes, which
   // reconstruct the tax tracker from the user's persisted lots + events.
-  const { data: portfolio } = useQuery({
-    queryKey: ['portfolio'],
-    queryFn: portfolioApi.getPortfolio,
-    retry: false,
-    enabled: fetchEnabled,
-  });
+  const { data: portfolio } = usePortfolio({ retry: false, enabled: fetchEnabled });
 
   const portfolioSymbols = useMemo(
     () => portfolio?.positions?.map((p) => p.symbol) ?? [],

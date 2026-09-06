@@ -25,14 +25,21 @@ import { MemoryRouter } from 'react-router-dom';
 import { OnboardingProvider, useOnboardingContext } from './OnboardingProvider';
 
 // Controllable auth state the provider reads via useAuthStore() (object form).
-const authState: { user: unknown; session: unknown; initialized: boolean } = {
+// `isReady` mirrors the real store's US-003 hydration flag: usePortfolio (and
+// every other auth-gated query) stays disabled until it is true.
+const authState: { user: unknown; session: unknown; initialized: boolean; isReady: boolean } = {
   user: null,
   session: null,
   initialized: true,
+  isReady: true,
 };
 
 vi.mock('@/stores/authStore', () => ({
-  useAuthStore: () => authState,
+  // Honour zustand's selector form too: usePortfolio reads
+  // `useAuthStore((s) => s.isReady)`, and an object-only mock would hand the
+  // selector's caller the whole state object (truthy, wrong).
+  useAuthStore: (selector?: (s: typeof authState) => unknown) =>
+    selector ? selector(authState) : authState,
 }));
 
 // Empty portfolio -> the "fresh user" branch that auto-opens the welcome modal.

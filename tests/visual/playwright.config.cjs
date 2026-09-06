@@ -68,16 +68,31 @@ module.exports = defineConfig({
       },
     },
   ],
-  webServer: {
-    // Boot the client dev server from the repo root. Playwright's `cwd` is
-    // relative to the config file location (tests/visual/), so `../..` lands
-    // at the repo root where `npm run client:dev` is defined.
-    command: 'npm run client:dev',
-    cwd: require('path').resolve(__dirname, '..', '..'),
-    url: 'http://localhost:5173',
-    timeout: 120_000,
-    reuseExistingServer: !isCI,
-    stdout: 'ignore',
-    stderr: 'pipe',
-  },
+  webServer: [
+    {
+      // The API server. The Vite dev server proxies /api/* to :3000, and the
+      // nightly run had been failing every night with ECONNREFUSED on every
+      // API call because nothing ever booted it — the suite only started the
+      // client. Health endpoint is the readiness probe.
+      command: 'npm run dev',
+      cwd: require('path').resolve(__dirname, '..', '..'),
+      url: 'http://localhost:3000/health',
+      timeout: 120_000,
+      reuseExistingServer: !isCI,
+      stdout: 'ignore',
+      stderr: 'pipe',
+    },
+    {
+      // Boot the client dev server from the repo root. Playwright's `cwd` is
+      // relative to the config file location (tests/visual/), so `../..` lands
+      // at the repo root where `npm run client:dev` is defined.
+      command: 'npm run client:dev',
+      cwd: require('path').resolve(__dirname, '..', '..'),
+      url: 'http://localhost:5173',
+      timeout: 120_000,
+      reuseExistingServer: !isCI,
+      stdout: 'ignore',
+      stderr: 'pipe',
+    },
+  ],
 });

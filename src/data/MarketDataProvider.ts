@@ -56,9 +56,35 @@ export interface DataProviderConfig {
   alpacaApiKey?: string;
   alpacaApiSecret?: string;
   alpacaDataUrl?: string;  // Defaults to https://data.alpaca.markets
+  /**
+   * Keyless Yahoo Finance chart endpoint as a failover for quotes + daily
+   * bars. Sits AFTER Polygon/Alpaca (licensed feeds) and BEFORE Alpha Vantage
+   * (25 req/day). Added 2026-09 when the Polygon Starter plan was cancelled:
+   * on the free tier Polygon throttles at 5 req/min and 429s, and without this
+   * the dashboard went blank. Unofficial endpoint — treat as best-effort, but
+   * it needs no credential and serves ~2 years of daily history per call.
+   * Defaults to enabled; set false to pin the chain to licensed providers.
+   */
+  yahooFallback?: boolean;
+  yahooBaseUrl?: string;   // Defaults to https://query1.finance.yahoo.com
   cacheTTLSeconds?: number;
   redisUrl?: string;
   allowMockFallback?: boolean;  // Only true in development
+}
+
+/** Subset of Yahoo's `/v8/finance/chart` result we read. */
+interface YahooChartResult {
+  meta?: { regularMarketPrice?: number; regularMarketTime?: number; symbol?: string };
+  timestamp?: number[];
+  indicators?: {
+    quote?: Array<{
+      open?: Array<number | null>;
+      high?: Array<number | null>;
+      low?: Array<number | null>;
+      close?: Array<number | null>;
+      volume?: Array<number | null>;
+    }>;
+  };
 }
 
 // Polygon.io WebSocket message types
@@ -139,6 +165,7 @@ export class MarketDataProvider {
     this.config = {
       cacheTTLSeconds: 60,
       allowMockFallback: process.env.NODE_ENV !== 'production',
+      yahooFallback: true,
       ...config,
     };
 
@@ -307,7 +334,25 @@ export class MarketDataProvider {
       }
     }
 
-    // 4c. Alpha Vantage (backup)
+    // 4c. Yahoo Finance (keyless failover — see DataProviderConfig.yahooFallback)
+    if (this.config.yahooFallback) {
+      const breaker = getBreaker('yahoo');
+      if (breaker.canAttempt()) {
+        try {
+          const quote = await this.fetchYahooQuote(upperSymbol);
+          if (quote) {
+            breaker.recordSuccess();
+            return await persist(quote, 'yahoo');
+          }
+          breaker.recordFailure();
+        } catch (e) {
+          breaker.recordFailure();
+          logger.error({ err: e, symbol: upperSymbol }, 'Yahoo quote error');
+        }
+      }
+    }
+
+    // 4d. Alpha Vantage (backup)
     if (this.config.alphaVantageApiKey) {
       const breaker = getBreaker('alphaVantage');
       if (breaker.canAttempt()) {
@@ -500,6 +545,25 @@ export class MarketDataProvider {
         } catch (e) {
           breaker.recordFailure();
           logger.warn({ err: e, symbol: upperSymbol }, 'Alpaca historical price error');
+        }
+      }
+    }
+
+    // Yahoo Finance daily bars — keyless failover (see DataProviderConfig).
+    if (this.config.yahooFallback) {
+      const breaker = getBreaker('yahoo');
+      if (breaker.canAttempt()) {
+        try {
+          const prices = await this.fetchYahooPrices(upperSymbol, days);
+          if (prices.length > 0) {
+            breaker.recordSuccess();
+            await this.historicalPriceCache.setPrices(upperSymbol, prices, days);
+            return prices;
+          }
+          breaker.recordFailure();
+        } catch (e) {
+          breaker.recordFailure();
+          logger.warn({ err: e, symbol: upperSymbol }, 'Yahoo historical price error');
         }
       }
     }
@@ -1351,6 +1415,105 @@ export class MarketDataProvider {
     }
 
     return prices;
+  }
+
+  // ============================================================================
+  // YAHOO FINANCE (keyless failover)
+  // ============================================================================
+  //
+  // `GET /v8/finance/chart/{symbol}?range=..&interval=1d` — no API key, no
+  // documented quota, unofficial. Returns `meta` (regularMarketPrice, market
+  // time) plus parallel `timestamp[]` / `indicators.quote[0].close[]` arrays.
+  // Null entries appear for holidays/half-days and are skipped.
+
+  private yahooChartUrl(symbol: string, range: string): string {
+    const base = (this.config.yahooBaseUrl || 'https://query1.finance.yahoo.com').replace(/\/+$/, '');
+    return `${base}/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=1d&includePrePost=false`;
+  }
+
+  private async fetchYahooChart(symbol: string, range: string): Promise<YahooChartResult | null> {
+    const response = await fetchWithRetry(
+      this.yahooChartUrl(symbol, range),
+      { headers: { 'User-Agent': 'Mozilla/5.0 (frontier-alpha)', Accept: 'application/json' } },
+    );
+    if (!response.ok) {
+      const { kind } = recordProviderError('yahoo', response.status);
+      logger.warn({ symbol, status: response.status, kind }, 'Yahoo chart HTTP non-200');
+      return null;
+    }
+    const body = (await response.json()) as {
+      chart?: { result?: YahooChartResult[] | null; error?: { code?: string; description?: string } | null };
+    };
+    const result = body.chart?.result?.[0];
+    if (!result) {
+      if (body.chart?.error) {
+        logger.warn({ symbol, error: body.chart.error }, 'Yahoo chart returned an error body');
+      }
+      return null;
+    }
+    return result;
+  }
+
+  /** Map a chart result to chronological daily bars, dropping null closes. */
+  private yahooBars(symbol: string, result: YahooChartResult): Price[] {
+    const ts = result.timestamp ?? [];
+    const q = result.indicators?.quote?.[0] ?? {};
+    const bars: Price[] = [];
+    for (let i = 0; i < ts.length; i++) {
+      const close = q.close?.[i];
+      if (close === null || close === undefined || !Number.isFinite(close)) continue;
+      bars.push({
+        symbol,
+        timestamp: new Date(ts[i] * 1000),
+        open: q.open?.[i] ?? close,
+        high: q.high?.[i] ?? close,
+        low: q.low?.[i] ?? close,
+        close,
+        volume: q.volume?.[i] ?? 0,
+      });
+    }
+    return bars;
+  }
+
+  private async fetchYahooQuote(symbol: string): Promise<Quote | null> {
+    const result = await this.fetchYahooChart(symbol, '5d');
+    if (!result) return null;
+
+    const bars = this.yahooBars(symbol, result);
+    const meta = result.meta ?? {};
+    const latestBar = bars[bars.length - 1];
+    const last = Number.isFinite(meta.regularMarketPrice) ? (meta.regularMarketPrice as number) : latestBar?.close;
+    if (!last) return null;
+
+    // Prior session close: the bar before the most recent one. During a live
+    // session the last bar is today's (partial) candle, so bars[-2] is
+    // yesterday's close; after hours it is still the previous session.
+    const prevClose = bars.length >= 2 ? bars[bars.length - 2].close : (latestBar?.open ?? last);
+    const change = last - prevClose;
+
+    return {
+      symbol,
+      timestamp: meta.regularMarketTime ? new Date(meta.regularMarketTime * 1000) : new Date(),
+      bid: last * 0.9999,
+      ask: last * 1.0001,
+      last,
+      change,
+      changePercent: prevClose ? (change / prevClose) * 100 : 0,
+    };
+  }
+
+  private async fetchYahooPrices(symbol: string, days: number): Promise<Price[]> {
+    // Calendar range with headroom for weekends/holidays (~252 bars per year).
+    const range =
+      days <= 20 ? '1mo' :
+      days <= 60 ? '3mo' :
+      days <= 125 ? '6mo' :
+      days <= 250 ? '1y' :
+      days <= 500 ? '2y' :
+      '5y';
+    const result = await this.fetchYahooChart(symbol, range);
+    if (!result) return [];
+    return this.yahooBars(symbol, result).slice(-days);
   }
 
   // ============================================================================

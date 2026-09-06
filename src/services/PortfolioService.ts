@@ -6,7 +6,52 @@ export interface PortfolioWithPositions extends FrontierPortfolio {
   positions: FrontierPosition[];
 }
 
+/**
+ * Cash balance a brand-new portfolio starts with. Matches the "$100K starting
+ * cash" convention the Trade page and SimulatedBroker already advertise, so a
+ * fresh account sees one consistent number everywhere. `addPosition` treats a
+ * buy as cash-out, so a zero default would drive cash negative on the very
+ * first position.
+ */
+export const DEFAULT_STARTING_CASH = 100_000;
+
 export class PortfolioService {
+  /**
+   * Return the user's portfolio, creating it on first touch.
+   *
+   * Nothing else in the system ever inserted a `frontier_portfolios` row —
+   * not signup, not the welcome flow, not the position routes — so every new
+   * account hit `getPortfolio() === null`: GET /portfolio 404'd, the
+   * Dashboard fell back to the $125K demo fixture under a LIVE badge, the
+   * Portfolio page rendered "Couldn't load data", and `addPosition` returned
+   * null (400 "Failed to add position"). A new user literally could not add
+   * a position. Creating the row lazily here closes that hole for every
+   * caller at once.
+   *
+   * Race-safe: the unique (user_id, name) constraint means a concurrent
+   * first request may win the insert; on conflict we simply re-read.
+   */
+  async ensurePortfolio(userId: string): Promise<PortfolioWithPositions | null> {
+    const existing = await this.getPortfolio(userId);
+    if (existing) return existing;
+
+    const { error } = await supabaseAdmin
+      .from('frontier_portfolios')
+      .insert({
+        user_id: userId,
+        name: 'Main Portfolio',
+        cash_balance: DEFAULT_STARTING_CASH,
+      });
+
+    // 23505 = unique_violation: another request created it first — fine.
+    if (error && error.code !== '23505') {
+      logger.error({ err: error, userId }, 'Error creating portfolio');
+      return null;
+    }
+
+    return this.getPortfolio(userId);
+  }
+
   async getPortfolio(userId: string): Promise<PortfolioWithPositions | null> {
     const { data: portfolio, error: portfolioError } = await supabaseAdmin
       .from('frontier_portfolios')
@@ -70,11 +115,10 @@ export class PortfolioService {
     // already does the symmetric increment, but addPosition was leaving
     // cash untouched — visible in production 2026-05-10 as "$100k cash"
     // even after a $45k buy.
-    const { data: portfolio } = await supabaseAdmin
-      .from('frontier_portfolios')
-      .select('id, cash_balance')
-      .eq('user_id', userId)
-      .single();
+    //
+    // ensurePortfolio (not a bare select): a first-ever position must create
+    // the portfolio row, otherwise new accounts can never add anything.
+    const portfolio = await this.ensurePortfolio(userId);
 
     if (!portfolio) return null;
 

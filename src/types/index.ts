@@ -29,6 +29,7 @@ export interface Price {
 export type QuoteSource =
   | 'polygon'
   | 'alpaca'
+  | 'yahoo'
   | 'alphaVantage'
   | 'polygon-websocket'
   | 'cache'

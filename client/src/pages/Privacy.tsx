@@ -79,7 +79,7 @@ export function Privacy() {
               <li>Supabase (auth + Postgres database)</li>
               <li>Stripe (billing and subscription management)</li>
               <li>Resend (transactional email delivery)</li>
-              <li>Polygon.io and Alpha Vantage (market data only — no user data sent)</li>
+              <li>Polygon.io, Yahoo Finance and Alpha Vantage (market data only — no user data sent)</li>
               <li>DeepSeek and OpenAI (AI explainer prompts; no portfolio data sent unless you explicitly request explanation)</li>
               <li>Vercel and Railway (application hosting)</li>
             </ul>

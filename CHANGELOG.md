@@ -7,6 +7,104 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.15.0] - 2026-09-06
+
+### Make-it-work wave — the app was unusable for any new account
+
+Walked production as a fresh signed-in user (the seeded golden account) and as
+an anonymous visitor. Five things were broken at once, each with a plausible
+"empty state" or "live" face on it, which is why they survived the health
+probes. Baselines before this wave: 1088 server + 277 client tests green,
+which says nothing about the seams below.
+
+#### Fixed — the new-account path
+
+- **No code path ever created a portfolio row.** Not signup, not the welcome
+  flow, not the position routes. A new account hit `getPortfolio() === null`
+  everywhere: `GET /portfolio` 404'd, `addPosition()` returned null (400
+  "Failed to add position"), the Portfolio page rendered "Couldn't load data",
+  and the Dashboard turned the 404 into the **$125K demo fixture under a LIVE
+  badge**. `PortfolioService.ensurePortfolio()` now creates the row on first
+  touch (`$100K` starting cash, the app-wide paper-account convention);
+  `GET /portfolio` and `addPosition` both go through it. (`9d0aa5c`)
+- **Signed-in users never see demo data on an error path again.** The
+  Dashboard's portfolio and factor fetches fall back to the fixture only for
+  anonymous visitors; a real session gets the honest empty state. (`0845ce8`)
+
+#### Fixed — one query key, two payload shapes
+
+- **Eight components shared the `['portfolio']` React Query key but were split
+  between two fetchers returning different shapes** (`api.get` → the
+  `{ success, data }` envelope; `portfolioApi.getPortfolio` → the bare
+  object). Whichever fetched first populated the cache and every consumer
+  expecting the other shape read `undefined`. In production
+  `OnboardingProvider` (bare) always won, so the Portfolio page rendered
+  **"$0 cash · No positions yet" for a funded account** and Optimize saw no
+  symbols. Order-dependent, silent, invisible to single-page tests. All eight
+  now use `hooks/usePortfolio.ts`, which normalises either shape.
+- Header feed pill shows **Idle** (not "Offline") when there are no positions
+  to stream.
+
+#### Fixed — analytics blank for everyone
+
+- **`fetchFactors` indexed the response envelope by symbol.** The server
+  returns `{ success, data: { NVDA: [...] } }`; the Dashboard read
+  `json['NVDA']` → undefined, so Factor Exposures, Risk Metrics and the AI
+  Insight rendered "No exposures / Awaiting price history / Connect your
+  portfolio" for demo and signed-in users alike while the API was returning
+  76 factors per holding. Aggregation extracted to `lib/aggregateFactors.ts`
+  (envelope-tolerant, unit-tested). (`0845ce8`)
+
+#### Fixed — realtime chain and the "LIVE" lie
+
+- **Quotes took 15-30s to appear and every page load logged 5+ console
+  errors.** The chain was WebSocket (Railway tier, 502 for weeks) → SSE
+  (`/quotes/stream?sse=true` has no event-stream branch; Vercel's `inject()`
+  cannot stream; the browser aborted with a MIME-type error every time) →
+  polling. `connect()` now fires one REST poll immediately while the WS
+  handshake is in flight; SSE is parked behind `SSE_ENABLED = false`;
+  polling is idempotent. (`68cd613`)
+- **The header pill was hardcoded `LIVE`** and pulsed green through every
+  outage while the market strip beside it said "Offline". Header pill,
+  Dashboard greeting badge and the strip now share `useFeedStatus`:
+  **Live** (open push socket) / **Delayed** (15-minute quotes over polling) /
+  **Offline**. (`68cd613`)
+
+#### Added — surviving the Polygon cancellation
+
+- **Keyless Yahoo Finance failover** (`/v8/finance/chart`) for quotes and
+  daily bars, positioned after Polygon/Alpaca and before Alpha Vantage
+  (25 req/day). The Stocks Starter plan was cancelled 2026-09; on the free tier
+  the key throttles at 5 req/min and 429s, and previously the only fallback
+  was Alpha Vantage. Tagged `source: 'yahoo'`, own circuit breaker and
+  quota-classifier slot, `yahooFallback: false` to disable. MSW answers the
+  Yahoo host with 503 by default so no suite reaches the network. (`e03397c`)
+
+#### Fixed — copy
+
+- **Factor Deltas said "interest rate sens fell 313.3%"** (0.09 → -0.19).
+  Deltas now read in exposure units with from/to anchors and rank by absolute
+  change, not percent-of-baseline. Trade page no longer claims "Live Polygon
+  quotes". Privacy/Terms list Yahoo Finance as a market-data source. (`ce7ea82`)
+
+#### Fixed — CI
+
+- **Nightly E2E had failed every night with `ECONNREFUSED`** on every API
+  call: the Playwright `webServer` only booted the Vite client, never the API
+  it proxies to. The config now boots both.
+
+#### Still open (operator actions, not code)
+
+- `frontier_risk_alerts.portfolio_id` migration (PR #42) is **unapplied** —
+  alert persistence and the integration smoke suite stay broken until
+  `bash scripts/apply-pending-migrations.sh` is run. `databaseSchema` probe
+  reports it as degraded.
+- Railway tier (`api.frontier-alpha…`) returns 502 and the CLI session is
+  logged out. With the Polygon WebSocket entitlement gone, that tier's only
+  job is gone too; polling on Vercel is the transport.
+- The Polygon key in production is the same value leaked in public git
+  history (see `docs/CREDENTIAL-ROTATION-2026-08.md`).
+
 ## [1.14.0] - 2026-07-30
 
 ### Silent-failure sweep — production was green while five features were dead

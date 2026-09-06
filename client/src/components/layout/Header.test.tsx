@@ -139,7 +139,7 @@ describe('Header quote tile', () => {
     expect(screen.queryByText('—')).not.toBeInTheDocument();
     // The unrelated "Live" connection status still renders, proving the
     // header mounted and only the quote tile was suppressed.
-    expect(screen.getByLabelText('Live connection active')).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Quote feed/)).toBeInTheDocument();
   });
 
   it('renders nothing (no dead "—") when the quote query errors', async () => {
@@ -153,7 +153,7 @@ describe('Header quote tile', () => {
       expect(getQuoteTile()).toBeNull();
     });
     expect(screen.queryByText('—')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Live connection active')).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Quote feed/)).toBeInTheDocument();
   });
 
   it('shows the "Loading" placeholder (not a dash) while the quote is in flight', async () => {

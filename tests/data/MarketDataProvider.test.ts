@@ -76,6 +76,11 @@ function makeProvider(overrides: Record<string, unknown> = {}): MarketDataProvid
     alpacaApiKey: 'ak',
     alpacaApiSecret: 'as',
     allowMockFallback: false,
+    // This suite pins the licensed Polygon → Alpaca → Alpha Vantage chain.
+    // The keyless Yahoo failover (on by default) is covered separately in
+    // MarketDataProvider.yahoo.test.ts; left on here it would answer the
+    // "every provider fails" scenarios with a real network fetch.
+    yahooFallback: false,
     ...overrides,
   });
   // Force the durable quote-cache read off so tests exercise the upstream

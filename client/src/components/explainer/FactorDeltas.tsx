@@ -18,6 +18,7 @@
 import { Card } from '@/components/shared/Card';
 import { Sparkline } from '@/components/shared/Sparkline';
 import { DegradedService } from '@/components/shared/DegradedService';
+import { formatDelta } from '@/hooks/factorDeltas.helpers';
 import {
   useFactorDeltas,
   type FactorDelta,
@@ -40,7 +41,6 @@ function DeltaPill({ delta }: { delta: FactorDelta }) {
   const positive = delta.delta >= 0;
   const Icon = positive ? TrendingUp : TrendingDown;
   const color = positive ? 'var(--color-positive)' : 'var(--color-negative)';
-  const sign = positive ? '+' : '';
   const human = delta.factor.replace(/_/g, ' ');
   // Three-point sparkline: previous, midpoint, current. Lightweight visual
   // that conveys direction without inventing intra-day points we don't have.
@@ -73,7 +73,7 @@ function DeltaPill({ delta }: { delta: FactorDelta }) {
                 className="mono text-[11px] tracking-[0.15em] uppercase tabular-nums font-medium"
                 style={{ color }}
               >
-                {sign}{delta.deltaPct.toFixed(1)}%
+                {formatDelta(delta.delta)}
               </span>
             </div>
           </div>

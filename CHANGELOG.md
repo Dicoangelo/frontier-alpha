@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.15.1] - 2026-09-06
+
+### Improvement loop — six verified cycles after the make-it-work wave
+
+Each cycle: walk production as the seeded golden user and as an anonymous
+visitor (13 routes, console errors + failed requests + empty-state flags),
+fix the highest-tier finding with a test that fails without the fix, pass
+every gate, deploy, re-walk. Loop state and per-cycle measurements in the
+(git-excluded) `LOOP-STATE.md`; walker at `scripts/loop-walk.mjs`.
+
+| Cycle | Finding | Fix |
+|---|---|---|
+| 1 | Equity curve was a seeded random walk: "+11.22% vs S&P +10.34%" for every account, under a LIVE badge | Real series marked from cached daily closes (`lib/equitySeries`, `useEquityHistory`); honest loading / unavailable / idle states; mock archived to `.graveyard/` |
+| 2 | Free-plan and anonymous users fired Pro-only / auth-only endpoints on five pages: 19 console 403/401s per walk, "Couldn't load · Retry" where an upgrade prompt belongs | `usePlanGate` (auth + plan + subscription resolved) on the CVRF fan-out, Tax, MethodConsensus, LineageExplorer; `UpgradeGate`'s locked preview is a static skeleton, not live children |
+| 3 | Factor hooks demanded a token for PUBLIC routes → anonymous Factors page empty, Factor Deltas permanently "degraded" | Hooks gate on auth hydration only; Dashboard skips the anonymous `/portfolio` call (last demo 401) |
+| 4 | `npm audit --omit=dev`: fast-uri 3.1.5 (4 high, SSRF / host confusion) via fastify's ajv chain and @vercel/node; fastify moderate | `overrides` pin fast-uri ^3.1.7 (^4.1.4 under fast-json-stringify), fastify 5.12.3. Production audit: 0 findings |
+| 5 | Trade page paper account and tracked Portfolio both showed "Positions" with no explanation | `PaperAccountNotice` (banner + inline), links to `/portfolio`, kicker "Paper account · Holdings" |
+| 6 | Ten module-preload warnings per page (service worker serves the vendor chunks) | Vendor chunks dropped from `modulePreload`; 0 warnings. Mobile walk (390×844) added: 0 errors, 0 overflow on all routes |
+
+Walk totals across the loop: authed **19 errors / 10 failed → 0 / 0**; demo
+**5 / 3 → 0 / 0**. Client tests 290 → 319; server 1100 unchanged.
+
+Side finding: the Railway tier came back (GitHub deploy on the main merge) and
+serves v1.15.0, so the header feed reports live streaming again.
+
 ## [1.15.0] - 2026-09-06
 
 ### Make-it-work wave — the app was unusable for any new account

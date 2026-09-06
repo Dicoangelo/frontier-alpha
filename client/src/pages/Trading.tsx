@@ -208,7 +208,7 @@ export default function Trading() {
   let brokerChipLabel = 'OFFLINE';
   if (alpacaStatus === 'live') {
     if (alpacaBrokerMode === 'simulated') {
-      brokerChipLabel = 'SIMULATED · LIVE QUOTES';
+      brokerChipLabel = 'SIMULATED · DELAYED QUOTES';
     } else if (alpacaBrokerMode === 'paper') {
       brokerChipLabel = 'ALPACA · PAPER';
     } else if (alpacaBrokerMode === 'live') {
@@ -255,7 +255,7 @@ export default function Trading() {
           </div>
           <p className="text-sm text-theme-secondary mt-1">
             {isSimulated
-              ? 'Live Polygon quotes, simulated fills, Supabase-persisted positions.'
+              ? 'Delayed market quotes, simulated fills, Supabase-persisted positions.'
               : 'Execute orders and manage your positions'}
           </p>
         </div>
@@ -296,7 +296,7 @@ export default function Trading() {
                 Paper Trading · Frontier Alpha Engine
               </p>
               <p className="text-sm mt-1 text-theme-secondary">
-                Live Polygon quotes · Supabase-persisted · $100K starting cash
+                15-min delayed quotes · Supabase-persisted · $100K starting cash
               </p>
             </div>
           </div>

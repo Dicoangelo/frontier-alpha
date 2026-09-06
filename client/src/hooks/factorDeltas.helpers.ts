@@ -90,23 +90,37 @@ export function categoryFor(
  */
 export function explainDelta(d: Omit<FactorDelta, 'explanation'>): string {
   const direction = d.delta >= 0 ? 'rose' : 'fell';
-  const magnitude = Math.abs(d.deltaPct).toFixed(1);
   const human = d.factor.replace(/_/g, ' ');
+  // Exposures are standardized loadings (roughly sigma units), so the change
+  // is stated in those units with the from/to anchors. Percent-of-baseline
+  // was the previous copy and produced "interest rate sens fell 313.3%" for
+  // a move from 0.09 to -0.19 — arithmetically true, meaningless to a reader.
+  const move = `${formatExposure(d.previous)} to ${formatExposure(d.current)}`;
 
   switch (d.category) {
     case 'style':
-      return `${human} ${direction} ${magnitude}%, shifting your style tilt`;
+      return `${human} ${direction} from ${move}, shifting your style tilt`;
     case 'macro':
-      return `${human} ${direction} ${magnitude}%, changing macro sensitivity`;
+      return `${human} ${direction} from ${move}, changing macro sensitivity`;
     case 'sector':
-      return `${human} exposure ${direction} ${magnitude}%, rebalancing sector concentration`;
+      return `${human} exposure ${direction} from ${move}, rebalancing sector concentration`;
     case 'volatility':
-      return `${human} ${direction} ${magnitude}%, shifting the risk profile`;
+      return `${human} ${direction} from ${move}, shifting the risk profile`;
     case 'sentiment':
-      return `${human} ${direction} ${magnitude}% on the latest sentiment read`;
+      return `${human} ${direction} from ${move} on the latest sentiment read`;
     default:
-      return `${human} ${direction} ${magnitude}%`;
+      return `${human} ${direction} from ${move}`;
   }
+}
+
+/** Exposure formatted for copy: two decimals, explicit minus sign. */
+export function formatExposure(x: number): string {
+  return (Math.abs(x) < 0.005 ? 0 : x).toFixed(2);
+}
+
+/** Signed absolute change for the pill: "+0.42" / "-1.31". */
+export function formatDelta(delta: number): string {
+  return `${delta >= 0 ? '+' : '-'}${Math.abs(delta).toFixed(2)}`;
 }
 
 export function computeDeltas(
@@ -145,7 +159,10 @@ export function computeDeltas(
     });
   }
 
-  // Top-3 by absolute percent change.
-  deltas.sort((a, b) => Math.abs(b.deltaPct) - Math.abs(a.deltaPct));
+  // Top-3 by absolute change in exposure. Ranking by percent-of-baseline
+  // surfaced whichever factor happened to have the smallest prior (a 0.01 →
+  // 0.04 move outranked a 1.0 → 0.5 one); absolute change is what moves the
+  // portfolio.
+  deltas.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
   return deltas.slice(0, 3);
 }

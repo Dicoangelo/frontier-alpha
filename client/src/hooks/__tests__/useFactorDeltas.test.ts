@@ -140,7 +140,7 @@ describe('useFactorDeltas — internals', () => {
       expect(down).toContain('fell');
     });
 
-    it('formats magnitude as a single decimal percent', () => {
+    it('states the move in exposure units with from/to anchors, never as a percent of baseline', () => {
       const out = explainDelta({
         factor: 'value',
         category: 'style',
@@ -149,7 +149,20 @@ describe('useFactorDeltas — internals', () => {
         delta: 0.023,
         deltaPct: 23.4567,
       });
-      expect(out).toContain('23.5%');
+      expect(out).toContain('from 0.10 to 0.12');
+      expect(out).not.toContain('%');
+    });
+
+    it('does not produce "fell 313%"-style copy for a sign flip off a tiny baseline', () => {
+      const out = explainDelta({
+        factor: 'interest_rate_sens',
+        category: 'macro',
+        current: -0.19,
+        previous: 0.09,
+        delta: -0.28,
+        deltaPct: -311.1,
+      });
+      expect(out).toBe('interest rate sens fell from 0.09 to -0.19, changing macro sensitivity');
     });
 
     it('routes per-category copy', () => {
@@ -228,7 +241,7 @@ describe('useFactorDeltas — internals', () => {
       expect(out[0].deltaPct).toBe(999);
     });
 
-    it('returns top-3 sorted by absolute deltaPct (descending)', () => {
+    it('returns top-3 sorted by absolute exposure change (descending)', () => {
       const current: FactorExposureWithCategory[] = [
         mkFactor('a', 1.0),
         mkFactor('b', 0.5),
@@ -239,17 +252,18 @@ describe('useFactorDeltas — internals', () => {
       const baseline = { a: 0.5, b: 0.4, c: 1.0, d: 0.04, e: -1.0 };
       const out = computeDeltas(current, baseline);
       expect(out).toHaveLength(3);
-      // |a| = 100, |b| = 25, |c| = 100, |d| = 25, |e| = 50
-      // Top 3 by |deltaPct|: a (100), c (100), e (50)
+      // |Δa| = 0.5, |Δb| = 0.1, |Δc| = 1.0, |Δd| = 0.01, |Δe| = 0.5
+      // Top 3 by |delta|: c (1.0), a (0.5), e (0.5)
       const factorNames = out.map((d) => d.factor);
       expect(factorNames).toContain('a');
       expect(factorNames).toContain('c');
       expect(factorNames).toContain('e');
       // Sorted descending by abs
       const sorted = [...out].sort(
-        (x, y) => Math.abs(y.deltaPct) - Math.abs(x.deltaPct),
+        (x, y) => Math.abs(y.delta) - Math.abs(x.delta),
       );
       expect(out).toEqual(sorted);
+      expect(out[0].factor).toBe('c');
     });
 
     it('preserves direction (negative delta keeps negative sign)', () => {

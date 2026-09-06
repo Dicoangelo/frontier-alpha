@@ -4,6 +4,7 @@ import { Settings, Menu, HelpCircle, Moon, Sun } from 'lucide-react';
 import { AlertDropdown } from '@/components/alerts/AlertDropdown';
 import { HelpKeyboardHint } from '@/components/help';
 import { useThemeStore } from '@/stores/themeStore';
+import { useFeedStatus } from '@/hooks/useFeedStatus';
 import { api } from '@/api/client';
 
 /** Default index ticker shown in the header quote tile. */
@@ -71,6 +72,9 @@ export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
   const pageTitle = pageTitleMap[location.pathname] || '';
   const { data: quote, isLoading: isQuoteLoading } = useHeaderQuote();
   const quoteUp = quote ? quote.changePercent >= 0 : true;
+  // Feed pill reads the real transport (see useFeedStatus) — it used to be a
+  // hardcoded "Live" that stayed green through every outage.
+  const feed = useFeedStatus();
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 glass-slab-floating z-50">
@@ -173,20 +177,38 @@ export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
           <div
             className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full glass-slab"
             role="status"
-            aria-label="Live connection active"
+            aria-label={feed.aria}
+            title={feed.aria}
           >
             <div
-              className="w-1.5 h-1.5 bg-[var(--color-brand-teal)] rounded-full animate-pulse-green shadow-[0_0_8px_var(--color-brand-teal)]"
+              className={`w-1.5 h-1.5 rounded-full ${feed.tone === 'live' ? 'animate-pulse-green' : ''}`}
+              style={{
+                backgroundColor:
+                  feed.tone === 'live'
+                    ? 'var(--color-brand-teal)'
+                    : feed.tone === 'delayed'
+                      ? 'var(--color-warning)'
+                      : 'var(--color-text-muted)',
+                boxShadow: feed.tone === 'live' ? '0 0 8px var(--color-brand-teal)' : 'none',
+              }}
               aria-hidden="true"
             />
             {/* Text uses --color-live, not the brand teal: #00FFC6 renders at
                 1.30:1 on a light card. The dot above keeps the brand teal —
                 it is decorative, so the contrast floor does not apply. */}
             <span
-              className="text-[9px] text-[var(--color-live)] mono tracking-[0.4em] uppercase"
+              className="text-[9px] mono tracking-[0.4em] uppercase"
+              style={{
+                color:
+                  feed.tone === 'live'
+                    ? 'var(--color-live)'
+                    : feed.tone === 'delayed'
+                      ? 'var(--color-warning)'
+                      : 'var(--color-text-muted)',
+              }}
               aria-hidden="true"
             >
-              Live
+              {feed.label}
             </span>
           </div>
 

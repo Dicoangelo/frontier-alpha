@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAlertsStore } from '@/stores/alertsStore';
 import { useDataFreshness } from '@/hooks/useDataFreshness';
+import { wsClient } from '@/api/websocket';
 
 type MarketPhase = 'pre' | 'open' | 'post' | 'closed';
 
@@ -203,7 +204,7 @@ export function MarketStatusStrip({ isConnected, lastUpdate }: MarketStatusStrip
               style={{ backgroundColor: wsColor }}
               aria-hidden="true"
             />
-            {isConnected ? 'Stream' : 'Offline'}
+            {isConnected ? (wsClient.activeTransport === 'websocket' ? 'Stream' : 'Polling') : 'Offline'}
           </span>
 
           {unreadAlerts > 0 && (
@@ -256,7 +257,7 @@ export function MarketStatusStrip({ isConnected, lastUpdate }: MarketStatusStrip
             <li><b className="text-[var(--color-text)]">Status pill</b> — phase of the US session</li>
             <li><b className="text-[var(--color-text)]">Countdown</b> — until next phase change (ET)</li>
             <li><b className="text-[var(--color-text)]">Quote</b> — seconds since last quote update</li>
-            <li><b className="text-[var(--color-text)]">Stream</b> — green pulse = WebSocket connected</li>
+            <li><b className="text-[var(--color-text)]">Stream / Polling</b> — how quotes arrive: pushed over WebSocket, or fetched every 15s (quotes are 15-minute delayed either way)</li>
             <li><b className="text-[var(--color-text)]">Alerts</b> — unacknowledged risk events</li>
           </ul>
           <div className="mt-3 text-[9px] mono tracking-[0.2em] uppercase text-[var(--color-text-muted)]">

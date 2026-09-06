@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuthStore } from '@/stores/authStore';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Key, Plus, Trash2, Copy, Check, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { api } from '@/api/client';
@@ -45,10 +46,16 @@ export function APIKeys() {
   const [revokeConfirmId, setRevokeConfirmId] = useState<string | null>(null);
   const [visibleKeyIds, setVisibleKeyIds] = useState<Set<string>>(new Set());
 
-  // Fetch API keys
+  // Fetch API keys — gated on auth hydration (US-003). This was the one query
+  // on the Settings page without the gate; it fired before the session was
+  // ready and logged two 401s on every load.
+  const isReady = useAuthStore((s) => s.isReady);
+  const session = useAuthStore((s) => s.session);
+  const authReady = isReady && !!session?.access_token;
   const { data: keysData, isLoading } = useQuery<{ data: APIKey[] }>({
     queryKey: ['api-keys'],
     queryFn: () => api.get('/api-keys'),
+    enabled: authReady,
   });
 
   const keys = keysData?.data || [];

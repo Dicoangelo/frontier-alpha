@@ -12,6 +12,11 @@ export interface EarningsCalendarItem extends EarningsEvent {
   daysUntil: number;
 }
 
+export interface UpcomingEarnings {
+  items: EarningsCalendarItem[];
+  unavailable: string[];
+}
+
 export interface EarningsHistory {
   symbol: string;
   reportDate: Date;
@@ -22,18 +27,26 @@ export interface EarningsHistory {
 }
 
 export const earningsApi = {
-  getUpcoming: async (symbols: string[], daysAhead: number = 30): Promise<EarningsCalendarItem[]> => {
+  /**
+   * Upcoming earnings for the holdings. `unavailable` lists symbols whose
+   * calendar could not be fetched (provider quota) — the card must say
+   * "unavailable" for those rather than "nothing scheduled".
+   */
+  getUpcoming: async (symbols: string[], daysAhead: number = 30): Promise<UpcomingEarnings> => {
     if (symbols.length === 0) {
-      return [];
+      return { items: [], unavailable: [] };
     }
-    const response = await api.get('/earnings/upcoming', {
-      params: { symbols: symbols.join(','), daysAhead },
-    });
-    return response.data.map((item: EarningsCalendarItem) => ({
+    const response = (await api.get('/earnings/upcoming', {
+      params: { symbols: symbols.join(','), days: daysAhead },
+    })) as unknown as { data: EarningsCalendarItem[]; meta?: { unavailable?: string[] } };
+    const items = (response.data ?? []).map((item: EarningsCalendarItem) => ({
       ...item,
+      id: item.id ?? `${item.symbol}-${String(item.reportDate).slice(0, 10)}`,
+      status: item.status ?? 'upcoming',
       reportDate: new Date(item.reportDate),
       daysUntil: Math.ceil((new Date(item.reportDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
     }));
+    return { items, unavailable: response.meta?.unavailable ?? [] };
   },
 
   getForecast: async (symbol: string): Promise<EarningsImpactForecast> => {

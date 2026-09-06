@@ -6,6 +6,9 @@ import type { EarningsCalendarItem } from '@/api/earnings';
 
 interface EarningsCalendarProps {
   earnings: EarningsCalendarItem[];
+  /** Symbols whose calendar the provider could not resolve (quota etc.). */
+  unavailable?: string[];
+  daysAhead?: number;
   isLoading?: boolean;
   selectedSymbol: string | null;
   onSelect: (symbol: string) => void;
@@ -13,6 +16,8 @@ interface EarningsCalendarProps {
 
 export function EarningsCalendar({
   earnings,
+  unavailable = [],
+  daysAhead,
   isLoading,
   selectedSymbol,
   onSelect
@@ -28,12 +33,24 @@ export function EarningsCalendar({
   }
 
   if (earnings.length === 0) {
+    const allUnavailable = unavailable.length > 0;
     return (
       <Card title="Upcoming Earnings">
-        <div className="glass-slab gradient-brand-subtle rounded-2xl flex flex-col items-center justify-center min-h-[256px] p-8 text-theme-muted">
+        <div
+          className="glass-slab gradient-brand-subtle rounded-2xl flex flex-col items-center justify-center min-h-[256px] p-8 text-theme-muted"
+          data-testid={allUnavailable ? 'earnings-calendar-unavailable' : 'earnings-calendar-empty'}
+        >
           <Calendar className="w-12 h-12 mb-4 opacity-60" aria-hidden="true" />
-          <p className="mono text-[10px] tracking-[0.3em] uppercase">No upcoming earnings</p>
-          <p className="text-sm text-theme-secondary mt-1">Add positions to track their earnings</p>
+          <p className="mono text-[10px] tracking-[0.3em] uppercase">
+            {allUnavailable ? 'Calendar unavailable' : 'No upcoming earnings'}
+          </p>
+          <p className="text-sm text-theme-secondary mt-1">
+            {allUnavailable
+              ? `Could not fetch dates for ${unavailable.join(', ')} (provider quota). Try again later.`
+              : daysAhead
+                ? `Nothing scheduled for your holdings in the next ${daysAhead} days`
+                : 'Nothing scheduled for your holdings'}
+          </p>
         </div>
       </Card>
     );

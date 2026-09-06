@@ -216,11 +216,12 @@ export function TradeExecutor({
         <form id="order-form" onSubmit={handleSubmit} className="space-y-4">
           {/* Symbol with Quote */}
           <div>
-            <label className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">
+            <label htmlFor="order-symbol" className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">
               Symbol
             </label>
             <div className="flex flex-wrap gap-2">
               <input
+                id="order-symbol"
                 type="text"
                 value={symbol}
                 onChange={(e) => setSymbol(e.target.value.toUpperCase())}
@@ -276,8 +277,9 @@ export function TradeExecutor({
 
           {/* Quantity */}
           <div>
-            <label className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Quantity</label>
+            <label htmlFor="order-qty" className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Quantity</label>
             <input
+              id="order-qty"
               type="number"
               value={qty}
               onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}

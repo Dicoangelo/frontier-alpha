@@ -7,7 +7,7 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cvrfApi } from '@/api/cvrf';
 import { toast } from '@/components/shared/Toast';
-import { useAuthStore } from '@/stores/authStore';
+import { usePlanGate } from '@/hooks/useSubscription';
 
 /**
  * US-003: every Bearer-gated useQuery is gated on auth readiness so the
@@ -16,9 +16,11 @@ import { useAuthStore } from '@/stores/authStore';
  * initial Supabase session-load AND we hold an access_token.
  */
 function useAuthGate(): boolean {
-  const isReady = useAuthStore((s) => s.isReady);
-  const session = useAuthStore((s) => s.session);
-  return isReady && !!session?.access_token;
+  // Every /api/v1/cvrf/* route is requirePlan('pro') on the server. A free
+  // account mounting any CVRF component (the Earnings belief panel, or the
+  // blurred preview behind UpgradeGate) used to fire the fan-out anyway and
+  // collect four 403s per page view.
+  return usePlanGate('pro');
 }
 
 // ============================================================================

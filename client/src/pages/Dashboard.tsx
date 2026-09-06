@@ -22,6 +22,7 @@ import { type DataSource, EMPTY, wrapReal } from '@/lib/dataSource';
 import { DEMO_HOLDINGS, DEMO_CASH, DEMO_TOTAL_VALUE, DEMO_FACTORS } from '@/lib/demoFixtures';
 import { aggregatePortfolioFactors } from '@/lib/aggregateFactors';
 import { useFeedStatus } from '@/hooks/useFeedStatus';
+import { useEquityHistory } from '@/hooks/useEquityHistory';
 
 // Types
 interface Position {
@@ -96,6 +97,9 @@ async function fetchPortfolio(): Promise<Portfolio | null> {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
     signedIn = Boolean(token);
+    // Anonymous visitor: the endpoint can only 401. Go straight to the demo
+    // fixture instead of logging a failed request on every public page load.
+    if (!token) return getDemoPortfolio();
     const response = await fetch('/api/v1/portfolio', {
       headers: {
         'Authorization': token ? `Bearer ${token}` : '',
@@ -293,6 +297,9 @@ export function Dashboard() {
   const symbols = portfolio.positions.map(p => p.symbol);
   const { quotes, isConnected, lastUpdate } = useQuotes(symbols);
   const feed = useFeedStatus();
+  // Real equity history (holdings marked to cached daily closes). The chart
+  // used to fall back to a seeded random walk when this was absent.
+  const equity = useEquityHistory(portfolio.positions, portfolio.cash);
 
   // Fetch portfolio data
   const loadPortfolioData = useCallback(async () => {
@@ -565,7 +572,11 @@ export function Dashboard() {
             {/* min-h reserves canvas + chrome (h-64 canvas + ~120px chrome)
                 so EquityCurve's ResizeObserver can't reflow neighbors. */}
             <div data-tour="equity-curve" className="mt-5 min-h-[420px]">
-              <EquityCurve portfolioValue={portfolio.totalValue} />
+              <EquityCurve
+                portfolioValue={portfolio.totalValue}
+                series={equity.series}
+                seriesStatus={equity.status}
+              />
             </div>
           </DashZone>
 

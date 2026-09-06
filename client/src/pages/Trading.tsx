@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useDeferredValue, useCallback } from 'react';
+import { PaperAccountNotice } from '@/components/trading/PaperAccountNotice';
 import {
   BarChart3,
   Activity,
@@ -298,6 +299,7 @@ export default function Trading() {
               <p className="text-sm mt-1 text-theme-secondary">
                 15-min delayed quotes · Supabase-persisted · $100K starting cash
               </p>
+              <PaperAccountNotice />
             </div>
           </div>
         ) : null}
@@ -470,8 +472,9 @@ export default function Trading() {
                     <BarChart3 className="w-4 h-4 text-[var(--color-accent-text)]" />
                   </div>
                   <div>
-                    <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Holdings</p>
+                    <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Paper account · Holdings</p>
                     <h3 className="text-sm font-bold text-theme">Positions</h3>
+                    <PaperAccountNotice variant="inline" />
                   </div>
                 </div>
                 <Button

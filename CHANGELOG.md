@@ -7,6 +7,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.15.2] - 2026-09-06
+
+### Flow walk — the Earnings page was rendering `Math.random()`
+
+The page-load walker had nothing left to find, so discovery changed angle:
+the golden fixture was restored (five holdings, enterprise comp — the
+synthetic monitor went 9/13 → 13/13) and every primary action was exercised
+as a Pro user (optimizer, backtest, paper order, settings save, insight
+refresh).
+
+#### Fixed — fabricated data
+
+- **Upcoming earnings were random.** `GET /earnings/upcoming` was served by
+  `src/core/EarningsOracle.getUpcomingEarnings`, which picked ~25% of the
+  holdings with `Math.random()`, gave each a random report date inside the
+  window and a hash-derived EPS / revenue estimate, and the Earnings page
+  rendered it as the user's calendar ("GOOGL reports in 4 days, EPS 4.00,
+  revenue $40B"). `GET /forecast/:symbol` built on the same class, whose
+  "historical reactions" are noise. The real Alpha Vantage oracle existed but
+  was wired only to the refresh and history routes.
+  New `src/earnings/EarningsCalendar.ts` (Alpha Vantage `EARNINGS_CALENDAR`,
+  per symbol, 24h cache, refusals cached 1h, in-flight dedup, never
+  synthesised); `/upcoming` reports provenance and `meta.unavailable`;
+  `/forecast` uses the calendar's real date with the real oracle (404 when
+  nothing is scheduled, 503 when the provider is unconfigured); refresh and
+  history no longer fall back to mock data in production. The client says
+  "calendar unavailable" distinctly from "nothing scheduled".
+- **A quota refusal on the CSV endpoint is a CSV.** Alpha Vantage answers
+  refusals with the real header followed by "Information: Thank you for
+  using…" spread one character per column (`I,n,f,o,r,m,a,…`), measured live
+  once the 25/day quota was spent. The first parser skipped that row as a
+  foreign symbol and the refusal exited as "nothing scheduled". Detected now,
+  with a guard so "PREMIUM BRANDS" / "INFORMATION SERVICES GROUP" rows still
+  parse.
+
+#### Fixed — smaller
+
+- Settings: the API-keys query was the one fetch without the auth-hydration
+  gate and logged two 401s per load.
+- Trade: Symbol and Quantity inputs have associated labels.
+- ML page banner no longer tells a connected user to "connect a portfolio";
+  it says the page is a preview with illustrative model outputs.
+
+#### Known
+
+- Alpha Vantage's free tier (25 req/day) is shared by earnings history,
+  forecasts and the calendar; Vercel's per-instance memory cache is cold on
+  every new instance, so the calendar can read "unavailable" late in the day.
+  Persisting calendar rows needs a migration (operator-applied).
+
+Tests: 1114 server / 321 client.
+
+## [1.15.1] - 2026-09-06
+
+### Improvement loop — six verified cycles after the make-it-work wave
+
+Each cycle: walk production as the seeded golden user and as an anonymous
+visitor (13 routes, console errors + failed requests + empty-state flags),
+fix the highest-tier finding with a test that fails without the fix, pass
+every gate, deploy, re-walk. Loop state and per-cycle measurements in the
+(git-excluded) `LOOP-STATE.md`; walker at `scripts/loop-walk.mjs`.
+
+| Cycle | Finding | Fix |
+|---|---|---|
+| 1 | Equity curve was a seeded random walk: "+11.22% vs S&P +10.34%" for every account, under a LIVE badge | Real series marked from cached daily closes (`lib/equitySeries`, `useEquityHistory`); honest loading / unavailable / idle states; mock archived to `.graveyard/` |
+| 2 | Free-plan and anonymous users fired Pro-only / auth-only endpoints on five pages: 19 console 403/401s per walk, "Couldn't load · Retry" where an upgrade prompt belongs | `usePlanGate` (auth + plan + subscription resolved) on the CVRF fan-out, Tax, MethodConsensus, LineageExplorer; `UpgradeGate`'s locked preview is a static skeleton, not live children |
+| 3 | Factor hooks demanded a token for PUBLIC routes → anonymous Factors page empty, Factor Deltas permanently "degraded" | Hooks gate on auth hydration only; Dashboard skips the anonymous `/portfolio` call (last demo 401) |
+| 4 | `npm audit --omit=dev`: fast-uri 3.1.5 (4 high, SSRF / host confusion) via fastify's ajv chain and @vercel/node; fastify moderate | `overrides` pin fast-uri ^3.1.7 (^4.1.4 under fast-json-stringify), fastify 5.12.3. Production audit: 0 findings |
+| 5 | Trade page paper account and tracked Portfolio both showed "Positions" with no explanation | `PaperAccountNotice` (banner + inline), links to `/portfolio`, kicker "Paper account · Holdings" |
+| 6 | Ten module-preload warnings per page (service worker serves the vendor chunks) | Vendor chunks dropped from `modulePreload`; 0 warnings. Mobile walk (390×844) added: 0 errors, 0 overflow on all routes |
+
+Walk totals across the loop: authed **19 errors / 10 failed → 0 / 0**; demo
+**5 / 3 → 0 / 0**. Client tests 290 → 319; server 1100 unchanged.
+
+Side finding: the Railway tier came back (GitHub deploy on the main merge) and
+serves v1.15.0, so the header feed reports live streaming again.
+
 ## [1.15.0] - 2026-09-06
 
 ### Make-it-work wave — the app was unusable for any new account

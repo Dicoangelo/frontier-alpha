@@ -20,6 +20,7 @@ import { FactorEngine } from './factors/FactorEngine.js';
 import { PortfolioOptimizer } from './optimizer/PortfolioOptimizer.js';
 import { CognitiveExplainer } from './core/CognitiveExplainer.js';
 import { EarningsOracle } from './core/EarningsOracle.js';
+import { EarningsCalendar } from './earnings/EarningsCalendar.js';
 import { MarketDataProvider } from './data/MarketDataProvider.js';
 import { rateLimiterMiddleware } from './middleware/rateLimiter.js';
 import { ExplanationService } from './services/ExplanationService.js';
@@ -98,6 +99,8 @@ export interface AppServer {
   explainer: CognitiveExplainer;
   explanationService: ExplanationService;
   earningsOracle: EarningsOracle;
+  /** Real upcoming-earnings dates (Alpha Vantage calendar, cached). */
+  earningsCalendar: EarningsCalendar;
   dataProvider: MarketDataProvider;
   cvrfManager: Awaited<ReturnType<typeof getPersistentCVRFManager>>;
   regimeDetector: RegimeDetector;
@@ -128,6 +131,9 @@ export async function buildApp(
   const explainer = new CognitiveExplainer();
   const explanationService = new ExplanationService(explainer);
   const earningsOracle = new EarningsOracle();
+  const earningsCalendar = new EarningsCalendar({
+    apiKey: opts.alphaVantageApiKey ?? process.env.ALPHA_VANTAGE_API_KEY ?? '',
+  });
   const dataProvider = new MarketDataProvider({
     polygonApiKey: opts.polygonApiKey ?? process.env.POLYGON_API_KEY,
     alphaVantageApiKey: opts.alphaVantageApiKey ?? process.env.ALPHA_VANTAGE_API_KEY,
@@ -147,6 +153,7 @@ export async function buildApp(
     explainer,
     explanationService,
     earningsOracle,
+    earningsCalendar,
     dataProvider,
     cvrfManager,
     regimeDetector,

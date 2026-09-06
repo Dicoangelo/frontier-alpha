@@ -30,6 +30,15 @@ export default defineConfig({
     // Optimize chunk size
     chunkSizeWarningLimit: 500,
 
+    // No <link rel="modulepreload"> for the vendor chunks. The service worker
+    // (injectManifest, precache) serves them from cache, so every page load
+    // logged five "preload ... not used because it is a cross-world service
+    // worker request" warnings followed by five "preloaded but not used"
+    // warnings. The chunks still load through the normal import graph.
+    modulePreload: {
+      resolveDependencies: (_filename, deps) => deps.filter((d) => !/vendor-/.test(d)),
+    },
+
     rollupOptions: {
       output: {
         // Manual chunks for better caching

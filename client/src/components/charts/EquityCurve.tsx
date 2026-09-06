@@ -1,26 +1,23 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useThemeStore } from '@/stores/themeStore';
+import { sliceSeriesByDays, type EquityPoint } from '@/lib/equitySeries';
+import type { EquitySeriesStatus } from '@/hooks/useEquityHistory';
 
-interface DataPoint {
-  date: string;
-  portfolio: number;
-  benchmark: number;
-}
+type DataPoint = EquityPoint;
 
 interface EquityCurveProps {
   portfolioValue: number;
+  /**
+   * Real dated series (see useEquityHistory). When absent and no return
+   * arrays are given, the chart renders an honest empty state — never a
+   * synthetic curve. The seeded random walk that used to fill this gap is in
+   * .graveyard/EquityCurve-mock.ts.
+   */
+  series?: EquityPoint[] | null;
+  seriesStatus?: EquitySeriesStatus;
   portfolioReturns?: number[];
   benchmarkReturns?: number[];
   timeframe?: '1W' | '1M' | '3M' | '6M' | '1Y' | 'YTD' | 'ALL';
-}
-
-// Seeded pseudo-random for deterministic mock data
-function seededRandom(seed: number) {
-  let s = seed;
-  return () => {
-    s = (s * 16807 + 0) % 2147483647;
-    return s / 2147483647;
-  };
 }
 
 // Generate historical data points from returns
@@ -60,39 +57,6 @@ function generateDataPoints(
   return tempPoints;
 }
 
-// Generate mock data for demo — deterministic per timeframe
-function generateMockData(currentValue: number, days: number): DataPoint[] {
-  const rand = seededRandom(days * 7919 + 42);
-  const points: DataPoint[] = [];
-  const now = new Date();
-
-  let portfolioValue = currentValue * 0.85;
-  let benchmarkValue = currentValue * 0.88;
-
-  for (let i = days; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-
-    points.push({
-      date: date.toISOString().split('T')[0],
-      portfolio: portfolioValue,
-      benchmark: benchmarkValue,
-    });
-
-    // Deterministic walk with slight upward bias
-    portfolioValue *= 1 + (rand() - 0.45) * 0.015;
-    benchmarkValue *= 1 + (rand() - 0.47) * 0.012;
-  }
-
-  // Adjust to match current value
-  const scale = currentValue / points[points.length - 1].portfolio;
-  return points.map(p => ({
-    ...p,
-    portfolio: p.portfolio * scale,
-    benchmark: p.benchmark * scale * 0.95,
-  }));
-}
-
 // Read resolved chart colors from CSS variables (cached per theme change)
 function readChartColors() {
   const cs = getComputedStyle(document.documentElement);
@@ -126,6 +90,8 @@ const TIMEFRAME_DAYS: Record<string, number> = {
 
 export const EquityCurve = React.memo(function EquityCurve({
   portfolioValue,
+  series = null,
+  seriesStatus = 'idle',
   portfolioReturns = [],
   benchmarkReturns = [],
   timeframe = '3M',
@@ -152,14 +118,19 @@ export const EquityCurve = React.memo(function EquityCurve({
     stableValue.current = portfolioValue;
   }
 
-  // Generate data — memoized, only changes on timeframe or significant value shift
-  const data = useMemo(() => {
+  // Data — a real dated series sliced to the timeframe, else a reconstruction
+  // from return arrays, else EMPTY. No mock path.
+  const data = useMemo<DataPoint[]>(() => {
+    if (series && series.length >= 2) return sliceSeriesByDays(series, days);
     const val = stableValue.current;
     return portfolioReturns.length > 0 && benchmarkReturns.length > 0
       ? generateDataPoints(val, portfolioReturns, benchmarkReturns, days)
-      : generateMockData(val, days);
+      : [];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stableValue.current, portfolioReturns, benchmarkReturns, days]);
+  }, [series, stableValue.current, portfolioReturns, benchmarkReturns, days]);
+
+  const hasData = data.length >= 2;
+  const isLoading = seriesStatus === 'loading' && !hasData;
 
   // Calculate metrics
   const { totalReturn, alpha } = useMemo(() => {
@@ -461,11 +432,10 @@ export const EquityCurve = React.memo(function EquityCurve({
           <p
             className="text-xl font-bold tabular-nums mt-1"
             style={{
-              color: totalReturn >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
+              color: !hasData ? 'var(--color-text-muted)' : totalReturn >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
             }}
           >
-            {totalReturn >= 0 ? '+' : ''}
-            {totalReturn.toFixed(2)}%
+            {hasData ? `${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(2)}%` : '—'}
           </p>
         </div>
         <div>
@@ -474,10 +444,9 @@ export const EquityCurve = React.memo(function EquityCurve({
           </p>
           <p
             className="text-xl font-bold tabular-nums mt-1"
-            style={{ color: alpha >= 0 ? 'var(--color-positive)' : 'var(--color-negative)' }}
+            style={{ color: !hasData ? 'var(--color-text-muted)' : alpha >= 0 ? 'var(--color-positive)' : 'var(--color-negative)' }}
           >
-            {alpha >= 0 ? '+' : ''}
-            {alpha.toFixed(2)}%
+            {hasData ? `${alpha >= 0 ? '+' : ''}${alpha.toFixed(2)}%` : '—'}
           </p>
         </div>
         {hoveredPoint && (
@@ -500,8 +469,31 @@ export const EquityCurve = React.memo(function EquityCurve({
         ref={containerRef}
         className="h-64 sm:h-72 w-full relative"
         role="img"
-        aria-label={`Portfolio equity curve showing ${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(1)}% total return over ${selectedTimeframe} timeframe`}
+        aria-label={hasData
+          ? `Portfolio equity curve showing ${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(1)}% total return over ${selectedTimeframe} timeframe`
+          : isLoading ? 'Portfolio equity curve loading' : 'Portfolio equity curve unavailable'}
       >
+        {!hasData && (
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
+            data-testid={isLoading ? 'equity-curve-loading' : 'equity-curve-unavailable'}
+          >
+            {isLoading ? (
+              <div className="w-2/3 h-2 rounded-full bg-[var(--color-bg-tertiary)] animate-pulse-subtle" aria-hidden="true" />
+            ) : (
+              <>
+                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
+                  Equity curve · unavailable
+                </p>
+                <p className="text-sm text-theme-secondary mt-2 max-w-sm">
+                  {seriesStatus === 'idle'
+                    ? 'Add a position to chart your holdings against the S&P 500.'
+                    : 'Daily history for one or more holdings is still accumulating. The curve appears once every position has cached closes.'}
+                </p>
+              </>
+            )}
+          </div>
+        )}
         <canvas
           ref={canvasRef}
           className="w-full h-full cursor-crosshair touch-none"
@@ -579,6 +571,11 @@ export const EquityCurve = React.memo(function EquityCurve({
           </span>
         </div>
       </div>
+      {hasData && series && (
+        <p className="text-center text-[10px] text-theme-muted mt-2">
+          Today's holdings marked to daily closes. Not your transaction history.
+        </p>
+      )}
     </section>
   );
 });

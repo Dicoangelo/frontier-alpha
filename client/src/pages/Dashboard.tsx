@@ -20,6 +20,8 @@ import { DashZone } from '@/components/dashboard/DashZone';
 import { getDisplayName } from '@/lib/getDisplayName';
 import { type DataSource, EMPTY, wrapReal } from '@/lib/dataSource';
 import { DEMO_HOLDINGS, DEMO_CASH, DEMO_TOTAL_VALUE, DEMO_FACTORS } from '@/lib/demoFixtures';
+import { aggregatePortfolioFactors } from '@/lib/aggregateFactors';
+import { useFeedStatus } from '@/hooks/useFeedStatus';
 
 // Types
 interface Position {
@@ -89,9 +91,11 @@ function getGreeting(): string {
 // the real portfolio. Read the live session via the supabase SDK instead;
 // it's already cached locally so this is a synchronous-feeling call.
 async function fetchPortfolio(): Promise<Portfolio | null> {
+  let signedIn = false;
   try {
     const { data: sessionData } = await supabase.auth.getSession();
     const token = sessionData.session?.access_token;
+    signedIn = Boolean(token);
     const response = await fetch('/api/v1/portfolio', {
       headers: {
         'Authorization': token ? `Bearer ${token}` : '',
@@ -114,7 +118,11 @@ async function fetchPortfolio(): Promise<Portfolio | null> {
     return (json.data || json.portfolio || json) as Portfolio;
   } catch (error) {
     console.error('Failed to fetch portfolio:', error);
-    return getDemoPortfolio();
+    // A signed-in user whose fetch failed (404 on a fresh account, 5xx, network)
+    // must NEVER see the $125K demo fixture under a LIVE badge — that is what
+    // every new account saw in production. Return null so the caller renders
+    // the honest empty state; demo data is for anonymous visitors only.
+    return signedIn ? null : getDemoPortfolio();
   }
 }
 
@@ -127,43 +135,19 @@ async function fetchFactors(symbols: string[]): Promise<FactorExposure[]> {
       throw new Error(`Factor fetch failed: ${response.status}`);
     }
 
-    const data = await response.json();
+    const json: unknown = await response.json();
 
-    // Convert API response to array format
-    // API returns: { symbol: FactorExposure[], ... }
-    // We want portfolio-level aggregate
-    const factorTotals = new Map<string, { exposure: number; tStat: number; contribution: number; count: number }>();
-
-    for (const symbol of symbols) {
-      const symbolFactors = data[symbol] || [];
-      for (const f of symbolFactors) {
-        const existing = factorTotals.get(f.factor) || { exposure: 0, tStat: 0, contribution: 0, count: 0 };
-        factorTotals.set(f.factor, {
-          exposure: existing.exposure + f.exposure,
-          tStat: existing.tStat + f.tStat,
-          contribution: existing.contribution + f.contribution,
-          count: existing.count + 1,
-        });
-      }
-    }
-
-    // Average across symbols
-    const aggregated: FactorExposure[] = [];
-    for (const [factor, totals] of factorTotals) {
-      aggregated.push({
-        factor,
-        exposure: totals.exposure / totals.count,
-        tStat: totals.tStat / totals.count,
-        confidence: Math.min(Math.abs(totals.tStat / totals.count) / 2, 1),
-        contribution: totals.contribution / totals.count,
-      });
-    }
-
-    // Sort by absolute exposure
-    return aggregated.sort((a, b) => Math.abs(b.exposure) - Math.abs(a.exposure)).slice(0, 10);
+    // The server wraps the per-symbol map in { success, data }. Indexing the
+    // envelope by symbol (the previous code) silently yielded nothing, which
+    // blanked Factor Exposures, Risk Metrics and the AI Insight for every
+    // visitor. `aggregatePortfolioFactors` unwraps and folds to a portfolio-
+    // level top-10 (average across holdings, ranked by |exposure|).
+    return aggregatePortfolioFactors(json, symbols);
   } catch (error) {
     console.error('Failed to fetch factors:', error);
-    return getDemoFactors();
+    // Demo factors are for the anonymous preview only. A signed-in user whose
+    // factor fetch failed gets an honest empty card, never fixture numbers.
+    return useAuthStore.getState().session ? [] : getDemoFactors();
   }
 }
 
@@ -308,6 +292,7 @@ export function Dashboard() {
   // Real-time quote streaming via useQuotes hook
   const symbols = portfolio.positions.map(p => p.symbol);
   const { quotes, isConnected, lastUpdate } = useQuotes(symbols);
+  const feed = useFeedStatus();
 
   // Fetch portfolio data
   const loadPortfolioData = useCallback(async () => {
@@ -549,9 +534,10 @@ export function Dashboard() {
               }`}
             />
             <span
-              className={`text-xs font-medium transition-colors duration-300 inline-block w-[42px] ${isConnected ? 'text-[var(--color-positive)]' : 'text-[var(--color-text-muted)]'}`}
+              className={`text-xs font-medium transition-colors duration-300 inline-block w-[56px] ${feed.tone === 'live' ? 'text-[var(--color-positive)]' : feed.tone === 'delayed' ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-muted)]'}`}
+              title={feed.aria}
             >
-              {isConnected ? 'Live' : 'Offline'}
+              {feed.label}
             </span>
             <span
               className="text-xs text-[var(--color-text-muted)] border-l border-[var(--color-border-light)] pl-2 ml-0.5 tabular-nums inline-block min-w-[64px]"

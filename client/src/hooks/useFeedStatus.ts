@@ -1,7 +1,7 @@
 import { useQuotesStore } from '@/stores/quotesStore';
 import { wsClient } from '@/api/websocket';
 
-export type FeedTone = 'live' | 'delayed' | 'offline';
+export type FeedTone = 'live' | 'delayed' | 'offline' | 'idle';
 
 export interface FeedStatus {
   /** Short pill copy: Live / Delayed / Offline. */
@@ -25,6 +25,11 @@ export function useFeedStatus(): FeedStatus {
   const isConnected = useQuotesStore((s) => s.isConnected);
   const transport = wsClient.activeTransport;
   if (!isConnected) {
+    // Nothing subscribed (empty portfolio): there is no feed to be offline
+    // from, and telling a brand-new user "Offline" reads as an outage.
+    if (wsClient.symbols.length === 0) {
+      return { label: 'Idle', tone: 'idle', aria: 'Quote feed idle (no positions to stream)' };
+    }
     return { label: 'Offline', tone: 'offline', aria: 'Quote feed offline' };
   }
   if (transport === 'websocket') {

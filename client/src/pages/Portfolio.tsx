@@ -6,7 +6,8 @@
  */
 
 import { useState, useMemo, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { usePortfolio } from '@/hooks/usePortfolio';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Edit2, X, Check, Share2, DollarSign, TrendingUp, TrendingDown, BarChart3, Wallet } from 'lucide-react';
 import { api, isNetworkError, getErrorMessage } from '@/api/client';
 import { useAuthStore } from '@/stores/authStore';
@@ -34,14 +35,6 @@ interface Position {
   currentPrice: number;
   unrealizedPnL: number;
   weight: number;
-}
-
-interface PortfolioData {
-  id: string;
-  name: string;
-  cash: number;
-  positions: Position[];
-  totalValue: number;
 }
 
 // Canonical input class — matches Settings/Backtest/LoginForm pattern.
@@ -75,13 +68,12 @@ export function Portfolio() {
   // `positions` stays empty so the page renders <EmptyPortfolio>.
   const isReady = useAuthStore((state) => state.isReady);
   const session = useAuthStore((state) => state.session);
-  const authReady = isReady && !!session?.access_token;
 
-  const { data: portfolio, isLoading, error, refetch } = useQuery<{ data: PortfolioData }>({
-    queryKey: ['portfolio'],
-    queryFn: () => api.get('/portfolio'),
-    enabled: authReady,
-  });
+  // Canonical, envelope-normalised portfolio query (see hooks/usePortfolio).
+  // This page used to run its own api.get() under the shared ['portfolio']
+  // key and read `.data.cash`; OnboardingProvider cached the bare shape under
+  // the same key first, so a funded account rendered "$0 · No positions yet".
+  const { data: portfolio, isLoading, error, refetch } = usePortfolio();
 
   const addPositionMutation = useMutation({
     mutationFn: (data: { symbol: string; shares: number; avgCost: number }) =>
@@ -212,9 +204,9 @@ export function Portfolio() {
   const isDemoView = isReady && !session;
   const positions: Position[] = isDemoView
     ? DEMO_HOLDINGS.map((h, i) => ({ id: `demo-${i}`, ...h }))
-    : portfolio?.data?.positions || [];
-  const cashBalance = isDemoView ? DEMO_CASH : portfolio?.data?.cash || 0;
-  const totalValue = isDemoView ? DEMO_TOTAL_VALUE : portfolio?.data?.totalValue || 0;
+    : portfolio?.positions || [];
+  const cashBalance = isDemoView ? DEMO_CASH : portfolio?.cash || 0;
+  const totalValue = isDemoView ? DEMO_TOTAL_VALUE : portfolio?.totalValue || 0;
 
   const mobileVisible = useMemo(() => {
     const q = mobileQuery.trim();
@@ -351,7 +343,7 @@ export function Portfolio() {
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          {portfolio?.data && (
+          {portfolio && (
             <>
               <button
                 type="button"
@@ -364,9 +356,9 @@ export function Portfolio() {
               </button>
               <PortfolioExport
                 portfolio={{
-                  id: portfolio.data.id,
-                  name: portfolio.data.name,
-                  positions: portfolio.data.positions.map((p) => ({
+                  id: portfolio.id,
+                  name: portfolio.name,
+                  positions: portfolio.positions.map((p) => ({
                     symbol: p.symbol,
                     shares: p.shares,
                     weight: p.weight,
@@ -374,8 +366,8 @@ export function Portfolio() {
                     currentPrice: p.currentPrice,
                     unrealizedPnL: p.unrealizedPnL,
                   })),
-                  cash: portfolio.data.cash,
-                  totalValue: portfolio.data.totalValue,
+                  cash: portfolio.cash,
+                  totalValue: portfolio.totalValue,
                   currency: 'USD',
                 }}
               />
@@ -808,12 +800,12 @@ export function Portfolio() {
       </BottomSheet>
 
       {/* Share Modal */}
-      {portfolio?.data && (
+      {portfolio && (
         <ShareModal
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
-          portfolioId={portfolio.data.id}
-          portfolioName={portfolio.data.name}
+          portfolioId={portfolio.id}
+          portfolioName={portfolio.name}
         />
       )}
 

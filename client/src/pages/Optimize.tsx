@@ -7,11 +7,11 @@
  */
 
 import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { usePortfolio } from '@/hooks/usePortfolio';
+import { useMutation } from '@tanstack/react-query';
 import { Sparkles, TrendingUp, Shield, Target, Info } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import { useToast } from '@/hooks/useToast';
-import { useAuthStore } from '@/stores/authStore';
 import { Spinner } from '@/components/shared/Spinner';
 import { UpgradeGate } from '@/components/shared/UpgradeGate';
 import { SectionErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -62,15 +62,8 @@ function OptimizeContent() {
   // query would otherwise fire and 401 in demo mode. Hold it until a real
   // session exists; with none, `symbols` stays empty and the holdings panel
   // shows its "No positions in portfolio." state.
-  const isReady = useAuthStore((state) => state.isReady);
-  const session = useAuthStore((state) => state.session);
-  const authReady = isReady && !!session?.access_token;
 
-  const { data: portfolio } = useQuery({
-    queryKey: ['portfolio'],
-    queryFn: () => api.get('/portfolio'),
-    enabled: authReady,
-  });
+  const { data: portfolio } = usePortfolio();
 
   const optimizeMutation = useMutation<{ data: OptimizationResult }, Error, { symbols: string[]; config: OptimizationConfig }>({
     mutationFn: (data) => api.post('/portfolio/optimize', data),
@@ -83,7 +76,7 @@ function OptimizeContent() {
     },
   });
 
-  const symbols = portfolio?.data?.positions?.map((p: { symbol: string }) => p.symbol) || [];
+  const symbols = portfolio?.positions?.map((p) => p.symbol) || [];
 
   const handleOptimize = () => {
     if (symbols.length === 0) return;

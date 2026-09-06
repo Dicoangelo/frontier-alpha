@@ -1,10 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { usePortfolio } from '@/hooks/usePortfolio';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { WelcomeModal, useOnboarding } from './WelcomeModal';
 import { FeatureTour } from './FeatureTour';
 import { useAuthStore } from '@/stores/authStore';
-import { portfolioApi } from '@/api/portfolio';
 import { toast } from '@/components/shared/Toast';
 
 interface OnboardingContextValue {
@@ -56,9 +55,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   // positions with the demo set, which is data-destructive UX. The query
   // is conditional on the same auth gate as the modal trigger so we don't
   // fire it for signed-out visitors.
-  const portfolioQuery = useQuery({
-    queryKey: ['portfolio'],
-    queryFn: portfolioApi.getPortfolio,
+  const portfolioQuery = usePortfolio({
     enabled: Boolean(initialized && isAuthenticated && user && !isOnboardingComplete && !hasShownWelcome),
     retry: false,
     staleTime: 5 * 60 * 1000,

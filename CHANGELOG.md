@@ -31,6 +31,20 @@ which says nothing about the seams below.
   Dashboard's portfolio and factor fetches fall back to the fixture only for
   anonymous visitors; a real session gets the honest empty state. (`0845ce8`)
 
+#### Fixed — one query key, two payload shapes
+
+- **Eight components shared the `['portfolio']` React Query key but were split
+  between two fetchers returning different shapes** (`api.get` → the
+  `{ success, data }` envelope; `portfolioApi.getPortfolio` → the bare
+  object). Whichever fetched first populated the cache and every consumer
+  expecting the other shape read `undefined`. In production
+  `OnboardingProvider` (bare) always won, so the Portfolio page rendered
+  **"$0 cash · No positions yet" for a funded account** and Optimize saw no
+  symbols. Order-dependent, silent, invisible to single-page tests. All eight
+  now use `hooks/usePortfolio.ts`, which normalises either shape.
+- Header feed pill shows **Idle** (not "Offline") when there are no positions
+  to stream.
+
 #### Fixed — analytics blank for everyone
 
 - **`fetchFactors` indexed the response envelope by symbol.** The server

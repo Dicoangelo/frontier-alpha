@@ -61,6 +61,13 @@ export function parseCalendarCsv(csv: string, requestedSymbol: string): Calendar
   const events: CalendarEvent[] = [];
   for (const line of lines) {
     if (!line.trim()) continue;
+    // Quota / premium refusals on the CSV endpoint arrive AS a CSV: the real
+    // header, then the "Information: Thank you for using Alpha Vantage…" prose
+    // spread one character per column ("I,n,f,o,r,m,a,…"). Measured live
+    // 2026-09-06. Without this check the row is skipped as a foreign symbol
+    // and the refusal exits as "no earnings scheduled" — the exact success-
+    // path-rejection trap this module exists to close.
+    if (isRefusalRow(line)) return null;
     const cols = splitCsv(line);
     const [symbol, name, reportDate, fiscalDateEnding, estimate, , timeOfTheDay] = cols;
     if (!symbol || !reportDate || !/^\d{4}-\d{2}-\d{2}$/.test(reportDate)) continue;
@@ -78,6 +85,18 @@ export function parseCalendarCsv(csv: string, requestedSymbol: string): Calendar
     });
   }
   return events;
+}
+
+function isRefusalRow(line: string): boolean {
+  const cols = line.split(',');
+  const first = cols[0].trim();
+  // A real row starts with a ticker ("GOOGL", "BRK.B"); a company name such as
+  // "PREMIUM BRANDS" or "INFORMATION SERVICES GROUP" lives in column 2 and must
+  // not trip the prose check below.
+  if (/^[A-Z][A-Z0-9.\-]{0,7}$/.test(first) && cols.length <= 8) return false;
+  const joined = cols.join('');
+  const spelledOut = cols.length >= 8 && cols.every((c) => c.trim().length <= 1);
+  return spelledOut || /information|thank you for using|rate limit|premium|api key|invalid/i.test(joined);
 }
 
 function splitCsv(line: string): string[] {

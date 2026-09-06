@@ -34,6 +34,18 @@ describe('parseCalendarCsv', () => {
     expect(parseCalendarCsv('{"Information": "Thank you for using Alpha Vantage! Our standard API rate limit is 25 requests per day."}', 'AAPL')).toBeNull();
   });
 
+  it('treats the spelled-out "Information" row under a valid header as a refusal, not an empty calendar', () => {
+    // Exactly what the CSV endpoint returns once the 25/day quota is spent (measured 2026-09-06).
+    const spelled = 'I,n,f,o,r,m,a,t,i,o,n,:, ,T,h,a,n,k, ,y,o,u';
+    expect(parseCalendarCsv(csv([spelled]), 'NVDA')).toBeNull();
+    expect(parseCalendarCsv(csv(['Information: Thank you for using Alpha Vantage,,,,,,']), 'NVDA')).toBeNull();
+  });
+
+  it('does not mistake a company name containing "premium" or "information" for a refusal', () => {
+    const out = parseCalendarCsv(csv(['PBH,PREMIUM BRANDS HOLDINGS,2026-11-05,2026-09-30,1.10,USD,pre-market', 'III,INFORMATION SERVICES GROUP,2026-11-06,2026-09-30,0.05,USD,']), 'PBH')!;
+    expect(out.map((e) => e.symbol)).toEqual(['PBH']);
+  });
+
   it('returns an empty list for a header-only body and tolerates a missing estimate', () => {
     expect(parseCalendarCsv(csv([]), 'AAPL')).toEqual([]);
     const out = parseCalendarCsv(csv(['AAPL,APPLE INC,2026-10-30,2026-09-30,,USD,']), 'AAPL')!;

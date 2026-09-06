@@ -13,6 +13,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useAuthReady } from '@/hooks/useSubscription';
 import {
   GitBranch,
   Database,
@@ -161,10 +162,14 @@ function NodeRow({ node, index }: { node: ProvenanceNode; index: number }) {
 }
 
 export function LineageExplorer() {
+  // /provenance/* is bearer-gated: an anonymous visitor used to fire it, 401,
+  // and see "Could not load decision lineage" as if the service were down.
+  const authReady = useAuthReady();
   const { data, isLoading, isError } = useQuery({
     queryKey: ['provenance', 'recent'],
     queryFn: () => provenanceApi.getRecent({ limit: 10 }),
     retry: false,
+    enabled: authReady,
   });
 
   const nodes = data?.nodes ?? [];
@@ -181,7 +186,15 @@ export function LineageExplorer() {
         </p>
       </div>
 
-      {isLoading ? (
+      {!authReady ? (
+        <div className="glass-slab rounded-xl p-6 text-center" data-testid="lineage-signed-out">
+          <GitBranch className="w-8 h-8 mx-auto mb-3 text-theme-muted" aria-hidden="true" />
+          <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Lineage · Sign in</p>
+          <p className="text-sm text-theme-secondary mt-2 max-w-md mx-auto">
+            Decision lineage is recorded per account. Sign in to see the derivation chain behind your recommendations.
+          </p>
+        </div>
+      ) : isLoading ? (
         <div className="space-y-3" aria-busy="true">
           {[0, 1].map((i) => (
             <div key={i} className="glass-slab rounded-xl h-20 animate-pulse-subtle" />

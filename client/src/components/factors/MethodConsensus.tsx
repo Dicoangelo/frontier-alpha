@@ -12,6 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Scale, ShieldCheck, ShieldAlert, ShieldQuestion } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { api } from '@/api/client';
+import { usePlanGate, useAuthReady } from '@/hooks/useSubscription';
 
 interface RankedFactor {
   factor: string;
@@ -66,10 +67,13 @@ export function MethodConsensus({ symbols }: { symbols: string[] }) {
   const [selected, setSelected] = useState(0);
   const symbol = symbols[Math.min(selected, Math.max(0, symbols.length - 1))];
 
+  // /explain/* is requirePlan('pro'): do not fire for anonymous or free users.
+  const authReady = useAuthReady();
+  const planOk = usePlanGate('pro');
   const { data, isLoading, isError } = useQuery({
     queryKey: ['explain', 'methods', symbol],
     queryFn: () => fetchConsensus(symbol),
-    enabled: Boolean(symbol),
+    enabled: Boolean(symbol) && planOk,
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
@@ -100,7 +104,16 @@ export function MethodConsensus({ symbols }: { symbols: string[] }) {
         ) : undefined
       }
     >
-      {isLoading ? (
+      {!planOk ? (
+        <div className="py-6 text-center" data-testid="method-consensus-gated">
+          <Scale className="w-7 h-7 mx-auto mb-2 text-theme-muted" aria-hidden="true" />
+          <p className="text-sm text-theme-secondary">
+            {authReady
+              ? 'Method consensus is part of the Pro plan.'
+              : 'Sign in to see three independent rankings agree or disagree on each holding.'}
+          </p>
+        </div>
+      ) : isLoading ? (
         <div className="h-28 rounded-lg animate-pulse-subtle bg-theme-tertiary" aria-busy="true" />
       ) : isError || !data || !meta ? (
         <div className="py-6 text-center">

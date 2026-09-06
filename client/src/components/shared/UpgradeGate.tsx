@@ -100,12 +100,21 @@ export function UpgradeGate({
 
   return (
     <div className="relative">
-      {/* Blurred preview of the locked content for context (not interactive) */}
+      {/* Blurred preview for context. A static skeleton, NOT the live
+          children: mounting them here fired every plan-gated query behind the
+          gate (four 403s per CVRF view for a free account) and painted
+          "Couldn't load · Retry" inside the blur. */}
       <div
-        className="blur-md pointer-events-none select-none opacity-50"
+        className="blur-md pointer-events-none select-none opacity-50 space-y-4 p-2"
         aria-hidden="true"
       >
-        {children}
+        <div className="glass-slab rounded-2xl h-28" />
+        <div className="grid grid-cols-3 gap-4">
+          <div className="glass-slab rounded-2xl h-40" />
+          <div className="glass-slab rounded-2xl h-40" />
+          <div className="glass-slab rounded-2xl h-40" />
+        </div>
+        <div className="glass-slab rounded-2xl h-64" />
       </div>
 
       {/* Gate panel — glass-slab-floating + sovereign-bar top rail */}

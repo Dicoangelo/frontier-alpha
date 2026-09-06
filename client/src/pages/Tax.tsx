@@ -14,6 +14,8 @@
 
 import { useState, useMemo } from 'react';
 import { usePortfolio } from '@/hooks/usePortfolio';
+import { useSubscription } from '@/hooks/useSubscription';
+import { UpgradeGate } from '@/components/shared/UpgradeGate';
 import { useQuery } from '@tanstack/react-query';
 import {
   Receipt,
@@ -892,7 +894,13 @@ export function Tax() {
   const isReady = useAuthStore((state) => state.isReady);
   const session = useAuthStore((state) => state.session);
   const authReady = isReady && !!session?.access_token;
-  const fetchEnabled = authReady && !isDemo;
+  // /api/v1/tax/* is requirePlan('pro') on the server. A free account used to
+  // fire report/harvest/wash-sales, collect three 403s, and see nothing but
+  // console errors; it now sees the upgrade gate instead.
+  const { meetsPlan, isLoading: subscriptionLoading } = useSubscription();
+  const planOk = meetsPlan('pro');
+  const fetchEnabled = authReady && !isDemo && !subscriptionLoading && planOk;
+  const showUpgradeGate = authReady && !isDemo && !subscriptionLoading && !planOk;
 
   // Demo mode (?demo=true shareable link, FF-6): render banner-marked
   // fixtures. Real accounts: live data from the /api/v1/tax/* routes, which
@@ -967,6 +975,22 @@ export function Tax() {
     { id: 'wash_sales', label: 'Wash Sales', icon: AlertTriangle },
     { id: 'report', label: 'Report', icon: FileText },
   ];
+
+  if (showUpgradeGate) {
+    return (
+      <div className="px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto">
+          <UpgradeGate
+            requiredPlan="pro"
+            title="Tax Optimization"
+            description="Realized-activity reports, harvesting opportunities and wash-sale detection run against your persisted lots — included in the Pro Plan."
+          >
+            <div />
+          </UpgradeGate>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

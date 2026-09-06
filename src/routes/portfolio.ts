@@ -128,12 +128,16 @@ export async function portfolioRoutes(fastify: FastifyInstance, opts: RouteConte
 
       // If using database and user is authenticated
       if (server.useDatabase && request.user) {
-        const dbPortfolio = await portfolioService.getPortfolio(request.user.id);
+        // ensurePortfolio: a signed-in user with no row yet is a NEW USER,
+        // not a missing resource. Create the empty portfolio and return it
+        // (200, zero positions) so the Dashboard/Portfolio pages render
+        // their honest empty states instead of a 404 → demo-data fallback.
+        const dbPortfolio = await portfolioService.ensurePortfolio(request.user.id);
 
         if (!dbPortfolio) {
-          return reply.status(404).send({
+          return reply.status(503).send({
             success: false,
-            error: { code: 'NOT_FOUND', message: 'No portfolio found' },
+            error: { code: 'PORTFOLIO_UNAVAILABLE', message: 'Could not load or create your portfolio' },
           });
         }
 

@@ -24,7 +24,7 @@ export type QuotaImpact =
   /** Upstream 5xx / network fault. Says nothing about our budget. */
   | 'provider_fault';
 
-export type UpstreamProvider = 'polygon' | 'alpaca' | 'alphaVantage';
+export type UpstreamProvider = 'polygon' | 'alpaca' | 'yahoo' | 'alphaVantage';
 
 metrics.registerCounter(
   'upstream_errors_total',
@@ -117,12 +117,14 @@ const emptyKindStats = (): ErrorKindStats => ({
 const stats: Record<UpstreamProvider, QuotaStats> = {
   polygon: { quota_burned: 0, quota_free: 0, provider_fault: 0 },
   alpaca: { quota_burned: 0, quota_free: 0, provider_fault: 0 },
+  yahoo: { quota_burned: 0, quota_free: 0, provider_fault: 0 },
   alphaVantage: { quota_burned: 0, quota_free: 0, provider_fault: 0 },
 };
 
 const kindStats: Record<UpstreamProvider, ErrorKindStats> = {
   polygon: emptyKindStats(),
   alpaca: emptyKindStats(),
+  yahoo: emptyKindStats(),
   alphaVantage: emptyKindStats(),
 };
 
@@ -190,6 +192,7 @@ export function getQuotaStats(): {
     providers: {
       polygon: withGuidance('polygon'),
       alpaca: withGuidance('alpaca'),
+      yahoo: withGuidance('yahoo'),
       alphaVantage: withGuidance('alphaVantage'),
     },
   };

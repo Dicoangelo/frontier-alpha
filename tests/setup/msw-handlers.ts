@@ -50,6 +50,17 @@ function unauthorized() {
 
 export const handlers = [
   // ========================
+  // Yahoo Finance (keyless failover) — default to "provider down" so no suite
+  // reaches the real network by accident. MSW runs with
+  // onUnhandledRequest:'warn', which PASSES THROUGH unmatched hosts; without
+  // this default a "every provider fails" scenario would quietly succeed with
+  // a live AAPL close. Suites that exercise Yahoo override this per test.
+  // ========================
+  http.get('https://query1.finance.yahoo.com/v8/finance/chart/:symbol', () =>
+    new HttpResponse('yahoo mocked down', { status: 503 }),
+  ),
+
+  // ========================
   // Health
   // ========================
   http.get(`${API_BASE}/api/v1/health`, () => {

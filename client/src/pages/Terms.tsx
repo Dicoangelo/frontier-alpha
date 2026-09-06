@@ -80,7 +80,7 @@ export function Terms() {
             <p className="mt-3">
               Quotes, factor scores, and analytical output are provided on a
               best-effort basis. Real-time data is sourced from third parties
-              (Polygon.io, Alpha Vantage). Frontier Alpha makes no guarantee
+              (Polygon.io, Yahoo Finance, Alpha Vantage). Frontier Alpha makes no guarantee
               of accuracy, completeness, or timeliness, and is not liable for
               decisions made based on platform output.
             </p>

@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-09-06T21:20:33.551Z",
-  "headSha": "1b259abd4d5abdd3bf8d031dcd2260f394fa42f1",
+  "generatedAt": "2026-09-06T21:42:27.933Z",
+  "headSha": "8edc4d6a8cda7888a7a447a87b2ac0e06504a871",
   "version": "1.15.1",
   "server": {
-    "tsFiles": 148,
-    "tsNonTestFiles": 140,
+    "tsFiles": 149,
+    "tsNonTestFiles": 141,
     "inSourceTestFiles": 8,
     "routeModules": 33,
     "endpoints": 124,
     "migrations": 18,
     "vercelApiFiles": 4,
-    "testFiles": 65
+    "testFiles": 67
   },
   "client": {
     "pages": 25,

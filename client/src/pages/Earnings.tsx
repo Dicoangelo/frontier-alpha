@@ -36,11 +36,13 @@ export function Earnings() {
 
   // Get upcoming earnings
   const {
-    data: earnings = [],
+    data: upcoming,
     isLoading: earningsLoading,
     isError: earningsError,
     refetch: refetchEarnings,
   } = useUpcomingEarnings(symbols, daysAhead);
+  const earnings = upcoming?.items ?? [];
+  const calendarUnavailable = upcoming?.unavailable ?? [];
 
   // Get forecast for selected symbol
   const {
@@ -233,6 +235,8 @@ export function Earnings() {
         >
           <EarningsCalendar
             earnings={earnings}
+            unavailable={calendarUnavailable}
+            daysAhead={daysAhead}
             isLoading={isLoading}
             selectedSymbol={selectedSymbol}
             onSelect={setSelectedSymbol}
@@ -261,7 +265,11 @@ export function Earnings() {
       {!isLoading && symbols.length > 0 && earnings.length === 0 && (
         <div className="glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-4 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)]">
           <p className="text-sm text-theme-secondary">
-            None of your {symbols.length} positions have earnings scheduled in the next {daysAhead} days.
+            {calendarUnavailable.length === symbols.length
+              ? 'The earnings calendar is unavailable right now (provider quota). Dates will appear once it recovers.'
+              : calendarUnavailable.length > 0
+                ? `None of your resolvable positions report in the next ${daysAhead} days. Calendar unavailable for ${calendarUnavailable.join(', ')}.`
+                : `None of your ${symbols.length} positions have earnings scheduled in the next ${daysAhead} days.`}
           </p>
         </div>
       )}

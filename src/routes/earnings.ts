@@ -1,7 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { logger } from '../observability/logger.js';
 import { EarningsOracle } from '../earnings/EarningsOracle.js';
-import type { APIResponse, EarningsImpactForecast, Price } from '../types/index.js';
+import type { EarningsCalendar } from '../earnings/EarningsCalendar.js';
+import type { APIResponse, Price } from '../types/index.js';
 import { BASE_HISTORY_DAYS } from '../factors/historySlice.js';
 
 interface EarningsReaction {
@@ -87,38 +88,84 @@ function generateMockHistory(symbol: string) {
   return reactions;
 }
 
+/** The subset of the real (Alpha Vantage) oracle the routes call. Injectable for tests. */
+export interface ForecastOracle {
+  generateForecast(symbol: string, reportDate: string): Promise<Record<string, unknown>>;
+  getHistoricalReactions(symbol: string): Promise<Array<Record<string, unknown> & { surprise?: number | null }>>;
+}
+
 interface RouteContext {
   server: {
-    earningsOracle: {
-      getUpcomingEarnings(symbols: string[], days: number): Promise<unknown[]>;
-      forecast(symbol: string, earning: unknown, exposures: unknown[]): Promise<EarningsImpactForecast>;
-    };
+    /**
+     * Real upcoming-earnings source (see src/earnings/EarningsCalendar.ts).
+     * Until 2026-09 this route family read `server.earningsOracle`, the
+     * `src/core` class whose calendar is Math.random() and whose "historical
+     * reactions" are noise; the Earnings page rendered both as the user's data.
+     */
+    earningsCalendar: EarningsCalendar;
     dataProvider: { getHistoricalPrices(symbol: string, days: number): Promise<Price[]> };
     factorEngine: { calculateExposures(symbols: string[], prices: Map<string, Price[]>): Promise<Map<string, unknown[]>> };
+    /** Test seam — defaults to the real Alpha Vantage + Polygon oracle. */
+    createEarningsOracle?: (alphaVantageKey: string, polygonKey: string) => ForecastOracle;
   };
+}
+
+const MAX_DAYS_AHEAD = 90;
+const DEFAULT_DAYS_AHEAD = 14;
+
+function parseDays(raw: string | undefined): number {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return DEFAULT_DAYS_AHEAD;
+  return Math.min(MAX_DAYS_AHEAD, Math.floor(n));
+}
+
+/** Production never serves synthesised earnings; dev/test may for local demos. */
+function mockAllowed(): boolean {
+  return process.env.NODE_ENV !== 'production';
 }
 
 export async function earningsRoutes(fastify: FastifyInstance, opts: RouteContext) {
   const { server } = opts;
+  const createOracle =
+    server.createEarningsOracle ??
+    ((av: string, poly: string): ForecastOracle => new EarningsOracle(av, poly) as unknown as ForecastOracle);
 
-  // GET /api/v1/earnings/upcoming
+  const realOracle = (): ForecastOracle | null => {
+    const alphaVantageKey = process.env.ALPHA_VANTAGE_API_KEY;
+    const polygonKey = process.env.POLYGON_API_KEY;
+    if (!alphaVantageKey || !polygonKey) return null;
+    return createOracle(alphaVantageKey, polygonKey);
+  };
+
+  // GET /api/v1/earnings/upcoming?symbols=A,B&days=30
   fastify.get<{
-    Querystring: { symbols: string };
+    Querystring: { symbols?: string; days?: string; daysAhead?: string };
     Reply: APIResponse<unknown[]>;
   }>(
     '/api/v1/earnings/upcoming',
-    async (request, _reply) => {
+    async (request, reply) => {
       const start = Date.now();
-      const symbols = request.query.symbols?.split(',') || [
-        'AAPL', 'NVDA', 'MSFT', 'GOOGL', 'AMZN', 'META', 'JPM', 'V', 'JNJ', 'UNH'
-      ];
+      const symbols = (request.query.symbols ?? '')
+        .split(',')
+        .map((s) => s.trim().toUpperCase())
+        .filter(Boolean);
+      if (symbols.length === 0) {
+        return reply.status(400).send({
+          success: false,
+          error: { code: 'VALIDATION_ERROR', message: 'symbols query parameter is required' },
+        });
+      }
+      const days = parseDays(request.query.days ?? request.query.daysAhead);
 
-      const earnings = await server.earningsOracle.getUpcomingEarnings(symbols, 14);
+      const { events, unavailable, source } = await server.earningsCalendar.getUpcoming(symbols, days);
 
       return {
         success: true,
-        data: earnings,
+        data: events,
         meta: {
+          source,
+          unavailable,
+          daysAhead: days,
           timestamp: new Date(),
           requestId: request.id,
           latencyMs: Date.now() - start,
@@ -128,53 +175,68 @@ export async function earningsRoutes(fastify: FastifyInstance, opts: RouteContex
   );
 
   // GET /api/v1/earnings/forecast/:symbol
+  //
+  // Report date comes from the real calendar; the forecast from the real
+  // oracle (Alpha Vantage quarterly history + Polygon price reactions). If the
+  // symbol has no report inside 90 days → 404; if the oracle is not configured
+  // or fails in production → 503, never a synthesised forecast.
   fastify.get<{
     Params: { symbol: string };
-    Reply: APIResponse<EarningsImpactForecast>;
+    Reply: APIResponse<unknown>;
   }>(
     '/api/v1/earnings/forecast/:symbol',
     async (request, reply) => {
       const start = Date.now();
-      const { symbol } = request.params;
+      const symbol = request.params.symbol.trim().toUpperCase();
 
       try {
-        // Get upcoming earnings
-        const earnings = await server.earningsOracle.getUpcomingEarnings([symbol], 30);
-        if (earnings.length === 0) {
-          return reply.status(404).send({
+        const { events, unavailable } = await server.earningsCalendar.getUpcoming([symbol], MAX_DAYS_AHEAD);
+        if (unavailable.includes(symbol)) {
+          return reply.status(503).send({
             success: false,
-            error: { code: 'NOT_FOUND', message: `No upcoming earnings for ${symbol}` },
+            error: { code: 'CALENDAR_UNAVAILABLE', message: `Earnings calendar unavailable for ${symbol}` },
           });
         }
-
-        // Get factor exposures
-        const prices = new Map<string, Price[]>();
-        for (const s of [symbol, 'SPY']) {
-          prices.set(s, await server.dataProvider.getHistoricalPrices(s, BASE_HISTORY_DAYS));
+        const next = events[0];
+        if (!next) {
+          return reply.status(404).send({
+            success: false,
+            error: { code: 'NOT_FOUND', message: `No upcoming earnings for ${symbol} in the next ${MAX_DAYS_AHEAD} days` },
+          });
         }
-        const exposures = await server.factorEngine.calculateExposures([symbol], prices);
+        const reportDate = next.reportDate.toISOString().slice(0, 10);
 
-        // Generate forecast
-        const forecast = await server.earningsOracle.forecast(
-          symbol,
-          earnings[0],
-          exposures.get(symbol) || []
-        );
+        const oracle = realOracle();
+        if (oracle) {
+          const forecast = await oracle.generateForecast(symbol, reportDate);
+          return {
+            success: true,
+            data: { symbol, ...forecast, reportDate, epsEstimate: next.epsEstimate, reportTime: next.reportTime },
+            meta: {
+              source: 'oracle',
+              timestamp: new Date(),
+              requestId: request.id,
+              latencyMs: Date.now() - start,
+            },
+          };
+        }
 
-        return {
-          success: true,
-          data: forecast,
-          meta: {
-            timestamp: new Date(),
-            requestId: request.id,
-            latencyMs: Date.now() - start,
-          },
-        };
-      } catch (error) {
-        logger.error({ err: error }, 'Earnings forecast failed');
-        return reply.status(500).send({
+        if (mockAllowed()) {
+          return {
+            success: true,
+            data: { ...generateMockForecast(symbol), reportDate },
+            meta: { source: 'mock', timestamp: new Date(), requestId: request.id, latencyMs: Date.now() - start },
+          };
+        }
+        return reply.status(503).send({
           success: false,
-          error: { code: 'INTERNAL_ERROR', message: 'Earnings forecast failed' },
+          error: { code: 'FORECAST_UNAVAILABLE', message: 'Earnings forecast provider is not configured' },
+        });
+      } catch (error) {
+        logger.error({ err: error, symbol }, 'Earnings forecast failed');
+        return reply.status(503).send({
+          success: false,
+          error: { code: 'FORECAST_UNAVAILABLE', message: 'Earnings forecast failed' },
         });
       }
     }
@@ -214,32 +276,35 @@ export async function earningsRoutes(fastify: FastifyInstance, opts: RouteContex
 
       refreshCooldowns.set(upperSymbol, Date.now());
 
-      let forecast;
+      let forecast: Record<string, unknown> | undefined;
       let source = 'mock';
 
-      const alphaVantageKey = process.env.ALPHA_VANTAGE_API_KEY;
-      const polygonKey = process.env.POLYGON_API_KEY;
-      const isProduction = process.env.NODE_ENV === 'production';
-
-      if (alphaVantageKey && polygonKey && isProduction) {
+      const oracle = realOracle();
+      if (oracle) {
         try {
-          const oracle = new EarningsOracle(alphaVantageKey, polygonKey);
-          // Generate fresh forecast 14 days ahead
-          const reportDate = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
+          // Real report date from the calendar; fall back to +14d only if the
+          // calendar has nothing inside 90 days (the forecast itself is real).
+          const { events } = await server.earningsCalendar.getUpcoming([upperSymbol], MAX_DAYS_AHEAD);
+          const reportDate = events[0]
+            ? events[0].reportDate.toISOString().slice(0, 10)
+            : new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
           const oracleForecast = await oracle.generateForecast(upperSymbol, reportDate);
           if (oracleForecast) {
-            forecast = {
-              symbol: upperSymbol,
-              ...oracleForecast,
-            };
+            forecast = { symbol: upperSymbol, ...oracleForecast };
             source = 'oracle';
           }
         } catch (error) {
-          logger.warn({ err: error, symbol: upperSymbol }, 'Oracle refresh failed, falling back to mock');
+          logger.warn({ err: error, symbol: upperSymbol }, 'Oracle refresh failed');
         }
       }
 
       if (!forecast) {
+        if (!mockAllowed()) {
+          return reply.status(503).send({
+            success: false,
+            error: { code: 'FORECAST_UNAVAILABLE', message: 'Earnings forecast provider unavailable' },
+          });
+        }
         forecast = generateMockForecast(upperSymbol);
       }
 
@@ -277,13 +342,9 @@ export async function earningsRoutes(fastify: FastifyInstance, opts: RouteContex
       let reactions;
       let source = 'mock';
 
-      const alphaVantageKey = process.env.ALPHA_VANTAGE_API_KEY;
-      const polygonKey = process.env.POLYGON_API_KEY;
-      const isProduction = process.env.NODE_ENV === 'production';
-
-      if (alphaVantageKey && polygonKey && isProduction) {
+      const oracle = realOracle();
+      if (oracle) {
         try {
-          const oracle = new EarningsOracle(alphaVantageKey, polygonKey);
           const historicalReactions = await oracle.getHistoricalReactions(upperSymbol);
           if (historicalReactions && historicalReactions.length > 0) {
             reactions = historicalReactions.map((r) => ({
@@ -293,11 +354,17 @@ export async function earningsRoutes(fastify: FastifyInstance, opts: RouteContex
             source = 'oracle';
           }
         } catch (error) {
-          logger.warn({ err: error, symbol: upperSymbol }, 'Historical reactions fetch failed, falling back to mock');
+          logger.warn({ err: error, symbol: upperSymbol }, 'Historical reactions fetch failed');
         }
       }
 
       if (!reactions) {
+        if (!mockAllowed()) {
+          return reply.status(503).send({
+            success: false,
+            error: { code: 'HISTORY_UNAVAILABLE', message: 'Earnings history provider unavailable' },
+          });
+        }
         reactions = generateMockHistory(upperSymbol);
       }
 

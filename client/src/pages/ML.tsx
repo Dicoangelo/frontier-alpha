@@ -227,7 +227,15 @@ export function ML() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <MockDataBanner force pageKey="ml" />
+      {/* The ML page is a preview by design (illustrative regime / model /
+          attribution numbers, opacity-60). The default banner copy told a
+          user WITH a connected portfolio to "connect a portfolio", which is
+          false and reads as a bug. Say what it actually is. */}
+      <MockDataBanner
+        force
+        pageKey="ml"
+        message="Preview with illustrative model outputs. Live model training runs in the Python ML engine, which is not enabled in this deployment."
+      />
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div

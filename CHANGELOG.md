@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.15.2] - 2026-09-06
+
+### Flow walk — the Earnings page was rendering `Math.random()`
+
+The page-load walker had nothing left to find, so discovery changed angle:
+the golden fixture was restored (five holdings, enterprise comp — the
+synthetic monitor went 9/13 → 13/13) and every primary action was exercised
+as a Pro user (optimizer, backtest, paper order, settings save, insight
+refresh).
+
+#### Fixed — fabricated data
+
+- **Upcoming earnings were random.** `GET /earnings/upcoming` was served by
+  `src/core/EarningsOracle.getUpcomingEarnings`, which picked ~25% of the
+  holdings with `Math.random()`, gave each a random report date inside the
+  window and a hash-derived EPS / revenue estimate, and the Earnings page
+  rendered it as the user's calendar ("GOOGL reports in 4 days, EPS 4.00,
+  revenue $40B"). `GET /forecast/:symbol` built on the same class, whose
+  "historical reactions" are noise. The real Alpha Vantage oracle existed but
+  was wired only to the refresh and history routes.
+  New `src/earnings/EarningsCalendar.ts` (Alpha Vantage `EARNINGS_CALENDAR`,
+  per symbol, 24h cache, refusals cached 1h, in-flight dedup, never
+  synthesised); `/upcoming` reports provenance and `meta.unavailable`;
+  `/forecast` uses the calendar's real date with the real oracle (404 when
+  nothing is scheduled, 503 when the provider is unconfigured); refresh and
+  history no longer fall back to mock data in production. The client says
+  "calendar unavailable" distinctly from "nothing scheduled".
+- **A quota refusal on the CSV endpoint is a CSV.** Alpha Vantage answers
+  refusals with the real header followed by "Information: Thank you for
+  using…" spread one character per column (`I,n,f,o,r,m,a,…`), measured live
+  once the 25/day quota was spent. The first parser skipped that row as a
+  foreign symbol and the refusal exited as "nothing scheduled". Detected now,
+  with a guard so "PREMIUM BRANDS" / "INFORMATION SERVICES GROUP" rows still
+  parse.
+
+#### Fixed — smaller
+
+- Settings: the API-keys query was the one fetch without the auth-hydration
+  gate and logged two 401s per load.
+- Trade: Symbol and Quantity inputs have associated labels.
+- ML page banner no longer tells a connected user to "connect a portfolio";
+  it says the page is a preview with illustrative model outputs.
+
+#### Known
+
+- Alpha Vantage's free tier (25 req/day) is shared by earnings history,
+  forecasts and the calendar; Vercel's per-instance memory cache is cold on
+  every new instance, so the calendar can read "unavailable" late in the day.
+  Persisting calendar rows needs a migration (operator-applied).
+
+Tests: 1114 server / 321 client.
+
 ## [1.15.1] - 2026-09-06
 
 ### Improvement loop — six verified cycles after the make-it-work wave

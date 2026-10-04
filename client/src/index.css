@@ -25,13 +25,22 @@
     --color-border: #d7e0e7;
     --color-border-light: #e8edf1;
     --color-border-hover: #aebfcf;
+    /* Field boundaries need more contrast than decorative card dividers. */
+    --color-control-border: #788a99;
+    --color-focus: #176b96;
     --color-primary: #176b96;
     --color-accent: #176b96;
     --color-accent-hover: #12577b;
     --color-accent-light: #e7f2f8;
     --color-accent-text: #176b96;
     --color-accent-secondary: #167c80;
-    --color-accent-secondary-text: #167c80;
+    --color-accent-secondary-text: #146f73;
+    /* Action fills stay dark enough for white labels in both appearances. */
+    --color-action-primary: #176b96;
+    --color-action-primary-hover: #12577b;
+    --color-action-danger: #b5474d;
+    --color-action-danger-hover: #a2363e;
+    --color-action-positive: #197764;
     --color-positive: #197764;
     --color-negative: #b5474d;
     --color-success: #197764;
@@ -61,6 +70,12 @@
     --gradient-halo: linear-gradient(var(--color-bg-secondary), var(--color-bg-secondary));
     --color-card-shadow: 0 1px 2px rgba(25, 43, 69, 0.03);
     --font-mono: 'JetBrains Mono', monospace;
+    --control-height: 44px;
+    --control-radius: 8px;
+    --text-control: 14px;
+    --line-control: 20px;
+    --text-label: 12px;
+    --line-label: 18px;
     --motion-duration-fast: 150ms;
     --motion-duration-base: 180ms;
     --motion-duration-slow: 220ms;
@@ -82,13 +97,17 @@
     --color-border: #314353;
     --color-border-light: #253747;
     --color-border-hover: #526d83;
+    --color-control-border: #748b9e;
+    --color-focus: #8dc8e6;
     --color-primary: #257da9;
     --color-accent: #257da9;
-    --color-accent-hover: #3090be;
+    --color-accent-hover: #1b6c95;
     --color-accent-light: #203f53;
     --color-accent-text: #8dc8e6;
     --color-accent-secondary: #7ec3c5;
     --color-accent-secondary-text: #7ec3c5;
+    --color-action-primary: #23769f;
+    --color-action-primary-hover: #1b6c95;
     --color-positive: #7fcbb4;
     --color-negative: #e5a0a6;
     --color-success: #7fcbb4;
@@ -119,6 +138,10 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
+  @media (min-width: 768px) {
+    :root { --control-height: 40px; }
+  }
+
   body {
     @apply antialiased transition-colors duration-300;
     background-color: var(--color-bg);
@@ -140,7 +163,7 @@
 
   /* Global focus ring — visible on keyboard nav, hidden on mouse */
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-focus);
     outline-offset: 2px;
   }
   :focus:not(:focus-visible) {

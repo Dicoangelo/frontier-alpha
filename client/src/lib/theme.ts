@@ -10,7 +10,7 @@ import type React from 'react';
  * Usage:
  *   CSS/Tailwind  → var(--color-positive)  or  text-accent
  *   TypeScript     → import { colors, cssVar } from '@/lib/theme'
- *                    colors.positive        // '#10b981'
+ *                    colors.positive        // '#197764'
  *                    cssVar('--color-positive')  // 'var(--color-positive)'
  */
 
@@ -24,21 +24,27 @@ export const brand = {
 export const colors = {
   primary: '#176b96', accent: '#176b96', accentHover: '#12577b',
   accentLight: '#e7f2f8', accentSecondary: '#167c80',
+  accentSecondaryText: '#146f73',
+  actionPrimary: '#176b96', actionPrimaryHover: '#12577b',
+  actionDanger: '#b5474d', actionDangerHover: '#a2363e', actionPositive: '#197764',
   positive: '#197764', negative: '#b5474d', success: '#197764',
   danger: '#b5474d', warning: '#94631f', info: '#176b96',
-  text: '#182b3a', textSecondary: '#4f6475', textMuted: '#617587',
+  text: '#182b3a', textSecondary: '#4f6475', textMuted: '#5b6f81',
   bg: '#f1f4f7', bgSecondary: '#ffffff', bgTertiary: '#eaf0f4',
-  border: '#d7e0e7', borderLight: '#e8edf1',
+  border: '#d7e0e7', borderLight: '#e8edf1', controlBorder: '#788a99', focus: '#176b96',
 } as const;
 
 export const darkColors = {
-  primary: '#257da9', accent: '#257da9', accentHover: '#3090be',
+  primary: '#257da9', accent: '#257da9', accentHover: '#1b6c95',
   accentLight: '#203f53', accentSecondary: '#7ec3c5',
+  accentSecondaryText: '#7ec3c5',
+  actionPrimary: '#23769f', actionPrimaryHover: '#1b6c95',
+  actionDanger: '#b5474d', actionDangerHover: '#a2363e', actionPositive: '#197764',
   positive: '#7fcbb4', negative: '#e5a0a6', success: '#7fcbb4',
   danger: '#e5a0a6', warning: '#ddbc82', info: '#8dc8e6',
   text: '#e3ecf3', textSecondary: '#b7c8d6', textMuted: '#93aabe',
   bg: '#101923', bgSecondary: '#17232f', bgTertiary: '#213141',
-  border: '#314353', borderLight: '#253747',
+  border: '#314353', borderLight: '#253747', controlBorder: '#748b9e', focus: '#8dc8e6',
 } as const;
 
 export const surfaces = {
@@ -77,6 +83,8 @@ export const cssVars = {
   textMuted:       '--color-text-muted',
   border:          '--color-border',
   borderLight:     '--color-border-light',
+  controlBorder:   '--color-control-border',
+  focus:           '--color-focus',
 
   // Brand / accent
   primary:         '--color-primary',
@@ -84,6 +92,12 @@ export const cssVars = {
   accentHover:     '--color-accent-hover',
   accentLight:     '--color-accent-light',
   accentSecondary: '--color-accent-secondary',
+  accentSecondaryText: '--color-accent-secondary-text',
+  actionPrimary:   '--color-action-primary',
+  actionPrimaryHover: '--color-action-primary-hover',
+  actionDanger:    '--color-action-danger',
+  actionDangerHover: '--color-action-danger-hover',
+  actionPositive:  '--color-action-positive',
 
   // Semantic states
   positive:        '--color-positive',

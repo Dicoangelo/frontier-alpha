@@ -465,11 +465,11 @@ export function Backtest() {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" />
                     <XAxis
                       dataKey="date"
-                      tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
+                      tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 12 }}
                       tickFormatter={(d) => new Date(d).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}
                     />
                     <YAxis
-                      tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
+                      tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 12 }}
                       tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
                     />
                     <Tooltip
@@ -497,7 +497,7 @@ export function Backtest() {
                         // plot area, well away from any axis tick.
                         position: 'insideTopRight',
                         fill: 'var(--color-text-muted)',
-                        fontSize: 11,
+                        fontSize: 12,
                       }}
                     />
                   </ComposedChart>
@@ -523,11 +523,11 @@ export function Backtest() {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" />
                     <XAxis
                       dataKey="episode"
-                      tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
+                      tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 12 }}
                       label={{ value: 'Episode', position: 'bottom', offset: -5 }}
                     />
                     <YAxis
-                      tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 11 }}
+                      tick={{ fill: 'var(--color-text-muted, var(--color-text-muted))', fontSize: 12 }}
                       tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
                     />
                     <Tooltip
@@ -539,7 +539,7 @@ export function Backtest() {
                     <ReferenceLine y={0} stroke="var(--color-text-muted)" strokeDasharray="2 2" />
                     <Bar dataKey="return" fill="var(--color-accent)" opacity={0.6} radius={[4, 4, 0, 0]} />
                     <Line type="monotone" dataKey="sharpe" stroke="var(--color-warning)" strokeWidth={2} dot={false} yAxisId="right" />
-                    <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-warning)', fontSize: 11 }} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-warning)', fontSize: 12 }} />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>

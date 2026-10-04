@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChartNoAxesCombined } from 'lucide-react';
+import { BrandLogo } from '@/components/shared/BrandLogo';
 import { HeroEnhanced } from '@/components/landing/HeroEnhanced';
 
 // Below-the-fold sections lazy-load so the hero ships in the smallest bundle.
@@ -86,9 +86,9 @@ export function Landing() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col" data-testid="visual-landing-ready">
       <header className="border-b border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] px-4 sm:px-6">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 py-4">
-          <a href="/" className="flex shrink-0 items-center gap-2.5 text-sm sm:text-base font-semibold tracking-tight text-[var(--color-text)]">
-            <span className="hidden h-9 w-9 items-center justify-center sm:flex rounded-lg bg-[var(--color-accent-light)] text-[var(--color-accent-text)]"><ChartNoAxesCombined size={20} aria-hidden="true" /></span>
+        <div className="fa-landing-header mx-auto flex max-w-6xl items-center justify-between gap-4 py-4">
+          <a href="/" className="fa-landing-brand shrink-0 text-sm sm:text-base font-semibold tracking-tight text-[var(--color-text)]" aria-label="Frontier Alpha home">
+            <BrandLogo decorative />
             Frontier Alpha
           </a>
           <nav className="flex items-center gap-2 sm:gap-4" aria-label="Account navigation">
@@ -191,8 +191,9 @@ export function Landing() {
 
       <footer className="mt-auto border-t border-[var(--color-border-light)] py-6 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-[var(--color-text-muted)]">
-            Frontier Alpha · Built by <span className="text-[var(--color-text-secondary)]">Metaventions AI</span>
+          <div className="fa-brand-footer">
+            <BrandLogo variant="wordmark" />
+            <div className="fa-brand-footer-copy"><strong>Frontier Alpha</strong>Built by Metaventions AI</div>
           </div>
           <nav className="flex flex-wrap justify-center gap-x-5 gap-y-3" aria-label="Footer navigation">
             <button

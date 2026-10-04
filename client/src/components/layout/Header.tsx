@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Settings, Menu, HelpCircle, Moon, Sun, LineChart, Search, PanelRight } from 'lucide-react';
+import { Settings, Menu, HelpCircle, Moon, Sun, Search, PanelRight } from 'lucide-react';
+import { BrandLogo } from '@/components/shared/BrandLogo';
 import { AlertDropdown } from '@/components/alerts/AlertDropdown';
 import { useThemeStore } from '@/stores/themeStore';
 import { useFeedStatus } from '@/hooks/useFeedStatus';
@@ -88,7 +89,7 @@ export function Header({ onMenuClick, onHelpClick, onSearchClick, onContextClick
           <Menu size={21} />
         </button>
         <Link to="/" className="workspace-brand" aria-label="Frontier Alpha home">
-          <span className="workspace-brand-mark"><LineChart size={21} aria-hidden="true" /></span>
+          <BrandLogo decorative />
           <span className="workspace-brand-copy"><strong>Frontier Alpha</strong><span>Investment workspace</span></span>
         </Link>
         {pageTitle && <span className="workspace-current-page">{pageTitle}</span>}

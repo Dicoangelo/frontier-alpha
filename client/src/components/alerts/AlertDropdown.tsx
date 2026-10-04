@@ -110,7 +110,7 @@ export function AlertDropdown() {
       >
         <Bell className="w-5 h-5" aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 min-w-5 h-5 px-1 mono tabular-nums bg-[var(--color-negative)] text-white text-[10px] font-semibold rounded-full flex items-center justify-center">
+          <span className="absolute top-0 right-0 min-w-5 h-5 px-1 mono tabular-nums bg-[var(--color-bg-secondary)] text-[var(--color-negative)] ring-1 ring-inset ring-[var(--color-negative)]/30 text-xs font-semibold rounded-full flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}

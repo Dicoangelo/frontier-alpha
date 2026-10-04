@@ -194,7 +194,7 @@ function VolSurfaceInner({ points }: VolSurfaceProps) {
 
     const labelStyle = {
       fill: 'var(--color-text-muted, var(--color-text-muted))',
-      fontSize: '11px',
+      fontSize: '12px',
       fontFamily: 'monospace',
     };
 
@@ -253,7 +253,7 @@ function VolSurfaceInner({ points }: VolSurfaceProps) {
       .attr('x', legendX)
       .attr('y', legendY + legendHeight + 12)
       .attr('fill', labelStyle.fill)
-      .attr('font-size', '10px')
+      .attr('font-size', '12px')
       .attr('font-family', labelStyle.fontFamily)
       .text(`${(ivMin * 100).toFixed(0)}%`);
 
@@ -262,7 +262,7 @@ function VolSurfaceInner({ points }: VolSurfaceProps) {
       .attr('y', legendY + legendHeight + 12)
       .attr('text-anchor', 'end')
       .attr('fill', labelStyle.fill)
-      .attr('font-size', '10px')
+      .attr('font-size', '12px')
       .attr('font-family', labelStyle.fontFamily)
       .text(`${(ivMax * 100).toFixed(0)}%`);
     return () => {

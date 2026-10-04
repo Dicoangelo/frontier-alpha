@@ -49,9 +49,9 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
     >
       <div className="space-y-5 pb-4" style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}>
         {/* Hero: price + PnL */}
-        <div className="flex items-baseline justify-between">
+        <div className="flex flex-wrap items-baseline justify-between gap-4">
           <div>
-            <div className="text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-1">
+            <div className="text-xs font-medium text-[var(--color-text-muted)] mb-1">
               Current price
             </div>
             <div className="text-2xl font-bold tabular-nums text-[var(--color-text)]">
@@ -59,13 +59,13 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-1">
+            <div className="text-xs font-medium text-[var(--color-text-muted)] mb-1">
               Unrealized P&L
             </div>
-            <div className="flex items-center gap-1.5 justify-end text-lg font-semibold tabular-nums" style={{ color }}>
+            <div className="flex flex-wrap items-center gap-1.5 justify-end text-lg font-semibold tabular-nums" style={{ color }}>
               {isUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
               {isUp ? '+' : ''}${position.unrealizedPnL.toFixed(2)}
-              <span className="text-[11px] mono ml-1">({isUp ? '+' : ''}{stats.pnlPct.toFixed(2)}%)</span>
+              <span className="text-xs mono ml-1">({isUp ? '+' : ''}{stats.pnlPct.toFixed(2)}%)</span>
             </div>
           </div>
         </div>
@@ -87,19 +87,19 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
         {/* Detail grid */}
         <dl className="grid grid-cols-2 gap-3 text-sm">
           <div className="rounded-sm bg-[var(--color-bg-tertiary)] p-3">
-            <dt className="text-[9px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)]">Shares</dt>
+            <dt className="text-xs font-medium text-[var(--color-text-muted)]">Shares</dt>
             <dd className="mt-1 tabular-nums text-[var(--color-text)]">{position.shares.toFixed(2)}</dd>
           </div>
           <div className="rounded-sm bg-[var(--color-bg-tertiary)] p-3">
-            <dt className="text-[9px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)]">Cost Basis</dt>
+            <dt className="text-xs font-medium text-[var(--color-text-muted)]">Cost Basis</dt>
             <dd className="mt-1 tabular-nums text-[var(--color-text)]">${position.costBasis.toFixed(2)}</dd>
           </div>
           <div className="rounded-sm bg-[var(--color-bg-tertiary)] p-3">
-            <dt className="text-[9px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)]">Position Value</dt>
+            <dt className="text-xs font-medium text-[var(--color-text-muted)]">Position Value</dt>
             <dd className="mt-1 tabular-nums text-[var(--color-text)]">${stats.value.toFixed(2)}</dd>
           </div>
           <div className="rounded-sm bg-[var(--color-bg-tertiary)] p-3">
-            <dt className="text-[9px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)]">Weight</dt>
+            <dt className="text-xs font-medium text-[var(--color-text-muted)]">Weight</dt>
             <dd className="mt-1 tabular-nums text-[var(--color-text)]">
               {position.weight != null ? `${(position.weight * (position.weight > 1 ? 1 : 100)).toFixed(1)}%` : '—'}
             </dd>
@@ -114,7 +114,7 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
             className="flex flex-col items-center gap-1.5 p-3 rounded-sm border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent-secondary-text)] hover:border-[var(--color-accent-secondary)] transition-colors animate-press"
           >
             <Zap className="w-4 h-4" />
-            <span className="text-[10px] mono tracking-[0.2em] uppercase">Trade</span>
+            <span className="text-xs font-medium">Trade</span>
           </button>
           <button
             type="button"
@@ -122,7 +122,7 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
             className="flex flex-col items-center gap-1.5 p-3 rounded-sm border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent-secondary-text)] hover:border-[var(--color-accent-secondary)] transition-colors animate-press"
           >
             <Bell className="w-4 h-4" />
-            <span className="text-[10px] mono tracking-[0.2em] uppercase">Alert</span>
+            <span className="text-xs font-medium">Alert</span>
           </button>
           {onEdit && <button
             type="button"
@@ -130,7 +130,7 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
             className="flex flex-col items-center gap-1.5 p-3 rounded-sm border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent-secondary-text)] hover:border-[var(--color-accent-secondary)] transition-colors animate-press"
           >
             <Pencil className="w-4 h-4" />
-            <span className="text-[10px] mono tracking-[0.2em] uppercase">Edit</span>
+            <span className="text-xs font-medium">Edit</span>
           </button>}
         </div>
 
@@ -138,7 +138,7 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
           <button
             type="button"
             onClick={() => { onDelete(position.id); onClose(); }}
-            className="w-full flex items-center justify-center gap-2 p-3 rounded-sm border border-[color-mix(in_srgb,var(--color-negative)_25%,transparent)] text-[var(--color-negative)] hover:bg-[color-mix(in_srgb,var(--color-negative)_8%,transparent)] transition-colors mono text-[10px] tracking-[0.3em] uppercase"
+            className="w-full flex items-center justify-center gap-2 p-3 rounded-sm border border-[color-mix(in_srgb,var(--color-negative)_25%,transparent)] text-[var(--color-negative)] hover:bg-[color-mix(in_srgb,var(--color-negative)_8%,transparent)] transition-colors text-xs font-medium"
           >
             <XIcon className="w-4 h-4" />
             Remove holding

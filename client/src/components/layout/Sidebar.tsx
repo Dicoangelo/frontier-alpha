@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { BrandLogo } from '@/components/shared/BrandLogo';
 import {
   LayoutDashboard,
   Briefcase,
@@ -106,8 +107,8 @@ export function Sidebar({ onNavigate, collapsed = false, onToggle }: SidebarProp
 
   return (
     <div className={`workspace-sidebar${collapsed ? ' is-collapsed' : ''}`}>
-      <div className="workspace-sidebar-heading">
-        <span className="workspace-sidebar-title">Workspace</span>
+      <div className="workspace-sidebar-heading fa-brand-sidebar-heading">
+        <div className="fa-brand-sidebar"><BrandLogo variant="wordmark" /><strong>Frontier Alpha</strong></div>
         {onToggle && (
           <button
             type="button"

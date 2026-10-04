@@ -204,7 +204,7 @@ export function TradeExecutor({
         <form ref={formRef} id="order-form" onSubmit={handleSubmit} className="space-y-4">
           {/* Symbol with Quote */}
           <div>
-            <label htmlFor="order-symbol" className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">
+            <label htmlFor="order-symbol" className="block text-xs font-medium text-theme-secondary mb-2">
               Symbol
             </label>
             <div className="flex flex-wrap gap-2">
@@ -214,7 +214,7 @@ export function TradeExecutor({
                 value={symbol}
                 onChange={(e) => { const next = e.target.value.toUpperCase().replace(/\s/g, ''); setSymbol(next); onSymbolChange?.(next); setSubmitSuccess(false); }}
                 placeholder="AAPL"
-                className="flex-1 px-3 py-2 min-h-[44px] glass-slab-floating rounded-lg text-theme focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-[border-color,box-shadow] duration-200"
+                className="flex-1 min-w-0 basis-32 px-3 py-2 min-h-[44px] glass-slab-floating rounded-lg text-theme focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-[border-color,box-shadow] duration-200"
                 required
               />
               {quote && (
@@ -230,8 +230,8 @@ export function TradeExecutor({
           </div>
 
           {/* Side Toggle */}
-          <div>
-            <label className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Side</label>
+          <fieldset>
+            <legend className="block text-xs font-medium text-theme-secondary mb-2">Side</legend>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -252,20 +252,20 @@ export function TradeExecutor({
                 aria-pressed={side === 'sell'}
                 className={`flex-1 py-2 min-h-[44px] px-4 rounded-lg font-medium animate-press transition-[background-color,box-shadow,transform] duration-200 flex items-center justify-center gap-2 ${
                   side === 'sell'
-                    ? 'text-white'
+                    ? 'text-[var(--color-negative)] ring-1 ring-inset ring-[var(--color-negative)]/40'
                     : 'glass-slab-floating text-theme-secondary hover:text-theme'
                 }`}
-                style={side === 'sell' ? { backgroundColor: 'var(--color-negative)' } : undefined}
+                style={side === 'sell' ? { backgroundColor: 'color-mix(in srgb, var(--color-negative) 12%, transparent)' } : undefined}
               >
                 <TrendingDown className="w-4 h-4" aria-hidden="true" />
                 Sell
               </button>
             </div>
-          </div>
+          </fieldset>
 
           {/* Quantity */}
           <div>
-            <label htmlFor="order-qty" className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Quantity</label>
+            <label htmlFor="order-qty" className="block text-xs font-medium text-theme-secondary mb-2">Quantity</label>
             <input
               id="order-qty"
               type="number"
@@ -286,7 +286,7 @@ export function TradeExecutor({
           {/* Order Type */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="order-type" className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Order Type</label>
+              <label htmlFor="order-type" className="block text-xs font-medium text-theme-secondary mb-2">Order Type</label>
               <select
                 id="order-type"
                 value={orderType}
@@ -302,7 +302,7 @@ export function TradeExecutor({
             </div>
 
             <div>
-              <label htmlFor="order-time-in-force" className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Time in Force</label>
+              <label htmlFor="order-time-in-force" className="block text-xs font-medium text-theme-secondary mb-2">Time in Force</label>
               <select
                 id="order-time-in-force"
                 value={timeInForce}
@@ -321,7 +321,7 @@ export function TradeExecutor({
           {/* Limit Price */}
           {needsLimitPrice && (
             <div>
-              <label htmlFor="order-limit-price" className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Limit Price</label>
+              <label htmlFor="order-limit-price" className="block text-xs font-medium text-theme-secondary mb-2">Limit Price</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted">$</span>
                 <input
@@ -342,7 +342,7 @@ export function TradeExecutor({
           {/* Stop Price */}
           {needsStopPrice && (
             <div>
-              <label htmlFor="order-stop-price" className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Stop Price</label>
+              <label htmlFor="order-stop-price" className="block text-xs font-medium text-theme-secondary mb-2">Stop Price</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted">$</span>
                 <input
@@ -362,7 +362,7 @@ export function TradeExecutor({
 
           {/* Extended Hours */}
           {!isMarketOpen && (
-            <label className="flex items-center gap-2 cursor-pointer animate-press">
+            <label className="flex min-h-10 items-center gap-2 cursor-pointer animate-press">
               <input
                 type="checkbox"
                 checked={extendedHours}

@@ -1,0 +1,56 @@
+/* Preserve the supplied artwork, including its black wordmark, in both themes. */
+.fa-brand-logo {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+.fa-brand-logo .fa-brand-logo-frame { display: block; }
+.fa-brand-logo img { display: block; object-fit: contain; }
+.fa-brand-logo--mark { width: 32px; height: 32px; }
+.fa-brand-logo--mark .fa-brand-logo-frame { width: 100%; height: 100%; }
+.fa-brand-logo--mark img { width: 100%; height: 100%; }
+.fa-brand-logo--wordmark {
+  width: 168px;
+  max-width: 100%;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+}
+.fa-brand-logo--wordmark .fa-brand-logo-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 510 / 303;
+  overflow: hidden;
+}
+.fa-brand-logo--wordmark img {
+  position: absolute;
+  width: 117.647059%;
+  max-width: none;
+  height: auto;
+  left: -8.823529%;
+  top: -41.914191%;
+}
+.workspace-app-rail .workspace-rail-logo .fa-brand-logo { width: 30px; height: 30px; }
+.workspace-brand .fa-brand-logo { width: 32px; height: 32px; }
+.workspace-sidebar .workspace-sidebar-heading.fa-brand-sidebar-heading { align-items: flex-start; gap: 12px; padding-top: 16px; padding-bottom: 16px; }
+.fa-brand-sidebar { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; }
+.fa-brand-sidebar .fa-brand-logo--wordmark { width: 148px; padding: 10px; }
+.fa-brand-sidebar strong { color: var(--color-text); font-size: 14px; font-weight: 600; line-height: 20px; }
+.fa-auth-brand .fa-brand-logo--wordmark { width: 200px; margin-bottom: 20px; }
+.fa-landing-brand { display: inline-flex; align-items: center; gap: 10px; }
+.fa-landing-brand .fa-brand-logo { width: 32px; height: 32px; }
+.fa-brand-footer { display: flex; align-items: center; gap: 16px; }
+.fa-brand-footer .fa-brand-logo--wordmark { width: 148px; padding: 10px; }
+.fa-brand-footer-copy { color: var(--color-text-muted); font-size: 12px; line-height: 20px; }
+.fa-brand-footer-copy strong { display: block; color: var(--color-text-secondary); font-weight: 600; }
+@media (max-width: 480px) {
+  .fa-landing-header { flex-wrap: wrap; }
+  .fa-landing-header nav { margin-left: auto; }
+  .fa-landing-brand { gap: 8px; }
+  .fa-landing-brand .fa-brand-logo { width: 28px; height: 28px; }
+  .fa-brand-footer { flex-direction: column; text-align: center; }
+}

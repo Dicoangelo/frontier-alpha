@@ -1,5 +1,6 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Search, LayoutDashboard, Briefcase, ArrowLeftRight, BarChart3, HelpCircle, Settings, LineChart, ArrowUpRight, CalendarDays, Bell, PanelLeftOpen } from 'lucide-react';
+import { Search, LayoutDashboard, Briefcase, ArrowLeftRight, BarChart3, HelpCircle, Settings, ArrowUpRight, CalendarDays, Bell, PanelLeftOpen } from 'lucide-react';
+import { BrandLogo } from '@/components/shared/BrandLogo';
 import { useAuthStore } from '@/stores/authStore';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { useFeedStatus } from '@/hooks/useFeedStatus';
@@ -8,7 +9,7 @@ import { DEMO_HOLDINGS } from '@/lib/demoFixtures';
 export function ApplicationRail({ onSearch, onHelp, collapsed, onExpand }: { onSearch: () => void; onHelp: () => void; collapsed: boolean; onExpand: () => void }) {
   const { pathname } = useLocation();
   return <aside className="workspace-app-rail" aria-label="Application rail">
-    <Link to="/" className="workspace-rail-logo" aria-label="Frontier Alpha dashboard"><LineChart size={22} /></Link>
+    <Link to="/" className="workspace-rail-logo" aria-label="Frontier Alpha dashboard"><BrandLogo decorative /></Link>
     {collapsed && <button type="button" onClick={onExpand} aria-label="Expand navigation" title="Expand navigation"><PanelLeftOpen size={19} /></button>}
     <button type="button" onClick={onSearch} aria-label="Search workspace" title="Search (⌘ K)"><Search size={19} /></button>
     <NavLink to={pathname === '/dashboard' ? '/dashboard' : '/'} end aria-label="Open dashboard" title="Dashboard"><LayoutDashboard size={19} /></NavLink>

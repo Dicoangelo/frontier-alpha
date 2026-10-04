@@ -136,14 +136,14 @@ function ConvictionChart({ cycles, factorWeights, onSelectEpisode, selectedIndex
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.4} />
           <XAxis
             dataKey="date"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
             tickLine={false}
             axisLine={{ stroke: 'var(--color-border)' }}
           />
           <YAxis
             domain={[-0.5, 0.5]}
             tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
             tickLine={false}
             axisLine={false}
           />
@@ -151,7 +151,7 @@ function ConvictionChart({ cycles, factorWeights, onSelectEpisode, selectedIndex
           <Legend
             iconSize={8}
             formatter={(value: string) => (
-              <span style={{ color: 'var(--color-text-muted)', fontSize: 10 }}>
+              <span style={{ color: 'var(--color-text-muted)', fontSize: 12 }}>
                 {value.replace(/_/g, ' ')}
               </span>
             )}

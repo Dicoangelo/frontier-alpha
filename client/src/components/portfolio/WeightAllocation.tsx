@@ -133,10 +133,10 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
               <>
                 <text
                   x={cx}
-                  y={cy - 8}
+                  y={cy - 14}
                   textAnchor="middle"
                   className="fill-[var(--color-text)] font-semibold"
-                  fontSize="11"
+                  fontSize="15"
                   fontWeight="600"
                   fill="var(--color-text)"
                 >
@@ -144,18 +144,18 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
                 </text>
                 <text
                   x={cx}
-                  y={cy + 6}
+                  y={cy + 5}
                   textAnchor="middle"
-                  fontSize="10"
+                  fontSize="14"
                   fill="var(--color-text-muted)"
                 >
                   {(hovered.weight * 100).toFixed(1)}%
                 </text>
                 <text
                   x={cx}
-                  y={cy + 20}
+                  y={cy + 24}
                   textAnchor="middle"
-                  fontSize="9"
+                  fontSize="14"
                   fill="var(--color-text-muted)"
                 >
                   ${hovered.value >= 1000 ? `${(hovered.value / 1000).toFixed(1)}k` : hovered.value.toFixed(0)}
@@ -177,7 +177,7 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
                   x={cx}
                   y={cy + 14}
                   textAnchor="middle"
-                  fontSize="9"
+                  fontSize="14"
                   fill="var(--color-text-muted)"
                 >
                   {positions.length === 1 ? 'position' : 'positions'}

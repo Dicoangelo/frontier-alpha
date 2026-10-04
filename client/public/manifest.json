@@ -10,16 +10,10 @@
   "scope": "/",
   "icons": [
     {
-      "src": "/icons/icon.svg",
+      "src": "/brand/metaventions-ai-mark.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
-    },
-    {
-      "src": "/vite.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
     }
   ],
   "categories": ["finance", "business", "productivity"],

@@ -235,8 +235,10 @@ export function MarketStatusStrip({ isConnected, lastUpdate }: MarketStatusStrip
           <button
             type="button"
             onClick={() => setHelpOpen((v) => !v)}
-            className="hidden sm:inline w-5 h-5 rounded-full text-theme-muted hover:text-[var(--color-accent-secondary-text)] animate-press transition-[color] duration-200"
+            className="hidden sm:inline-flex w-10 h-10 items-center justify-center rounded-full text-theme-muted hover:text-[var(--color-accent-secondary-text)] animate-press transition-[color] duration-200"
             aria-label="Show market strip help (press ? key)"
+            aria-expanded={helpOpen}
+            aria-controls="market-strip-legend"
             title="Press ? for help"
           >
             ?
@@ -246,11 +248,12 @@ export function MarketStatusStrip({ isConnected, lastUpdate }: MarketStatusStrip
 
       {helpOpen && (
         <div
-          className="absolute right-4 top-10 z-50 w-72 p-4 rounded-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-lg text-[11px] text-[var(--color-text-secondary)]"
+          className="absolute right-4 top-10 z-50 w-72 p-4 rounded-sm bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-lg text-sm leading-relaxed text-[var(--color-text-secondary)]"
+          id="market-strip-legend"
           role="dialog"
           aria-label="Market strip legend"
         >
-          <div className="mono tracking-[0.3em] uppercase text-[9px] text-[var(--color-text-muted)] mb-2">
+          <div className="font-semibold text-xs text-[var(--color-text-muted)] mb-2">
             Market Strip Legend
           </div>
           <ul className="space-y-1.5">
@@ -260,7 +263,7 @@ export function MarketStatusStrip({ isConnected, lastUpdate }: MarketStatusStrip
             <li><b className="text-[var(--color-text)]">Stream / Polling</b> — how quotes arrive: pushed over WebSocket, or fetched every 15s (quotes are 15-minute delayed either way)</li>
             <li><b className="text-[var(--color-text)]">Alerts</b> — unacknowledged risk events</li>
           </ul>
-          <div className="mt-3 text-[9px] mono tracking-[0.2em] uppercase text-[var(--color-text-muted)]">
+          <div className="mt-3 text-xs text-[var(--color-text-muted)]">
             Press ? or Esc to close
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { X, Keyboard } from 'lucide-react';
 import { ALL_SHORTCUTS } from '@/hooks/useKeyboardShortcuts';
-import { useFocusTrap } from '@/components/shared/VisuallyHidden';
+import { useDialogFocus } from '@/hooks/useDialogFocus';
 
 interface KeyboardHelpModalProps {
   isOpen: boolean;
@@ -10,7 +10,7 @@ interface KeyboardHelpModalProps {
 
 export function KeyboardHelpModal({ isOpen, onClose }: KeyboardHelpModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(modalRef as React.RefObject<HTMLElement>, isOpen);
+  useDialogFocus(modalRef, isOpen);
 
   // Close on Escape
   useEffect(() => {
@@ -28,18 +28,6 @@ export function KeyboardHelpModal({ isOpen, onClose }: KeyboardHelpModalProps) {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
-  // Lock body scroll when open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   return (
@@ -55,6 +43,7 @@ export function KeyboardHelpModal({ isOpen, onClose }: KeyboardHelpModalProps) {
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div
           ref={modalRef}
+          tabIndex={-1}
           className="glass-modal relative w-full max-w-md rounded-2xl overflow-hidden animate-enter shadow-[0_30px_80px_-20px_rgba(123,44,255,0.35)]"
           role="dialog"
           aria-modal="true"

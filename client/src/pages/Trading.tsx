@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useDeferredValue, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PaperAccountNotice } from '@/components/trading/PaperAccountNotice';
 import {
   BarChart3,
@@ -14,7 +14,7 @@ import {
   Settings,
   Shield,
   CheckCircle2,
-  Sparkles,
+  CircleDollarSign,
   X,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -31,7 +31,11 @@ import {
   useQuote,
 } from '@/hooks/useTrading';
 import { useAlpacaStatus } from '@/hooks/useIntegrationsHealth';
-import { api } from '@/api/client';
+import { api, getErrorMessage } from '@/api/client';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuthStore } from '@/stores/authStore';
+import { WorkspaceDialog } from '@/components/trading/WorkspaceDialog';
+import '@/components/trading/transaction-workspace.css';
 
 // ─── Active broker mode (read raw integrations payload for `mode`) ──────────
 // The shared `useAlpacaStatus()` selector returns only the status flag —
@@ -73,51 +77,11 @@ function useAlpacaBrokerMode(): AlpacaBrokerMode {
 
 const PAPER_INTRO_FLAG = 'paper_trading_intro_shown';
 
-// ─── Sparkline mini-chart ────────────────────────────────────────────────────
-function Sparkline({ symbol }: { symbol: string }) {
-  const points = useMemo(() => {
-    let seed = 0;
-    for (let i = 0; i < symbol.length; i++) seed += symbol.charCodeAt(i);
-    const pts: number[] = [];
-    for (let i = 0; i < 7; i++) {
-      seed = (seed * 16807) % 2147483647;
-      pts.push((seed % 100) / 100);
-    }
-    return pts;
-  }, [symbol]);
-
-  const width = 40;
-  const height = 16;
-  const min = Math.min(...points);
-  const max = Math.max(...points);
-  const range = max - min || 1;
-  const coords = points
-    .map(
-      (p, i) =>
-        `${(i / (points.length - 1)) * width},${height - ((p - min) / range) * height}`
-    )
-    .join(' ');
-  const isUp = points[points.length - 1] > points[0];
-
-  return (
-    <svg width={width} height={height} className="flex-shrink-0">
-      <polyline
-        points={coords}
-        fill="none"
-        stroke={isUp ? 'var(--color-positive)' : 'var(--color-negative)'}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 // ─── Skeleton for Trading page ───────────────────────────────────────────────
 function TradingSkeleton() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] animate-fade-in">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header skeleton */}
         <div className="mb-8">
           <div className="skeleton-shimmer h-9 w-32 rounded-lg mb-2" />
@@ -147,7 +111,16 @@ function TradingSkeleton() {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Trading() {
-  const [selectedSymbol, setSelectedSymbol] = useState('');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const linkedSymbol = searchParams.get('symbol')?.trim().toUpperCase() ?? '';
+  const [selectedSymbol, setSelectedSymbol] = useState(linkedSymbol);
+  const session = useAuthStore((state) => state.session);
+  const isReadOnly = !session;
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- follow position links on this route
+    if (linkedSymbol) setSelectedSymbol(linkedSymbol);
+  }, [linkedSymbol]);
   const [showConnectionSettings, setShowConnectionSettings] = useState(false);
 
   const {
@@ -164,26 +137,11 @@ export default function Trading() {
   const alpacaDegraded = alpacaStatus === 'degraded';
   const isSimulated = alpacaStatus === 'live' && alpacaBrokerMode === 'simulated';
 
-  const { data: positionsData, isLoading: positionsLoading, refetch: refetchPositions } = useBrokerPositions();
+  const { data: positionsData, isLoading: positionsLoading, error: positionsError, refetch: refetchPositions } = useBrokerPositions();
   const { data: marketClock } = useMarketClock();
-  const connectBroker = useConnectBroker();
-  const { data: selectedQuote } = useQuote(selectedSymbol);
-  const deferredQuotePrice = useDeferredValue(selectedQuote?.last);
+  const { data: selectedQuote, isLoading: quoteLoading, error: quoteError } = useQuote(selectedSymbol);
 
   const positions = positionsData?.positions || [];
-
-  const handleConnectDemo = async () => {
-    try {
-      await connectBroker.mutateAsync({ broker: 'mock' });
-      toast.success('Demo broker connected', 'You can now place simulated orders');
-    } catch (error) {
-      // Surface real error to user — was previously silent (only console.error).
-      toast.error(
-        'Failed to connect demo broker',
-        error instanceof Error ? error.message : 'Try again or check console.',
-      );
-    }
-  };
 
   // First-touch educational toast — only fires the first time a user submits
   // an order against the SimulatedBroker. Gated by localStorage so we don't
@@ -195,7 +153,7 @@ export default function Trading() {
         if (!window.localStorage.getItem(PAPER_INTRO_FLAG)) {
           toast.info(
             'Paper trading active',
-            'Orders fill against live quotes, positions are saved, but no real money moves. Switch to live trading via Settings → Broker.'
+            'Orders use delayed quotes and virtual funds. Your paper positions are saved to your account.'
           );
           window.localStorage.setItem(PAPER_INTRO_FLAG, '1');
         }
@@ -224,15 +182,15 @@ export default function Trading() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]" data-testid="visual-trading-ready">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="transaction-workspace min-h-full" data-testid="visual-trading-ready">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div
           className="mb-8 animate-fade-in-up"
           style={{ animationFillMode: 'both' }}
         >
           <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
-            Execution · Trading
+            Order management
           </p>
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl lg:text-3xl font-bold text-theme">
@@ -256,7 +214,7 @@ export default function Trading() {
           </div>
           <p className="text-sm text-theme-secondary mt-1">
             {isSimulated
-              ? 'Delayed market quotes, simulated fills, Supabase-persisted positions.'
+              ? 'Practice with delayed market quotes and a saved paper portfolio.'
               : 'Execute orders and manage your positions'}
           </p>
         </div>
@@ -291,13 +249,13 @@ export default function Trading() {
             className="glass-slab-floating relative overflow-hidden mb-6 rounded-xl pl-5 pr-4 py-4 flex items-start gap-3 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] shadow-[0_18px_60px_-20px_rgba(123,44,255,0.45)] animate-fade-in-up"
             style={{ animationDelay: '20ms', animationFillMode: 'both' }}
           >
-            <Sparkles className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent-text)]" aria-hidden="true" />
+            <CircleDollarSign className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-accent-text)]" aria-hidden="true" />
             <div className="flex-1">
               <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)]">
-                Paper Trading · Frontier Alpha Engine
+                Paper trading
               </p>
               <p className="text-sm mt-1 text-theme-secondary">
-                15-min delayed quotes · Supabase-persisted · $100K starting cash
+                Quotes are delayed by 15 minutes. Orders use virtual funds.
               </p>
               <PaperAccountNotice />
             </div>
@@ -305,7 +263,7 @@ export default function Trading() {
         ) : null}
 
         {/* Connection Status Banner */}
-        <div
+        {!isReadOnly && <div
           className="animate-fade-in-up"
           style={{ animationDelay: '50ms', animationFillMode: 'both' }}
         >
@@ -317,25 +275,18 @@ export default function Trading() {
               <div className="flex-1">
                 <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-warning)]">No Broker Connected</p>
                 <p className="text-sm mt-1 text-theme-secondary">
-                  Connect your Alpaca account to start trading, or use demo mode to practice.
+                  Verify your Alpaca credentials. The active trading account is configured for this workspace.
                 </p>
                 <div className="flex gap-2 mt-3">
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setShowConnectionSettings(true)}
+                    onClick={() => { if (isReadOnly) navigate('/login'); else setShowConnectionSettings(true); }}
                     leftIcon={<Settings className="w-4 h-4" />}
                   >
-                    Connect Broker
+                    Verify credentials
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={handleConnectDemo}
-                    isLoading={connectBroker.isPending}
-                  >
-                    Use Demo Mode
-                  </Button>
+
                 </div>
               </div>
             </div>
@@ -358,8 +309,8 @@ export default function Trading() {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setShowConnectionSettings(true)}
-                aria-label="Open broker connection settings"
+                onClick={() => { if (isReadOnly) navigate('/login'); else setShowConnectionSettings(true); }}
+                aria-label="Verify broker credentials"
               >
                 <Settings className="w-4 h-4" />
               </Button>
@@ -381,15 +332,19 @@ export default function Trading() {
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setShowConnectionSettings(true)}
-                aria-label="Open broker connection settings"
+                onClick={() => { if (isReadOnly) navigate('/login'); else setShowConnectionSettings(true); }}
+                aria-label="Verify broker credentials"
               >
                 <Settings className="w-4 h-4" />
               </Button>
             </div>
           )}
-        </div>
+        </div>}
 
+        {isReadOnly && <div className="workspace-notice mb-4 flex items-center justify-between gap-4">
+          <p>Sign in to view your account, preview orders, and manage positions.</p>
+          <Button size="sm" onClick={() => navigate('/login')}>Sign in</Button>
+        </div>}
         {/* Main grid */}
         <div
           className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up"
@@ -400,15 +355,16 @@ export default function Trading() {
             className="lg:col-span-2 animate-fade-in-up"
             style={{ animationDelay: '150ms', animationFillMode: 'both' }}
           >
-            {alpacaDegraded ? (
+            {(alpacaDegraded || isReadOnly) ? (
               <fieldset
                 disabled
                 aria-disabled="true"
-                title="Alpaca broker not yet configured — order submission is disabled"
+                title={isReadOnly ? 'Sign in to use the order ticket' : 'Broker is unavailable — order submission is disabled'}
                 className="border-0 p-0 m-0 min-w-0 [&_button[type=submit]]:cursor-not-allowed [&_button[type=submit]]:opacity-60"
               >
                 <TradeExecutor
                   defaultSymbol={selectedSymbol}
+                onSymbolChange={setSelectedSymbol}
                   onOrderSubmitted={handleOrderSubmittedFromExecutor}
                 />
               </fieldset>
@@ -418,6 +374,7 @@ export default function Trading() {
               // broker fills against live Polygon quotes server-side.
               <TradeExecutor
                 defaultSymbol={selectedSymbol}
+                onSymbolChange={setSelectedSymbol}
                 onOrderSubmitted={handleOrderSubmittedFromExecutor}
               />
             )}
@@ -453,7 +410,11 @@ export default function Trading() {
               >
                 <PriceChart
                   symbol={selectedSymbol}
-                  currentPrice={deferredQuotePrice}
+                  currentPrice={selectedQuote?.last}
+                  changePercent={selectedQuote?.changePercent}
+                  timestamp={selectedQuote?.timestamp}
+                  isLoading={quoteLoading}
+                  error={isReadOnly ? 'Sign in to view account quotes.' : quoteError ? getErrorMessage(quoteError) : undefined}
                 />
               </div>
             )}
@@ -472,9 +433,9 @@ export default function Trading() {
                     <BarChart3 className="w-4 h-4 text-[var(--color-accent-text)]" />
                   </div>
                   <div>
-                    <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Paper account · Holdings</p>
+                    <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">{paperTrading ? 'Paper account' : 'Broker account'} · Holdings</p>
                     <h3 className="text-sm font-bold text-theme">Positions</h3>
-                    <PaperAccountNotice variant="inline" />
+                    {paperTrading && <PaperAccountNotice variant="inline" />}
                   </div>
                 </div>
                 <Button
@@ -493,13 +454,14 @@ export default function Trading() {
                   <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin" />
                   <p className="text-sm">Loading positions...</p>
                 </div>
+              ) : positionsError ? (
+                <p role="alert" className="workspace-inline-error">{getErrorMessage(positionsError)}. Use Refresh positions to try again.</p>
               ) : positions.length === 0 ? (
                 <div className="py-8 text-center animate-fade-in-up">
                   <div
                     className="w-12 h-12 mx-auto mb-3 rounded-2xl flex items-center justify-center"
                     style={{
                       backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
-                      boxShadow: '0 0 30px rgba(123,44,255,0.2)',
                     }}
                   >
                     <Activity className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
@@ -509,7 +471,7 @@ export default function Trading() {
                   </p>
                   <p className="text-sm font-semibold text-theme">No positions</p>
                   <p className="text-xs mt-1 text-theme-secondary leading-relaxed max-w-xs mx-auto">
-                    Place trades to build your portfolio. Live P&amp;L appears here.
+                    Place trades to build your portfolio. Your position returns appear here.
                   </p>
                 </div>
               ) : (
@@ -539,7 +501,6 @@ export default function Trading() {
                               ) : (
                                 <TrendingDown className="w-3 h-3 text-[var(--color-negative)]" />
                               )}
-                              <Sparkline symbol={position.symbol} />
                             </div>
                             <p className="mono text-[11px] tabular-nums text-theme-muted mt-0.5">
                               {position.qty} sh @ ${position.avgEntryPrice.toFixed(2)}
@@ -717,16 +678,13 @@ function MarketStatusDisplay({ clock }: { clock?: { isOpen: boolean; nextOpen: s
   }, [clock]);
 
   if (!clock) {
-    return (
-      <div className="space-y-2">
-        <div className="skeleton-shimmer h-4 w-3/4 rounded" />
-        <div className="skeleton-shimmer h-3 w-1/2 rounded" />
-        <div className="skeleton-shimmer h-2 w-full rounded-full" />
-      </div>
-    );
+    return <p className="text-sm text-theme-muted">Market status is unavailable. Your account’s market clock will appear when available.</p>;
   }
 
-  const { label, isOpen, progressPercent } = getMarketPhase(now);
+  const phase = getMarketPhase(now);
+  const { label, isOpen, progressPercent } = clock.isOpen
+    ? { ...phase, label: 'Regular session', isOpen: true }
+    : { label: 'Market closed', isOpen: false, progressPercent: 0 };
   const nextEvent = clock.isOpen ? clock.nextClose : clock.nextOpen;
   const nextEventDate = nextEvent ? new Date(nextEvent) : null;
 
@@ -830,22 +788,21 @@ function ConnectionSettingsModal({
 }) {
   const [apiKey, setApiKey] = useState('');
   const [apiSecret, setApiSecret] = useState('');
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
   const [paperTrading, setPaperTrading] = useState(true);
   const connectBroker = useConnectBroker();
 
   const handleConnect = async () => {
+    if (connectBroker.isPending || !apiKey.trim() || !apiSecret.trim()) return;
+    setVerificationMessage(null);
     try {
       await connectBroker.mutateAsync({
         broker: 'alpaca',
-        apiKey,
-        apiSecret,
+        apiKey: apiKey.trim(),
+        apiSecret: apiSecret.trim(),
         paperTrading,
       });
-      toast.success(
-        'Alpaca connected',
-        paperTrading ? 'Paper trading mode active' : 'Live trading mode active',
-      );
-      onClose();
+      setVerificationMessage(`Credentials verified for your ${paperTrading ? 'paper' : 'live'} Alpaca account. The active workspace broker has not changed.`);
     } catch (error) {
       // Surface real error to user — was previously silent (only console.error).
       // Common causes: bad keys, network, Alpaca API down.
@@ -856,32 +813,20 @@ function ConnectionSettingsModal({
     }
   };
 
-  const handleConnectDemo = async () => {
-    try {
-      await connectBroker.mutateAsync({ broker: 'mock' });
-      toast.success('Demo broker connected', 'You can now place simulated orders');
-      onClose();
-    } catch (error) {
-      toast.error(
-        'Demo connection failed',
-        error instanceof Error ? error.message : 'Could not enable demo broker. Try again.',
-      );
-    }
-  };
-
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div className="relative min-h-full flex items-start sm:items-center justify-center p-4 sm:p-6 lg:p-8">
-      <div className="glass-slab rounded-2xl p-6 sm:p-8 w-full max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-y-auto animate-scale-in">
+    <WorkspaceDialog labelledBy="broker-dialog-title" onClose={onClose} busy={connectBroker.isPending}>
+      <form onSubmit={(event) => { event.preventDefault(); void handleConnect(); }} className="p-6 sm:p-8">
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted mb-1">Integrations</p>
-            <h2 className="text-lg font-bold text-theme">Broker Connection</h2>
+            <h2 id="broker-dialog-title" className="text-lg font-bold text-theme">Verify broker credentials</h2>
           </div>
           <button
+            type="button"
             onClick={onClose}
+            disabled={connectBroker.isPending}
             className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[var(--color-bg-tertiary)] rounded animate-press transition-colors duration-200"
-            aria-label="Close broker connection settings"
+            aria-label="Close broker verification"
           >
             <X className="w-5 h-5 text-theme-muted" />
           </button>
@@ -911,10 +856,10 @@ function ConnectionSettingsModal({
         <div className="space-y-4 mb-6">
           <div>
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Alpaca</p>
-            <h3 className="text-sm font-bold text-theme mt-1">Connect Account</h3>
+            <h3 className="text-sm font-bold text-theme mt-1">Verify account access</h3>
           </div>
           <p className="text-sm text-theme-secondary">
-            Get your API keys from{' '}
+            This checks your credentials without changing the workspace’s active broker. Get your API keys from{' '}
             <a
               href="https://app.alpaca.markets/paper/dashboard/overview"
               target="_blank"
@@ -931,9 +876,12 @@ function ConnectionSettingsModal({
             </label>
             <input
               id="alpaca-api-key"
-              type="text"
+              type="password"
+              autoComplete="off"
+              required
               value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              disabled={connectBroker.isPending}
+              onChange={(e) => { setApiKey(e.target.value); setVerificationMessage(null); }}
               placeholder="PK..."
               className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm"
             />
@@ -946,8 +894,11 @@ function ConnectionSettingsModal({
             <input
               id="alpaca-api-secret"
               type="password"
+              autoComplete="off"
+              required
               value={apiSecret}
-              onChange={(e) => setApiSecret(e.target.value)}
+              disabled={connectBroker.isPending}
+              onChange={(e) => { setApiSecret(e.target.value); setVerificationMessage(null); }}
               placeholder="Your secret key"
               className="block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm"
             />
@@ -957,16 +908,17 @@ function ConnectionSettingsModal({
             <input
               type="checkbox"
               checked={paperTrading}
-              onChange={(e) => setPaperTrading(e.target.checked)}
+              disabled={connectBroker.isPending}
+              onChange={(e) => { setPaperTrading(e.target.checked); setVerificationMessage(null); }}
               className="w-5 h-5 rounded border-[var(--color-border)] accent-[var(--color-accent)]"
             />
-            <span className="text-sm text-theme-secondary">Paper trading (recommended)</span>
+            <span className="text-sm text-theme-secondary">Verify a paper account</span>
           </label>
 
           {!paperTrading && (
             <div className="glass-slab-floating relative overflow-hidden rounded-xl p-3 text-sm before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-negative)]">
               <p className="text-[var(--color-negative)]">
-                <strong>Warning:</strong> Live trading uses real money. Only disable paper trading if you understand the risks.
+                This verifies access to a live account. It does not place orders or change the active trading mode.
               </p>
             </div>
           )}
@@ -981,32 +933,17 @@ function ConnectionSettingsModal({
 
           <Button
             fullWidth
-            onClick={handleConnect}
+            type="submit"
             isLoading={connectBroker.isPending}
-            disabled={!apiKey || !apiSecret}
+            disabled={!apiKey.trim() || !apiSecret.trim()}
             leftIcon={<Link2 className="w-4 h-4" />}
           >
-            Connect Alpaca
+            Verify credentials
           </Button>
         </div>
 
-        <hr className="my-6 border-[var(--color-border-light)]" />
-
-        {/* Demo Mode */}
-        <div className="text-center">
-          <p className="text-sm text-theme-secondary mb-3">
-            Or try the platform without a broker account
-          </p>
-          <Button
-            variant="outline"
-            onClick={handleConnectDemo}
-            isLoading={connectBroker.isPending}
-          >
-            Use Demo Mode
-          </Button>
-        </div>
-      </div>
-      </div>
-    </div>
+        {verificationMessage && <p role="status" className="workspace-notice">{verificationMessage}</p>}
+      </form>
+    </WorkspaceDialog>
   );
 }

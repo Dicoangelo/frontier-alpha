@@ -70,10 +70,10 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
           </div>
         </div>
 
-        {/* Sparkline, wider */}
-        <div className="rounded-sm border border-[var(--color-border-light)] bg-[var(--color-bg-tertiary)] p-4">
+        {/* Historical trend requires actual history; cost basis is not a time series. */}
+        {position.history && position.history.length > 1 && <div className="rounded-sm border border-[var(--color-border-light)] bg-[var(--color-bg-tertiary)] p-4">
           <Sparkline
-            data={position.history && position.history.length > 1 ? position.history : [position.costBasis, position.currentPrice || position.costBasis]}
+            data={position.history}
             width={320}
             height={40}
             stroke={color}
@@ -82,7 +82,7 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
             className="w-full"
             ariaLabel={`${position.symbol} price history`}
           />
-        </div>
+        </div>}
 
         {/* Detail grid */}
         <dl className="grid grid-cols-2 gap-3 text-sm">
@@ -107,7 +107,7 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
         </dl>
 
         {/* Actions */}
-        <div className="grid grid-cols-3 gap-2 pt-1">
+        <div className={`grid ${onEdit ? 'grid-cols-3' : 'grid-cols-2'} gap-2 pt-1`}>
           <button
             type="button"
             onClick={() => { onClose(); navigate(`/trade?symbol=${position.symbol}`); }}
@@ -124,14 +124,14 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
             <Bell className="w-4 h-4" />
             <span className="text-[10px] mono tracking-[0.2em] uppercase">Alert</span>
           </button>
-          <button
+          {onEdit && <button
             type="button"
-            onClick={() => { onEdit?.(position.symbol); }}
+            onClick={() => { onEdit(position.symbol); }}
             className="flex flex-col items-center gap-1.5 p-3 rounded-sm border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent-secondary-text)] hover:border-[var(--color-accent-secondary)] transition-colors animate-press"
           >
             <Pencil className="w-4 h-4" />
             <span className="text-[10px] mono tracking-[0.2em] uppercase">Edit</span>
-          </button>
+          </button>}
         </div>
 
         {onDelete && position.id && (
@@ -141,7 +141,7 @@ export function PositionSheet({ position, onClose, onEdit, onDelete }: PositionS
             className="w-full flex items-center justify-center gap-2 p-3 rounded-sm border border-[color-mix(in_srgb,var(--color-negative)_25%,transparent)] text-[var(--color-negative)] hover:bg-[color-mix(in_srgb,var(--color-negative)_8%,transparent)] transition-colors mono text-[10px] tracking-[0.3em] uppercase"
           >
             <XIcon className="w-4 h-4" />
-            Close Position
+            Remove holding
           </button>
         )}
       </div>

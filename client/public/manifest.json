@@ -4,8 +4,8 @@
   "description": "Portfolio analytics, factor research, and clear risk insights.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f6f8fb",
-  "theme_color": "#285cc4",
+  "background_color": "#f1f4f7",
+  "theme_color": "#176b96",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [

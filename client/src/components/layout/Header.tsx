@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Settings, Menu, HelpCircle, Moon, Sun, LineChart } from 'lucide-react';
+import { Settings, Menu, HelpCircle, Moon, Sun, LineChart, Search, PanelRight } from 'lucide-react';
 import { AlertDropdown } from '@/components/alerts/AlertDropdown';
 import { useThemeStore } from '@/stores/themeStore';
 import { useFeedStatus } from '@/hooks/useFeedStatus';
@@ -66,9 +66,12 @@ interface HeaderProps {
   onMenuClick?: () => void;
   onHelpClick?: () => void;
   sidebarOpen?: boolean;
+  onSearchClick?: () => void;
+  onContextClick?: () => void;
+  contextOpen?: boolean;
 }
 
-export function Header({ onMenuClick, onHelpClick, sidebarOpen = false }: HeaderProps) {
+export function Header({ onMenuClick, onHelpClick, onSearchClick, onContextClick, contextOpen, sidebarOpen = false }: HeaderProps) {
   const { resolved, toggle } = useThemeStore();
   const location = useLocation();
   const pageTitle = pageTitleMap[location.pathname] || '';
@@ -86,10 +89,13 @@ export function Header({ onMenuClick, onHelpClick, sidebarOpen = false }: Header
         </button>
         <Link to="/" className="workspace-brand" aria-label="Frontier Alpha home">
           <span className="workspace-brand-mark"><LineChart size={21} aria-hidden="true" /></span>
-          <span className="workspace-brand-copy"><strong>Frontier Alpha</strong><span>by Metaventions AI</span></span>
+          <span className="workspace-brand-copy"><strong>Frontier Alpha</strong><span>Investment workspace</span></span>
         </Link>
         {pageTitle && <span className="workspace-current-page">{pageTitle}</span>}
       </div>
+      <button type="button" className="workspace-search" onClick={onSearchClick} aria-label="Search pages and commands" aria-haspopup="dialog">
+        <Search size={15} aria-hidden="true" /><span>Search workspace</span><kbd>⌘ K</kbd>
+      </button>
       <div className="workspace-header-actions">
         {!(quote == null && !isQuoteLoading) && (
           <div
@@ -114,11 +120,12 @@ export function Header({ onMenuClick, onHelpClick, sidebarOpen = false }: Header
           <span className="workspace-status-dot" style={{ background: feedColor }} aria-hidden="true" />
           <span aria-hidden="true">{feed.label}</span>
         </div>
+        <button type="button" className="workspace-icon-button" aria-label="Toggle portfolio pulse" title="Portfolio pulse" aria-expanded={contextOpen} onClick={onContextClick}><PanelRight size={18} /></button>
         <AlertDropdown />
         <button type="button" onClick={toggle} className="workspace-icon-button" aria-label={`Switch to ${resolved === 'dark' ? 'light' : 'dark'} mode`} title={`${resolved === 'dark' ? 'Light' : 'Dark'} mode`}>
           {resolved === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
         </button>
-        <button type="button" onClick={onHelpClick} className="workspace-icon-button workspace-help-button" aria-label="Open help (press ? key)" title="Help (press ?)">
+        <button type="button" onClick={onHelpClick} className="workspace-icon-button workspace-help-button" aria-label="Open help (press H key)" title="Help (press H)">
           <HelpCircle size={19} />
         </button>
         <Link to="/settings" className="workspace-icon-button workspace-settings-button" aria-label="Settings"><Settings size={19} aria-hidden="true" /></Link>

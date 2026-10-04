@@ -62,7 +62,7 @@ export function Button({
   return (
     <button
       className={`
-        ${variants[variant]} ${sizes[size]}
+        frontier-button frontier-button-${size} ${variants[variant]} ${sizes[size]}
         rounded-lg font-medium
         transition-[background-color,color,border-color,box-shadow] duration-150
         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none
@@ -72,6 +72,8 @@ export function Button({
         ${className}
       `}
       disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
+      type="button"
       {...props}
     >
       {isLoading ? (

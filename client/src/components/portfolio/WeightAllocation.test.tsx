@@ -39,4 +39,12 @@ describe('WeightAllocation', () => {
     fireEvent.mouseLeave(screen.getByLabelText('AAA: 60.0%'));
     expect(within(chart).getByText('2')).toBeInTheDocument();
   });
+  it('labels normalized invested-holdings weights clearly and supports keyboard inspection', () => {
+    render(<WeightAllocation positions={positions.map((p, i) => ({ ...p, weight: i === 0 ? 0.4 : 0.5 }))} />);
+    expect(screen.getByText('Invested holdings · cash excluded')).toBeInTheDocument();
+    expect(screen.getByLabelText('AAA: 44.4%')).toBeInTheDocument();
+    fireEvent.focus(screen.getByRole('button', { name: 'Inspect AAA allocation: 44.4% of holdings, $1,000.00' }));
+    expect(within(screen.getByRole('img')).getByText('$1.0k')).toBeInTheDocument();
+  });
+
 });

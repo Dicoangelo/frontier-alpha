@@ -1,9 +1,11 @@
 import React from 'react';
+import { WorkspaceDialog } from './WorkspaceDialog';
+import './transaction-workspace.css';
 import { X, AlertCircle, AlertTriangle, Zap } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { Badge } from '@/components/shared/Badge';
 import { Button } from '@/components/shared/Button';
-import type { OrderPreview, OrderValidation } from '@/hooks/useTrading';
+import type { OrderPreview, OrderValidation, OrderRequest } from '@/hooks/useTrading';
 
 interface OrderPreviewModalProps {
   preview: OrderPreview;
@@ -12,6 +14,8 @@ interface OrderPreviewModalProps {
   isSubmitting: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  error?: string | null;
+  request?: OrderRequest;
 }
 
 export const OrderPreviewModal = React.memo(function OrderPreviewModal({
@@ -21,6 +25,8 @@ export const OrderPreviewModal = React.memo(function OrderPreviewModal({
   isSubmitting,
   onClose,
   onConfirm,
+  error,
+  request,
 }: OrderPreviewModalProps) {
   const impactColor =
     preview.marketImpact === 'high'
@@ -30,18 +36,18 @@ export const OrderPreviewModal = React.memo(function OrderPreviewModal({
       : 'var(--color-positive)';
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md p-6 relative overflow-hidden">
-        <div className="sovereign-bar absolute left-0 right-0 top-0" aria-hidden="true" />
+    <WorkspaceDialog labelledBy="order-preview-title" onClose={onClose} busy={isSubmitting}>
+      <Card className="w-full p-6 relative overflow-hidden">
         <div className="flex items-center justify-between mb-4 pt-1">
           <div>
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
               Preview
             </p>
-            <h3 className="mt-0.5 text-lg font-semibold text-theme">Order Preview</h3>
+            <h3 id="order-preview-title" className="mt-0.5 text-lg font-semibold text-theme">Review order</h3>
           </div>
           <button
             onClick={onClose}
+            disabled={isSubmitting}
             className="p-1.5 min-h-[36px] min-w-[36px] hover:bg-[var(--color-bg-secondary)] rounded-lg animate-press transition-[background-color] duration-200"
             aria-label="Close order preview"
           >
@@ -68,10 +74,16 @@ export const OrderPreviewModal = React.memo(function OrderPreviewModal({
             </div>
             <div className="flex justify-between">
               <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Order Type</span>
-              <span className="font-semibold capitalize text-theme">{preview.type}</span>
+              <span className="font-semibold capitalize text-theme">{preview.type.replaceAll('_', ' ')}</span>
             </div>
           </div>
 
+          {request && <dl className="grid grid-cols-2 gap-2 text-sm text-theme-secondary">
+            <dt>Time in force</dt><dd className="text-right uppercase">{request.timeInForce}</dd>
+            {request.limitPrice != null && <><dt>Limit price</dt><dd className="text-right mono">${request.limitPrice.toFixed(2)}</dd></>}
+            {request.stopPrice != null && <><dt>Stop price</dt><dd className="text-right mono">${request.stopPrice.toFixed(2)}</dd></>}
+            <dt>Extended hours</dt><dd className="text-right">{request.extendedHours ? 'Enabled' : 'Off'}</dd>
+          </dl>}
           {/* Price Details */}
           <div className="glass-slab-floating rounded-xl p-4 space-y-2">
             <div className="flex justify-between text-sm">
@@ -144,11 +156,14 @@ export const OrderPreviewModal = React.memo(function OrderPreviewModal({
             </>
           )}
 
+          {error && <p role="alert" className="workspace-inline-error">{error}</p>}
+
           {/* Actions */}
           <div className="flex gap-2 pt-2">
             <Button
               variant="outline"
               onClick={onClose}
+              disabled={isSubmitting}
               className="flex-1 animate-press"
             >
               Cancel
@@ -156,7 +171,7 @@ export const OrderPreviewModal = React.memo(function OrderPreviewModal({
             <Button
               variant={side === 'buy' ? 'primary' : 'danger'}
               onClick={onConfirm}
-              disabled={!!(validation && !validation.valid)}
+              disabled={!validation?.valid || isSubmitting}
               isLoading={isSubmitting}
               className={`flex-1 animate-press animate-lift ${side === 'buy' ? 'bg-[image:var(--gradient-sovereign)]' : ''}`}
             >
@@ -165,6 +180,6 @@ export const OrderPreviewModal = React.memo(function OrderPreviewModal({
           </div>
         </div>
       </Card>
-    </div>
+    </WorkspaceDialog>
   );
 });

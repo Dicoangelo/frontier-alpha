@@ -54,3 +54,18 @@ button[class*="gradient-sovereign"]:not(:focus-visible) { box-shadow: none; }
 ::selection { color: var(--color-text); background: var(--color-accent-light); }
 
 :is(.glass-slab,.glass-slab-floating,.glass-liquid-subtle).rounded-sm { border-radius: 10px; }
+
+/* Consistent data density and controls across the analytical views. */
+.workspace-shell .surface-card { box-shadow:0 1px 2px rgb(24 43 58 / .025); }
+.workspace-shell :is(.glass-slab,.glass-slab-floating,.glass-liquid-subtle) { border-radius:8px; }
+.workspace-shell table { font-variant-numeric:tabular-nums; }
+.workspace-shell table th { font-weight:550; font-size:11px; text-transform:none; letter-spacing:0; color:var(--color-text-secondary); background:var(--color-bg); }
+.workspace-shell table td { font-size:12px; }
+.workspace-shell table tbody tr:hover { background:color-mix(in srgb,var(--color-accent) 3%,var(--color-bg-secondary)); }
+.workspace-table-scroll { min-width:0; position:relative; }
+.workspace-table-viewport { overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
+.workspace-table-scroll-control { display:flex; align-items:center; gap:12px; padding:7px 10px; border-bottom:1px solid var(--color-border-light); background:var(--color-bg); color:var(--color-text-muted); font-size:10px; }
+.workspace-table-scroll-control input { min-width:80px; flex:1; height:16px; accent-color:var(--color-accent); cursor:ew-resize; }
+.workspace-table-scroll-control span { white-space:nowrap; }
+.workspace-shell input[type="range"] { accent-color:var(--color-accent); }
+.workspace-shell input[type="checkbox"] { accent-color:var(--color-accent); }

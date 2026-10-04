@@ -18,7 +18,7 @@ function getSystemTheme(): 'light' | 'dark' {
 function applyTheme(resolved: 'light' | 'dark') {
   const root = document.documentElement;
   const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-  if (themeColor) themeColor.content = resolved === 'dark' ? '#171d26' : '#f6f8fb';
+  if (themeColor) themeColor.content = resolved === 'dark' ? '#101923' : '#f1f4f7';
   if (resolved === 'dark') {
     root.classList.add('dark');
   } else {

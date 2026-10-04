@@ -46,6 +46,7 @@ export const ALL_SHORTCUTS = [
 function isInputFocused(): boolean {
   const target = document.activeElement as HTMLElement | null;
   if (!target) return false;
+  if (target.closest('[role="dialog"]')) return true;
   return (
     target.tagName === 'INPUT' ||
     target.tagName === 'TEXTAREA' ||

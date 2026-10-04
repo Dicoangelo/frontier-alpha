@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { Card } from '@/components/shared/Card';
 import { useThemeStore } from '@/stores/themeStore';
 import type { Position } from '@/types';
 
@@ -82,13 +81,14 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
   if (positions.length === 0) return null;
 
   return (
-    <Card title="Weight allocation">
-      <div className="flex flex-wrap items-center justify-center gap-5">
+    <section className="desk-panel allocation-panel" aria-labelledby="allocation-heading">
+      <header className="allocation-header"><h2 id="allocation-heading">Holdings mix</h2><p>Invested holdings · cash excluded</p></header>
+      <div className="allocation-body">
         {/* SVG Donut */}
-        <div className="relative flex-shrink-0" style={{ minWidth: 160, minHeight: 160 }}>
+        <div className="relative flex-shrink-0" style={{ width: 136, height: 136, flexShrink: 0 }}>
           <svg
-            width={SIZE}
-            height={SIZE}
+            width="136"
+            height="136"
             viewBox={`0 0 ${SIZE} ${SIZE}`}
             aria-label="Portfolio weight allocation donut chart"
             role="img"
@@ -188,28 +188,31 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
         </div>
 
         {/* Legend */}
-        <div className="flex flex-col gap-2 flex-1 basis-36 min-w-0">
+        <div className="allocation-legend">
           {segments.map((seg) => (
-            <div
+            <button
               key={seg.symbol}
-              className={`flex items-center gap-2 cursor-pointer rounded px-2 py-1 transition-colors ${hoveredSymbol === seg.symbol ? 'bg-[var(--color-bg-tertiary)]' : ''}`}
+              type="button"
+              className={`allocation-row ${hoveredSymbol === seg.symbol ? 'is-active' : ''}`}
               onMouseEnter={() => setHoveredSymbol(seg.symbol)}
               onMouseLeave={() => setHoveredSymbol(null)}
+              onFocus={() => setHoveredSymbol(seg.symbol)}
+              onBlur={() => setHoveredSymbol(null)}
+              onClick={() => setHoveredSymbol(seg.symbol)}
+              aria-label={`Inspect ${seg.symbol} allocation: ${(seg.weight * 100).toFixed(1)}% of holdings, ${seg.value.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}`}
             >
               <div
                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                 style={{ backgroundColor: seg.color }}
               />
-              <span className="text-xs font-medium text-[var(--color-text)] truncate flex-1">
-                {seg.symbol}
-              </span>
-              <span className="text-xs text-[var(--color-text-muted)] flex-shrink-0">
-                {(seg.weight * 100).toFixed(1)}%
-              </span>
-            </div>
+              <span className="allocation-symbol">{seg.symbol}</span>
+              <span className="allocation-bar"><i style={{ width: `${Math.max(0, Math.min(100, seg.weight * 100))}%`, backgroundColor: seg.color }} /></span>
+              <span className="allocation-weight">{(seg.weight * 100).toFixed(1)}%</span>
+            </button>
           ))}
         </div>
       </div>
-    </Card>
+      <footer className="allocation-footer">Percentages are normalized across holdings, excluding cash. Select a symbol to inspect its value.</footer>
+    </section>
   );
 });

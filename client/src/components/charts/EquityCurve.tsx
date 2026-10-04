@@ -1,23 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useThemeStore } from '@/stores/themeStore';
-import { sliceSeriesByDays, type EquityPoint } from '@/lib/equitySeries';
+import type { EquityPoint } from '@/lib/equitySeries';
 import type { EquitySeriesStatus } from '@/hooks/useEquityHistory';
 
 type DataPoint = EquityPoint;
-
+type Timeframe = '1W' | '1M' | '3M' | '6M' | '1Y' | 'YTD' | 'ALL';
 interface EquityCurveProps {
   portfolioValue: number;
-  /**
-   * Real dated series (see useEquityHistory). When absent and no return
-   * arrays are given, the chart renders an honest empty state — never a
-   * synthetic curve. The seeded random walk that used to fill this gap is in
-   * .graveyard/EquityCurve-mock.ts.
-   */
   series?: EquityPoint[] | null;
   seriesStatus?: EquitySeriesStatus;
   portfolioReturns?: number[];
   benchmarkReturns?: number[];
-  timeframe?: '1W' | '1M' | '3M' | '6M' | '1Y' | 'YTD' | 'ALL';
+  timeframe?: Timeframe;
 }
 
 // Generate historical data points from returns
@@ -57,525 +50,112 @@ function generateDataPoints(
   return tempPoints;
 }
 
-// Read resolved chart colors from CSS variables (cached per theme change)
-function readChartColors() {
-  const cs = getComputedStyle(document.documentElement);
-  const v = (name: string) => cs.getPropertyValue(name).trim();
-  const chartPrimary = v('--chart-primary');
-  const bg = v('--color-bg');
-  return {
-    grid: v('--color-border'),
-    // Use full theme text color for axis labels — muted reads as broken on
-    // dark backgrounds (per user feedback 2026-05-10). Theme-aware: white-ish
-    // in dark mode, dark in light mode.
-    label: v('--color-text'),
-    benchmark: v('--color-text-muted'),
-    line: chartPrimary,
-    gradientTop: chartPrimary + '40', // ~25% opacity via hex alpha
-    gradientBottom: 'transparent',
-    dot: chartPrimary,
-    dotStroke: bg,
-  };
+const TIMEFRAMES: Timeframe[] = ['1W', '1M', '3M', '6M', '1Y', 'YTD', 'ALL'];
+const PERIOD_DAYS: Record<Exclude<Timeframe, 'YTD' | 'ALL'>, number> = { '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365 };
+const dateLabel = (date: string, year = false) => new Date(`${date.slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', ...(year ? { year: 'numeric' } : {}) });
+const money = (value: number) => value.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const percent = (value: number) => `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
+
+// Windows end at the latest available daily close; the actual range is always
+// visible. Include one real anchor before the boundary for return calculations.
+function selectWindow(points: DataPoint[], timeframe: Timeframe): DataPoint[] {
+  if (points.length < 2 || timeframe === 'ALL') return points;
+  const latest = new Date(`${points[points.length - 1].date.slice(0, 10)}T12:00:00Z`);
+  const cutoff = timeframe === 'YTD'
+    ? `${latest.getUTCFullYear()}-01-01`
+    : new Date(latest.getTime() - PERIOD_DAYS[timeframe] * 86400000).toISOString().slice(0, 10);
+  const index = points.findIndex(p => p.date >= cutoff);
+  return index < 0 ? [] : points.slice(points[index].date === cutoff ? index : Math.max(0, index - 1));
 }
 
-const TIMEFRAME_DAYS: Record<string, number> = {
-  '1W': 7,
-  '1M': 30,
-  '3M': 90,
-  '6M': 180,
-  '1Y': 365,
-  'YTD': Math.floor((new Date().getTime() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (1000 * 60 * 60 * 24)),
-  'ALL': 365,
-};
-
-export const EquityCurve = React.memo(function EquityCurve({
-  portfolioValue,
-  series = null,
-  seriesStatus = 'idle',
-  portfolioReturns = [],
-  benchmarkReturns = [],
-  timeframe = '3M',
-}: EquityCurveProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+export const EquityCurve = React.memo(function EquityCurve({ portfolioValue, series = null, seriesStatus = 'idle', portfolioReturns = [], benchmarkReturns = [], timeframe = '3M' }: EquityCurveProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [selectedTimeframe, setSelectedTimeframe] = useState(timeframe);
-  const [hoveredPoint, setHoveredPoint] = useState<DataPoint | null>(null);
-  const [hoveredX, setHoveredX] = useState<number | null>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  const [animationProgress, setAnimationProgress] = useState(0);
-  const animationRef = useRef<number | null>(null);
-  const isDark = useThemeStore((s) => s.resolved === 'dark');
+  const [width, setWidth] = useState(640);
+  const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe>(timeframe);
+  const [inspection, setInspection] = useState<number | null>(null);
 
-  // Cache resolved CSS colors — only recompute on theme change, not per animation frame
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const chartColors = useMemo(() => readChartColors(), [isDark]);
-
-  const days = TIMEFRAME_DAYS[selectedTimeframe];
-
-  // Stable reference to portfolioValue — only update when it changes significantly (>1%)
-  const stableValue = useRef(portfolioValue);
-  if (Math.abs(portfolioValue - stableValue.current) / stableValue.current > 0.01) {
-    stableValue.current = portfolioValue;
-  }
-
-  // Data — a real dated series sliced to the timeframe, else a reconstruction
-  // from return arrays, else EMPTY. No mock path.
-  const data = useMemo<DataPoint[]>(() => {
-    if (series && series.length >= 2) return sliceSeriesByDays(series, days);
-    const val = stableValue.current;
+  const data = useMemo(() => {
+    if (series && series.length >= 2) return selectWindow(series, selectedTimeframe);
+    const now = new Date();
+    const days = selectedTimeframe === 'ALL' ? Math.max(portfolioReturns.length, benchmarkReturns.length)
+      : selectedTimeframe === 'YTD' ? Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000) + 1
+      : PERIOD_DAYS[selectedTimeframe];
     return portfolioReturns.length > 0 && benchmarkReturns.length > 0
-      ? generateDataPoints(val, portfolioReturns, benchmarkReturns, days)
-      : [];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [series, stableValue.current, portfolioReturns, benchmarkReturns, days]);
-
+      ? generateDataPoints(portfolioValue, portfolioReturns, benchmarkReturns, days) : [];
+  }, [series, selectedTimeframe, portfolioReturns, benchmarkReturns, portfolioValue]);
   const hasData = data.length >= 2;
   const isLoading = seriesStatus === 'loading' && !hasData;
+  const first = data[0];
+  const last = data[data.length - 1];
+  const canCalculate = hasData && first.portfolio !== 0 && first.benchmark !== 0;
+  const totalReturn = canCalculate ? (last.portfolio / first.portfolio - 1) * 100 : 0;
+  const alpha = canCalculate ? totalReturn - (last.benchmark / first.benchmark - 1) * 100 : 0;
+  const activeIndex = inspection === null ? data.length - 1 : Math.max(0, Math.min(inspection, data.length - 1));
+  const activePoint = data[activeIndex];
 
-  // Calculate metrics
-  const { totalReturn, alpha } = useMemo(() => {
-    const startValue = data[0]?.portfolio || portfolioValue;
-    const endValue = data[data.length - 1]?.portfolio || portfolioValue;
-    const tr = ((endValue - startValue) / startValue) * 100;
-
-    const benchmarkStart = data[0]?.benchmark || portfolioValue;
-    const benchmarkEnd = data[data.length - 1]?.benchmark || portfolioValue;
-    const benchmarkReturn = ((benchmarkEnd - benchmarkStart) / benchmarkStart) * 100;
-
-    return { totalReturn: tr, alpha: tr - benchmarkReturn };
-  }, [data, portfolioValue]);
-
-  // Resize observer
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
-        setDimensions({
-          width: entry.contentRect.width,
-          height: Math.max(200, entry.contentRect.height),
-        });
-      }
+    const observer = new ResizeObserver(entries => {
+      if (entries[0]?.contentRect.width) setWidth(Math.max(280, entries[0].contentRect.width));
     });
-
     observer.observe(container);
     return () => observer.disconnect();
   }, []);
 
-  // Animate chart on timeframe change only (not on value ticks)
-  useEffect(() => {
-    setAnimationProgress(0);
-    const startTime = performance.now();
-    const duration = 800;
-
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setAnimationProgress(eased);
-
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animate);
-      }
-    };
-
-    animationRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [selectedTimeframe]);
-
-  // Draw chart
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || dimensions.width === 0) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const colors = chartColors;
-
-    // Set canvas size
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = dimensions.width * dpr;
-    canvas.height = dimensions.height * dpr;
-    canvas.style.width = `${dimensions.width}px`;
-    canvas.style.height = `${dimensions.height}px`;
-    ctx.scale(dpr, dpr);
-
-    // Clear
-    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
-
-    if (data.length < 2) return;
-
-    // Calculate bounds
-    const padding = { top: 20, right: 20, bottom: 30, left: 60 };
-    const chartWidth = dimensions.width - padding.left - padding.right;
-    const chartHeight = dimensions.height - padding.top - padding.bottom;
-
-    const allValues = data.flatMap(d => [d.portfolio, d.benchmark]);
-    const minValue = Math.min(...allValues) * 0.98;
-    const maxValue = Math.max(...allValues) * 1.02;
-
-    const xScale = (i: number) => padding.left + (i / (data.length - 1)) * chartWidth;
-    const yScale = (v: number) => padding.top + chartHeight - ((v - minValue) / (maxValue - minValue)) * chartHeight;
-
-    // Draw grid
-    ctx.strokeStyle = colors.grid;
-    ctx.lineWidth = 1;
-
-    // Horizontal grid lines
-    const yTicks = 5;
-    for (let i = 0; i <= yTicks; i++) {
-      const y = padding.top + (i / yTicks) * chartHeight;
-      ctx.beginPath();
-      ctx.moveTo(padding.left, y);
-      ctx.lineTo(dimensions.width - padding.right, y);
-      ctx.stroke();
-
-      // Y-axis labels
-      const value = maxValue - (i / yTicks) * (maxValue - minValue);
-      ctx.fillStyle = colors.label;
-      ctx.font = '11px system-ui';
-      ctx.textAlign = 'right';
-      ctx.fillText(`$${(value / 1000).toFixed(0)}k`, padding.left - 8, y + 4);
-    }
-
-    // Calculate how many points to draw based on animation progress
-    const pointsToDraw = Math.floor(data.length * animationProgress);
-    const animatedData = data.slice(0, Math.max(2, pointsToDraw));
-
-    // Draw benchmark line (dashed)
-    ctx.strokeStyle = colors.benchmark;
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([4, 4]);
-    ctx.globalAlpha = animationProgress;
-    ctx.beginPath();
-    animatedData.forEach((point, i) => {
-      const x = xScale(i);
-      const y = yScale(point.benchmark);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.globalAlpha = 1;
-
-    // Draw portfolio line with gradient
-    const gradient = ctx.createLinearGradient(0, padding.top, 0, dimensions.height - padding.bottom);
-    gradient.addColorStop(0, colors.gradientTop);
-    gradient.addColorStop(1, colors.gradientBottom);
-
-    // Fill area under portfolio line
-    ctx.beginPath();
-    ctx.moveTo(xScale(0), yScale(animatedData[0].portfolio));
-    animatedData.forEach((point, i) => {
-      ctx.lineTo(xScale(i), yScale(point.portfolio));
-    });
-    ctx.lineTo(xScale(animatedData.length - 1), dimensions.height - padding.bottom);
-    ctx.lineTo(xScale(0), dimensions.height - padding.bottom);
-    ctx.closePath();
-    ctx.fillStyle = gradient;
-    ctx.fill();
-
-    // Draw portfolio line
-    ctx.strokeStyle = colors.line;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    animatedData.forEach((point, i) => {
-      const x = xScale(i);
-      const y = yScale(point.portfolio);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // Draw animated endpoint dot
-    if (animatedData.length > 0 && animationProgress < 1) {
-      const lastPoint = animatedData[animatedData.length - 1];
-      const lastX = xScale(animatedData.length - 1);
-      const lastY = yScale(lastPoint.portfolio);
-
-      ctx.beginPath();
-      ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
-      ctx.fillStyle = colors.dot;
-      ctx.fill();
-      ctx.strokeStyle = colors.dotStroke;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    // X-axis labels
-    const labelCount = Math.min(6, data.length);
-    const step = Math.floor(data.length / labelCount);
-    ctx.fillStyle = colors.label;
-    ctx.font = '11px system-ui';
-    ctx.textAlign = 'center';
-
-    for (let i = 0; i < data.length; i += step) {
-      const date = new Date(data[i].date);
-      const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      ctx.fillText(label, xScale(i), dimensions.height - 8);
-    }
-
-    // Draw crosshair at hovered position
-    if (hoveredX !== null && hoveredX >= padding.left && hoveredX <= dimensions.width - padding.right) {
-      ctx.save();
-      ctx.strokeStyle = isDark ? 'color-mix(in srgb, var(--color-text) 30%, transparent)' : 'color-mix(in srgb, var(--color-text) 20%, transparent)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(hoveredX, padding.top);
-      ctx.lineTo(hoveredX, dimensions.height - padding.bottom);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.restore();
-    }
-
-  }, [data, dimensions, animationProgress, isDark, hoveredX]);
-
-  // Shared logic for updating hovered state from a canvas X coordinate
-  const updateHoverFromX = (clientX: number) => {
-    if (!canvasRef.current || data.length === 0) return;
-
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const padding = { left: 60, right: 20 };
-    const chartWidth = dimensions.width - padding.left - padding.right;
-
-    const relativeX = x - padding.left;
-    const index = Math.round((relativeX / chartWidth) * (data.length - 1));
-
-    setHoveredX(x);
-
-    if (index >= 0 && index < data.length) {
-      setHoveredPoint(data[index]);
-    }
+  const height = 224;
+  const padding = { left: 53, right: 12, top: 14, bottom: 28 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const values = data.flatMap(point => [point.portfolio, point.benchmark]);
+  const lowest = hasData ? Math.min(...values) : 0;
+  const highest = hasData ? Math.max(...values) : 1;
+  const buffer = Math.max((highest - lowest) * 0.15, Math.abs(highest) * 0.005, 1);
+  const min = lowest - buffer;
+  const max = highest + buffer;
+  const x = (index: number) => padding.left + index / Math.max(1, data.length - 1) * plotWidth;
+  const y = (value: number) => padding.top + (max - value) / (max - min) * plotHeight;
+  const line = (key: 'portfolio' | 'benchmark') => data.map((point, index) => `${index === 0 ? 'M' : 'L'}${x(index)},${y(point[key])}`).join(' ');
+  const tickCount = width < 440 ? 3 : 5;
+  const tickIndices = [...new Set(Array.from({ length: tickCount }, (_, i) => Math.round(i * (data.length - 1) / (tickCount - 1))))];
+  const inspectAt = (clientX: number, rect: DOMRect) => {
+    const relative = (clientX - rect.left) / rect.width * width;
+    setInspection(Math.max(0, Math.min(data.length - 1, Math.round((relative - padding.left) / plotWidth * (data.length - 1)))));
   };
-
-  // Mouse handling for hover
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    updateHoverFromX(e.clientX);
-  };
-
-  const handleMouseLeave = () => {
-    setHoveredPoint(null);
-    setHoveredX(null);
-  };
-
-  // Touch handling — mirrors mouse hover behavior
-  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    if (touch) updateHoverFromX(touch.clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    if (touch) updateHoverFromX(touch.clientX);
-  };
-
-  const handleTouchEnd = () => {
-    setHoveredPoint(null);
-    setHoveredX(null);
-  };
+  const tone = (value: number) => value > 0 ? 'var(--color-positive)' : value < 0 ? 'var(--color-negative)' : 'var(--color-text)';
 
   return (
-    <section
-      className="glass-slab rounded-2xl p-4 sm:p-6 animate-enter"
-      aria-label="Portfolio Performance"
-    >
-      {/* Title row */}
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-        <div>
-          <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">
-            Equity Curve
-          </p>
-          <h3 className="text-lg font-semibold text-theme mt-1">Portfolio Performance</h3>
+    <section className="desk-panel equity-panel" aria-label="Portfolio Performance">
+      <header className="equity-header">
+        <div><h2>Portfolio performance</h2><p>{hasData ? `${dateLabel(first.date)} – ${dateLabel(last.date, true)}` : 'Daily closes · S&P 500 benchmark'}</p></div>
+        <div className="equity-periods" role="group" aria-label="Chart timeframe">
+          {TIMEFRAMES.map(period => <button type="button" key={period} aria-pressed={selectedTimeframe === period} onClick={() => { setSelectedTimeframe(period); setInspection(null); }}>{period === 'ALL' ? 'All' : period}</button>)}
         </div>
-
-        {/* Timeframe selector — segmented control */}
-        <div
-          className="flex gap-1 glass-slab-floating rounded-lg p-1"
-          role="group"
-          aria-label="Chart timeframe"
-        >
-          {(['1W', '1M', '3M', '6M', '1Y', 'YTD'] as const).map((tf) => (
-            <button
-              key={tf}
-              onClick={() => setSelectedTimeframe(tf)}
-              className={`px-3 py-1.5 min-h-[32px] text-[10px] mono tracking-[0.2em] uppercase rounded-md animate-press transition-[color,background-color] duration-200 touch-manipulation ${
-                selectedTimeframe === tf
-                  ? 'bg-[var(--color-accent-light)] text-[var(--color-accent-text)]'
-                  : 'text-theme-secondary hover:text-theme'
-              }`}
-              aria-pressed={selectedTimeframe === tf}
-            >
-              {tf}
-            </button>
-          ))}
-        </div>
+      </header>
+      <div className="equity-metrics">
+        <div><span>Period return</span><strong style={{ color: canCalculate ? tone(totalReturn) : 'var(--color-text-muted)' }}>{canCalculate ? percent(totalReturn) : '—'}</strong></div>
+        <div><span>vs S&amp;P 500</span><strong style={{ color: canCalculate ? tone(alpha) : 'var(--color-text-muted)' }}>{canCalculate ? percent(alpha) : '—'}</strong></div>
+        <div className="equity-observation" aria-live="polite"><span>{activePoint ? dateLabel(activePoint.date) : 'Latest close'}</span><strong>{activePoint ? money(activePoint.portfolio) : '—'}</strong></div>
       </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
-        <div>
-          <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">
-            Total Return
-          </p>
-          <p
-            className="text-xl font-bold tabular-nums mt-1"
-            style={{
-              color: !hasData ? 'var(--color-text-muted)' : totalReturn >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
-            }}
-          >
-            {hasData ? `${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(2)}%` : '—'}
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">
-            vs S&amp;P 500
-          </p>
-          <p
-            className="text-xl font-bold tabular-nums mt-1"
-            style={{ color: !hasData ? 'var(--color-text-muted)' : alpha >= 0 ? 'var(--color-positive)' : 'var(--color-negative)' }}
-          >
-            {hasData ? `${alpha >= 0 ? '+' : ''}${alpha.toFixed(2)}%` : '—'}
-          </p>
-        </div>
-        {hoveredPoint && (
-          <div className="border-l pl-3 border-theme-light col-span-2 sm:col-span-1">
-            <p className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted">
-              {new Date(hoveredPoint.date).toLocaleDateString()}
-            </p>
-            <p className="text-lg font-semibold text-theme tabular-nums mt-1">
-              $
-              {hoveredPoint.portfolio.toLocaleString(undefined, {
-                maximumFractionDigits: 0,
-              })}
-            </p>
-          </div>
-        )}
+      <div ref={containerRef} className="equity-plot">
+        {hasData ? <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Portfolio equity curve showing ${percent(totalReturn)} return over ${selectedTimeframe}; ${dateLabel(first.date, true)} to ${dateLabel(last.date, true)}`} onMouseMove={event => inspectAt(event.clientX, event.currentTarget.getBoundingClientRect())} onMouseLeave={() => setInspection(null)}>
+          {Array.from({ length: 5 }, (_, i) => {
+            const value = max - i / 4 * (max - min);
+            const pointY = y(value);
+            return <g key={i}><line x1={padding.left} y1={pointY} x2={width - padding.right} y2={pointY} className="equity-grid-line" /><text x={padding.left - 9} y={pointY + 4} textAnchor="end" className="equity-axis">{Math.abs(value) >= 1000 && max - min >= 1000 ? `$${(value / 1000).toFixed(max - min < 10000 ? 1 : 0)}k` : money(value)}</text></g>;
+          })}
+          <path d={`${line('portfolio')} L${x(data.length - 1)},${height - padding.bottom} L${x(0)},${height - padding.bottom} Z`} className="equity-area" />
+          <path d={line('benchmark')} className="equity-benchmark" />
+          <path d={line('portfolio')} className="equity-line" />
+          {tickIndices.map(index => <text key={index} x={x(index)} y={height - 6} textAnchor={index === 0 ? 'start' : index === data.length - 1 ? 'end' : 'middle'} className="equity-axis">{dateLabel(data[index].date)}</text>)}
+          {activePoint && <g><line x1={x(activeIndex)} y1={padding.top} x2={x(activeIndex)} y2={height - padding.bottom} className="equity-crosshair" /><circle cx={x(activeIndex)} cy={y(activePoint.portfolio)} r={3.5} className="equity-dot" /></g>}
+        </svg> : <div className="equity-empty" data-testid={isLoading ? 'equity-curve-loading' : 'equity-curve-unavailable'}>
+          <strong>{isLoading ? 'Loading daily closes…' : 'Performance history unavailable'}</strong>
+          <p>{seriesStatus === 'idle' ? 'Add a position to chart your holdings against the S&P 500.' : 'Daily history appears once every holding has enough cached closes. No estimated returns are shown.'}</p>
+        </div>}
       </div>
-
-      {/* Chart — fixed height wrapper for CLS safety */}
-      <div
-        ref={containerRef}
-        className="h-64 sm:h-72 w-full relative"
-        role="img"
-        aria-label={hasData
-          ? `Portfolio equity curve showing ${totalReturn >= 0 ? '+' : ''}${totalReturn.toFixed(1)}% total return over ${selectedTimeframe} timeframe`
-          : isLoading ? 'Portfolio equity curve loading' : 'Portfolio equity curve unavailable'}
-      >
-        {!hasData && (
-          <div
-            className="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
-            data-testid={isLoading ? 'equity-curve-loading' : 'equity-curve-unavailable'}
-          >
-            {isLoading ? (
-              <div className="w-2/3 h-2 rounded-full bg-[var(--color-bg-tertiary)] animate-pulse-subtle" aria-hidden="true" />
-            ) : (
-              <>
-                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
-                  Equity curve · unavailable
-                </p>
-                <p className="text-sm text-theme-secondary mt-2 max-w-sm">
-                  {seriesStatus === 'idle'
-                    ? 'Add a position to chart your holdings against the S&P 500.'
-                    : 'Daily history for one or more holdings is still accumulating. The curve appears once every position has cached closes.'}
-                </p>
-              </>
-            )}
-          </div>
-        )}
-        <canvas
-          ref={canvasRef}
-          className="w-full h-full cursor-crosshair touch-none"
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          aria-hidden="true"
-        />
-        {/* Tooltip near cursor */}
-        {hoveredPoint && hoveredX !== null && (() => {
-          const padding = { left: 60, right: 20 };
-          const tooltipWidth = 168;
-          // Clamp tooltip to canvas bounds
-          const rawLeft = hoveredX + 12;
-          const clampedLeft = Math.min(
-            Math.max(rawLeft, padding.left),
-            dimensions.width - padding.right - tooltipWidth
-          );
-          const dailyChange = data.length > 1
-            ? ((hoveredPoint.portfolio - data[0].portfolio) / data[0].portfolio) * 100
-            : 0;
-          return (
-            <div
-              className="pointer-events-none absolute top-2 backdrop-blur-md bg-[var(--color-bg-tooltip)] text-theme border border-theme-light rounded-lg shadow-lg px-3 py-2 text-xs z-10"
-              style={{ left: clampedLeft, width: tooltipWidth }}
-            >
-              <p className="text-[9px] mono tracking-[0.3em] uppercase text-theme opacity-90 mb-1">
-                {new Date(hoveredPoint.date).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </p>
-              <p className="font-semibold tabular-nums text-theme">
-                $
-                {hoveredPoint.portfolio.toLocaleString(undefined, {
-                  maximumFractionDigits: 0,
-                })}
-              </p>
-              <p className="text-theme opacity-80 tabular-nums text-[11px]">
-                Bench: $
-                {hoveredPoint.benchmark.toLocaleString(undefined, {
-                  maximumFractionDigits: 0,
-                })}
-              </p>
-              <p
-                className="tabular-nums font-semibold"
-                style={{
-                  color:
-                    dailyChange >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
-                }}
-              >
-                {dailyChange >= 0 ? '+' : ''}
-                {dailyChange.toFixed(2)}%
-              </p>
-            </div>
-          );
-        })()}
-      </div>
-
-      {/* Legend */}
-      <div className="flex items-center justify-center gap-6 mt-4">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 bg-[var(--color-accent)]" />
-          <span className="text-[10px] mono tracking-[0.3em] uppercase text-theme">
-            Portfolio
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 border-dashed border-t-2 border-theme" />
-          <span className="text-[10px] mono tracking-[0.3em] uppercase text-theme">
-            S&amp;P 500
-          </span>
-        </div>
-      </div>
-      {hasData && series && (
-        <p className="text-center text-[10px] text-theme-muted mt-2">
-          Today's holdings marked to daily closes. Not your transaction history.
-        </p>
-      )}
+      {hasData && <div className="equity-inspector"><label htmlFor="equity-date-inspector">Inspect date</label><input id="equity-date-inspector" aria-label="Inspect chart date" type="range" min="0" max={data.length - 1} value={activeIndex} onChange={event => setInspection(Number(event.target.value))} aria-valuetext={activePoint ? `${dateLabel(activePoint.date, true)}: ${money(activePoint.portfolio)}` : undefined} /></div>}
+      <footer className="equity-footer"><div className="equity-legend"><span><i />Portfolio</span><span><i />S&amp;P 500</span></div><span>{hasData && series ? "Today's holdings at daily closes. Not your transaction history." : 'Daily closing prices'}</span></footer>
     </section>
   );
 });

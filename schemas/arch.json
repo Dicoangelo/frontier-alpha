@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-04T10:22:41.878Z",
-  "headSha": "05ae417c48dc72f640816b4fc450b04a115299b1",
+  "generatedAt": "2026-10-04T11:07:39.275Z",
+  "headSha": "e4b12f99cf5e62397bd4fded4c867f2782e17ef5",
   "version": "1.15.2",
   "server": {
     "tsFiles": 149,
@@ -10,13 +10,13 @@
     "endpoints": 124,
     "migrations": 18,
     "vercelApiFiles": 4,
-    "testFiles": 67
+    "testFiles": 68
   },
   "client": {
     "pages": 25,
-    "components": 122,
+    "components": 124,
     "stores": 6,
-    "hooks": 18,
+    "hooks": 19,
     "apiModules": 10,
     "appRoutes": 27
   },
@@ -259,6 +259,7 @@
     "factorDeltas.helpers",
     "useCVRF",
     "useDataFreshness",
+    "useDialogFocus",
     "useEarnings",
     "useEquityHistory",
     "useFactorDeltas",

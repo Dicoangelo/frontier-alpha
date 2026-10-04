@@ -1,66 +1,43 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useId } from 'react';
 
 interface ScrollableTableProps {
   children: React.ReactNode;
   className?: string;
+  label?: string;
 }
 
-export function ScrollableTable({ children, className = '' }: ScrollableTableProps) {
+/** The same visible horizontal slider used by the Partnerships workspace. */
+export function ScrollableTable({ children, className = '', label = 'Scroll table horizontally' }: ScrollableTableProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const checkOverflow = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 0);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  const id = useId();
+  const [metrics, setMetrics] = useState({ maximum: 0, position: 0 });
+  const synchronize = useCallback(() => {
+    const node = scrollRef.current;
+    if (!node) return;
+    const maximum = Math.max(0, node.scrollWidth - node.clientWidth);
+    const position = Math.max(0, Math.min(maximum, node.scrollLeft));
+    setMetrics(previous => previous.maximum === maximum && previous.position === position ? previous : { maximum, position });
   }, []);
 
   useEffect(() => {
-    checkOverflow();
-    const el = scrollRef.current;
-    if (!el) return;
+    const node = scrollRef.current;
+    if (!node) return;
+    synchronize();
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(synchronize) : null;
+    observer?.observe(node);
+    for (const child of node.children) observer?.observe(child);
+    window.addEventListener('resize', synchronize);
+    return () => { observer?.disconnect(); window.removeEventListener('resize', synchronize); };
+  }, [children, synchronize]);
 
-    el.addEventListener('scroll', checkOverflow, { passive: true });
-    const observer = new ResizeObserver(checkOverflow);
-    observer.observe(el);
-
-    return () => {
-      el.removeEventListener('scroll', checkOverflow);
-      observer.disconnect();
-    };
-  }, [checkOverflow]);
-
-  return (
-    <div className={`relative ${className}`}>
-      {/* Left shadow */}
-      {canScrollLeft && (
-        <div
-          className="absolute left-0 top-0 bottom-0 w-4 z-10 pointer-events-none"
-          style={{
-            background: 'linear-gradient(to right, var(--color-bg), transparent)',
-          }}
-        />
-      )}
-
-      <div
-        ref={scrollRef}
-        className="overflow-x-auto"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-      >
-        {children}
-      </div>
-
-      {/* Right shadow */}
-      {canScrollRight && (
-        <div
-          className="absolute right-0 top-0 bottom-0 w-4 z-10 pointer-events-none"
-          style={{
-            background: 'linear-gradient(to left, var(--color-bg), transparent)',
-          }}
-        />
-      )}
-    </div>
-  );
+  return <div className={`workspace-table-scroll ${className}`}>
+    {metrics.maximum > 1 && <div className="workspace-table-scroll-control">
+      <span>More columns</span><input type="range" min={0} max={metrics.maximum} step={1} value={metrics.position} aria-label={label} aria-controls={id}
+        aria-valuetext={`${Math.round(metrics.position / metrics.maximum * 100)}%`} onChange={event => {
+          if (scrollRef.current) scrollRef.current.scrollLeft = Number(event.target.value);
+          synchronize();
+        }} />
+    </div>}
+    <div ref={scrollRef} id={id} className="workspace-table-viewport" tabIndex={metrics.maximum > 1 ? 0 : undefined} role="region" aria-label={label} onScroll={synchronize}>{children}</div>
+  </div>;
 }

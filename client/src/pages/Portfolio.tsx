@@ -11,8 +11,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Edit2, X, Check, Share2, DollarSign, TrendingUp, TrendingDown, BarChart3, Wallet } from 'lucide-react';
 import { api, isNetworkError, getErrorMessage } from '@/api/client';
 import { useAuthStore } from '@/stores/authStore';
-import { DEMO_HOLDINGS, DEMO_CASH, DEMO_TOTAL_VALUE } from '@/lib/demoFixtures';
-import { useCountUp } from '@/components/portfolio/PortfolioOverview';
+import { DEMO_HOLDINGS, DEMO_CASH } from '@/lib/demoFixtures';
+import { useNavigate } from 'react-router-dom';
+import '@/components/trading/transaction-workspace.css';
 import { Spinner } from '@/components/shared/Spinner';
 import { SkeletonPortfolioPage } from '@/components/shared/Skeleton';
 import { PortfolioExport } from '@/components/portfolio/PortfolioExport';
@@ -47,7 +48,16 @@ const labelClass =
 const kickerClass =
   'mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2';
 
+function validatePositionForm(form: { symbol: string; shares: string; avgCost: string }): string | null {
+  if (!form.symbol.trim()) return 'Enter a ticker symbol.';
+  if (!Number.isFinite(Number(form.shares)) || Number(form.shares) <= 0) return 'Shares must be greater than zero.';
+  if (!form.avgCost.trim() || !Number.isFinite(Number(form.avgCost)) || Number(form.avgCost) < 0) return 'Average cost must be zero or greater.';
+  return null;
+}
+
 export function Portfolio() {
+  const navigate = useNavigate();
+  const [formError, setFormError] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const addPositionSheet = useBottomSheet();
@@ -86,6 +96,7 @@ export function Portfolio() {
       toastSuccess('Position added', { message: `${formData.symbol.toUpperCase()} added to portfolio` });
     },
     onError: (error) => {
+      setFormError(getErrorMessage(error));
       toastError('Failed to add position', { message: getErrorMessage(error) });
     },
   });
@@ -100,6 +111,7 @@ export function Portfolio() {
       setFormData({ symbol: '', shares: '', avgCost: '' });
     },
     onError: (error) => {
+      setFormError(getErrorMessage(error));
       toastError('Failed to update position', { message: getErrorMessage(error) });
     },
   });
@@ -121,8 +133,12 @@ export function Portfolio() {
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!session || addPositionMutation.isPending) return;
+    const validationError = validatePositionForm(formData);
+    setFormError(validationError);
+    if (validationError) return;
     addPositionMutation.mutate({
-      symbol: formData.symbol.toUpperCase(),
+      symbol: formData.symbol.trim().toUpperCase(),
       shares: parseFloat(formData.shares),
       avgCost: parseFloat(formData.avgCost),
     });
@@ -130,7 +146,10 @@ export function Portfolio() {
 
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingId) return;
+    if (!editingId || !session || updatePositionMutation.isPending) return;
+    const validationError = validatePositionForm(formData);
+    setFormError(validationError);
+    if (validationError) return;
     updatePositionMutation.mutate({
       id: editingId,
       shares: parseFloat(formData.shares),
@@ -138,7 +157,19 @@ export function Portfolio() {
     });
   };
 
+  const handleEditKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') handleUpdate(event);
+    if (event.key === 'Escape' && !updatePositionMutation.isPending) {
+      setEditingId(null);
+      setFormError(null);
+      setFormData({ symbol: '', shares: '', avgCost: '' });
+    }
+  };
+
   const startEdit = (position: Position) => {
+    if (!session) { navigate('/login'); return; }
+    setShowAddForm(false);
+    setFormError(null);
     setEditingId(position.id);
     setFormData({
       symbol: position.symbol,
@@ -148,6 +179,10 @@ export function Portfolio() {
   };
 
   const handleAddPositionClick = () => {
+    if (!session) { navigate('/login'); return; }
+    setEditingId(null);
+    setFormError(null);
+    setFormData({ symbol: '', shares: '', avgCost: '' });
     if (isMobile) {
       addPositionSheet.open();
     } else {
@@ -202,14 +237,20 @@ export function Portfolio() {
   // holdings so the public Portfolio page mirrors the Dashboard preview
   // instead of an empty state. Authed users always see their real data.
   const isDemoView = isReady && !session;
-  const positions: Position[] = isDemoView
-    ? DEMO_HOLDINGS.map((h, i) => ({ id: `demo-${i}`, ...h }))
-    : portfolio?.positions || [];
+  const positions = useMemo<Position[]>(() => {
+    if (!isDemoView) return portfolio?.positions || [];
+    const value = DEMO_CASH + DEMO_HOLDINGS.reduce((sum, holding) => sum + holding.shares * holding.currentPrice, 0);
+    return DEMO_HOLDINGS.map((holding, index) => ({
+      ...holding, id: `demo-${index}`, weight: value > 0 ? holding.shares * holding.currentPrice / value : 0,
+    }));
+  }, [isDemoView, portfolio?.positions]);
   const cashBalance = isDemoView ? DEMO_CASH : portfolio?.cash || 0;
-  const totalValue = isDemoView ? DEMO_TOTAL_VALUE : portfolio?.totalValue || 0;
+  const totalValue = isDemoView
+    ? positions.reduce((sum, position) => sum + position.shares * position.currentPrice, cashBalance)
+    : portfolio?.totalValue || 0;
 
   const mobileVisible = useMemo(() => {
-    const q = mobileQuery.trim();
+    const q = mobileQuery.trim().toUpperCase();
     let list = positions.filter((p) => {
       if (q && !p.symbol.includes(q)) return false;
       if (mobileFilter === 'winners' && (p.unrealizedPnL || 0) < 0) return false;
@@ -233,10 +274,6 @@ export function Portfolio() {
     () => positions.reduce((sum, p) => sum + (p.unrealizedPnL || 0), 0),
     [positions]
   );
-
-  const totalValueRef = useCountUp(totalValue, 800);
-  const pnlRef = useCountUp(Math.abs(totalPnL), 800);
-  const cashRef = useCountUp(cashBalance, 800);
 
   // ─── Early returns (after all hooks have been called) ─────────────────
   if (isLoading) {
@@ -283,10 +320,11 @@ export function Portfolio() {
           id="bs-shares"
           type="number"
           step="0.000001"
+          min="0.000001"
+          required
           inputMode="decimal"
           value={formData.shares}
           onChange={(e) => setFormData({ ...formData, shares: e.target.value })}
-          required
           className={`${inputClass} tabular-nums`}
           placeholder="100"
         />
@@ -297,21 +335,23 @@ export function Portfolio() {
           id="bs-cost"
           type="number"
           step="0.01"
+          min="0"
+          required
           inputMode="decimal"
           value={formData.avgCost}
           onChange={(e) => setFormData({ ...formData, avgCost: e.target.value })}
-          required
           className={`${inputClass} tabular-nums`}
           placeholder="150.00"
         />
       </div>
+      {formError && <p role="alert" className="workspace-inline-error">{formError}</p>}
       <div className="flex gap-3 pt-2">
         <button
           type="submit"
           disabled={addPositionMutation.isPending}
           className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] rounded-sm bg-[image:var(--gradient-sovereign)] text-white mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:brightness-110 hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)] disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-[0_4px_30px_rgba(123,44,255,0.35)] transition-[filter,box-shadow] duration-200"
         >
-          {addPositionMutation.isPending ? <Spinner className="w-4 h-4" /> : 'Add Position'}
+          {addPositionMutation.isPending ? <><Spinner className="w-4 h-4" /> Adding…</> : 'Add position'}
         </button>
         <button
           type="button"
@@ -325,7 +365,7 @@ export function Portfolio() {
   );
 
   const content = (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="transaction-workspace space-y-5 max-w-7xl mx-auto">
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div
         className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 animate-fade-in-up"
@@ -333,17 +373,17 @@ export function Portfolio() {
       >
         <div>
           <p className={kickerClass}>
-            Positions · <span className="text-[color:var(--color-accent-secondary-text)]">Live</span>
+            Positions · <span>{isDemoView ? 'Demo portfolio' : 'Saved portfolio'}</span>
           </p>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
             <span className="text-gradient-brand">Portfolio</span>
           </h1>
           <p className="mt-3 text-sm sm:text-base text-theme-secondary leading-relaxed max-w-2xl">
-            Manage positions, track unrealized P&L, and rebalance with cognitive context on every name.
+            Review holdings, track unrealized returns, and update your position book.
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          {portfolio && (
+          {!isDemoView && portfolio && (
             <>
               <button
                 type="button"
@@ -376,14 +416,17 @@ export function Portfolio() {
           <button
             type="button"
             onClick={handleAddPositionClick}
-            aria-label="Add position"
+            aria-label={isDemoView ? 'Sign in to add positions' : 'Add position'}
             className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-sm bg-[image:var(--gradient-sovereign)] text-white mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:brightness-110 hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)] transition-[filter,box-shadow] duration-200"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
-            Add Position
+            {isDemoView ? 'Sign in to add positions' : 'Add position'}
           </button>
         </div>
       </div>
+
+      {isDemoView && <p className="workspace-notice">Sample holdings and prices for exploring the workspace. Totals reflect these sample values. Sign in to manage your own portfolio.</p>}
+      {formError && <p role="alert" className="workspace-inline-error">{formError}</p>}
 
       {/* ── Stat Tiles ──────────────────────────────────────────────────── */}
       <div
@@ -400,7 +443,7 @@ export function Portfolio() {
           <div className="min-w-0">
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Total Value</p>
             <p className="text-xl font-bold mt-1 tabular-nums text-gradient-brand holo-pulse">
-              $<span ref={totalValueRef}>0</span>
+              ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -425,7 +468,7 @@ export function Portfolio() {
               className="text-xl font-bold mt-1 tabular-nums"
               style={{ color: totalPnL >= 0 ? 'var(--color-positive)' : 'var(--color-negative)' }}
             >
-              {totalPnL >= 0 ? '+$' : '-$'}<span ref={pnlRef}>0</span>
+              {totalPnL >= 0 ? '+$' : '-$'}{Math.abs(totalPnL).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -453,7 +496,7 @@ export function Portfolio() {
           <div className="min-w-0">
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Cash Balance</p>
             <p className="text-xl font-bold mt-1 tabular-nums text-theme">
-              $<span ref={cashRef}>0</span>
+              ${cashBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -497,9 +540,10 @@ export function Portfolio() {
                 id="add-shares"
                 type="number"
                 step="0.000001"
+                min="0.000001"
+                required
                 value={formData.shares}
                 onChange={(e) => setFormData({ ...formData, shares: e.target.value })}
-                required
                 className={`${inputClass} tabular-nums`}
                 placeholder="100"
               />
@@ -510,9 +554,10 @@ export function Portfolio() {
                 id="add-cost"
                 type="number"
                 step="0.01"
+                min="0"
+                required
                 value={formData.avgCost}
                 onChange={(e) => setFormData({ ...formData, avgCost: e.target.value })}
-                required
                 className={`${inputClass} tabular-nums`}
                 placeholder="150.00"
               />
@@ -523,7 +568,7 @@ export function Portfolio() {
                 disabled={addPositionMutation.isPending}
                 className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 min-h-[44px] rounded-sm bg-[image:var(--gradient-sovereign)] text-white mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:brightness-110 hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)] disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-[0_4px_30px_rgba(123,44,255,0.35)] transition-[filter,box-shadow] duration-200"
               >
-                {addPositionMutation.isPending ? <Spinner className="w-4 h-4" /> : 'Add'}
+                {addPositionMutation.isPending ? <><Spinner className="w-4 h-4" /> Adding…</> : 'Add'}
               </button>
               <button
                 type="button"
@@ -582,6 +627,8 @@ export function Portfolio() {
                                 id={`m-shares-${position.id}`}
                                 type="number"
                                 step="0.000001"
+                                min="0.000001"
+                                required
                                 inputMode="decimal"
                                 value={formData.shares}
                                 onChange={(e) => setFormData({ ...formData, shares: e.target.value })}
@@ -594,6 +641,8 @@ export function Portfolio() {
                                 id={`m-cost-${position.id}`}
                                 type="number"
                                 step="0.01"
+                                min="0"
+                                required
                                 inputMode="decimal"
                                 value={formData.avgCost}
                                 onChange={(e) => setFormData({ ...formData, avgCost: e.target.value })}
@@ -604,9 +653,10 @@ export function Portfolio() {
                           <div className="flex gap-2">
                             <button
                               type="submit"
+                              disabled={updatePositionMutation.isPending}
                               className="flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] rounded-sm bg-[image:var(--gradient-sovereign)] text-white mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift shadow-[0_4px_18px_-6px_rgba(123,44,255,0.55)] transition-[filter,box-shadow] duration-200"
                             >
-                              <Check className="w-4 h-4" aria-hidden="true" /> Save
+                              <Check className="w-4 h-4" aria-hidden="true" /> {updatePositionMutation.isPending ? 'Saving…' : 'Save'}
                             </button>
                             <button
                               type="button"
@@ -630,13 +680,15 @@ export function Portfolio() {
                             <WhyButton symbol={position.symbol} onClick={setWhySymbol} />
                             <button
                               onClick={() => startEdit(position)}
+                              disabled={isDemoView}
                               className="p-2.5 min-w-[44px] min-h-[44px] text-theme-muted hover:text-[var(--color-accent-text)] hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-sm flex items-center justify-center touch-manipulation animate-press transition-colors duration-200"
                               aria-label={`Edit ${position.symbol}`}
                             >
                               <Edit2 className="w-5 h-5" aria-hidden="true" />
                             </button>
                             <button
-                              onClick={() => deletePositionMutation.mutate(position.id)}
+                              onClick={() => { if (session && !deletePositionMutation.isPending) deletePositionMutation.mutate(position.id); }}
+                              disabled={isDemoView || deletePositionMutation.isPending}
                               className="p-2.5 min-w-[44px] min-h-[44px] text-theme-muted hover:text-[var(--color-negative)] hover:bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] rounded-sm flex items-center justify-center touch-manipulation animate-press transition-colors duration-200"
                               aria-label={`Delete ${position.symbol}`}
                             >
@@ -692,10 +744,13 @@ export function Portfolio() {
                             <input
                               type="number"
                               step="0.000001"
+                              min="0.000001"
+                              required
                               inputMode="decimal"
                               value={formData.shares}
                               onChange={(e) => setFormData({ ...formData, shares: e.target.value })}
                               className={`${inputClass} text-right tabular-nums w-28`}
+                              onKeyDown={handleEditKeyDown}
                               aria-label={`Edit shares for ${position.symbol}`}
                             />
                           </td>
@@ -703,10 +758,13 @@ export function Portfolio() {
                             <input
                               type="number"
                               step="0.01"
+                              min="0"
+                              required
                               inputMode="decimal"
                               value={formData.avgCost}
                               onChange={(e) => setFormData({ ...formData, avgCost: e.target.value })}
                               className={`${inputClass} text-right tabular-nums w-28`}
+                              onKeyDown={handleEditKeyDown}
                               aria-label={`Edit avg cost for ${position.symbol}`}
                             />
                           </td>
@@ -716,6 +774,7 @@ export function Portfolio() {
                             <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={handleUpdate}
+                                disabled={updatePositionMutation.isPending}
                                 className="p-2.5 min-w-[44px] min-h-[44px] text-[var(--color-positive)] hover:bg-[color-mix(in_srgb,var(--color-positive)_12%,transparent)] rounded-sm flex items-center justify-center animate-press transition-colors duration-200"
                                 aria-label="Save changes"
                               >
@@ -758,13 +817,15 @@ export function Portfolio() {
                               <WhyButton symbol={position.symbol} onClick={setWhySymbol} />
                               <button
                                 onClick={() => startEdit(position)}
+                              disabled={isDemoView}
                                 className="p-2.5 min-w-[44px] min-h-[44px] text-theme-muted hover:text-[var(--color-accent-text)] hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] rounded-sm flex items-center justify-center animate-press transition-colors duration-200"
                                 aria-label={`Edit ${position.symbol}`}
                               >
                                 <Edit2 className="w-5 h-5" aria-hidden="true" />
                               </button>
                               <button
-                                onClick={() => deletePositionMutation.mutate(position.id)}
+                                onClick={() => { if (session && !deletePositionMutation.isPending) deletePositionMutation.mutate(position.id); }}
+                              disabled={isDemoView || deletePositionMutation.isPending}
                                 className="p-2.5 min-w-[44px] min-h-[44px] text-theme-muted hover:text-[var(--color-negative)] hover:bg-[color-mix(in_srgb,var(--color-negative)_10%,transparent)] rounded-sm flex items-center justify-center animate-press transition-colors duration-200"
                                 aria-label={`Delete ${position.symbol}`}
                               >
@@ -800,7 +861,7 @@ export function Portfolio() {
       </BottomSheet>
 
       {/* Share Modal */}
-      {portfolio && (
+      {!isDemoView && portfolio && (
         <ShareModal
           isOpen={showShareModal}
           onClose={() => setShowShareModal(false)}
@@ -820,13 +881,13 @@ export function Portfolio() {
       <PositionSheet
         position={positions.find((p) => p.id === sheetPositionId) || null}
         onClose={() => setSheetPositionId(null)}
-        onEdit={() => {
+        onEdit={isDemoView ? undefined : () => {
           const p = positions.find((x) => x.id === sheetPositionId);
           if (p) startEdit(p);
           setSheetPositionId(null);
         }}
-        onDelete={(id) => {
-          if (id) deletePositionMutation.mutate(id);
+        onDelete={isDemoView ? undefined : (id) => {
+          if (id && session && !deletePositionMutation.isPending) deletePositionMutation.mutate(id);
         }}
       />
     </div>

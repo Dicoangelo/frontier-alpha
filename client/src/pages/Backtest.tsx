@@ -4,7 +4,7 @@
  * Walk-forward backtesting interface with equity curve visualization,
  * episode performance breakdown, and factor attribution.
  *
- * Layout-wrapped (see App.tsx) — page chrome (grid bg, sovereign bar)
+ * Layout-wrapped (see App.tsx) — page chrome
  * is provided by the parent Layout. This page contributes the section
  * shell, hero, run controls, and result surfaces.
  */
@@ -30,9 +30,11 @@ import {
   Activity,
   Target,
   AlertTriangle,
+  RotateCcw,
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { api } from '@/api/client';
+import { api, getErrorMessage } from '@/api/client';
+import { Button } from '@/components/shared/Button';
 import { useToast } from '@/hooks/useToast';
 import { rechartsTooltipStyle } from '@/lib/theme';
 import { BacktestEmptyState } from '@/components/backtest/BacktestEmptyState';
@@ -84,15 +86,19 @@ interface BacktestResult {
 
 const DEFAULT_SYMBOLS = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSLA', 'JPM'];
 
-// Canonical input class — matches Settings/LoginForm pattern.
-const inputClass =
-  'block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm';
-
-const labelClass =
-  'block mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2';
-
-const kickerClass =
-  'mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2';
+const DEFAULT_CONFIG: BacktestRunConfig = {
+  symbols: DEFAULT_SYMBOLS,
+  startDate: '2023-01-01',
+  endDate: '2026-01-01',
+  initialCapital: 100000,
+  episodeLengthDays: 21,
+  strategy: 'max_sharpe',
+  useCVRF: true,
+  rebalanceFrequency: 'monthly',
+};
+const inputClass = 'block w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2.5 text-sm text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30';
+const labelClass = 'mb-1.5 block text-xs font-medium text-theme-secondary';
+const kickerClass = 'mb-1 text-xs font-medium text-theme-muted';
 
 function useRunBacktest() {
   const { toastSuccess, toastError } = useToast();
@@ -106,7 +112,7 @@ function useRunBacktest() {
       toastSuccess('Backtest complete', { message: `${returnPct}% total return across ${data.walkForward.windows} windows` });
     },
     onError: (error) => {
-      toastError('Backtest failed', { message: (error as Error).message });
+      toastError('Backtest failed', { message: getErrorMessage(error) });
     },
   });
 }
@@ -121,7 +127,7 @@ interface MetricCardProps {
 
 function MetricCard({ label, value, subtitle, icon, color = 'text-[var(--color-text)]' }: MetricCardProps) {
   return (
-    <div className="glass-slab rounded-xl p-4 flex items-center gap-3 animate-enter">
+    <div className="border border-[var(--color-border)] bg-[var(--color-bg-secondary)] rounded-xl p-4 flex items-center gap-3">
       <div
         className="p-2.5 rounded-lg flex-shrink-0"
         style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)' }}
@@ -129,7 +135,7 @@ function MetricCard({ label, value, subtitle, icon, color = 'text-[var(--color-t
         <span className="text-[var(--color-accent-text)]">{icon}</span>
       </div>
       <div className="min-w-0">
-        <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">{label}</p>
+        <p className="text-xs font-medium text-theme-muted">{label}</p>
         <p className={`text-xl font-bold mt-0.5 tabular-nums ${color}`}>{value}</p>
         {subtitle && <p className="text-xs text-theme-muted mt-0.5">{subtitle}</p>}
       </div>
@@ -138,71 +144,69 @@ function MetricCard({ label, value, subtitle, icon, color = 'text-[var(--color-t
 }
 
 export function Backtest() {
-  const [config, setConfig] = useState<BacktestRunConfig>({
-    symbols: DEFAULT_SYMBOLS,
-    startDate: '2023-01-01',
-    endDate: '2026-01-01',
-    initialCapital: 100000,
-    episodeLengthDays: 21,
-    strategy: 'max_sharpe',
-    useCVRF: true,
-    rebalanceFrequency: 'monthly',
-  });
+  const [config, setConfig] = useState<BacktestRunConfig>(DEFAULT_CONFIG);
   const [symbolInput, setSymbolInput] = useState(DEFAULT_SYMBOLS.join(', '));
   const [showConfig, setShowConfig] = useState(true);
-
-  const { mutate: runBacktest, data: result, isPending, error } = useRunBacktest();
-
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const { mutate: runBacktest, data: result, isPending, error, reset } = useRunBacktest();
+  const handleReset = () => {
+    setConfig(DEFAULT_CONFIG);
+    setSymbolInput(DEFAULT_SYMBOLS.join(', '));
+    setValidationError(null);
+    setShowConfig(true);
+    reset();
+  };
   const handleRun = () => {
-    const symbols = symbolInput
-      .split(',')
-      .map((s) => s.trim().toUpperCase())
-      .filter(Boolean);
+    const symbols = [...new Set(symbolInput.split(/[,\s]+/).map(s => s.trim().toUpperCase()).filter(Boolean))];
+    if (symbols.length === 0) { setValidationError('Enter at least one ticker symbol.'); return; }
+    if (symbols.some(symbol => !/^[A-Z][A-Z0-9.-]{0,9}$/.test(symbol))) { setValidationError('Enter valid ticker symbols separated by commas or spaces.'); return; }
+    const start = Date.parse(config.startDate);
+    const end = Date.parse(config.endDate);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || start >= end) { setValidationError('Choose an end date after the start date.'); return; }
+    if (!Number.isFinite(config.initialCapital) || config.initialCapital <= 0) { setValidationError('Initial capital must be greater than zero.'); return; }
+    if (!Number.isInteger(config.episodeLengthDays) || config.episodeLengthDays < 1) { setValidationError('Episode length must be a positive whole number of days.'); return; }
     const finalConfig = { ...config, symbols };
+    setValidationError(null);
     setConfig(finalConfig);
     setShowConfig(false);
-    runBacktest(finalConfig);
+    runBacktest(finalConfig, { onError: () => setShowConfig(true) });
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-4 max-w-7xl mx-auto">
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div
-        className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 animate-fade-in-up"
+        className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4"
         style={{ animationDelay: '0ms', animationFillMode: 'both' }}
       >
         <div>
-          <p className={kickerClass}>
-            Backtest · <span className="text-[color:var(--color-accent-secondary-text)]">Walk-Forward Validation</span>
-          </p>
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
-            <span className="text-gradient-brand">Historical</span>{' '}
-            <span className="text-theme">Conviction</span>
-          </h1>
-          <p className="mt-3 text-sm sm:text-base text-theme-secondary leading-relaxed max-w-2xl">
-            CVRF-integrated walk-forward engine. Fold-by-fold out-of-sample returns,
-            overfit ratio, and factor attribution for any strategy across any window.
-          </p>
+          <p className={kickerClass}>Research / Historical analysis</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-theme">Strategy backtest</h1>
+          <p className="mt-1 text-sm text-theme-secondary">Review walk-forward returns, risk, and factor attribution over a historical period.</p>
         </div>
 
+        <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" disabled={isPending} onClick={handleReset} leftIcon={<RotateCcw size={15} />}>Reset inputs</Button>
         <button
           onClick={() => setShowConfig(!showConfig)}
-          aria-pressed={showConfig}
+          aria-expanded={showConfig}
+          aria-controls="backtest-settings"
           aria-label={showConfig ? 'Hide configuration panel' : 'Show configuration panel'}
-          className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-sm glass-slab text-theme-secondary hover:text-theme mono text-[10px] tracking-[0.3em] uppercase animate-press transition-colors duration-200"
+          className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-theme-secondary hover:text-theme text-xs font-medium transition-colors duration-200"
         >
           <Settings2 className="w-4 h-4" aria-hidden="true" />
-          {showConfig ? 'Hide Config' : 'Show Config'}
+          {showConfig ? 'Hide settings' : 'Edit settings'}
         </button>
+        </div>
       </div>
 
       {/* ── Configuration Panel ─────────────────────────────────────────── */}
       {showConfig && (
         <section
-          className="glass-slab rounded-2xl p-6 sm:p-8 animate-fade-in-up"
-          style={{ animationDelay: '50ms', animationFillMode: 'both' }}
+          id="backtest-settings"
+          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 sm:p-5"
         >
-          <header className="flex items-start gap-4 mb-6">
+          <header className="flex items-start gap-4 mb-4">
             <div
               className="p-2.5 rounded-lg shrink-0"
               style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
@@ -211,14 +215,14 @@ export function Backtest() {
             </div>
             <div className="min-w-0">
               <p className={kickerClass}>Inputs</p>
-              <h2 className="text-lg font-bold text-theme mt-1">Backtest Configuration</h2>
+              <h2 className="text-lg font-bold text-theme mt-1">Backtest settings</h2>
               <p className="text-sm text-theme-secondary mt-1">
-                Universe, date range, strategy, and rebalance cadence
+                Historical price data · Execution assumptions: 5 bps commission, 2 bps slippage
               </p>
             </div>
           </header>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <fieldset disabled={isPending} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Symbols */}
             <div className="lg:col-span-3">
               <label htmlFor="bt-symbols" className={labelClass}>
@@ -270,6 +274,7 @@ export function Backtest() {
               <input
                 id="bt-capital"
                 type="number"
+                min="1"
                 value={config.initialCapital}
                 onChange={(e) => setConfig({ ...config, initialCapital: Number(e.target.value) })}
                 className={`${inputClass} tabular-nums`}
@@ -325,20 +330,25 @@ export function Backtest() {
               <input
                 id="bt-episode"
                 type="number"
+                min="1"
+                step="1"
                 value={config.episodeLengthDays}
                 onChange={(e) => setConfig({ ...config, episodeLengthDays: Number(e.target.value) })}
                 className={`${inputClass} tabular-nums`}
               />
             </div>
-          </div>
+          </fieldset>
+
+          {validationError && <p role="alert" className="mt-4 text-sm text-[var(--color-negative)]">{validationError}</p>}
 
           {/* Run Button */}
-          <div className="mt-7 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-4">
             <button
               onClick={handleRun}
               disabled={isPending}
               aria-label="Run backtest"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] rounded-sm bg-[image:var(--gradient-sovereign)] text-white mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:brightness-110 hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)] disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-[0_4px_30px_rgba(123,44,255,0.35)] transition-[filter,box-shadow] duration-200"
+              type="button"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] rounded-md bg-[var(--color-accent)] text-white text-sm font-medium  hover:brightness-110 disabled:opacity-50 transition-[filter,box-shadow] duration-200"
             >
               {isPending ? (
                 <>
@@ -353,8 +363,8 @@ export function Backtest() {
               )}
             </button>
             {isPending && (
-              <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
-                Folding walk-forward windows…
+              <span className="text-xs font-medium text-theme-muted">
+                Calculating walk-forward windows…
               </span>
             )}
           </div>
@@ -364,14 +374,14 @@ export function Backtest() {
       {/* ── Error Banner ────────────────────────────────────────────────── */}
       {error && (
         <div
-          className="glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-4 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-negative)] shadow-[0_18px_60px_-20px_rgba(239,68,68,0.45)] animate-fade-in-up"
+          className="border border-[var(--color-border)] bg-[var(--color-bg-secondary)] relative overflow-hidden rounded-xl pl-5 pr-4 py-4 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[var(--color-negative)] "
           role="alert"
         >
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-[var(--color-negative)]" aria-hidden="true" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-theme">Backtest failed</p>
-              <p className="text-sm mt-1 text-theme-secondary leading-relaxed">{(error as Error).message}</p>
+              <p className="text-sm mt-1 text-theme-secondary leading-relaxed">{getErrorMessage(error)}</p>
             </div>
           </div>
         </div>
@@ -386,11 +396,11 @@ export function Backtest() {
         <SectionErrorBoundary sectionName="Backtest Results">
           {/* Metrics Row */}
           <section
-            className="animate-fade-in-up"
+            className=""
             style={{ animationDelay: '100ms', animationFillMode: 'both' }}
           >
-            <p className={kickerClass}>Results · Walk-Forward</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 animate-stagger">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><p className={kickerClass}>Historical results · Walk-forward</p><p className="text-xs text-theme-muted">{result.config.startDate} – {result.config.endDate} · {result.config.symbols.join(', ')}</p></div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               <MetricCard
                 label="Total Return"
                 value={`${(result.walkForward.totalReturn * 100).toFixed(2)}%`}
@@ -418,7 +428,7 @@ export function Backtest() {
               <MetricCard
                 label="Alpha"
                 value={`${(result.alpha * 100).toFixed(2)}%`}
-                subtitle="vs benchmark"
+                subtitle="vs estimated benchmark"
                 icon={<TrendingUp className="w-4 h-4" />}
                 color={result.alpha >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'}
               />
@@ -434,10 +444,10 @@ export function Backtest() {
           {/* Equity Curve */}
           {result.equityCurve.length > 0 && (
             <section
-              className="glass-slab rounded-2xl p-6 sm:p-8 animate-fade-in-up"
+              className="border border-[var(--color-border)] bg-[var(--color-bg-secondary)] rounded-lg p-4 sm:p-5"
               style={{ animationDelay: '150ms', animationFillMode: 'both' }}
             >
-              <header className="flex items-start gap-4 mb-6">
+              <header className="flex items-start gap-4 mb-4">
                 <div
                   className="p-2.5 rounded-lg shrink-0"
                   style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
@@ -476,11 +486,11 @@ export function Backtest() {
                       strokeWidth={2}
                     />
                     <ReferenceLine
-                      y={config.initialCapital}
+                      y={result.config.initialCapital}
                       stroke="var(--color-text-muted)"
                       strokeDasharray="3 3"
                       label={{
-                        value: `Initial $${(config.initialCapital / 1000).toFixed(0)}k`,
+                        value: `Initial $${(result.config.initialCapital / 1000).toFixed(0)}k`,
                         // 'left' put the label exactly on top of the Y-axis tick
                         // (which formats the same value as `$100k`), making them
                         // collide. 'insideTopRight' parks the label inside the
@@ -498,11 +508,11 @@ export function Backtest() {
 
           {/* Episode Returns + Factor Attribution */}
           <div
-            className="grid grid-cols-12 gap-6 animate-fade-in-up"
+            className="grid grid-cols-12 gap-4"
             style={{ animationDelay: '200ms', animationFillMode: 'both' }}
           >
             {/* Episode Returns */}
-            <section className="col-span-12 lg:col-span-7 glass-slab rounded-2xl p-6 sm:p-8">
+            <section className="col-span-12 lg:col-span-7 border border-[var(--color-border)] bg-[var(--color-bg-secondary)] rounded-lg p-4 sm:p-5">
               <header className="mb-5">
                 <p className={kickerClass}>Out-Of-Sample</p>
                 <h3 className="text-lg font-bold text-theme">Episode Returns</h3>
@@ -536,7 +546,7 @@ export function Backtest() {
             </section>
 
             {/* Factor Attribution */}
-            <section className="col-span-12 lg:col-span-5 glass-slab rounded-2xl p-6 sm:p-8">
+            <section className="col-span-12 lg:col-span-5 border border-[var(--color-border)] bg-[var(--color-bg-secondary)] rounded-lg p-4 sm:p-5">
               <header className="mb-5">
                 <p className={kickerClass}>Decomposition</p>
                 <h3 className="text-lg font-bold text-theme">Factor Attribution</h3>
@@ -584,16 +594,16 @@ export function Backtest() {
 
           {/* Overfit Analysis */}
           <section
-            className="glass-slab rounded-2xl p-6 sm:p-8 animate-fade-in-up"
+            className="border border-[var(--color-border)] bg-[var(--color-bg-secondary)] rounded-lg p-4 sm:p-5"
             style={{ animationDelay: '250ms', animationFillMode: 'both' }}
           >
             <header className="mb-5">
               <p className={kickerClass}>Robustness</p>
-              <h3 className="text-lg font-bold text-theme">Overfit Analysis</h3>
+              <h3 className="text-lg font-bold text-theme">Overfit analysis</h3><p className="mt-1 text-xs text-theme-muted">The benchmark is an approximation returned by the backtest engine, not a tracked index.</p>
             </header>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="p-4 rounded-lg bg-theme-tertiary border border-theme-light text-center">
-                <div className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Overfit Ratio</div>
+                <div className="text-xs font-medium text-theme-muted">Overfit Ratio</div>
                 <div
                   className={`text-2xl font-bold tabular-nums mt-1 ${
                     result.walkForward.overfitRatio < 1.5
@@ -608,13 +618,13 @@ export function Backtest() {
                 </div>
               </div>
               <div className="p-4 rounded-lg bg-theme-tertiary border border-theme-light text-center">
-                <div className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Benchmark Return</div>
+                <div className="text-xs font-medium text-theme-muted">Estimated benchmark return</div>
                 <div className="text-2xl font-bold text-theme tabular-nums mt-1">
                   {(result.benchmark.totalReturn * 100).toFixed(2)}%
                 </div>
               </div>
               <div className="p-4 rounded-lg bg-theme-tertiary border border-theme-light text-center">
-                <div className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Strategy Alpha</div>
+                <div className="text-xs font-medium text-theme-muted">Alpha vs estimated benchmark</div>
                 <div
                   className={`text-2xl font-bold tabular-nums mt-1 ${
                     result.alpha >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]'
@@ -633,7 +643,7 @@ export function Backtest() {
       {isPending && <BacktestRunningSkeleton />}
 
       {/* ── Empty State ─────────────────────────────────────────────────── */}
-      {!result && !isPending && !error && <BacktestEmptyState />}
+      {!result && !isPending && !error && <BacktestEmptyState onConfigure={() => setShowConfig(true)} />}
     </div>
   );
 }

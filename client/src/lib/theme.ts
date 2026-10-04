@@ -16,33 +16,33 @@ import type React from 'react';
 
 // ─── Brand Palette ────────────────────────────────────────────────────
 export const brand = {
-  amethyst: '#285cc4', cyan: '#327991', magenta: '#7b72b4',
-  gold: '#ae7c30', teal: '#318565', holo: '#3972c5',
+  amethyst: '#176b96', cyan: '#167c80', magenta: '#7976a8',
+  gold: '#ae803d', teal: '#268573', holo: '#247fac',
 } as const;
 
 // Mirrors the workspace's light palette. Chart components prefer cssVar().
 export const colors = {
-  primary: '#285cc4', accent: '#285cc4', accentHover: '#204ca5',
-  accentLight: '#eaf0fc', accentSecondary: '#327991',
-  positive: '#20764f', negative: '#b43f48', success: '#20764f',
-  danger: '#b43f48', warning: '#94620d', info: '#285cc4',
-  text: '#202b3c', textSecondary: '#526175', textMuted: '#65748a',
-  bg: '#f6f8fb', bgSecondary: '#ffffff', bgTertiary: '#eef2f7',
-  border: '#dfe5ed', borderLight: '#edf0f4',
+  primary: '#176b96', accent: '#176b96', accentHover: '#12577b',
+  accentLight: '#e7f2f8', accentSecondary: '#167c80',
+  positive: '#197764', negative: '#b5474d', success: '#197764',
+  danger: '#b5474d', warning: '#94631f', info: '#176b96',
+  text: '#182b3a', textSecondary: '#4f6475', textMuted: '#617587',
+  bg: '#f1f4f7', bgSecondary: '#ffffff', bgTertiary: '#eaf0f4',
+  border: '#d7e0e7', borderLight: '#e8edf1',
 } as const;
 
 export const darkColors = {
-  primary: '#366bd0', accent: '#366bd0', accentHover: '#447bdf',
-  accentLight: '#273a57', accentSecondary: '#87b4c6',
-  positive: '#8ac9a6', negative: '#e3a0a4', success: '#8ac9a6',
-  danger: '#e3a0a4', warning: '#dabc7b', info: '#94baff',
-  text: '#e6ecf4', textSecondary: '#b8c5d6', textMuted: '#99a9bd',
-  bg: '#171d26', bgSecondary: '#1e2632', bgTertiary: '#293344',
-  border: '#354153', borderLight: '#2c3747',
+  primary: '#257da9', accent: '#257da9', accentHover: '#3090be',
+  accentLight: '#203f53', accentSecondary: '#7ec3c5',
+  positive: '#7fcbb4', negative: '#e5a0a6', success: '#7fcbb4',
+  danger: '#e5a0a6', warning: '#ddbc82', info: '#8dc8e6',
+  text: '#e3ecf3', textSecondary: '#b7c8d6', textMuted: '#93aabe',
+  bg: '#101923', bgSecondary: '#17232f', bgTertiary: '#213141',
+  border: '#314353', borderLight: '#253747',
 } as const;
 
 export const surfaces = {
-  light: '#f6f8fb', dark: '#1e2632', deep: '#171d26',
+  light: '#f1f4f7', dark: '#17232f', deep: '#101923',
 } as const;
 
 // Semantic states follow the selected appearance, including tooltip text.

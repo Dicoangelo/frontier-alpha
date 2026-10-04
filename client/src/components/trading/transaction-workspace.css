@@ -1,0 +1,16 @@
+/* Dense, quiet financial workspaces; all colours follow the active theme. */
+.transaction-workspace { color: var(--color-text); }
+.transaction-workspace h1 { font-size: clamp(1.625rem, 2.4vw, 2rem); font-weight: 650; }
+.transaction-workspace :is(label, th, .tracking-\[0\.3em\]) { letter-spacing: .025em; }
+.transaction-workspace :is(input, select) { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 6px; box-shadow: none; }
+.transaction-workspace :is(input, select):focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.transaction-workspace :is(section, .glass-slab, .glass-slab-floating) { box-shadow: none; }
+.transaction-workspace .text-gradient-brand { color: var(--color-text); -webkit-text-fill-color: var(--color-text); background: none; }
+.transaction-workspace table { font-size: .8125rem; }
+.transaction-workspace th { background: var(--color-bg-secondary); font-size: .6875rem; }
+.transaction-workspace td { padding-block: .625rem; }
+.transaction-workspace button:disabled { cursor: not-allowed; }
+.workspace-dialog-backdrop { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgb(9 18 30 / .58); }
+.workspace-dialog { width: 100%; max-width: 38rem; max-height: calc(100dvh - 2rem); overflow-y: auto; border-radius: 10px; background: var(--color-bg); border: 1px solid var(--color-border); box-shadow: 0 24px 64px rgb(0 0 0 / .24); outline: none; }
+.workspace-inline-error { color: var(--color-negative); background: color-mix(in srgb, var(--color-negative) 6%, var(--color-bg)); border: 1px solid color-mix(in srgb, var(--color-negative) 28%, transparent); border-radius: 6px; padding: .75rem; font-size: .8125rem; }
+.workspace-notice { padding: .75rem 1rem; background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: 6px; color: var(--color-text-secondary); font-size: .8125rem; }

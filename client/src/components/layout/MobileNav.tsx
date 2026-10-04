@@ -15,6 +15,8 @@ import {
   Settings,
   HelpCircle,
   LineChart,
+  ScrollText,
+  Bell,
 } from 'lucide-react';
 import { useState } from 'react';
 import { BottomSheet } from '@/components/shared/BottomSheet';
@@ -27,6 +29,8 @@ const mobileNavigation = [
 ];
 
 const morePages = [
+  { name: 'Insights', icon: ScrollText, href: '/insights' },
+  { name: 'Alerts', icon: Bell, href: '/alerts' },
   { name: 'Factors', icon: BarChart3, href: '/factors' },
   { name: 'Earnings', icon: Calendar, href: '/earnings' },
   { name: 'Optimize', icon: SlidersHorizontal, href: '/optimize' },
@@ -88,7 +92,7 @@ export function MobileNav() {
           {mobileNavigation.map((item) => (
             <NavLink
               key={item.name}
-              to={item.href}
+              to={item.href === '/' && location.pathname === '/dashboard' ? '/dashboard' : item.href}
               end={item.href === '/'}
               aria-label={item.name}
               className={({ isActive }) => navButtonClass(isActive)}

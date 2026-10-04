@@ -8,9 +8,12 @@ interface PanelResizeHandleProps {
   min: number;
   max: number;
   defaultValue: number;
+  label?: string;
+  direction?: 1 | -1;
+  className?: string;
 }
 
-export function PanelResizeHandle({ value, onChange, min, max, defaultValue }: PanelResizeHandleProps) {
+export function PanelResizeHandle({ value, onChange, min, max, defaultValue, label = 'Resize navigation', direction = 1, className = '' }: PanelResizeHandleProps) {
   const drag = useRef<{ pointerId: number; startX: number; startValue: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const clamp = (size: number) => Math.min(max, Math.max(min, Math.round(size)));
@@ -30,14 +33,14 @@ export function PanelResizeHandle({ value, onChange, min, max, defaultValue }: P
     <div
       role="separator"
       aria-orientation="vertical"
-      aria-label="Resize navigation"
+      aria-label={label}
       aria-valuemin={min}
       aria-valuemax={max}
       aria-valuenow={current}
       aria-valuetext={`${current} pixels`}
       tabIndex={0}
       title="Drag to resize. Arrow keys adjust width; double-click resets."
-      className={`workspace-resize-handle${dragging ? ' is-dragging' : ''}`}
+      className={`workspace-resize-handle ${className}${dragging ? ' is-dragging' : ''}`}
       onPointerDown={(event) => {
         if (event.button !== 0 || !event.isPrimary || drag.current) return;
         event.preventDefault();
@@ -50,7 +53,7 @@ export function PanelResizeHandle({ value, onChange, min, max, defaultValue }: P
         const start = drag.current;
         if (!start || event.pointerId !== start.pointerId) return;
         event.preventDefault();
-        onChange(clamp(start.startValue + event.clientX - start.startX));
+        onChange(clamp(start.startValue + direction * (event.clientX - start.startX)));
       }}
       onPointerUp={stop}
       onPointerCancel={stop}
@@ -66,8 +69,8 @@ export function PanelResizeHandle({ value, onChange, min, max, defaultValue }: P
         const step = event.shiftKey ? 30 : 10;
         const next = event.key === 'Home' ? min
           : event.key === 'End' ? max
-          : event.key === 'ArrowLeft' ? current - step
-          : event.key === 'ArrowRight' ? current + step
+          : event.key === 'ArrowLeft' ? current - step * direction
+          : event.key === 'ArrowRight' ? current + step * direction
           : null;
         if (next !== null) {
           event.preventDefault();

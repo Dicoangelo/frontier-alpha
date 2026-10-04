@@ -18,31 +18,6 @@ interface PositionCardProps {
   className?: string;
 }
 
-/**
- * Synthesize a deterministic sparkline when no price history is provided —
- * random-but-stable noise walking around currentPrice, biased by PnL sign
- * so the visual direction matches reality. Real data from useQuotes/history
- * will override this.
- */
-function synthesizeHistory(symbol: string, currentPrice: number, pnl: number): number[] {
-  let seed = 0;
-  for (let i = 0; i < symbol.length; i++) seed = (seed * 31 + symbol.charCodeAt(i)) | 0;
-  const rand = () => {
-    seed = (seed * 9301 + 49297) % 233280;
-    return seed / 233280;
-  };
-  const steps = 24;
-  const drift = pnl >= 0 ? 0.004 : -0.004;
-  const vals: number[] = [];
-  let v = currentPrice * (1 - drift * steps * 0.5);
-  for (let i = 0; i < steps; i++) {
-    v = v * (1 + drift + (rand() - 0.5) * 0.018);
-    vals.push(v);
-  }
-  vals.push(currentPrice);
-  return vals;
-}
-
 export function PositionCard({ position, onClick, className = '' }: PositionCardProps) {
   const isUp = (position.unrealizedPnL ?? 0) >= 0;
   const color = isUp ? 'var(--color-positive)' : 'var(--color-negative)';
@@ -54,7 +29,7 @@ export function PositionCard({ position, onClick, className = '' }: PositionCard
 
   const history = position.history && position.history.length > 1
     ? position.history
-    : synthesizeHistory(position.symbol, position.currentPrice || position.costBasis, position.unrealizedPnL);
+    : null;
 
   const weightPct = position.weight != null ? position.weight * (position.weight > 1 ? 1 : 100) : null;
 
@@ -82,8 +57,8 @@ export function PositionCard({ position, onClick, className = '' }: PositionCard
         </span>
       </div>
 
-      {/* Row 3: sparkline spanning card */}
-      <div className="mt-3 -mx-1">
+      {/* Render a trend only when price history is supplied. */}
+      {history && <div className="mt-3 -mx-1">
         <Sparkline
           data={history}
           width={280}
@@ -93,7 +68,7 @@ export function PositionCard({ position, onClick, className = '' }: PositionCard
           className="w-full"
           ariaLabel={`${position.symbol} recent price sparkline`}
         />
-      </div>
+      </div>}
     </>
   );
 

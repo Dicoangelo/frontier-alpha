@@ -4,7 +4,7 @@
  * a seeded random walk and reported "+11.22% / +10.34%" for every account.
  */
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { EquityCurve } from './EquityCurve';
 
 // jsdom has no ResizeObserver; the chart observes its container for sizing.
@@ -47,8 +47,68 @@ describe('EquityCurve', () => {
     ];
     render(<EquityCurve portfolioValue={110000} series={series} seriesStatus="ready" />);
     expect(screen.getByText('+10.00%')).toBeInTheDocument(); // total return
-    expect(screen.getByText('+5.00%')).toBeInTheDocument(); // alpha vs benchmark
+    expect(screen.getByText('+5.00 pp')).toBeInTheDocument(); // difference in percentage points
     expect(screen.getByText(/Not your transaction history/)).toBeInTheDocument();
     expect(screen.queryByTestId('equity-curve-unavailable')).not.toBeInTheDocument();
+  });
+});
+
+
+describe('EquityCurve controls', () => {
+  const history = [
+    point('2024-12-31', 50000, 50000),
+    point('2025-12-31', 100000, 90000),
+    point('2026-01-02', 110000, 100000),
+    point('2026-09-01', 120000, 110000),
+    point('2026-09-23', 140000, 115000),
+    point('2026-09-30', 150000, 120000),
+  ];
+
+  it('shows all supplied history, selects the actual YTD anchor, and changes the requested window', () => {
+    render(<EquityCurve portfolioValue={150000} series={history} seriesStatus="ready" timeframe="ALL" />);
+    expect(screen.getByRole('img')).toHaveAttribute('aria-label', expect.stringContaining('+200.00%'));
+    fireEvent.click(screen.getByRole('button', { name: 'YTD' }));
+    expect(screen.getByRole('img')).toHaveAttribute('aria-label', expect.stringContaining('+50.00%'));
+    expect(screen.getByRole('button', { name: 'YTD' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: '1W' }));
+    expect(screen.getByRole('img')).toHaveAttribute('aria-label', expect.stringContaining('+7.14%'));
+    expect(screen.getByRole('img')).toHaveAttribute('aria-label', expect.stringContaining('Sep 23, 2026 to Sep 30, 2026'));
+  });
+
+  it('toggles the benchmark line without changing the measured return or comparison', () => {
+    const { container } = render(<EquityCurve portfolioValue={150000} series={history} seriesStatus="ready" timeframe="ALL" />);
+    const toggle = screen.getByRole('button', { name: 'Show S&P 500 benchmark' });
+    expect(container.querySelector('.equity-benchmark')).toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(container.querySelector('.equity-benchmark')).not.toBeInTheDocument();
+    expect(screen.getByText('+200.00%')).toBeInTheDocument();
+    expect(screen.getByText('+60.00 pp')).toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(container.querySelector('.equity-benchmark')).toBeInTheDocument();
+  });
+
+  it('offers an in-flow chart expansion and an Escape shortcut to restore the layout', () => {
+    const onToggleExpand = vi.fn();
+    const { rerender } = render(<EquityCurve portfolioValue={150000} series={history} onToggleExpand={onToggleExpand} />);
+    const expand = screen.getByRole('button', { name: 'Expand chart' });
+    expect(expand).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(expand);
+    expect(onToggleExpand).toHaveBeenCalledOnce();
+    rerender(<EquityCurve portfolioValue={150000} series={history} expanded onToggleExpand={onToggleExpand} />);
+    const restore = screen.getByRole('button', { name: 'Restore layout' });
+    expect(restore).toHaveAttribute('aria-expanded', 'true');
+    expect(document.getElementById(restore.getAttribute('aria-controls')!)).toHaveStyle({ height: '360px' });
+    fireEvent.keyDown(restore, { key: 'Escape' });
+    expect(onToggleExpand).toHaveBeenCalledTimes(2);
+  });
+
+  it('lets a keyboard-accessible date slider inspect real values and resets inspection when the period changes', () => {
+    render(<EquityCurve portfolioValue={150000} series={history} seriesStatus="ready" timeframe="ALL" />);
+    const slider = screen.getByRole('slider', { name: 'Inspect chart date' });
+    fireEvent.change(slider, { target: { value: '0' } });
+    expect(slider).toHaveAttribute('aria-valuetext', 'Dec 31, 2024: $50,000');
+    fireEvent.click(screen.getByRole('button', { name: '1W' }));
+    expect(slider).toHaveAttribute('aria-valuetext', 'Sep 30, 2026: $150,000');
   });
 });

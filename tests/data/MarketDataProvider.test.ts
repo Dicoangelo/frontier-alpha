@@ -94,6 +94,17 @@ beforeEach(() => {
   resetQuotaStats();
 });
 
+it('isolates strict research history from a concurrent development mock fallback', async () => {
+  const provider = makeProvider({ polygonApiKey: undefined, alpacaApiKey: undefined, alpacaApiSecret: undefined, alphaVantageApiKey: undefined, yahooFallback: false, allowMockFallback: true });
+  (provider as unknown as { historicalPriceCache: CompositeCache }).historicalPriceCache = stubCache();
+  const [development, research] = await Promise.allSettled([
+    provider.getHistoricalPrices('AAPL', 10),
+    provider.getHistoricalPrices('AAPL', 10, { allowMockFallback: false }),
+  ]);
+  expect(development.status).toBe('fulfilled');
+  expect(research.status).toBe('rejected');
+});
+
 describe('getQuote — failover + retry', () => {
   it('retries a Polygon 429, then falls over to Alpaca', async () => {
     let polyHits = 0;

@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus, HelpCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus, HelpCircle, FileText } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { DataQualityBadge } from '@/components/shared/DataQualityBadge';
 import { FactorBar } from './FactorBar';
@@ -63,27 +63,14 @@ function NetExposureIndicator({ value }: { value: number }) {
 }
 
 function AccordionContent({ isExpanded, children }: { isExpanded: boolean; children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState(0);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    if (isExpanded) {
-      setHeight(ref.current.scrollHeight);
-    } else {
-      setHeight(0);
-    }
-  }, [isExpanded]);
-
+  // grid-template-rows 0fr -> 1fr animates to the content's natural height without
+  // measuring it, so the panel also stays correct when its children change while open.
   return (
     <div
-      style={{
-        height: `${height}px`,
-        overflow: 'hidden',
-        transition: 'height 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-      }}
+      className="grid transition-[grid-template-rows] duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+      style={{ gridTemplateRows: isExpanded ? '1fr' : '0fr' }}
     >
-      <div ref={ref}>
+      <div className="overflow-hidden min-h-0">
         {children}
       </div>
     </div>
@@ -246,16 +233,16 @@ export function FactorExposures({ factors, insight }: FactorExposuresProps) {
       )}
 
       {insight && (
-        <div className="glass-slab gradient-brand-subtle relative overflow-hidden mt-6 p-4 rounded-2xl before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)]">
-          <div className="flex items-start gap-3 pl-2">
+        <div className="mt-5 p-4 rounded-lg border border-theme bg-[var(--color-bg-tertiary)]">
+          <div className="flex items-start gap-3">
             <div
               className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
               style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)' }}
             >
-              <span className="text-lg" aria-hidden="true">🧠</span>
+              <FileText size={17} className="text-theme-secondary" aria-hidden="true" />
             </div>
             <div>
-              <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-accent-text)]">AI Insight</p>
+              <p className="text-xs font-semibold text-theme">Factor interpretation</p>
               <p className="text-sm text-theme-secondary mt-1 leading-relaxed">{insight}</p>
             </div>
           </div>

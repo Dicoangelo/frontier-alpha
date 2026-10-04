@@ -1,10 +1,12 @@
 import { useCallback } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
+import { BrandLogo } from '@/components/shared/BrandLogo';
 import {
+  Workflow,
   LayoutDashboard,
   Briefcase,
   ShoppingCart,
-  Sparkles,
+  SlidersHorizontal,
   BarChart3,
   Calendar,
   Bell,
@@ -17,6 +19,8 @@ import {
   Receipt,
   LineChart,
   ScrollText,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 
 // Route → lazy import map for hover prefetching
@@ -25,6 +29,7 @@ const routePrefetchMap: Record<string, () => Promise<unknown>> = {
   '/portfolio': () => import('@/pages/Portfolio'),
   '/trade':    () => import('@/pages/Trading'),
   '/optimize': () => import('@/pages/Optimize'),
+  '/research': () => import('@/pages/AgentResearch'),
   '/factors':  () => import('@/pages/Factors'),
   '/earnings': () => import('@/pages/Earnings'),
   '/alerts':   () => import('@/pages/Alerts'),
@@ -62,13 +67,14 @@ const navSections: NavSection[] = [
     label: 'Execution',
     items: [
       { name: 'Trade', icon: ShoppingCart, href: '/trade' },
-      { name: 'Optimize', icon: Sparkles, href: '/optimize' },
+      { name: 'Optimize', icon: SlidersHorizontal, href: '/optimize' },
       { name: 'Options', icon: Sigma, href: '/options' },
     ],
   },
   {
     label: 'Intelligence',
     items: [
+      { name: 'Agent research', icon: Workflow, href: '/research' },
       { name: 'Factors', icon: BarChart3, href: '/factors' },
       { name: 'CVRF', icon: Brain, href: '/cvrf' },
       { name: 'ML', icon: Cpu, href: '/ml' },
@@ -91,63 +97,64 @@ const navSections: NavSection[] = [
 
 interface SidebarProps {
   onNavigate?: () => void;
+  collapsed?: boolean;
+  onToggle?: () => void;
 }
 
-export function Sidebar({ onNavigate }: SidebarProps) {
-  // Prefetch route chunk on hover (fires import() which Vite caches)
+export function Sidebar({ onNavigate, collapsed = false, onToggle }: SidebarProps) {
+  const location = useLocation();
   const handlePrefetch = useCallback((href: string) => {
     const prefetch = routePrefetchMap[href];
     if (prefetch) prefetch();
   }, []);
 
   return (
-    // `flex flex-col` keeps the DQ Score footer pinned below the nav in the
-    // normal flow; previously it was `absolute bottom-0` and overlapped the
-    // bottom Account links once the nav grew tall enough (e.g. after the
-    // v1.2.6 Backtest entry was added).
-    <aside className="fixed left-0 top-16 bottom-0 w-64 glass-slab overflow-y-auto flex flex-col">
-      <nav className="p-4 space-y-6 flex-1">
+    <div className={`workspace-sidebar${collapsed ? ' is-collapsed' : ''}`}>
+      <div className="workspace-sidebar-heading fa-brand-sidebar-heading">
+        <div className="fa-brand-sidebar"><BrandLogo variant="wordmark" /><strong>Frontier Alpha</strong></div>
+        {onToggle && (
+          <button
+            type="button"
+            className="workspace-icon-button"
+            onClick={onToggle}
+            aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
+            aria-expanded={!collapsed}
+            title={collapsed ? 'Expand navigation' : 'Collapse navigation'}
+          >
+            {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
+        )}
+      </div>
+      <nav className="workspace-navigation" aria-label="Workspace views">
         {navSections.map((section) => (
-          <div key={section.label} className="space-y-1">
-            <p className="px-4 pb-1 mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
-              {section.label}
-            </p>
+          <div key={section.label} className="workspace-nav-section">
+            <p className="workspace-nav-heading">{section.label}</p>
             {section.items.map((item) => (
               <NavLink
                 key={item.name}
-                to={item.href}
+                to={item.href === '/' && location.pathname === '/dashboard' ? '/dashboard' : item.href}
                 end={item.href === '/'}
                 onClick={onNavigate}
                 onPointerEnter={() => handlePrefetch(item.href)}
-                className={({ isActive }: { isActive: boolean }) => `
-                  relative flex items-center gap-3 px-4 py-3 rounded-sm
-                  transition-[background-color,color] duration-200 animate-press
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-inset
-                  before:content-[''] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-full
-                  ${isActive
-                    ? 'bg-[var(--color-accent-light)] text-[var(--color-text)] font-medium before:bg-[image:var(--gradient-sovereign)]'
-                    : 'text-theme-secondary hover:bg-[var(--color-bg-tertiary)] hover:text-theme before:bg-transparent'
-                  }
-                `}
+                onFocus={() => handlePrefetch(item.href)}
+                aria-label={item.name}
+                title={collapsed ? item.name : undefined}
+                className={({ isActive }) => `workspace-nav-link${isActive ? ' is-active' : ''}`}
               >
-                <item.icon className="w-5 h-5" aria-hidden="true" />
-                <span className="text-sm">{item.name}</span>
+                <item.icon size={18} aria-hidden="true" />
+                <span className="workspace-nav-label">{item.name}</span>
               </NavLink>
             ))}
           </div>
         ))}
       </nav>
-
-      <div className="p-4 border-t border-theme glass-slab">
-        {/* DQ Score chip — status surface, not a CTA. The sovereign gradient is
-            demoted to a thin left rail + the numerals only (gradient text) so
-            the brand reads as a refined accent on calm glass, not a candy fill. */}
-        <div className="relative overflow-hidden p-3 rounded-sm glass-slab-floating border border-theme-light animate-press cursor-default before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)]">
-          <p className="mono text-[10px] font-semibold tracking-[0.3em] uppercase text-theme-muted">DQ Score</p>
-          <p className="mt-0.5 text-2xl font-semibold leading-none tabular-nums bg-[image:var(--gradient-sovereign)] bg-clip-text text-transparent">0.88</p>
-          <p className="mt-1.5 mono text-[10px] tracking-[0.15em] uppercase text-theme-muted">Powered by 80+ factors</p>
+      <div className="workspace-sidebar-footer">
+        <LineChart size={18} aria-hidden="true" />
+        <div>
+          <p>Portfolio workspace</p>
+          <span>Research. Review. Invest.</span>
         </div>
       </div>
-    </aside>
+    </div>
   );
 }

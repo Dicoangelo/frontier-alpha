@@ -141,7 +141,6 @@ function GreeksHeatmapInner({ cells }: GreeksHeatmapProps) {
         <div className="overflow-x-auto animate-fade-in">
           <table
             className="w-full text-xs"
-            role="img"
             aria-label={`${greekLabels[selectedGreek]} heatmap for ${optionSide}s across strikes and expirations`}
           >
             <thead>
@@ -178,10 +177,12 @@ function GreeksHeatmapInner({ cells }: GreeksHeatmapProps) {
                         <td
                           key={exp}
                           className="text-center mono px-2 py-2 tabular-nums"
-                          style={{ backgroundColor: getColor(value), color: 'var(--color-text-inverse, #fff)' }}
+                          style={{ backgroundColor: getColor(value) }}
                           title={`Strike ${strike}, ${EXPIRATION_LABELS[exp]}: ${value.toFixed(4)}`}
                         >
-                          {selectedGreek === 'gamma' ? value.toFixed(5) : value.toFixed(3)}
+                          <span className="inline-block rounded bg-[var(--color-bg-secondary)] px-1 py-0.5 text-xs text-[var(--color-text)]">
+                            {selectedGreek === 'gamma' ? value.toFixed(5) : value.toFixed(3)}
+                          </span>
                         </td>
                       );
                     })}

@@ -11,6 +11,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Timer } from 'lucide-react';
+import { Button } from '@/components/shared/Button';
 import { Card } from '@/components/shared/Card';
 import { factorsApi, type FactorSaliency } from '@/api/factors';
 
@@ -60,7 +61,7 @@ export function SignalTiming({ symbols }: SignalTimingProps) {
   const [selected, setSelected] = useState(0);
   const symbol = symbols[Math.min(selected, Math.max(0, symbols.length - 1))];
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['factors', 'saliency', symbol],
     queryFn: () => factorsApi.getSaliency(symbol),
     enabled: Boolean(symbol),
@@ -75,22 +76,9 @@ export function SignalTiming({ symbols }: SignalTimingProps) {
       title="Signal Timing"
       action={
         symbols.length > 1 ? (
-          <div className="flex gap-1 flex-wrap justify-end">
-            {symbols.slice(0, 6).map((s, i) => (
-              <button
-                key={s}
-                onClick={() => setSelected(i)}
-                aria-pressed={i === selected}
-                className={`px-2 py-0.5 min-h-[32px] inline-flex items-center justify-center mono text-[10px] tracking-wider uppercase rounded-md animate-press transition-[background-color,color] duration-200 ${
-                  i === selected
-                    ? 'bg-theme shadow text-theme'
-                    : 'text-theme-secondary hover:text-theme'
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
+          <select aria-label="Signal timing holding" value={symbol} onChange={event => setSelected(symbols.indexOf(event.target.value))} className="max-w-[160px] rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-1.5 text-xs text-theme">
+            {symbols.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
         ) : undefined
       }
     >
@@ -100,19 +88,20 @@ export function SignalTiming({ symbols }: SignalTimingProps) {
             <div key={i} className="h-12 rounded-lg animate-pulse-subtle bg-theme-tertiary" />
           ))}
         </div>
-      ) : isError || !data ? (
+      ) : isError || !data || data.factors.length === 0 ? (
         <div className="py-6 text-center">
           <Timer className="w-7 h-7 mx-auto mb-2 text-theme-muted" aria-hidden="true" />
           <p className="text-sm text-theme-secondary">
-            Not enough price history for {symbol} to attribute signal timing yet.
+            {isError ? `Signal timing could not be loaded for ${symbol}.` : `Not enough price history for ${symbol} to attribute signal timing yet.`}
           </p>
+          {isError && <Button variant="outline" size="sm" onClick={() => refetch()} className="mx-auto mt-3">Retry signal timing</Button>}
         </div>
       ) : (
         <div className="space-y-5">
           {data.factors.map((f) => (
             <AttributionBar key={f.factor} saliency={f} />
           ))}
-          <div className="flex items-center gap-4 pt-1 border-t border-[var(--color-border-light)]">
+          <div className="flex flex-wrap items-center gap-3 pt-1 border-t border-[var(--color-border-light)]">
             {(['recent', 'mid', 'far'] as const).map((key) => {
               const w = data.factors[0]?.windows.find((x) => x.key === key);
               return (

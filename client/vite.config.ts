@@ -1,25 +1,33 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 export default defineConfig({
   plugins: [
     react(),
-    VitePWA({
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'service-worker.ts',
-      registerType: 'autoUpdate',
-      injectRegister: 'auto',
-      manifest: false, // Using client/public/manifest.json
-      injectManifest: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-      },
-      devOptions: {
-        enabled: false,
-      },
-    }),
+    {
+      name: 'frontier-worker-bootstrap',
+      apply: 'build',
+      transformIndexHtml: () => [{
+        tag: 'script',
+        injectTo: 'head-prepend',
+        children: `
+          if ('serviceWorker' in navigator) {
+            let recovered = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              const root = document.getElementById('root');
+              if (!recovered && root && root.childElementCount === 0) {
+                recovered = true;
+                location.reload();
+              }
+            });
+            navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
+              .then(registration => registration.update())
+              .catch(() => { /* The app also works without offline support. */ });
+          }
+        `,
+      }],
+    },
   ],
   resolve: {
     alias: {
@@ -30,11 +38,8 @@ export default defineConfig({
     // Optimize chunk size
     chunkSizeWarningLimit: 500,
 
-    // No <link rel="modulepreload"> for the vendor chunks. The service worker
-    // (injectManifest, precache) serves them from cache, so every page load
-    // logged five "preload ... not used because it is a cross-world service
-    // worker request" warnings followed by five "preloaded but not used"
-    // warnings. The chunks still load through the normal import graph.
+    // Vendor chunks load through the normal module graph. Avoid redundant
+    // preloads when the service worker satisfies immutable assets from cache.
     modulePreload: {
       resolveDependencies: (_filename, deps) => deps.filter((d) => !/vendor-/.test(d)),
     },

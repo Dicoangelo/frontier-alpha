@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { getErrorMessage } from '@/api/client';
+import './transaction-workspace.css';
 import {
   TrendingUp,
   TrendingDown,
@@ -26,6 +28,7 @@ interface TradeExecutorProps {
   defaultSymbol?: string;
   onOrderSubmitted?: (order: Order) => void;
   className?: string;
+  onSymbolChange?: (symbol: string) => void;
 }
 
 const orderTypeOptions = [
@@ -46,6 +49,7 @@ export function TradeExecutor({
   defaultSymbol = '',
   onOrderSubmitted,
   className = '',
+  onSymbolChange,
 }: TradeExecutorProps) {
   const {
     account,
@@ -53,8 +57,11 @@ export function TradeExecutor({
     brokerType,
     paperTrading,
     accountLoading,
+    accountError,
+    refetchAccount,
     orders,
     ordersLoading,
+    ordersError,
     refetchOrders,
     submitOrder,
     cancelOrder,
@@ -64,7 +71,11 @@ export function TradeExecutor({
 
   // Form state
   const [symbol, setSymbol] = useState(defaultSymbol);
-  const [qty, setQty] = useState<number>(1);
+  const [qty, setQty] = useState('1');
+  const formRef = useRef<HTMLFormElement>(null);
+  const pendingRef = useRef(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [previewRequest, setPreviewRequest] = useState<OrderRequest | null>(null);
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [orderType, setOrderType] = useState<'market' | 'limit' | 'stop' | 'stop_limit'>('market');
   const [timeInForce, setTimeInForce] = useState<'day' | 'gtc' | 'ioc' | 'fok'>('day');
@@ -86,115 +97,92 @@ export function TradeExecutor({
   // Update default symbol when prop changes
   useEffect(() => {
     if (defaultSymbol) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing prop to local state
       setSymbol(defaultSymbol);
     }
   }, [defaultSymbol]);
 
-  // Auto-fill limit price from quote
-  useEffect(() => {
-    if (quote && (orderType === 'limit' || orderType === 'stop_limit') && !limitPrice) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- initializing from external data
-      setLimitPrice(side === 'buy' ? quote.ask : quote.bid);
-    }
-  }, [quote, orderType, side, limitPrice]);
-
   const needsLimitPrice = orderType === 'limit' || orderType === 'stop_limit';
   const needsStopPrice = orderType === 'stop' || orderType === 'stop_limit';
 
-  // Handle order preview
-  const handlePreview = useCallback(async () => {
-    if (!symbol.trim() || qty <= 0) return;
-
-    const orderReq: Partial<OrderRequest> = {
-      symbol: symbol.toUpperCase(),
-      qty,
-      side,
-      type: orderType,
+  const buildRequest = (): OrderRequest | null => {
+    const quantity = Number(qty);
+    if (!symbol.trim() || !Number.isFinite(quantity) || quantity <= 0) {
+      setFormError('Enter a symbol and a quantity greater than zero.');
+      return null;
+    }
+    if ((needsLimitPrice && (!limitPrice || !Number.isFinite(limitPrice) || limitPrice <= 0)) ||
+        (needsStopPrice && (!stopPrice || !Number.isFinite(stopPrice) || stopPrice <= 0))) {
+      setFormError('Enter a positive price for each required price field.');
+      return null;
+    }
+    return {
+      symbol: symbol.trim().toUpperCase(), qty: quantity, side, type: orderType,
+      timeInForce, extendedHours,
+      ...(needsLimitPrice ? { limitPrice } : {}),
+      ...(needsStopPrice ? { stopPrice } : {}),
     };
+  };
 
-    if (needsLimitPrice && limitPrice) {
-      orderReq.limitPrice = limitPrice;
-    }
-
-    if (needsStopPrice && stopPrice) {
-      orderReq.stopPrice = stopPrice;
-    }
-
+  const handlePreview = async () => {
+    if (pendingRef.current) return;
+    setFormError(null);
+    const request = buildRequest();
+    if (!request || !formRef.current?.reportValidity()) return;
+    pendingRef.current = true;
     try {
-      const result = await orderPreview.mutateAsync(orderReq);
+      const result = await orderPreview.mutateAsync(request);
       setPreview(result.preview);
       setValidation(result.validation);
+      setPreviewRequest(request);
       setShowPreview(true);
     } catch (error) {
-      console.error('Preview failed:', error);
-    }
-  }, [symbol, qty, side, orderType, limitPrice, stopPrice, needsLimitPrice, needsStopPrice, orderPreview]);
+      setFormError(getErrorMessage(error));
+    } finally { pendingRef.current = false; }
+  };
 
-  // Handle order submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!symbol.trim()) return;
-    if (qty <= 0) return;
-
-    const orderReq: OrderRequest = {
-      symbol: symbol.toUpperCase(),
-      qty,
-      side,
-      type: orderType,
-      timeInForce,
-      extendedHours,
-    };
-
-    if (needsLimitPrice && limitPrice) {
-      orderReq.limitPrice = limitPrice;
-    }
-
-    if (needsStopPrice && stopPrice) {
-      orderReq.stopPrice = stopPrice;
-    }
-
+  const submitRequest = async (request: OrderRequest) => {
+    if (pendingRef.current) return;
+    pendingRef.current = true;
+    setFormError(null);
     try {
-      const result = await submitOrder.mutateAsync(orderReq);
-
+      const result = await submitOrder.mutateAsync(request);
       setSubmitSuccess(true);
-      setTimeout(() => setSubmitSuccess(false), 3000);
-
-      if (onOrderSubmitted && result.order) {
-        onOrderSubmitted(result.order);
-      }
-
-      // Reset form
+      if (result.order) onOrderSubmitted?.(result.order);
       setSymbol('');
-      setQty(1);
+      onSymbolChange?.('');
+      setQty('1');
       setLimitPrice(undefined);
       setStopPrice(undefined);
       setShowPreview(false);
       setPreview(null);
       setValidation(null);
+      setPreviewRequest(null);
     } catch (error) {
-      console.error('Order submission failed:', error);
-    }
+      setFormError(getErrorMessage(error));
+    } finally { pendingRef.current = false; }
   };
 
-  // Confirm and submit from preview
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    setSubmitSuccess(false);
+    const request = buildRequest();
+    if (request) void submitRequest(request);
+  };
+
   const handleConfirmOrder = () => {
-    setShowPreview(false);
-    const form = document.getElementById('order-form') as HTMLFormElement;
-    if (form) {
-      form.requestSubmit();
-    }
+    if (previewRequest && validation?.valid) void submitRequest(previewRequest);
   };
 
   // Calculate estimated cost
-  const estimatedCost = quote ? qty * (side === 'buy' ? quote.ask : quote.bid) : 0;
+  const estimatedCost = quote ? Number(qty) * (side === 'buy' ? quote.ask : quote.bid) : 0;
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <div className={`transaction-workspace space-y-4 ${className}`}>
       <AccountSummary
         account={account}
         accountLoading={accountLoading}
+        error={accountError ? getErrorMessage(accountError) : undefined}
+        onRetry={() => refetchAccount()}
         brokerConnected={brokerConnected}
         brokerType={brokerType}
         paperTrading={paperTrading}
@@ -213,10 +201,10 @@ export function TradeExecutor({
           </h3>
         </div>
 
-        <form id="order-form" onSubmit={handleSubmit} className="space-y-4">
+        <form ref={formRef} id="order-form" onSubmit={handleSubmit} className="space-y-4">
           {/* Symbol with Quote */}
           <div>
-            <label htmlFor="order-symbol" className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">
+            <label htmlFor="order-symbol" className="block text-xs font-medium text-theme-secondary mb-2">
               Symbol
             </label>
             <div className="flex flex-wrap gap-2">
@@ -224,9 +212,9 @@ export function TradeExecutor({
                 id="order-symbol"
                 type="text"
                 value={symbol}
-                onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+                onChange={(e) => { const next = e.target.value.toUpperCase().replace(/\s/g, ''); setSymbol(next); onSymbolChange?.(next); setSubmitSuccess(false); }}
                 placeholder="AAPL"
-                className="flex-1 px-3 py-2 min-h-[44px] glass-slab-floating rounded-lg text-theme focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-[border-color,box-shadow] duration-200"
+                className="flex-1 min-w-0 basis-32 px-3 py-2 min-h-[44px] glass-slab-floating rounded-lg text-theme focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-[border-color,box-shadow] duration-200"
                 required
               />
               {quote && (
@@ -242,8 +230,8 @@ export function TradeExecutor({
           </div>
 
           {/* Side Toggle */}
-          <div>
-            <label className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Side</label>
+          <fieldset>
+            <legend className="block text-xs font-medium text-theme-secondary mb-2">Side</legend>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -251,7 +239,7 @@ export function TradeExecutor({
                 aria-pressed={side === 'buy'}
                 className={`flex-1 py-2 min-h-[44px] px-4 rounded-lg font-medium animate-press transition-[background-color,box-shadow,transform] duration-200 flex items-center justify-center gap-2 ${
                   side === 'buy'
-                    ? 'bg-[image:var(--gradient-sovereign)] text-white shadow-[0_18px_60px_-20px_rgba(123,44,255,0.35)] animate-lift'
+                    ? 'bg-[var(--color-accent)] text-white'
                     : 'glass-slab-floating text-theme-secondary hover:text-theme'
                 }`}
               >
@@ -264,26 +252,27 @@ export function TradeExecutor({
                 aria-pressed={side === 'sell'}
                 className={`flex-1 py-2 min-h-[44px] px-4 rounded-lg font-medium animate-press transition-[background-color,box-shadow,transform] duration-200 flex items-center justify-center gap-2 ${
                   side === 'sell'
-                    ? 'text-white shadow-[0_18px_60px_-20px_rgba(239,68,68,0.35)] animate-lift'
+                    ? 'text-[var(--color-negative)] ring-1 ring-inset ring-[var(--color-negative)]/40'
                     : 'glass-slab-floating text-theme-secondary hover:text-theme'
                 }`}
-                style={side === 'sell' ? { backgroundColor: 'var(--color-negative)' } : undefined}
+                style={side === 'sell' ? { backgroundColor: 'color-mix(in srgb, var(--color-negative) 12%, transparent)' } : undefined}
               >
                 <TrendingDown className="w-4 h-4" aria-hidden="true" />
                 Sell
               </button>
             </div>
-          </div>
+          </fieldset>
 
           {/* Quantity */}
           <div>
-            <label htmlFor="order-qty" className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Quantity</label>
+            <label htmlFor="order-qty" className="block text-xs font-medium text-theme-secondary mb-2">Quantity</label>
             <input
               id="order-qty"
               type="number"
               value={qty}
-              onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
-              min="1"
+              onChange={(e) => setQty(e.target.value)}
+              min="0.000001"
+              step="any"
               className="w-full px-3 py-2 min-h-[44px] glass-slab-floating rounded-lg mono tabular-nums text-theme focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-[border-color,box-shadow] duration-200"
               required
             />
@@ -297,8 +286,9 @@ export function TradeExecutor({
           {/* Order Type */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Order Type</label>
+              <label htmlFor="order-type" className="block text-xs font-medium text-theme-secondary mb-2">Order Type</label>
               <select
+                id="order-type"
                 value={orderType}
                 onChange={(e) => setOrderType(e.target.value as typeof orderType)}
                 className="w-full px-3 py-2 min-h-[44px] glass-slab-floating rounded-lg text-theme focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-[border-color,box-shadow] duration-200"
@@ -312,8 +302,9 @@ export function TradeExecutor({
             </div>
 
             <div>
-              <label className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Time in Force</label>
+              <label htmlFor="order-time-in-force" className="block text-xs font-medium text-theme-secondary mb-2">Time in Force</label>
               <select
+                id="order-time-in-force"
                 value={timeInForce}
                 onChange={(e) => setTimeInForce(e.target.value as typeof timeInForce)}
                 className="w-full px-3 py-2 min-h-[44px] glass-slab-floating rounded-lg text-theme focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-[border-color,box-shadow] duration-200"
@@ -330,10 +321,12 @@ export function TradeExecutor({
           {/* Limit Price */}
           {needsLimitPrice && (
             <div>
-              <label className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Limit Price</label>
+              <label htmlFor="order-limit-price" className="block text-xs font-medium text-theme-secondary mb-2">Limit Price</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted">$</span>
                 <input
+                  id="order-limit-price"
+                  min="0.01"
                   type="number"
                   value={limitPrice || ''}
                   onChange={(e) => setLimitPrice(parseFloat(e.target.value) || undefined)}
@@ -349,10 +342,12 @@ export function TradeExecutor({
           {/* Stop Price */}
           {needsStopPrice && (
             <div>
-              <label className="block mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-secondary mb-1.5">Stop Price</label>
+              <label htmlFor="order-stop-price" className="block text-xs font-medium text-theme-secondary mb-2">Stop Price</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted">$</span>
                 <input
+                  id="order-stop-price"
+                  min="0.01"
                   type="number"
                   value={stopPrice || ''}
                   onChange={(e) => setStopPrice(parseFloat(e.target.value) || undefined)}
@@ -367,7 +362,7 @@ export function TradeExecutor({
 
           {/* Extended Hours */}
           {!isMarketOpen && (
-            <label className="flex items-center gap-2 cursor-pointer animate-press">
+            <label className="flex min-h-10 items-center gap-2 cursor-pointer animate-press">
               <input
                 type="checkbox"
                 checked={extendedHours}
@@ -379,14 +374,14 @@ export function TradeExecutor({
           )}
 
           {/* Error Display — type rail */}
-          {submitOrder.isError && (
-            <div
+          {(formError || submitOrder.isError) && (
+            <div role="alert"
               className="glass-slab-floating relative overflow-hidden flex items-center gap-2 p-3 pl-5 rounded-xl before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] bg-[var(--color-negative)]/8"
             >
               <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px] bg-[var(--color-negative)]" />
               <AlertCircle className="w-4 h-4 text-[var(--color-negative)]" aria-hidden="true" />
               <span className="text-sm leading-relaxed text-[var(--color-negative)]">
-                {(submitOrder.error as Error)?.message || 'Order submission failed'}
+                {formError || (submitOrder.error as Error)?.message || 'Order submission failed'}
               </span>
             </div>
           )}
@@ -408,7 +403,8 @@ export function TradeExecutor({
               type="button"
               variant="outline"
               onClick={handlePreview}
-              disabled={!symbol.trim() || qty <= 0 || orderPreview.isPending}
+              disabled={!symbol.trim() || Number(qty) <= 0 || orderPreview.isPending || submitOrder.isPending}
+              isLoading={orderPreview.isPending}
               leftIcon={<Eye className="w-4 h-4" />}
               className="flex-1 animate-press"
             >
@@ -418,6 +414,7 @@ export function TradeExecutor({
               type="submit"
               variant={side === 'buy' ? 'primary' : 'danger'}
               isLoading={submitOrder.isPending}
+              disabled={orderPreview.isPending}
               leftIcon={side === 'buy' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
               className={`flex-1 animate-press animate-lift ${side === 'buy' ? 'bg-[image:var(--gradient-sovereign)]' : ''}`}
             >
@@ -427,7 +424,7 @@ export function TradeExecutor({
 
           {!brokerConnected && (
             <p className="mono text-[10px] tracking-[0.2em] uppercase text-center text-theme-muted">
-              Demo mode — configure ALPACA_API_KEY for real trading
+              Account details are unavailable. Verify your credentials using Broker settings.
             </p>
           )}
         </form>
@@ -438,15 +435,19 @@ export function TradeExecutor({
         <OrderPreviewModal
           preview={preview}
           validation={validation}
-          side={side}
+          side={previewRequest?.side ?? side}
+          request={previewRequest ?? undefined}
+          error={formError}
           isSubmitting={submitOrder.isPending ?? false}
-          onClose={() => setShowPreview(false)}
+          onClose={() => { if (!submitOrder.isPending) setShowPreview(false); }}
           onConfirm={handleConfirmOrder}
         />
       )}
 
+      {cancelOrder.isError && <p role="alert" className="workspace-inline-error">Could not cancel order: {getErrorMessage(cancelOrder.error)}</p>}
       <OrderHistory
         orders={orders}
+        error={ordersError ? getErrorMessage(ordersError) : undefined}
         ordersLoading={ordersLoading}
         onRefetch={() => refetchOrders()}
         onCancelOrder={(id) => cancelOrder.mutate(id)}
@@ -466,17 +467,22 @@ export function TradeExecutorCompact({
   onOrderSubmitted?: (order: Order) => void;
   className?: string;
 }) {
-  const [qty, setQty] = useState(1);
+  const [qty, setQty] = useState('1');
+  const quickPending = useRef(false);
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const { submitOrder } = useTrading();
   const { data: quote } = useQuote(symbol);
 
-  const handleQuickTrade = async () => {
+  const handleQuickTrade = async (requestedSide: 'buy' | 'sell') => {
+    const quantity = Number(qty);
+    if (!Number.isFinite(quantity) || quantity <= 0 || quickPending.current) return;
+    quickPending.current = true;
+    setSide(requestedSide);
     try {
       const result = await submitOrder.mutateAsync({
         symbol: symbol.toUpperCase(),
-        qty,
-        side,
+        qty: quantity,
+        side: requestedSide,
         type: 'market',
         timeInForce: 'day',
       });
@@ -486,10 +492,10 @@ export function TradeExecutorCompact({
       }
     } catch (error) {
       console.error('Quick trade failed:', error);
-    }
+    } finally { quickPending.current = false; }
   };
 
-  const estimatedCost = quote ? qty * (side === 'buy' ? quote.ask : quote.bid) : 0;
+  const estimatedCost = quote ? Number(qty) * (side === 'buy' ? quote.ask : quote.bid) : 0;
 
   return (
     <div className={`glass-slab-floating rounded-xl p-4 ${className}`}>
@@ -506,17 +512,19 @@ export function TradeExecutorCompact({
         <input
           type="number"
           value={qty}
-          onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
-          min="1"
+          onChange={(e) => setQty(e.target.value)}
+          min="0.000001"
+          step="any"
+          aria-label={`Quantity for ${symbol}`}
           className="w-20 px-2 py-1.5 min-h-[40px] glass-slab-floating rounded-lg mono tabular-nums text-center text-theme focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition-[border-color,box-shadow] duration-200"
         />
         <Button
           variant="primary"
           size="sm"
           onClick={() => {
-            setSide('buy');
-            handleQuickTrade();
+            void handleQuickTrade('buy');
           }}
+          disabled={submitOrder.isPending || !Number.isFinite(Number(qty)) || Number(qty) <= 0}
           isLoading={submitOrder.isPending && side === 'buy'}
           className="flex-1 bg-[image:var(--gradient-sovereign)] animate-press animate-lift"
         >
@@ -526,9 +534,9 @@ export function TradeExecutorCompact({
           variant="danger"
           size="sm"
           onClick={() => {
-            setSide('sell');
-            handleQuickTrade();
+            void handleQuickTrade('sell');
           }}
+          disabled={submitOrder.isPending || !Number.isFinite(Number(qty)) || Number(qty) <= 0}
           isLoading={submitOrder.isPending && side === 'sell'}
           className="flex-1 animate-press animate-lift"
         >

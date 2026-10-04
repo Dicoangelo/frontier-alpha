@@ -129,12 +129,12 @@ function StrategySelectorInner() {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" vertical={false} />
               <XAxis
                 dataKey="price"
-                tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
                 tickFormatter={(v: number) => `$${v.toFixed(0)}`}
                 axisLine={{ stroke: 'var(--color-border)' }}
               />
               <YAxis
-                tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
                 tickFormatter={(v: number) => `$${v.toFixed(0)}`}
                 axisLine={{ stroke: 'var(--color-border)' }}
               />
@@ -148,7 +148,7 @@ function StrategySelectorInner() {
                 x={UNDERLYING_PRICE}
                 stroke="var(--color-text-muted)"
                 strokeDasharray="2 2"
-                label={{ value: 'Current', position: 'top', fill: 'var(--color-text-muted)', fontSize: 10 }}
+                label={{ value: 'Current', position: 'top', fill: 'var(--color-text-muted)', fontSize: 12 }}
               />
               {breakevens.map((be, i) => (
                 <ReferenceLine
@@ -156,7 +156,7 @@ function StrategySelectorInner() {
                   x={be}
                   stroke="var(--color-warning)"
                   strokeDasharray="4 4"
-                  label={{ value: `BE: $${be.toFixed(0)}`, position: 'top', fill: 'var(--color-warning)', fontSize: 10 }}
+                  label={{ value: `BE: $${be.toFixed(0)}`, position: 'top', fill: 'var(--color-warning)', fontSize: 12 }}
                 />
               ))}
               <Legend />

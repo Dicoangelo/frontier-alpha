@@ -1,6 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useId } from 'react';
 import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { OverlayPortal } from './OverlayPortal';
+import { useDialogFocus } from '@/hooks/useDialogFocus';
 
 interface BottomSheetProps {
   isOpen: boolean;
@@ -30,70 +32,33 @@ export function BottomSheet({
 
   const sheetRef = useRef<HTMLDivElement>(null);
   const startY = useRef(0);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const titleId = useId();
+  useDialogFocus(sheetRef, isOpen);
+  useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
 
   const heightClasses = {
-    auto: 'max-h-[80vh]',
-    half: 'h-[50vh]',
-    full: 'h-[90vh]',
+    auto: 'max-h-[85dvh]',
+    half: 'h-[50dvh]',
+    full: 'h-[95dvh]',
   };
 
   const handleClose = useCallback(() => {
+    if (closeTimer.current) return;
     setIsClosing(true);
-    setTimeout(() => {
+    closeTimer.current = setTimeout(() => {
+      closeTimer.current = null;
       setIsClosing(false);
       onClose();
-      // Return focus to the element that opened the sheet
-      previousFocusRef.current?.focus();
     }, 300);
   }, [onClose]);
 
-  // Capture previous focus and move focus into the sheet when it opens
-  useEffect(() => {
-    if (isOpen) {
-      previousFocusRef.current = document.activeElement as HTMLElement;
-      // Slide-in: start translated, then release on next frame
-      setIsEntering(true);
-      const raf = requestAnimationFrame(() => setIsEntering(false));
-      // Focus the sheet itself (or first focusable child) after render
-      const timer = setTimeout(() => {
-        const focusable = sheetRef.current?.querySelector<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        (focusable ?? sheetRef.current)?.focus();
-      }, 50);
-      return () => {
-        cancelAnimationFrame(raf);
-        clearTimeout(timer);
-      };
-    }
-  }, [isOpen]);
-
-  // Focus trap: keep Tab within the sheet while it is open
+  // Animate the sheet without making its route ancestor a positioning context.
   useEffect(() => {
     if (!isOpen) return;
-
-    const handleTab = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab' || !sheetRef.current) return;
-      const focusable = Array.from(
-        sheetRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        )
-      ).filter((el) => !el.hasAttribute('disabled'));
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleTab);
-    return () => document.removeEventListener('keydown', handleTab);
+    setIsEntering(true);
+    const frame = requestAnimationFrame(() => setIsEntering(false));
+    return () => cancelAnimationFrame(frame);
   }, [isOpen]);
 
   // Handle drag to close
@@ -103,9 +68,9 @@ export function BottomSheet({
     const sheet = sheetRef.current;
 
     const handleTouchStart = (e: TouchEvent) => {
-      // Only drag from handle or top area
+      // Keep scrolling the content independent of the dismiss gesture.
       const target = e.target as HTMLElement;
-      if (!target.closest('[data-sheet-handle]') && sheet.scrollTop > 0) return;
+      if (!target.closest('[data-sheet-handle]')) return;
 
       startY.current = e.touches[0].clientY;
       setIsDragging(true);
@@ -149,6 +114,8 @@ export function BottomSheet({
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
+        e.preventDefault();
+        e.stopPropagation();
         handleClose();
       }
     };
@@ -156,19 +123,6 @@ export function BottomSheet({
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- handleClose is stable (only calls onClose prop)
-  }, [isOpen]);
-
-  // Lock body scroll when open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isOpen]);
 
   if (!isOpen && !isClosing) return null;
@@ -184,7 +138,8 @@ export function BottomSheet({
   }
 
   return (
-    <div className="fixed inset-0 z-50" role="presentation">
+    <OverlayPortal>
+    <div className="fixed inset-0 z-[110]" role="presentation">
       {/* Backdrop */}
       <div
         className={`
@@ -203,7 +158,7 @@ export function BottomSheet({
           absolute bottom-0 left-0 right-0
           glass-modal rounded-t-3xl
           shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.4)]
-          flex flex-col
+          flex flex-col min-h-0
           ${heightClasses[height]}
         `}
         style={{
@@ -214,7 +169,8 @@ export function BottomSheet({
         }}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={title ? 'sheet-title' : undefined}
+        aria-labelledby={title ? titleId : undefined}
+        aria-label={title ? undefined : 'Details'}
         tabIndex={-1}
       >
         {/* Drag handle */}
@@ -238,7 +194,7 @@ export function BottomSheet({
               )}
               {title && (
                 <h2
-                  id="sheet-title"
+                  id={titleId}
                   className="text-lg font-semibold text-theme"
                 >
                   {title}
@@ -259,11 +215,12 @@ export function BottomSheet({
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-4 max-h-[80vh]">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-6 py-4">
           {children}
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }
 

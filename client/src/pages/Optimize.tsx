@@ -1,462 +1,102 @@
-/**
- * Portfolio Optimization Page
- *
- * Multi-objective Monte Carlo optimization with cognitive insights.
- * Layout-wrapped (see App.tsx) — page chrome is provided by parent Layout.
- * This page contributes the section shell, hero, controls, and result surfaces.
- */
-
 import { useState } from 'react';
-import { usePortfolio } from '@/hooks/usePortfolio';
+import { Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { Sparkles, TrendingUp, Shield, Target, Info } from 'lucide-react';
+import { SlidersHorizontal, TrendingUp, Shield, Target, Info, RotateCcw } from 'lucide-react';
+import { usePortfolio } from '@/hooks/usePortfolio';
 import { api, getErrorMessage } from '@/api/client';
 import { useToast } from '@/hooks/useToast';
-import { Spinner } from '@/components/shared/Spinner';
+import { Button } from '@/components/shared/Button';
 import { UpgradeGate } from '@/components/shared/UpgradeGate';
 import { SectionErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { MonteCarloChart } from '@/components/charts/MonteCarloChart';
 import type { OptimizationConfig, OptimizationResult } from '@/types';
 
-// Page-local objective union — kept here because the picker uses this exact
-// subset and the shared OptimizationConfig.objective is the canonical superset.
 type OptimizationObjective = OptimizationConfig['objective'];
-
-// Canonical input class — matches Settings/Backtest/LoginForm pattern.
-const inputClass =
-  'block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm';
-
-const labelClass =
-  'block mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2';
-
-const kickerClass =
-  'mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2';
-
+const inputClass = 'block w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-3 py-2.5 text-sm tabular-nums text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30';
+const labelClass = 'mb-1.5 block text-xs font-medium text-[var(--color-text-secondary)]';
+const panelClass = 'rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 sm:p-5';
 const objectives: { value: OptimizationObjective; label: string; description: string; icon: typeof TrendingUp }[] = [
-  { value: 'max_sharpe', label: 'Maximum Sharpe', description: 'Maximize risk-adjusted returns', icon: TrendingUp },
-  { value: 'min_volatility', label: 'Minimum Volatility', description: 'Minimize portfolio risk', icon: Shield },
-  { value: 'risk_parity', label: 'Risk Parity', description: 'Equal risk contribution', icon: Target },
-  { value: 'target_volatility', label: 'Target Volatility', description: 'Hit a specific volatility level', icon: Info },
+  { value: 'max_sharpe', label: 'Maximum Sharpe', description: 'Risk-adjusted return', icon: TrendingUp },
+  { value: 'min_volatility', label: 'Minimum volatility', description: 'Lower portfolio volatility', icon: Shield },
+  { value: 'risk_parity', label: 'Risk parity', description: 'Balanced risk contribution', icon: Target },
+  { value: 'target_volatility', label: 'Target volatility', description: 'Set an annualized target', icon: Info },
 ];
 
 export function Optimize() {
-  return (
-    <UpgradeGate
-      requiredPlan="pro"
-      title="Portfolio Optimizer"
-      description="Monte Carlo optimization across 10,000+ paths — max Sharpe, min variance, risk parity, and target volatility — is part of the Pro Plan. Upgrade to run solver-grade weight allocation on your portfolio."
-    >
-      <OptimizeContent />
-    </UpgradeGate>
-  );
+  return <UpgradeGate requiredPlan="pro" title="Portfolio optimizer" description="Compare allocation objectives and portfolio constraints with the Pro plan."><OptimizeContent /></UpgradeGate>;
 }
 
 function OptimizeContent() {
   const [selectedObjective, setSelectedObjective] = useState<OptimizationObjective>('max_sharpe');
   const [targetVol, setTargetVol] = useState('0.15');
   const [maxWeight, setMaxWeight] = useState('0.25');
+  const [validationError, setValidationError] = useState<string | null>(null);
   const { toastSuccess, toastError } = useToast();
-
-  // US-003 auth gate — /portfolio is Bearer-gated. The UpgradeGate renders this
-  // content as a blurred preview for non-pro (incl. anonymous) visitors, so the
-  // query would otherwise fire and 401 in demo mode. Hold it until a real
-  // session exists; with none, `symbols` stays empty and the holdings panel
-  // shows its "No positions in portfolio." state.
-
-  const { data: portfolio } = usePortfolio();
-
+  const { data: portfolio, isLoading: portfolioLoading, isError: portfolioError, refetch: refetchPortfolio } = usePortfolio();
+  const symbols = [...new Set(portfolio?.positions?.map(p => p.symbol) || [])];
   const optimizeMutation = useMutation<{ data: OptimizationResult }, Error, { symbols: string[]; config: OptimizationConfig }>({
-    mutationFn: (data) => api.post('/portfolio/optimize', data),
-    onSuccess: (response) => {
-      const sharpe = response.data.sharpeRatio.toFixed(2);
-      toastSuccess('Optimization complete', { message: `Sharpe ratio: ${sharpe}` });
-    },
-    onError: (error) => {
-      toastError('Optimization failed', { message: getErrorMessage(error) });
-    },
+    mutationFn: data => api.post('/portfolio/optimize', data),
+    onSuccess: response => toastSuccess('Optimization complete', { message: `Sharpe ratio: ${response.data.sharpeRatio.toFixed(2)}` }),
+    onError: error => toastError('Optimization failed', { message: getErrorMessage(error) }),
   });
-
-  const symbols = portfolio?.positions?.map((p) => p.symbol) || [];
-
-  const handleOptimize = () => {
-    if (symbols.length === 0) return;
-
-    const config: OptimizationConfig = {
-      objective: selectedObjective,
-      // 4.5% — 10-year treasury proxy. Server defaults this to the same
-      // value when omitted, but sending it explicitly avoids any client-
-      // server type mismatch that previously surfaced as a NaN sharpe.
-      riskFreeRate: 0.045,
-      constraints: {
-        maxWeight: parseFloat(maxWeight),
-      },
-    };
-
-    if (selectedObjective === 'target_volatility') {
-      config.targetVolatility = parseFloat(targetVol);
-      config.constraints!.targetVolatility = parseFloat(targetVol);
-    }
-
-    optimizeMutation.mutate({ symbols, config });
-  };
-
   const result = optimizeMutation.data?.data;
   const isPending = optimizeMutation.isPending;
+  const clearResult = () => { optimizeMutation.reset(); setValidationError(null); };
+  const handleReset = () => {
+    setSelectedObjective('max_sharpe'); setTargetVol('0.15'); setMaxWeight('0.25'); clearResult();
+  };
+  const handleOptimize = () => {
+    const weight = Number(maxWeight);
+    const volatility = Number(targetVol);
+    if (symbols.length < 2) { setValidationError('Add at least two holdings with price history to optimize a portfolio.'); return; }
+    if (!maxWeight.trim() || !Number.isFinite(weight) || weight < 0.05 || weight > 1) { setValidationError('Enter a maximum position weight between 0.05 and 1.'); return; }
+    if (selectedObjective === 'target_volatility' && (!targetVol.trim() || !Number.isFinite(volatility) || volatility < 0.05 || volatility > 0.5)) { setValidationError('Enter a target volatility between 0.05 and 0.50.'); return; }
+    setValidationError(null);
+    const config: OptimizationConfig = { objective: selectedObjective, riskFreeRate: 0.045, constraints: { maxWeight: weight } };
+    if (selectedObjective === 'target_volatility') {
+      config.targetVolatility = volatility;
+      config.constraints!.targetVolatility = volatility;
+    }
+    optimizeMutation.mutate({ symbols, config });
+  };
+  const monteCarlo = result?.monteCarlo;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div
-        className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 animate-fade-in-up"
-        style={{ animationDelay: '0ms', animationFillMode: 'both' }}
-      >
-        <div>
-          <p className={kickerClass}>
-            Optimize · <span className="text-[color:var(--color-accent-secondary-text)]">Monte Carlo</span>
-          </p>
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
-            <span className="text-gradient-brand">Portfolio</span>{' '}
-            <span className="text-theme">Optimization</span>
-          </h1>
-          <p className="mt-3 text-sm sm:text-base text-theme-secondary leading-relaxed max-w-2xl">
-            Multi-factor optimization with cognitive insights. Maximize Sharpe, minimize variance,
-            balance risk contribution, or pin volatility to a target band.
-          </p>
-        </div>
-
-        {/* Convergence indicator — type-rail pill */}
-        {(isPending || result) && (
-          <div
-            className={`glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-2.5 inline-flex items-center gap-2 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] ${
-              isPending
-                ? "before:bg-[var(--color-warning)] shadow-[0_8px_30px_-12px_rgba(245,158,11,0.45)]"
-                : "before:bg-[var(--color-positive)] shadow-[0_8px_30px_-12px_rgba(34,197,94,0.45)]"
-            }`}
-            role="status"
-            aria-live="polite"
-          >
-            {isPending ? (
-              <>
-                <div className="w-3 h-3 border-2 border-[var(--color-warning)]/30 border-t-[var(--color-warning)] rounded-full animate-spin" aria-hidden="true" />
-                <span className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-warning)]">
-                  Sampling
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="w-2 h-2 rounded-full bg-[var(--color-positive)] holo-pulse" aria-hidden="true" />
-                <span className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-positive)]">
-                  Converged
-                </span>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ── Objective + Constraints (left) ────────────────────────────── */}
-        <div
-          className="lg:col-span-2 space-y-6 animate-fade-in-up"
-          style={{ animationDelay: '50ms', animationFillMode: 'both' }}
-        >
-          <section className="glass-slab rounded-2xl p-6 sm:p-8">
-            <header className="flex items-start gap-4 mb-6">
-              <div
-                className="p-2.5 rounded-lg shrink-0"
-                style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
-              >
-                <Sparkles className="w-5 h-5" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
-              </div>
-              <div className="min-w-0">
-                <p className={kickerClass}>Strategy</p>
-                <h2 className="text-lg font-bold text-theme mt-1">Optimization Objective</h2>
-                <p className="text-sm text-theme-secondary mt-1">
-                  Choose what the optimizer should solve for
-                </p>
-              </div>
-            </header>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-stagger">
-              {objectives.map((obj) => {
-                const active = selectedObjective === obj.value;
-                return (
-                  <button
-                    key={obj.value}
-                    type="button"
-                    onClick={() => setSelectedObjective(obj.value)}
-                    aria-pressed={active}
-                    className={`animate-enter glass-slab-floating relative overflow-hidden p-4 min-h-[44px] rounded-xl text-left animate-press transition-[border-color,box-shadow,background-color] duration-200 ${
-                      active
-                        ? "before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-[image:var(--gradient-sovereign)] shadow-[0_4px_20px_rgba(123,44,255,0.18)]"
-                        : ''
-                    }`}
-                    style={
-                      active
-                        ? { backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }
-                        : undefined
-                    }
-                  >
-                    <obj.icon
-                      className="w-5 h-5 mb-2"
-                      aria-hidden="true"
-                      style={{ color: active ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
-                    />
-                    <p className={`font-semibold ${active ? 'text-gradient-brand' : 'text-theme'}`}>
-                      {obj.label}
-                    </p>
-                    <p className="text-sm text-theme-muted mt-0.5">{obj.description}</p>
-                  </button>
-                );
-              })}
+    <div className="mx-auto max-w-7xl space-y-4">
+      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--color-border)] pb-4">
+        <div><p className="mb-1 text-xs font-medium text-[var(--color-text-muted)]">Research / Allocation</p><h1 className="text-2xl font-semibold tracking-tight text-[var(--color-text)]">Portfolio optimizer</h1><p className="mt-1 text-sm text-[var(--color-text-secondary)]">Compare allocation objectives, position limits, and projected risk.</p></div>
+        <Button variant="outline" size="sm" onClick={handleReset} disabled={isPending} leftIcon={<RotateCcw size={15} />}>Reset inputs</Button>
+      </header>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]">
+        <section className={panelClass} aria-labelledby="optimizer-settings">
+          <h2 id="optimizer-settings" className="mb-4 flex items-center gap-2 text-sm font-semibold text-[var(--color-text)]"><SlidersHorizontal size={16} aria-hidden="true" /> Optimization settings</h2>
+          <fieldset disabled={isPending}>
+            <legend className={labelClass}>Objective</legend>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {objectives.map(obj => <button key={obj.value} type="button" onClick={() => { setSelectedObjective(obj.value); clearResult(); }} aria-pressed={selectedObjective === obj.value} className={`flex items-start gap-3 rounded-md border p-3 text-left transition-colors disabled:opacity-60 ${selectedObjective === obj.value ? 'border-[var(--color-accent)] bg-[var(--color-accent-light)]' : 'border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)]'}`}><obj.icon size={17} className="mt-0.5 shrink-0 text-[var(--color-accent-text)]" aria-hidden="true" /><span><span className="block text-sm font-medium text-[var(--color-text)]">{obj.label}</span><span className="mt-0.5 block text-xs text-[var(--color-text-muted)]">{obj.description}</span></span></button>)}
             </div>
-          </section>
-
-          <section className="glass-slab rounded-2xl p-6 sm:p-8">
-            <header className="flex items-start gap-4 mb-6">
-              <div
-                className="p-2.5 rounded-lg shrink-0"
-                style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
-              >
-                <Shield className="w-5 h-5" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
-              </div>
-              <div className="min-w-0">
-                <p className={kickerClass}>Constraints</p>
-                <h2 className="text-lg font-bold text-theme mt-1">Bounds & Targets</h2>
-                <p className="text-sm text-theme-secondary mt-1">
-                  Per-position caps and any volatility targeting
-                </p>
-              </div>
-            </header>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label htmlFor="opt-max-weight" className={labelClass}>
-                  Max Position Weight
-                </label>
-                <input
-                  id="opt-max-weight"
-                  type="number"
-                  step="0.01"
-                  min="0.05"
-                  max="1"
-                  value={maxWeight}
-                  onChange={(e) => setMaxWeight(e.target.value)}
-                  className={`${inputClass} tabular-nums`}
-                />
-                <p className="text-xs text-theme-muted mt-2 tabular-nums">
-                  Cap any single name at {(parseFloat(maxWeight) * 100).toFixed(0)}%
-                </p>
-              </div>
-              {selectedObjective === 'target_volatility' && (
-                <div>
-                  <label htmlFor="opt-target-vol" className={labelClass}>
-                    Target Volatility
-                  </label>
-                  <input
-                    id="opt-target-vol"
-                    type="number"
-                    step="0.01"
-                    min="0.05"
-                    max="0.5"
-                    value={targetVol}
-                    onChange={(e) => setTargetVol(e.target.value)}
-                    className={`${inputClass} tabular-nums`}
-                  />
-                  <p className="text-xs text-theme-muted mt-2 tabular-nums">
-                    Pin annualized vol at {(parseFloat(targetVol) * 100).toFixed(0)}%
-                  </p>
-                </div>
-              )}
+            <div className="mt-5 grid grid-cols-1 gap-4 border-t border-[var(--color-border-light)] pt-4 sm:grid-cols-2">
+              <div><label htmlFor="opt-max-weight" className={labelClass}>Maximum position weight</label><input id="opt-max-weight" type="number" step="0.01" min="0.05" max="1" value={maxWeight} onChange={e => { setMaxWeight(e.target.value); clearResult(); }} className={inputClass} /><p className="mt-1.5 text-xs text-[var(--color-text-muted)]">Decimal allocation: 0.25 limits a holding to 25%.</p></div>
+              {selectedObjective === 'target_volatility' && <div><label htmlFor="opt-target-vol" className={labelClass}>Target volatility</label><input id="opt-target-vol" type="number" step="0.01" min="0.05" max="0.5" value={targetVol} onChange={e => { setTargetVol(e.target.value); clearResult(); }} className={inputClass} /><p className="mt-1.5 text-xs text-[var(--color-text-muted)]">Annualized decimal: 0.15 represents 15%.</p></div>}
             </div>
-
-            <div className="mt-7 flex flex-col sm:flex-row sm:items-center gap-4">
-              <button
-                onClick={handleOptimize}
-                disabled={symbols.length === 0 || isPending}
-                aria-label="Run optimization"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] rounded-sm bg-[image:var(--gradient-sovereign)] text-white mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:brightness-110 hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)] disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-[0_4px_30px_rgba(123,44,255,0.35)] transition-[filter,box-shadow] duration-200"
-              >
-                {isPending ? (
-                  <>
-                    <Spinner className="w-4 h-4" />
-                    Running…
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" aria-hidden="true" />
-                    Run Optimization
-                  </>
-                )}
-              </button>
-              {symbols.length === 0 && (
-                <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-warning)]">
-                  Add positions to your portfolio first
-                </p>
-              )}
-            </div>
-          </section>
-        </div>
-
-        {/* ── Holdings (right) ──────────────────────────────────────────── */}
-        <div
-          className="animate-fade-in-up"
-          style={{ animationDelay: '100ms', animationFillMode: 'both' }}
-        >
-          <section className="glass-slab rounded-2xl p-6 sm:p-8">
-            <header className="flex items-start gap-4 mb-6">
-              <div
-                className="p-2.5 rounded-lg shrink-0"
-                style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
-              >
-                <Target className="w-5 h-5" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
-              </div>
-              <div className="min-w-0">
-                <p className={kickerClass}>Universe</p>
-                <h2 className="text-lg font-bold text-theme mt-1">Current Holdings</h2>
-              </div>
-            </header>
-
-            {symbols.length === 0 ? (
-              <p className="text-sm text-theme-muted">No positions in portfolio.</p>
-            ) : (
-              <div className="space-y-1 animate-stagger">
-                {symbols.map((symbol: string) => {
-                  const weight = result?.weights?.[symbol];
-                  return (
-                    <div
-                      key={symbol}
-                      className="animate-enter flex items-center justify-between py-2.5 px-3 rounded-sm hover:bg-[var(--color-bg-tertiary)] transition-colors duration-150"
-                    >
-                      <span className="mono text-xs tracking-[0.2em] uppercase text-theme">{symbol}</span>
-                      {weight !== undefined && (
-                        <span className="mono text-xs tabular-nums text-[var(--color-accent-text)] font-semibold">
-                          {(weight * 100).toFixed(1)}%
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-        </div>
-      </div>
-
-      {/* ── Results ───────────────────────────────────────────────────── */}
-      {/* Wrapped in SectionErrorBoundary to defend against the v1.3.9
-          "Cannot read properties of n... reading 'colSpan'" client-side
-          crash class — if a child chart/table chokes on a malformed
-          result, the boundary renders an inline error instead of taking
-          down the whole page. */}
-      {result && (
-        <SectionErrorBoundary sectionName="Optimization Results">
-        <section
-          className="glass-slab rounded-2xl p-6 sm:p-8 animate-fade-in-up"
-          style={{ animationDelay: '150ms', animationFillMode: 'both' }}
-        >
-          <header className="flex items-start gap-4 mb-6">
-            <div
-              className="p-2.5 rounded-lg shrink-0"
-              style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 10%, transparent)' }}
-            >
-              <Sparkles className="w-5 h-5" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <p className={kickerClass}>Output</p>
-              <h2 className="text-lg font-bold text-theme mt-1">Optimization Results</h2>
-              <p className="text-sm text-theme-secondary mt-1">
-                Solver-derived weights, expected return, and risk profile
-              </p>
-            </div>
-          </header>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 animate-stagger">
-            <div className="animate-enter glass-slab-floating rounded-xl p-4">
-              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Expected Return</p>
-              <p className="text-xl font-bold tabular-nums mt-1 text-[var(--color-positive)]">
-                {(result.expectedReturn * 100).toFixed(1)}%
-              </p>
-            </div>
-            <div className="animate-enter glass-slab-floating rounded-xl p-4">
-              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Expected Volatility</p>
-              <p className="text-xl font-bold tabular-nums mt-1 text-[var(--color-warning)]">
-                {(result.expectedVolatility * 100).toFixed(1)}%
-              </p>
-            </div>
-            <div className="animate-enter glass-slab-floating rounded-xl p-4">
-              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Sharpe Ratio</p>
-              <p className="text-xl font-bold tabular-nums mt-1 text-gradient-brand holo-pulse">
-                {result.sharpeRatio.toFixed(2)}
-              </p>
-            </div>
-            <div className="animate-enter glass-slab-floating rounded-xl p-4">
-              <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Positions</p>
-              <p className="text-xl font-bold tabular-nums mt-1 text-theme">
-                {Object.keys(result.weights).length}
-              </p>
-            </div>
-          </div>
-
-          <p className={`${kickerClass} mt-2`}>Optimal Weights</p>
-          <div className="space-y-2 animate-stagger">
-            {Object.entries(result.weights)
-              .sort(([, a], [, b]) => b - a)
-              .map(([symbol, weight]) => (
-                <div
-                  key={symbol}
-                  className="animate-enter flex items-center gap-3 py-1.5 px-2 rounded-sm hover:bg-[var(--color-bg-tertiary)] transition-colors duration-150"
-                >
-                  <span className="w-16 mono text-xs tracking-[0.2em] uppercase text-theme">{symbol}</span>
-                  <div className="flex-1 h-2.5 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${weight * 100}%`,
-                        background: 'var(--gradient-sovereign)',
-                      }}
-                    />
-                  </div>
-                  <span className="w-16 text-right mono text-xs tabular-nums text-theme-secondary">
-                    {(weight * 100).toFixed(1)}%
-                  </span>
-                </div>
-              ))}
-          </div>
+          </fieldset>
+          {(validationError || optimizeMutation.error) && <p role="alert" className="mt-4 rounded-md border border-[var(--color-negative)]/25 bg-[color-mix(in_srgb,var(--color-negative)_5%,transparent)] p-3 text-sm text-[var(--color-negative)]">{validationError || getErrorMessage(optimizeMutation.error)}</p>}
+          <div className="mt-5 flex flex-wrap items-center gap-3"><Button onClick={handleOptimize} disabled={symbols.length < 2 || portfolioLoading || portfolioError} isLoading={isPending} leftIcon={<SlidersHorizontal size={16} />}>{isPending ? 'Running optimization…' : 'Run optimization'}</Button><span className="text-xs text-[var(--color-text-muted)]" role="status">{isPending ? 'Calculating allocation and risk.' : symbols.length < 2 ? 'At least two holdings are required.' : `${symbols.length} holdings · 4.5% risk-free rate`}</span></div>
         </section>
-        </SectionErrorBoundary>
-      )}
-
-      {/* ── Monte Carlo Chart ─────────────────────────────────────────── */}
-      {result && (
-        <div
-          className="animate-fade-in-up"
-          style={{ animationDelay: '200ms', animationFillMode: 'both' }}
-        >
-          <MonteCarloChart
-            result={{
-              // Build a chart-compatible MonteCarloResult by merging server
-              // values (when present) with synthesized confidence-interval
-              // estimates derived from expectedReturn ± vol * z-scores.
-              // The shared OptimizationResult.monteCarlo confidenceInterval
-              // is optional; the chart prop requires it.
-              medianReturn: result.monteCarlo?.medianReturn ?? result.expectedReturn,
-              var95: result.monteCarlo?.var95 ?? -result.expectedVolatility * 1.645,
-              cvar95: result.monteCarlo?.cvar95 ?? -result.expectedVolatility * 2.063,
-              probPositive: result.monteCarlo?.probPositive ?? 0.5 + (result.expectedReturn / (result.expectedVolatility * 2)) * 0.3,
-              simulations: result.monteCarlo?.simulations,
-              confidenceInterval: result.monteCarlo?.confidenceInterval ?? {
-                p5: result.expectedReturn - result.expectedVolatility * 1.645,
-                p25: result.expectedReturn - result.expectedVolatility * 0.675,
-                p50: result.expectedReturn,
-                p75: result.expectedReturn + result.expectedVolatility * 0.675,
-                p95: result.expectedReturn + result.expectedVolatility * 1.645,
-              },
-            }}
-            timeHorizon="1 Year"
-          />
-        </div>
-      )}
+        <section className={panelClass} aria-labelledby="optimizer-holdings">
+          <div className="mb-3 flex items-center justify-between gap-3"><h2 id="optimizer-holdings" className="text-sm font-semibold text-[var(--color-text)]">Portfolio holdings</h2><Link to="/portfolio" className="text-xs font-medium text-[var(--color-accent-text)] hover:underline">Manage</Link></div>
+          {portfolioLoading ? <p role="status" className="py-5 text-sm text-[var(--color-text-muted)]">Loading holdings…</p> : portfolioError ? <div role="alert" className="space-y-3 py-3"><p className="text-sm text-[var(--color-negative)]">Unable to load your holdings.</p><Button variant="outline" size="sm" onClick={() => refetchPortfolio()}>Retry holdings</Button></div> : symbols.length === 0 ? <p className="py-5 text-sm text-[var(--color-text-muted)]">Add positions to your portfolio to compare allocations.</p> : <><div className="mb-1 flex justify-between border-b border-[var(--color-border-light)] pb-2 text-xs text-[var(--color-text-muted)]"><span>Symbol</span><span>{result ? 'Model weight' : 'Current weight'}</span></div><ul className="divide-y divide-[var(--color-border-light)]">{symbols.map(symbol => { const weight = result ? result.weights[symbol] : portfolio?.positions?.filter(p => p.symbol === symbol).reduce((sum, p) => sum + p.weight, 0); return <li key={symbol} className="flex items-center justify-between py-2.5 text-sm"><span className="font-medium text-[var(--color-text)]">{symbol}</span><span className="tabular-nums text-[var(--color-text-secondary)]">{weight === undefined ? '—' : `${(weight * 100).toFixed(1)}%`}</span></li>; })}</ul></>}
+        </section>
+      </div>
+      {result && <SectionErrorBoundary sectionName="Optimization results"><section className={panelClass}>
+        <h2 className="text-sm font-semibold text-[var(--color-text)]">Model results</h2><p className="mt-1 text-xs text-[var(--color-text-muted)]">Estimates returned by the optimizer. Changing an input clears these results.</p>
+        <div className="my-4 grid grid-cols-2 gap-4 border-y border-[var(--color-border-light)] py-4 md:grid-cols-4">{[['Expected return', `${(result.expectedReturn * 100).toFixed(1)}%`], ['Expected volatility', `${(result.expectedVolatility * 100).toFixed(1)}%`], ['Sharpe ratio', result.sharpeRatio.toFixed(2)], ['Positions', Object.keys(result.weights).length]].map(([label, value]) => <div key={label}><p className="text-xs text-[var(--color-text-muted)]">{label}</p><p className="mt-1 text-xl font-semibold tabular-nums text-[var(--color-text)]">{value}</p></div>)}</div>
+        <h3 className="mb-3 text-xs font-medium text-[var(--color-text-secondary)]">Model allocation</h3><div className="space-y-3">{Object.entries(result.weights).sort(([,a], [,b]) => b - a).map(([symbol, weight]) => <div key={symbol} className="flex items-center gap-3 text-xs"><span className="w-16 font-medium text-[var(--color-text)]">{symbol}</span><div className="h-2 flex-1 overflow-hidden rounded-sm bg-[var(--color-bg-tertiary)]"><div className="h-full bg-[var(--color-accent)]" style={{width:`${weight * 100}%`}} /></div><span className="w-14 text-right tabular-nums text-[var(--color-text-secondary)]">{(weight * 100).toFixed(1)}%</span></div>)}</div>
+        {result.explanation && <p className="mt-5 border-t border-[var(--color-border-light)] pt-4 text-sm leading-6 text-[var(--color-text-secondary)]">{result.explanation}</p>}
+      </section>
+      {monteCarlo && <section className={`${panelClass} mt-4`}><h2 className="text-sm font-semibold text-[var(--color-text)]">Simulation risk summary</h2><div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">{[['Median return', `${(monteCarlo.medianReturn * 100).toFixed(1)}%`], ['95% value at risk', `${(monteCarlo.var95 * 100).toFixed(1)}%`], ['95% conditional VaR', `${(monteCarlo.cvar95 * 100).toFixed(1)}%`], ['Positive return probability', `${(monteCarlo.probPositive * 100).toFixed(1)}%`]].map(([label,value]) => <div key={label}><p className="text-xs text-[var(--color-text-muted)]">{label}</p><p className="mt-1 text-lg font-semibold tabular-nums text-[var(--color-text)]">{value}</p></div>)}</div></section>}
+      {monteCarlo?.confidenceInterval && monteCarlo.simulations && monteCarlo.simulations.length > 0 ? <div className="mt-4"><MonteCarloChart result={{...monteCarlo, confidenceInterval: monteCarlo.confidenceInterval}} timeHorizon="1 Year" /></div> : <p className="mt-3 text-xs text-[var(--color-text-muted)]">{monteCarlo ? 'The response includes summary statistics; a simulation distribution was not returned.' : 'Simulation statistics were not included in this result.'}</p>}
+      </SectionErrorBoundary>}
     </div>
   );
 }

@@ -87,10 +87,10 @@ function TimingBadge({ timing }: { timing: string | undefined }) {
   return (
     <span
       data-testid={isBMO ? 'bmo-badge' : 'amc-badge'}
-      className={`mono absolute top-0.5 left-0.5 text-[7px] font-bold leading-none px-0.5 rounded ${
+      className={`mono absolute top-1 left-1 text-xs font-semibold leading-4 px-1 rounded ${
         isBMO
-          ? 'bg-[color-mix(in_srgb,var(--color-info)_20%,transparent)] text-[var(--color-info)]'
-          : 'bg-[color-mix(in_srgb,var(--color-warning)_20%,transparent)] text-[var(--color-warning)]'
+          ? 'bg-[color-mix(in_srgb,var(--color-info)_10%,var(--color-bg-secondary))] text-[var(--color-info)]'
+          : 'bg-[color-mix(in_srgb,var(--color-warning)_10%,var(--color-bg-secondary))] text-[var(--color-warning)]'
       }`}
     >
       {isBMO ? 'BMO' : 'AMC'}
@@ -317,7 +317,7 @@ export function EarningsHeatmap({ earnings, onSelect, selectedSymbol }: Earnings
                         }}
                         disabled={!hasEarnings}
                         className={`
-                          aspect-square rounded-lg border text-sm relative flex flex-col items-center justify-center
+                          aspect-square min-h-16 rounded-lg border text-sm relative flex flex-col items-center justify-center pt-3
                           ${isToday ? 'ring-2 ring-[var(--color-accent)]' : ''}
                           ${hasEarnings
                             ? `${getImpactColor(maxMove)} cursor-pointer hover:scale-105 transition-[transform] duration-150 animate-press`
@@ -348,14 +348,14 @@ export function EarningsHeatmap({ earnings, onSelect, selectedSymbol }: Earnings
                               />
                             ))}
                             {dayEarnings.length > 3 && (
-                              <span className="text-[8px] text-theme-muted">+</span>
+                              <span className="text-xs leading-3 text-theme-muted" aria-hidden="true">+</span>
                             )}
                           </span>
                         )}
 
                         {/* High impact alert icon */}
                         {hasEarnings && maxMove >= 0.08 && (
-                          <AlertTriangle className="absolute top-0.5 right-0.5 w-2.5 h-2.5 text-[var(--color-danger)]" aria-hidden="true" />
+                          <AlertTriangle className="absolute bottom-1 right-1 w-3 h-3 text-[var(--color-danger)]" aria-hidden="true" />
                         )}
                       </button>
                     );
@@ -436,7 +436,7 @@ export function EarningsHeatmap({ earnings, onSelect, selectedSymbol }: Earnings
         )}
 
         {/* Legend */}
-        <div className="mt-4 flex flex-wrap gap-3 mono text-[10px] tracking-wider uppercase text-theme-muted">
+        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-theme-muted">
           <div className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded bg-[var(--color-positive)]/15 border border-[var(--color-positive)]/25" aria-hidden="true" />
             Minimal
@@ -454,11 +454,11 @@ export function EarningsHeatmap({ earnings, onSelect, selectedSymbol }: Earnings
             High Impact
           </div>
           <div className="flex items-center gap-1.5 ml-2 border-l border-theme-light pl-2">
-            <span className="text-[8px] font-bold text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_20%,transparent)] px-0.5 rounded">BMO</span>
+            <span className="text-xs font-semibold text-[var(--color-info)] bg-[color-mix(in_srgb,var(--color-info)_10%,var(--color-bg-secondary))] px-1 py-0.5 rounded">BMO</span>
             Pre-market
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[8px] font-bold text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_20%,transparent)] px-0.5 rounded">AMC</span>
+            <span className="text-xs font-semibold text-[var(--color-warning)] bg-[color-mix(in_srgb,var(--color-warning)_10%,var(--color-bg-secondary))] px-1 py-0.5 rounded">AMC</span>
             Post-market
           </div>
         </div>

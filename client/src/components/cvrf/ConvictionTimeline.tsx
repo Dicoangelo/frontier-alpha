@@ -69,7 +69,7 @@ function ConvictionTooltip({ active, payload, label }: ConvictionTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
 
   return (
-    <div className="backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-text-inverse)] border border-theme-light rounded-lg p-3 shadow-lg text-xs">
+    <div className="backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-tooltip-text)] border border-theme-light rounded-lg p-3 shadow-lg text-xs">
       <p className="mono text-[10px] tracking-[0.3em] uppercase opacity-70 mb-1">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center justify-between gap-3 py-0.5">
@@ -136,14 +136,14 @@ function ConvictionChart({ cycles, factorWeights, onSelectEpisode, selectedIndex
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.4} />
           <XAxis
             dataKey="date"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
             tickLine={false}
             axisLine={{ stroke: 'var(--color-border)' }}
           />
           <YAxis
             domain={[-0.5, 0.5]}
             tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
             tickLine={false}
             axisLine={false}
           />
@@ -151,7 +151,7 @@ function ConvictionChart({ cycles, factorWeights, onSelectEpisode, selectedIndex
           <Legend
             iconSize={8}
             formatter={(value: string) => (
-              <span style={{ color: 'var(--color-text-muted)', fontSize: 10 }}>
+              <span style={{ color: 'var(--color-text-muted)', fontSize: 12 }}>
                 {value.replace(/_/g, ' ')}
               </span>
             )}

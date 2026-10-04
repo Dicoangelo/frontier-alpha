@@ -160,7 +160,8 @@ The dashboard provides a comprehensive view of your portfolio:
 
 ### Portfolio Overview
 - **Total Value** - Current market value of all positions plus cash
-- **Daily Change** - Today's gain/loss in dollars and percentage
+- **Holdings Value** - Current value of invested positions
+- **Cash Balance** - Available cash and its share of portfolio value
 - **Unrealized P&L** - Total profit/loss since purchase
 
 ### Equity Curve

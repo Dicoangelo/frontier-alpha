@@ -8,7 +8,7 @@ export function PageTransition({ children }: PageTransitionProps) {
   const location = useLocation();
 
   return (
-    <div key={location.pathname} className="page-transition min-h-[400px]">
+    <div key={location.pathname} className="workspace-page-transition min-h-[400px]">
       {children}
     </div>
   );

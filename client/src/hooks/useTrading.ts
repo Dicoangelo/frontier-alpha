@@ -373,7 +373,10 @@ export function useConnectBroker() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['trading'] });
-      toast.success('Broker connected', data.message);
+      toast.success(
+        data.broker === 'mock' ? 'Paper trading check complete' : 'Broker credentials verified',
+        'The active workspace broker has not changed.',
+      );
     },
     onError: (error) => {
       toast.error('Broker connection failed', getErrorMessage(error));

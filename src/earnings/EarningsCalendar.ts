@@ -93,7 +93,7 @@ function isRefusalRow(line: string): boolean {
   // A real row starts with a ticker ("GOOGL", "BRK.B"); a company name such as
   // "PREMIUM BRANDS" or "INFORMATION SERVICES GROUP" lives in column 2 and must
   // not trip the prose check below.
-  if (/^[A-Z][A-Z0-9.\-]{0,7}$/.test(first) && cols.length <= 8) return false;
+  if (/^[A-Z][A-Z0-9.-]{0,7}$/.test(first) && cols.length <= 8) return false;
   const joined = cols.join('');
   const spelledOut = cols.length >= 8 && cols.every((c) => c.trim().length <= 1);
   return spelledOut || /information|thank you for using|rate limit|premium|api key|invalid/i.test(joined);

@@ -18,17 +18,22 @@ export interface DemoHolding {
   unrealizedPnL: number;
 }
 
-/** Canonical demo holdings (sum of position values + cash = DEMO_TOTAL_VALUE). */
-export const DEMO_HOLDINGS: DemoHolding[] = [
-  { symbol: 'NVDA', shares: 50, weight: 0.22, costBasis: 450, currentPrice: 520, unrealizedPnL: 3500 },
-  { symbol: 'MSFT', shares: 30, weight: 0.18, costBasis: 380, currentPrice: 415, unrealizedPnL: 1050 },
-  { symbol: 'AAPL', shares: 100, weight: 0.15, costBasis: 175, currentPrice: 195, unrealizedPnL: 2000 },
-  { symbol: 'GOOGL', shares: 25, weight: 0.14, costBasis: 140, currentPrice: 165, unrealizedPnL: 625 },
-  { symbol: 'AMZN', shares: 40, weight: 0.12, costBasis: 180, currentPrice: 205, unrealizedPnL: 1000 },
+/** Prices and quantities are illustrative; totals and weights derive from them. */
+const DEMO_POSITIONS = [
+  { symbol: 'NVDA', shares: 50, costBasis: 450, currentPrice: 520 },
+  { symbol: 'MSFT', shares: 30, costBasis: 380, currentPrice: 415 },
+  { symbol: 'AAPL', shares: 100, costBasis: 175, currentPrice: 195 },
+  { symbol: 'GOOGL', shares: 25, costBasis: 140, currentPrice: 165 },
+  { symbol: 'AMZN', shares: 40, costBasis: 180, currentPrice: 205 },
 ];
 
 export const DEMO_CASH = 15000;
-export const DEMO_TOTAL_VALUE = 125000;
+export const DEMO_TOTAL_VALUE = DEMO_CASH + DEMO_POSITIONS.reduce((sum, holding) => sum + holding.shares * holding.currentPrice, 0);
+export const DEMO_HOLDINGS: DemoHolding[] = DEMO_POSITIONS.map(holding => ({
+  ...holding,
+  weight: holding.shares * holding.currentPrice / DEMO_TOTAL_VALUE,
+  unrealizedPnL: (holding.currentPrice - holding.costBasis) * holding.shares,
+}));
 export const DEMO_SYMBOLS = DEMO_HOLDINGS.map((h) => h.symbol);
 
 export interface DemoFactor {

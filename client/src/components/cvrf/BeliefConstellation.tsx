@@ -556,7 +556,7 @@ export const BeliefConstellation = React.memo(function BeliefConstellation() {
 
         {/* Hover Tooltip: backdrop-blurred */}
         {hoveredNode && !selectedNode && (
-          <div className="absolute bottom-4 left-4 backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-text-inverse)] border border-theme-light rounded-lg px-3 py-2 shadow-lg pointer-events-none z-10">
+          <div className="absolute bottom-4 left-4 backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-tooltip-text)] border border-theme-light rounded-lg px-3 py-2 shadow-lg pointer-events-none z-10">
             <div className="flex items-center gap-2">
               <div
                 className="w-2.5 h-2.5 rounded-full"

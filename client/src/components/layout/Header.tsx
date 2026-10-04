@@ -1,8 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Settings, Menu, HelpCircle, Moon, Sun } from 'lucide-react';
+import { Settings, Menu, HelpCircle, Moon, Sun, Search, PanelRight } from 'lucide-react';
+import { BrandLogo } from '@/components/shared/BrandLogo';
 import { AlertDropdown } from '@/components/alerts/AlertDropdown';
-import { HelpKeyboardHint } from '@/components/help';
 import { useThemeStore } from '@/stores/themeStore';
 import { useFeedStatus } from '@/hooks/useFeedStatus';
 import { api } from '@/api/client';
@@ -49,12 +49,15 @@ const pageTitleMap: Record<string, string> = {
   '/portfolio': 'Portfolio',
   '/trade': 'Trade',
   '/optimize': 'Optimize',
+  '/research': 'Agent research',
   '/factors': 'Factors',
   '/earnings': 'Earnings',
   '/alerts': 'Alerts',
   '/cvrf': 'CVRF',
   '/ml': 'ML',
   '/options': 'Options',
+  '/backtest': 'Backtest',
+  '/insights': 'Insights',
   '/social': 'Social',
   '/tax': 'Tax',
   '/settings': 'Settings',
@@ -64,186 +67,70 @@ const pageTitleMap: Record<string, string> = {
 interface HeaderProps {
   onMenuClick?: () => void;
   onHelpClick?: () => void;
+  sidebarOpen?: boolean;
+  onSearchClick?: () => void;
+  onContextClick?: () => void;
+  contextOpen?: boolean;
 }
 
-export function Header({ onMenuClick, onHelpClick }: HeaderProps) {
+export function Header({ onMenuClick, onHelpClick, onSearchClick, onContextClick, contextOpen, sidebarOpen = false }: HeaderProps) {
   const { resolved, toggle } = useThemeStore();
   const location = useLocation();
   const pageTitle = pageTitleMap[location.pathname] || '';
   const { data: quote, isLoading: isQuoteLoading } = useHeaderQuote();
   const quoteUp = quote ? quote.changePercent >= 0 : true;
-  // Feed pill reads the real transport (see useFeedStatus) — it used to be a
-  // hardcoded "Live" that stayed green through every outage.
   const feed = useFeedStatus();
+  const feedColor = feed.tone === 'live' ? 'var(--color-live)'
+    : feed.tone === 'delayed' ? 'var(--color-warning)' : 'var(--color-text-muted)';
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 glass-slab-floating z-50">
-      {/* Sovereign spectrum top bar */}
-      <div className="sovereign-bar absolute top-0 left-0 right-0" />
-
-      <div className="flex items-center justify-between h-full px-4 sm:px-6">
-        <div className="flex items-center gap-3">
-          {/* Mobile menu button */}
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden p-2 -ml-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-theme-secondary hover:text-[var(--color-accent-text)] hover:bg-[var(--color-bg-tertiary)] animate-press rounded-sm transition-[color,background-color] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
-            aria-label="Toggle navigation"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-
-          <Link
-            to="/"
-            className="flex items-center gap-3 min-h-[44px] animate-press rounded-sm transition-[color] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
-          >
-            <img
-              src="/metaventions-logo.png"
-              alt="Metaventions AI"
-              width={40}
-              height={40}
-              loading="eager"
-              decoding="async"
-              className="w-10 h-10 rounded-sm"
-            />
-            <div className="hidden sm:flex flex-col leading-tight">
-              <h1 className="mono text-base font-bold tracking-[0.18em] uppercase text-theme">
-                FRONTIER <span className="text-gradient-brand">ALPHA</span>
-              </h1>
-              <p className="hidden md:block text-[9px] text-theme-muted mono tracking-[0.4em] uppercase mt-0.5">
-                by Metaventions AI
-              </p>
-            </div>
-          </Link>
-
-          {/* Page title kicker (desktop) */}
-          {pageTitle && (
-            <div className="hidden lg:flex items-center gap-2 ml-2 pl-4 border-l border-theme">
-              <span
-                className="w-1 h-1 rounded-full bg-[var(--color-accent)]"
-                aria-hidden="true"
-              />
-              <span className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted holo-pulse">
-                {pageTitle}
-              </span>
-            </div>
-          )}
-
-          {/* Mobile page title */}
-          {pageTitle && (
-            <span className="lg:hidden mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
-              {pageTitle}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Live delayed index quote (default SPY) */}
-          {!(quote == null && !isQuoteLoading) && (
-            <div
-              className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-full glass-slab min-w-[150px]"
-              role="status"
-              aria-label={
-                quote
-                  ? `${quote.symbol} ${quote.last.toFixed(2)}, ${quote.changePercent >= 0 ? 'up' : 'down'} ${Math.abs(quote.changePercent).toFixed(2)} percent`
-                  : `Loading ${HEADER_QUOTE_SYMBOL} quote`
-              }
-            >
-              <span className="text-[9px] text-theme-muted mono tracking-[0.3em] uppercase">
-                {HEADER_QUOTE_SYMBOL}
-              </span>
-              {quote ? (
-                <>
-                  <span className="text-xs font-semibold text-theme tabular-nums">
-                    {quote.last.toFixed(2)}
-                  </span>
-                  <span
-                    className="text-[10px] font-medium tabular-nums"
-                    style={{
-                      color: quoteUp
-                        ? 'var(--color-positive)'
-                        : 'var(--color-negative)',
-                    }}
-                  >
-                    {quoteUp ? '+' : ''}
-                    {quote.changePercent.toFixed(2)}%
-                  </span>
-                </>
-              ) : (
-                <span className="text-xs text-theme-muted tabular-nums">Loading</span>
-              )}
-            </div>
-          )}
-
+    <header className="workspace-header">
+      <div className="workspace-header-start">
+        <button type="button" onClick={onMenuClick} className="workspace-icon-button workspace-menu-button" aria-label="Toggle navigation" aria-expanded={sidebarOpen} aria-haspopup="dialog">
+          <Menu size={21} />
+        </button>
+        <Link to="/" className="workspace-brand" aria-label="Frontier Alpha home">
+          <BrandLogo decorative />
+          <span className="workspace-brand-copy"><strong>Frontier Alpha</strong><span>Investment workspace</span></span>
+        </Link>
+        {pageTitle && <span className="workspace-current-page">{pageTitle}</span>}
+      </div>
+      <button type="button" className="workspace-search" onClick={onSearchClick} aria-label="Search pages and commands" aria-haspopup="dialog">
+        <Search size={15} aria-hidden="true" /><span>Search workspace</span><kbd>⌘ K</kbd>
+      </button>
+      <div className="workspace-header-actions">
+        {!(quote == null && !isQuoteLoading) && (
           <div
-            className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full glass-slab"
+            className="workspace-header-quote"
             role="status"
-            aria-label={feed.aria}
-            title={feed.aria}
+            aria-label={quote
+              ? `${quote.symbol} ${quote.last.toFixed(2)}, ${quote.changePercent >= 0 ? 'up' : 'down'} ${Math.abs(quote.changePercent).toFixed(2)} percent`
+              : `Loading ${HEADER_QUOTE_SYMBOL} quote`}
           >
-            <div
-              className={`w-1.5 h-1.5 rounded-full ${feed.tone === 'live' ? 'animate-pulse-green' : ''}`}
-              style={{
-                backgroundColor:
-                  feed.tone === 'live'
-                    ? 'var(--color-brand-teal)'
-                    : feed.tone === 'delayed'
-                      ? 'var(--color-warning)'
-                      : 'var(--color-text-muted)',
-                boxShadow: feed.tone === 'live' ? '0 0 8px var(--color-brand-teal)' : 'none',
-              }}
-              aria-hidden="true"
-            />
-            {/* Text uses --color-live, not the brand teal: #00FFC6 renders at
-                1.30:1 on a light card. The dot above keeps the brand teal —
-                it is decorative, so the contrast floor does not apply. */}
-            <span
-              className="text-[9px] mono tracking-[0.4em] uppercase"
-              style={{
-                color:
-                  feed.tone === 'live'
-                    ? 'var(--color-live)'
-                    : feed.tone === 'delayed'
-                      ? 'var(--color-warning)'
-                      : 'var(--color-text-muted)',
-              }}
-              aria-hidden="true"
-            >
-              {feed.label}
-            </span>
+            <span className="workspace-quote-symbol">{HEADER_QUOTE_SYMBOL}</span>
+            {quote ? (
+              <>
+                <span className="font-semibold tabular-nums">{quote.last.toFixed(2)}</span>
+                <span className="tabular-nums" style={{ color: quoteUp ? 'var(--color-positive)' : 'var(--color-negative)' }}>
+                  {quoteUp ? '+' : ''}{quote.changePercent.toFixed(2)}%
+                </span>
+              </>
+            ) : <span className="text-theme-muted">Loading</span>}
           </div>
-
-          <AlertDropdown />
-
-          {/* Dark mode toggle */}
-          <button
-            onClick={toggle}
-            className="p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-theme-secondary hover:text-[var(--color-accent-text)] hover:bg-[var(--color-bg-tertiary)] animate-press rounded-sm transition-[color,background-color] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
-            aria-label={`Switch to ${resolved === 'dark' ? 'light' : 'dark'} mode`}
-            title={`${resolved === 'dark' ? 'Light' : 'Dark'} mode`}
-          >
-            {resolved === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-
-          {/* Help button with keyboard hint */}
-          <HelpKeyboardHint />
-          <button
-            onClick={onHelpClick}
-            className="p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-theme-secondary hover:text-[var(--color-accent-text)] hover:bg-[var(--color-bg-tertiary)] animate-press rounded-sm transition-[color,background-color] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
-            aria-label="Open help (press ? key)"
-            title="Help (press ?)"
-          >
-            <HelpCircle className="w-5 h-5" />
-          </button>
-
-          {/* Settings */}
-          <Link
-            to="/settings"
-            className="hidden lg:flex p-2 text-theme-secondary hover:text-[var(--color-accent-text)] hover:bg-[var(--color-bg-tertiary)] animate-press rounded-sm transition-[color,background-color] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
-            aria-label="Settings"
-          >
-            <Settings className="w-5 h-5" aria-hidden="true" />
-          </Link>
+        )}
+        <div className="workspace-feed-status" role="status" aria-label={feed.aria} title={feed.aria} style={{ color: feedColor }}>
+          <span className="workspace-status-dot" style={{ background: feedColor }} aria-hidden="true" />
+          <span aria-hidden="true">{feed.label}</span>
         </div>
+        <button type="button" className="workspace-icon-button" aria-label="Toggle portfolio pulse" title="Portfolio pulse" aria-expanded={contextOpen} onClick={onContextClick}><PanelRight size={18} /></button>
+        <AlertDropdown />
+        <button type="button" onClick={toggle} className="workspace-icon-button" aria-label={`Switch to ${resolved === 'dark' ? 'light' : 'dark'} mode`} title={`${resolved === 'dark' ? 'Light' : 'Dark'} mode`}>
+          {resolved === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
+        </button>
+        <button type="button" onClick={onHelpClick} className="workspace-icon-button workspace-help-button" aria-label="Open help (press H key)" title="Help (press H)">
+          <HelpCircle size={19} />
+        </button>
+        <Link to="/settings" className="workspace-icon-button workspace-settings-button" aria-label="Settings"><Settings size={19} aria-hidden="true" /></Link>
       </div>
     </header>
   );

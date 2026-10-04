@@ -7,186 +7,139 @@
 
 @layer base {
   :root {
-    /* Backgrounds */
-    --color-bg: #F8FAFC;
-    --color-bg-secondary: rgba(255, 255, 255, 0.85);
-    --color-bg-tertiary: rgba(0, 0, 0, 0.03);
-
-    /* Text */
-    --color-text: #0B1020;
-    --color-text-secondary: rgba(0, 0, 0, 0.6);
-    --color-text-muted: rgba(0, 0, 0, 0.4);
-
-    /* Borders */
-    --color-border: rgba(11, 16, 32, 0.1);
-    --color-border-light: rgba(11, 16, 32, 0.05);
-    --color-border-hover: rgba(11, 16, 32, 0.2);
-
-    /* Primary / Accent */
-    --color-primary: #7B2CFF;
-    --color-accent: #7B2CFF;
-    --color-accent-hover: #6920e0;
-    --color-accent-light: rgba(123, 44, 255, 0.08);
-    --color-accent-secondary: #18E6FF;
-    /* Accent used as TEXT. On light surfaces the brand violet is already
-     * readable (5.76:1 on white), so this matches --color-accent here and
-     * only diverges in dark mode. Split out because --color-accent also backs
-     * borders, glows and gradient stops, which must keep the exact brand hue. */
-    --color-accent-text: #7B2CFF;
-    /* Secondary accent as TEXT. Brand cyan #18E6FF is 1.52:1 on white —
-     * effectively invisible for the "Required" field markers and inline links
-     * that use it. cyan-700 holds the hue and clears AA at 5.36:1. */
-    --color-accent-secondary-text: #0e7490;
-
-    /* Semantic state — LIGHT THEME.
-     *
-     * These are read as TEXT (gain/loss figures, badges, status labels), so
-     * they are held to WCAG AA 4.5:1 against the light surfaces, not to the
-     * dark-theme palette they were copied from. The vivid 500-weights below
-     * were inherited from `.dark` and fail badly on white:
-     *   #10b981 positive -> 2.54:1   #ef4444 negative -> 3.76:1
-     *   #f59e0b warning  -> 2.15:1   #3b82f6 info     -> 3.68:1
-     * Every "+$3,500.00" and "-8.03%" in the app rendered below the readable
-     * floor in light mode. Measured against #f8fafc (page) and #fff (card).
-     *
-     * The --chart-* palette below is deliberately NOT darkened: chart strokes
-     * and fills are not text, and keeping the 500-weights preserves the
-     * product's visual identity. Dark theme is unaffected (.dark overrides). */
-    --color-positive: #047857; /* emerald-700  5.48:1 on card */
-    --color-negative: #b91c1c; /* red-700      6.47:1 */
-    --color-success: #047857;
-    --color-danger: #b91c1c;
-    --color-warning: #b45309;  /* amber-700    5.02:1 */
-    --color-info: #1d4ed8;     /* blue-700     6.70:1 */
-
-    /* Live/streaming status TEXT. The brand teal (#00FFC6) is theme-invariant
-     * by design and renders at 1.30:1 on a light card — effectively invisible.
-     * Decorative uses (the pulsing dot, glows) keep the brand teal; anything
-     * carrying meaning as text uses this. */
-    --color-live: #0f766e;     /* teal-700     5.47:1 */
-
-    /* Chart Palette */
-    --chart-primary: #3b82f6;
-    --chart-secondary: #10b981;
-    --chart-accent: #f59e0b;
-    --chart-danger: #ef4444;
-    --chart-purple: #8b5cf6;
-    --chart-cyan: #06b6d4;
-
-    /* Tooltip / Inverse */
-    --color-bg-tooltip: #0F1219;
+    color-scheme: light;
+    --workspace-rail: #122334;
+    --workspace-rail-border: #293e50;
+    --workspace-rail-text: #c3d0dc;
+    --workspace-rail-muted: #93aabe;
+    --workspace-rail-active: #213e54;
+    --workspace-rail-accent: #86c7e7;
+    --color-highlight: #bc8b3a;
+    --color-bg: #f1f4f7;
+    --color-bg-secondary: #ffffff;
+    --color-bg-tertiary: #eaf0f4;
+    --color-text: #182b3a;
+    --color-text-secondary: #4f6475;
+    /* #617587 was 4.32:1 on --color-bg; #5b6f81 clears 4.5:1 on bg, bg-tertiary and white */
+    --color-text-muted: #5b6f81;
+    --color-border: #d7e0e7;
+    --color-border-light: #e8edf1;
+    --color-border-hover: #aebfcf;
+    /* Field boundaries need more contrast than decorative card dividers. */
+    --color-control-border: #788a99;
+    --color-focus: #176b96;
+    --color-primary: #176b96;
+    --color-accent: #176b96;
+    --color-accent-hover: #12577b;
+    --color-accent-light: #e7f2f8;
+    --color-accent-text: #176b96;
+    --color-accent-secondary: #167c80;
+    --color-accent-secondary-text: #146f73;
+    /* Action fills stay dark enough for white labels in both appearances. */
+    --color-action-primary: #176b96;
+    --color-action-primary-hover: #12577b;
+    --color-action-danger: #b5474d;
+    --color-action-danger-hover: #a2363e;
+    --color-action-positive: #197764;
+    --color-positive: #197764;
+    --color-negative: #b5474d;
+    --color-success: #197764;
+    --color-danger: #b5474d;
+    --color-warning: #94631f;
+    --color-info: #176b96;
+    --color-live: #197764;
+    --chart-primary: #247fac;
+    --chart-secondary: #268573;
+    --chart-accent: #ae803d;
+    --chart-danger: #bc6570;
+    --chart-purple: #7976a8;
+    --chart-cyan: #518c9c;
+    --chart-pink: #a9768f;
+    --chart-teal: #648980;
+    --color-bg-tooltip: #ffffff;
+    --color-tooltip-text: #182b3a;
     --color-text-inverse: #ffffff;
-
-    /* Brand — Metaventions AI sovereign spectrum (theme-invariant) */
-    --brand-amethyst: #7B2CFF;
-    --brand-cyan: #18E6FF;
-    --brand-magenta: #FF3DF2;
-    --brand-teal: #00FFC6;
-    --brand-gold: #D7B26D;
-    --gradient-sovereign: linear-gradient(90deg, #FF3DF2 0%, #7B2CFF 50%, #18E6FF 100%);
-    --gradient-halo: linear-gradient(135deg, rgba(0, 255, 198, 0.18) 0%, rgba(24, 230, 255, 0.14) 50%, rgba(90, 167, 255, 0.18) 100%);
-    /* Legacy alias */
-    --color-brand-teal: #00FFC6;
-
-    /* Chart extras */
-    --chart-pink: #EC4899;
-    --chart-teal: #14B8A6;
-
-    /* Misc */
-    --color-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+    --brand-amethyst: #176b96;
+    --brand-cyan: #167c80;
+    --brand-magenta: #7976a8;
+    --brand-teal: #268573;
+    --brand-gold: #ae803d;
+    --color-brand-teal: #268573;
+    /* Retain image-compatible aliases for existing component utilities. */
+    --gradient-sovereign: linear-gradient(90deg, var(--color-accent), var(--color-accent));
+    --gradient-halo: linear-gradient(var(--color-bg-secondary), var(--color-bg-secondary));
+    --color-card-shadow: 0 1px 2px rgba(25, 43, 69, 0.03);
     --font-mono: 'JetBrains Mono', monospace;
-
-    /* ── Motion System (MOTION-001) ─────────────────────────────────────
-       Durations and easings for the unified motion grammar.
-       Usage:
-         transition: transform var(--motion-duration-fast) var(--motion-ease-out);
-         animation-delay: calc(var(--index) * var(--motion-stagger-step));
-    */
-    --motion-duration-fast: 150ms;   /* presses, focus-rings, micro-hovers */
-    --motion-duration-base: 240ms;   /* card enter, tab switch, dropdowns */
-    --motion-duration-slow: 400ms;   /* route transitions, panel expand */
-    --motion-duration-hero: 620ms;   /* landing hero reveals only */
-    --motion-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);   /* decelerating enter */
-    --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);        /* accelerating exit */
-    --motion-ease-inout: cubic-bezier(0.4, 0, 0.2, 1);   /* standard transform */
-    --motion-stagger-step: 60ms;     /* per-item delay for list reveals */
+    --control-height: 44px;
+    --control-radius: 8px;
+    --text-control: 14px;
+    --line-control: 20px;
+    --text-label: 12px;
+    --line-label: 18px;
+    --motion-duration-fast: 150ms;
+    --motion-duration-base: 180ms;
+    --motion-duration-slow: 220ms;
+    --motion-duration-hero: 300ms;
+    --motion-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --motion-ease-inout: cubic-bezier(0.4, 0, 0.2, 1);
+    --motion-stagger-step: 40ms;
   }
 
   .dark {
-    /* Backgrounds */
-    --color-bg: #0F1219;
-    --color-bg-secondary: rgba(22, 28, 45, 0.55);
-    --color-bg-tertiary: rgba(255, 255, 255, 0.04);
-
-    /* Text */
-    --color-text: #E6EDF5;
-    --color-text-secondary: rgba(255, 255, 255, 0.65);
-    --color-text-muted: rgba(255, 255, 255, 0.45);
-
-    /* Borders */
-    --color-border: rgba(255, 255, 255, 0.12);
-    --color-border-light: rgba(255, 255, 255, 0.06);
-    --color-border-hover: rgba(255, 255, 255, 0.22);
-
-    /* Primary / Accent */
-    --color-primary: #7B2CFF;
-    --color-accent: #7B2CFF;
-    --color-accent-hover: #9454ff;
-    --color-accent-light: rgba(123, 44, 255, 0.15);
-    --color-accent-secondary: #18E6FF;
-    /* Accent used as TEXT on dark surfaces. The brand violet #7B2CFF only
-     * reaches 2.85:1 on a dark card — below the readable floor at the 10-12px
-     * sizes it is used at. violet-400 keeps the hue and clears AA at 6.03:1.
-     * --color-accent itself is unchanged so borders, glows and the sovereign
-     * gradient keep the exact brand colour. */
-    --color-accent-text: #a78bfa;
-    /* Brand cyan is already 10.79:1 on a dark card, so it stands as text here. */
-    --color-accent-secondary-text: #18E6FF;
-
-    /* Semantic state — DARK THEME. Already contrast-correct on #0f1219. */
-    --color-positive: #34d399;
-    --color-negative: #f87171;
-    --color-success: #34d399;
-    --color-danger: #f87171;
-    --color-warning: #fbbf24;
-    --color-info: #60a5fa;
-
-    /* Live status text — the brand teal is readable on dark, so it stands. */
-    --color-live: #00FFC6;
-
-    /* Chart Palette */
-    --chart-primary: #60a5fa;
-    --chart-secondary: #34d399;
-    --chart-accent: #fbbf24;
-    --chart-danger: #f87171;
-    --chart-purple: #a78bfa;
-    --chart-cyan: #22d3ee;
-
-    /* Tooltip / Inverse */
-    --color-bg-tooltip: #1a1f2e;
-    --color-text-inverse: #0B1020;
-
-    /* Brand — Metaventions AI sovereign spectrum (theme-invariant) */
-    --brand-amethyst: #7B2CFF;
-    --brand-cyan: #18E6FF;
-    --brand-magenta: #FF3DF2;
-    --brand-teal: #00FFC6;
-    --brand-gold: #D7B26D;
-    --gradient-sovereign: linear-gradient(90deg, #FF3DF2 0%, #7B2CFF 50%, #18E6FF 100%);
-    --gradient-halo: linear-gradient(135deg, rgba(0, 255, 198, 0.22) 0%, rgba(24, 230, 255, 0.18) 50%, rgba(90, 167, 255, 0.22) 100%);
-    /* Legacy alias */
-    --color-brand-teal: #00FFC6;
-
-    /* Chart extras */
-    --chart-pink: #F472B6;
-    --chart-teal: #2DD4BF;
-
-    /* Misc */
-    --color-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    color-scheme: dark;
+    --color-bg: #101923;
+    --color-bg-secondary: #17232f;
+    --color-bg-tertiary: #213141;
+    --color-text: #e3ecf3;
+    --color-text-secondary: #b7c8d6;
+    --color-text-muted: #93aabe;
+    --color-border: #314353;
+    --color-border-light: #253747;
+    --color-border-hover: #526d83;
+    --color-control-border: #748b9e;
+    --color-focus: #8dc8e6;
+    --color-primary: #257da9;
+    --color-accent: #257da9;
+    --color-accent-hover: #1b6c95;
+    --color-accent-light: #203f53;
+    --color-accent-text: #8dc8e6;
+    --color-accent-secondary: #7ec3c5;
+    --color-accent-secondary-text: #7ec3c5;
+    --color-action-primary: #23769f;
+    --color-action-primary-hover: #1b6c95;
+    --color-positive: #7fcbb4;
+    --color-negative: #e5a0a6;
+    --color-success: #7fcbb4;
+    --color-danger: #e5a0a6;
+    --color-warning: #ddbc82;
+    --color-info: #8dc8e6;
+    --color-live: #7fcbb4;
+    --chart-primary: #6fb7dc;
+    --chart-secondary: #7fcbb4;
+    --chart-accent: #ddbc82;
+    --chart-danger: #e5a0a6;
+    --chart-purple: #b1aed9;
+    --chart-cyan: #7ec3c5;
+    --chart-pink: #d1a7bc;
+    --chart-teal: #99c1b6;
+    --color-bg-tooltip: #17232f;
+    --color-tooltip-text: #e3ecf3;
+    --brand-amethyst: #8dc8e6;
+    --brand-cyan: #7ec3c5;
+    --brand-magenta: #b1aed9;
+    --brand-teal: #7fcbb4;
+    --brand-gold: #ddbc82;
+    --color-brand-teal: #7fcbb4;
+    --color-card-shadow: none;
   }
 
   html {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  @media (min-width: 768px) {
+    :root { --control-height: 40px; }
   }
 
   body {
@@ -210,11 +163,20 @@
 
   /* Global focus ring — visible on keyboard nav, hidden on mouse */
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-focus);
     outline-offset: 2px;
   }
   :focus:not(:focus-visible) {
     outline: none;
+  }
+
+  /* Browser surfaces carry the palette, not UA defaults */
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 25%, transparent);
+    color: var(--color-text);
+  }
+  input, textarea {
+    caret-color: var(--color-accent);
   }
 }
 
@@ -309,13 +271,15 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 0;
+    width: 100%;
     height: 3px;
     background: linear-gradient(to right, #FF3DF2, #7B2CFF, #18E6FF);
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .nav-link:hover::after {
-    width: 100%;
+    transform: scaleX(1);
   }
 
   /* ── Click Feedback (legacy alias — prefer .animate-press in new code) ── */

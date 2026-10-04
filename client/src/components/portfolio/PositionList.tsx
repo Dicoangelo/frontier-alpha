@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
-import { Card } from '@/components/shared/Card';
-import { Badge } from '@/components/shared/Badge';
+import { ScrollableTable } from '@/components/shared/ScrollableTable';
+import { ArrowDown, ArrowUp, ArrowUpDown, Search, X } from 'lucide-react';
 import { quotesApi, type HistoricalPrices } from '@/api/quotes';
 import type { Position, Quote } from '@/types';
 
@@ -118,6 +118,7 @@ function useSparklineData(positions: Position[]): Map<string, SparklineEntry> {
 
 type SortField = 'symbol' | 'shares' | 'currentPrice' | 'value' | 'unrealizedPnL' | 'weight';
 type SortDir = 'asc' | 'desc';
+type PnlFilter = 'all' | 'gains' | 'losses';
 
 interface PositionListProps {
   positions: Position[];
@@ -125,11 +126,11 @@ interface PositionListProps {
 }
 
 function pnlColor(pnl: number) {
-  return pnl >= 0 ? 'text-[var(--color-positive)]' : 'text-[var(--color-negative)]';
+  return pnl > 0 ? 'text-[var(--color-positive)]' : pnl < 0 ? 'text-[var(--color-negative)]' : 'text-[var(--color-text-muted)]';
 }
 
 function pnlSign(pnl: number) {
-  return pnl >= 0 ? '+' : '';
+  return pnl > 0 ? '+' : pnl < 0 ? '−' : '';
 }
 
 // Track previous prices to detect changes for flash animation
@@ -168,303 +169,171 @@ function useQuoteFlash(quotes: Map<string, Quote> | undefined) {
     }
 
     if (newFlashes.size > 0) {
-      setFlashMap(prev => {
+      const frame = requestAnimationFrame(() => setFlashMap(prev => {
         const merged = new Map(prev);
         for (const [s, d] of newFlashes) merged.set(s, d);
         return merged;
-      });
+      }));
+      return () => cancelAnimationFrame(frame);
     }
   }, [quotes, clearFlash]);
 
   // Cleanup timers on unmount
   useEffect(() => {
+    const timers = timerRefs.current;
     return () => {
-      for (const t of timerRefs.current.values()) clearTimeout(t);
+      for (const timer of timers.values()) clearTimeout(timer);
+      timers.clear();
     };
   }, []);
 
   return flashMap;
 }
 
+function SortableHeader({ field, label, sortField, sortDir, onSort, align = 'right' }: {
+  field: SortField;
+  label: string;
+  sortField: SortField;
+  sortDir: SortDir;
+  onSort: (field: SortField) => void;
+  align?: 'left' | 'right';
+}) {
+  const selected = field === sortField;
+  const SortIcon = selected ? (sortDir === 'asc' ? ArrowUp : ArrowDown) : ArrowUpDown;
+  return (
+    <th scope="col" aria-sort={selected ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'} className={align === 'left' ? 'text-left' : 'text-right'}>
+      <button type="button" className={`holdings-sort ${align === 'left' ? '' : 'ml-auto'}`} onClick={() => onSort(field)} aria-label={`Sort by ${label}`}>
+        {label}<SortIcon size={12} aria-hidden="true" className={selected ? 'text-[var(--color-accent)]' : 'opacity-40'} />
+      </button>
+    </th>
+  );
+}
+
 export function PositionList({ positions, quotes }: PositionListProps) {
   const [sortField, setSortField] = useState<SortField>('value');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [search, setSearch] = useState('');
+  const [pnlFilter, setPnlFilter] = useState<PnlFilter>('all');
+  const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
   const flashMap = useQuoteFlash(quotes);
   const sparklineMap = useSparklineData(positions);
 
   const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
+    if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else {
       setSortField(field);
-      setSortDir('desc');
+      setSortDir(field === 'symbol' ? 'asc' : 'desc');
     }
   };
 
-  const sorted = useMemo(() => [...positions].sort((a, b) => {
-    let av: number | string;
-    let bv: number | string;
-    switch (sortField) {
-      case 'symbol':
-        av = a.symbol;
-        bv = b.symbol;
-        break;
-      case 'shares':
-        av = a.shares;
-        bv = b.shares;
-        break;
-      case 'currentPrice':
-        av = a.currentPrice;
-        bv = b.currentPrice;
-        break;
-      case 'value':
-        av = a.shares * a.currentPrice;
-        bv = b.shares * b.currentPrice;
-        break;
-      case 'unrealizedPnL':
-        av = a.unrealizedPnL;
-        bv = b.unrealizedPnL;
-        break;
-      case 'weight':
-        av = a.weight;
-        bv = b.weight;
-        break;
-      default:
-        av = 0;
-        bv = 0;
-    }
-    const cmp = typeof av === 'string' ? av.localeCompare(bv as string) : (av as number) - (bv as number);
-    return sortDir === 'asc' ? cmp : -cmp;
-  }), [positions, sortField, sortDir]);
+  const sorted = useMemo(() => {
+    const query = search.trim().toUpperCase();
+    const valueOf = (position: Position): string | number => sortField === 'value'
+      ? position.shares * position.currentPrice
+      : position[sortField];
+    return positions.filter(p => p.symbol.toUpperCase().includes(query) && (pnlFilter === 'all' || (pnlFilter === 'gains' ? p.unrealizedPnL > 0 : p.unrealizedPnL < 0))).sort((a, b) => {
+      const av = valueOf(a);
+      const bv = valueOf(b);
+      const comparison = typeof av === 'string' ? av.localeCompare(bv as string) : av - (bv as number);
+      return sortDir === 'asc' ? comparison : -comparison;
+    });
+  }, [positions, search, pnlFilter, sortField, sortDir]);
 
-  const SortArrow = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <span className="ml-1 opacity-20">↕</span>;
-    return <span className="ml-1 text-[var(--color-accent-text)]">{sortDir === 'asc' ? '↑' : '↓'}</span>;
-  };
-
-  const SortTh = ({
-    field,
-    label,
-    align = 'right',
-  }: {
-    field: SortField;
-    label: string;
-    align?: 'left' | 'right';
-  }) => (
-    <th
-      scope="col"
-      onClick={() => handleSort(field)}
-      className={`py-3 px-4 font-medium text-xs uppercase tracking-wider text-[var(--color-text-muted)] cursor-pointer select-none hover:text-[var(--color-text)] transition-colors ${align === 'right' ? 'text-right' : 'text-left'}`}
-    >
-      {label}
-      <SortArrow field={field} />
-    </th>
-  );
+  const shownValue = sorted.reduce((sum, position) => sum + position.shares * position.currentPrice, 0);
+  const shownPnl = sorted.reduce((sum, position) => sum + position.unrealizedPnL, 0);
+  const clearFilters = () => { setSearch(''); setPnlFilter('all'); };
+  const sortProps = { sortField, sortDir, onSort: handleSort };
+  const currency = (value: number, digits = 2) => value.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
   return (
-    <Card title="Holdings">
-      {/* Mobile sort dropdown — visible only below md */}
-      <div className="md:hidden mb-3 flex items-center gap-2">
-        <label htmlFor="mobile-sort" className="text-xs text-[var(--color-text-muted)]">
-          Sort by:
-        </label>
-        <select
-          id="mobile-sort"
-          value={`${sortField}-${sortDir}`}
-          onChange={(e) => {
-            const [f, d] = e.target.value.split('-') as [SortField, SortDir];
-            setSortField(f);
-            setSortDir(d);
-          }}
-          className="text-xs border border-[var(--color-border)] rounded px-2 py-1 bg-[var(--color-bg)] text-[var(--color-text)]"
-        >
-          <option value="symbol-asc">Symbol A-Z</option>
-          <option value="symbol-desc">Symbol Z-A</option>
-          <option value="value-desc">Value (High-Low)</option>
-          <option value="value-asc">Value (Low-High)</option>
-          <option value="unrealizedPnL-desc">P&L (High-Low)</option>
-          <option value="unrealizedPnL-asc">P&L (Low-High)</option>
-          <option value="weight-desc">Weight (High-Low)</option>
-        </select>
+    <section className={`holdings-panel desk-panel holdings-density-${density}`} aria-labelledby="holdings-heading">
+      <header className="holdings-toolbar">
+        <div>
+          <h2 id="holdings-heading">Holdings <span className="desk-count">{positions.length}</span></h2>
+          <p>Position-level exposure and unrealized returns</p>
+        </div>
+        <div className="holdings-tools">
+          <div className="holdings-search">
+            <Search size={14} aria-hidden="true" />
+            <input type="search" value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => { if (e.key === 'Escape') setSearch(''); }} aria-label="Search holdings" placeholder="Search symbol" />
+            {search && <button type="button" onClick={() => setSearch('')} aria-label="Clear holdings search"><X size={14} /></button>}
+          </div>
+          <select className="holdings-sort-select" aria-label="Sort holdings" value={`${sortField}-${sortDir}`} onChange={e => {
+            const [field, direction] = e.target.value.split('-') as [SortField, SortDir];
+            setSortField(field);
+            setSortDir(direction);
+          }}>
+            <option value="symbol-asc">Symbol A–Z</option>
+            <option value="symbol-desc">Symbol Z–A</option>
+            <option value="shares-desc">Shares: high to low</option>
+            <option value="shares-asc">Shares: low to high</option>
+            <option value="currentPrice-desc">Price: high to low</option>
+            <option value="currentPrice-asc">Price: low to high</option>
+            <option value="value-desc">Value: high to low</option>
+            <option value="value-asc">Value: low to high</option>
+            <option value="unrealizedPnL-desc">P&amp;L: high to low</option>
+            <option value="unrealizedPnL-asc">P&amp;L: low to high</option>
+            <option value="weight-desc">Weight: high to low</option>
+            <option value="weight-asc">Weight: low to high</option>
+          </select>
+        </div>
+      </header>
+      <div className="holdings-view-toolbar">
+        <div className="holdings-filters" role="group" aria-label="Filter by unrealized P&L">
+          {([['all', 'All holdings'], ['gains', 'With gains'], ['losses', 'With losses']] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={pnlFilter === value} onClick={() => setPnlFilter(value)}>{label}</button>)}
+        </div>
+        <div className="holdings-density" role="group" aria-label="Holdings row density">
+          <span>Rows</span>
+          <button type="button" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}>Compact</button>
+          <button type="button" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}>Comfortable</button>
+        </div>
       </div>
-
-      {/* Mobile card layout — hidden at md and above */}
-      <div className="md:hidden space-y-3">
-        {sorted.map((position) => {
-          const sparkline = sparklineMap.get(position.symbol.toUpperCase());
-          const changePct = sparkline?.changePct ?? null;
-          const isLoadingSpark = sparkline?.isLoading ?? false;
-          const positionValue = position.shares * position.currentPrice;
-
-          const flash = flashMap.get(position.symbol);
-          const flashClass = flash === 'up' ? 'quote-flash-up' : flash === 'down' ? 'quote-flash-down' : '';
-
-          return (
-            <div
-              key={`${position.symbol}-${flash ?? 'none'}`}
-              className={`p-3 bg-[var(--color-bg-tertiary)] rounded-lg border border-[var(--color-border-light)] ${flashClass}`}
-            >
-              {/* Top row: symbol + P&L prominent */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-9 h-9 bg-[var(--color-accent)] rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
-                    aria-hidden="true"
-                  >
-                    {position.symbol.slice(0, 2)}
-                  </div>
-                  <span className="font-semibold text-[var(--color-text)]">{position.symbol}</span>
-                </div>
-                <span className={`text-sm font-bold ${pnlColor(position.unrealizedPnL)}`}>
-                  {pnlSign(position.unrealizedPnL)}$
-                  {Math.abs(position.unrealizedPnL).toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </span>
-              </div>
-
-              {/* Detail grid */}
-              <div className="grid grid-cols-3 gap-2 text-xs text-[var(--color-text-muted)]">
-                <div>
-                  <p className="mb-0.5">Price</p>
-                  <p className="text-[var(--color-text)] font-medium">${position.currentPrice.toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="mb-0.5">Value</p>
-                  <p className="text-[var(--color-text)] font-medium">
-                    ${positionValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  </p>
-                </div>
-                <div>
-                  <p className="mb-0.5">Weight</p>
-                  <p className="text-[var(--color-text)] font-medium">{(position.weight * 100).toFixed(1)}%</p>
-                </div>
-                <div>
-                  <p className="mb-0.5">Shares</p>
-                  <p className="text-[var(--color-text)] font-medium">{position.shares}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="mb-0.5">7D Change</p>
-                  <div className="mt-0.5 flex items-center gap-2">
-                    {isLoadingSpark ? (
-                      <span
-                        aria-hidden="true"
-                        className="inline-block h-3 w-16 rounded-sm bg-[var(--color-border-light)] animate-pulse-subtle"
-                      />
-                    ) : changePct === null ? (
-                      <span className="text-[var(--color-text-muted)]">—</span>
-                    ) : (
-                      <Badge variant={changePct >= 0 ? 'success' : 'danger'}>
-                        {changePct >= 0 ? '+' : ''}
-                        {changePct.toFixed(2)}%
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Desktop table layout — hidden below md */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full" role="table">
+      <ScrollableTable className="holdings-table-wrap" label="Scroll holdings table horizontally">
+        <table className="holdings-table" aria-describedby="holdings-table-note">
           <thead>
-            <tr className="border-b border-[var(--color-border-light)]">
-              <SortTh field="symbol" label="Symbol" align="left" />
-              <SortTh field="shares" label="Shares" />
-              <SortTh field="currentPrice" label="Price" />
-              <SortTh field="value" label="Value" />
-              <th
-                scope="col"
-                className="py-3 px-4 text-right font-medium text-xs uppercase tracking-wider text-[var(--color-text-muted)]"
-              >
-                7D
-              </th>
-              <SortTh field="unrealizedPnL" label="P&L" />
-              <SortTh field="weight" label="Weight" />
-              <th
-                scope="col"
-                className="py-3 px-4 text-right font-medium text-xs uppercase tracking-wider text-[var(--color-text-muted)]"
-              >
-                Change
-              </th>
+            <tr>
+              <SortableHeader field="symbol" label="Symbol" align="left" {...sortProps} />
+              <SortableHeader field="shares" label="Shares" {...sortProps} />
+              <SortableHeader field="currentPrice" label="Price" {...sortProps} />
+              <SortableHeader field="value" label="Market value" {...sortProps} />
+              <th scope="col" className="text-right">7D trend</th>
+              <SortableHeader field="unrealizedPnL" label="Unrealized P&L" {...sortProps} />
+              <SortableHeader field="weight" label="Portfolio weight" {...sortProps} />
+              <th scope="col" className="text-right">7D change</th>
             </tr>
           </thead>
           <tbody>
-            {sorted.map((position) => {
+            {sorted.map(position => {
               const sparkline = sparklineMap.get(position.symbol.toUpperCase());
               const changePct = sparkline?.changePct ?? null;
-              const isLoadingSpark = sparkline?.isLoading ?? false;
-              const positionValue = position.shares * position.currentPrice;
-
               const flash = flashMap.get(position.symbol);
-              const flashClass = flash === 'up' ? 'quote-flash-up' : flash === 'down' ? 'quote-flash-down' : '';
-
               return (
-                <tr
-                  key={`${position.symbol}-${flash ?? 'none'}`}
-                  className={`border-b border-[var(--color-border-light)] last:border-0 hover:bg-[var(--color-bg-tertiary)] transition-colors ${flashClass}`}
-                >
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-9 h-9 bg-[var(--color-accent)] rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
-                        aria-hidden="true"
-                      >
-                        {position.symbol.slice(0, 2)}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-[var(--color-text)]">{position.symbol}</p>
-                        <p className="text-xs text-[var(--color-text-muted)]">{position.shares} shares</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-right text-[var(--color-text)]">{position.shares}</td>
-                  <td className="py-3 px-4 text-right text-[var(--color-text)]">
-                    ${position.currentPrice.toFixed(2)}
-                  </td>
-                  <td className="py-3 px-4 text-right text-[var(--color-text)]">
-                    ${positionValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    <div className="flex justify-end">
-                      <Sparkline closes={sparkline?.closes} isLoading={isLoadingSpark} />
-                    </div>
-                  </td>
-                  <td className={`py-3 px-4 text-right font-semibold ${pnlColor(position.unrealizedPnL)}`}>
-                    {pnlSign(position.unrealizedPnL)}$
-                    {Math.abs(position.unrealizedPnL).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </td>
-                  <td className="py-3 px-4 text-right text-[var(--color-text)]">
-                    {(position.weight * 100).toFixed(1)}%
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    {isLoadingSpark ? (
-                      <span
-                        aria-hidden="true"
-                        className="inline-block h-3 w-14 rounded-sm bg-[var(--color-border-light)] animate-pulse-subtle"
-                      />
-                    ) : changePct === null ? (
-                      <span className="text-[var(--color-text-muted)]">—</span>
-                    ) : (
-                      <Badge variant={changePct >= 0 ? 'success' : 'danger'}>
-                        {changePct >= 0 ? '+' : ''}
-                        {changePct.toFixed(2)}%
-                      </Badge>
-                    )}
+                <tr key={position.symbol} className={flash === 'up' ? 'quote-flash-up' : flash === 'down' ? 'quote-flash-down' : ''}>
+                  <th scope="row"><span className="holdings-symbol">{position.symbol}</span></th>
+                  <td>{position.shares.toLocaleString('en-US', { maximumFractionDigits: 6 })}</td>
+                  <td>${currency(position.currentPrice)}</td>
+                  <td className="font-medium">${currency(position.shares * position.currentPrice)}</td>
+                  <td><span className="inline-flex items-center justify-end"><Sparkline closes={sparkline?.closes} isLoading={sparkline?.isLoading ?? false} /></span></td>
+                  <td className={`font-medium ${pnlColor(position.unrealizedPnL)}`}>{pnlSign(position.unrealizedPnL)}${currency(Math.abs(position.unrealizedPnL))}</td>
+                  <td>{(position.weight * 100).toFixed(1)}%</td>
+                  <td className={changePct === null ? 'text-[var(--color-text-muted)]' : pnlColor(changePct)}>
+                    {sparkline?.isLoading ? <span aria-label="Loading seven day change">—</span> : changePct === null ? '—' : `${pnlSign(changePct)}${Math.abs(changePct).toFixed(2)}%`}
                   </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
-      </div>
-    </Card>
+      </ScrollableTable>
+      {sorted.length === 0 && <div className="holdings-empty" role="status">{search ? `No holdings match “${search}”${pnlFilter === 'all' ? '' : ' with this P&L filter'}.` : pnlFilter !== 'all' ? 'No holdings match this P&L filter.' : 'No positions to display.'}{(search || pnlFilter !== 'all') && <button type="button" onClick={clearFilters}>Reset filters</button>}</div>}
+      <footer className="holdings-footer" id="holdings-table-note">
+        <div className="holdings-summary" aria-live="polite">
+          <span>{sorted.length} of {positions.length} positions</span>
+          <span>Shown value <strong>${currency(shownValue)}</strong></span>
+          <span>Shown P&amp;L <strong className={pnlColor(shownPnl)}>{pnlSign(shownPnl)}${currency(Math.abs(shownPnl))}</strong></span>
+        </div>
+        <span>Weights include cash in portfolio value. 7D data uses cached daily closes.</span>
+      </footer>
+    </section>
   );
 }

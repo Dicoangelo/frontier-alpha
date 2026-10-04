@@ -11,6 +11,8 @@ interface AccountSummaryProps {
   brokerType: string;
   paperTrading: boolean;
   isMarketOpen: boolean;
+  error?: string;
+  onRetry?: () => void;
 }
 
 export const AccountSummary = React.memo(function AccountSummary({
@@ -20,22 +22,11 @@ export const AccountSummary = React.memo(function AccountSummary({
   brokerType,
   paperTrading,
   isMarketOpen,
+  error,
+  onRetry,
 }: AccountSummaryProps) {
-  // Broker status — type rail (positive=connected, warning=paper/closed, negative=offline)
-  const railColor = !brokerConnected
-    ? 'var(--color-negative)'
-    : !isMarketOpen
-    ? 'var(--color-warning)'
-    : 'var(--color-positive)';
-  const railShadow = !brokerConnected
-    ? 'shadow-[0_18px_60px_-20px_rgba(239,68,68,0.35)]'
-    : !isMarketOpen
-    ? 'shadow-[0_18px_60px_-20px_rgba(245,158,11,0.35)]'
-    : 'shadow-[0_18px_60px_-20px_rgba(16,185,129,0.35)]';
-
   return (
-    <Card className={`relative overflow-hidden p-4 ${railShadow}`}>
-      <span aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: railColor }} />
+    <Card className="p-4">
       <div className="flex items-center justify-between mb-4 pl-2">
         <div>
           <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted">
@@ -43,12 +34,12 @@ export const AccountSummary = React.memo(function AccountSummary({
           </p>
           <h3 className="mt-1 text-lg font-semibold text-theme flex items-center gap-2">
             <Wallet className="w-5 h-5 text-[var(--color-info)]" aria-hidden="true" />
-            Broker Status
+            Account summary
           </h3>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant={brokerConnected ? 'success' : 'warning'}>
-            {brokerType === 'alpaca' ? 'Alpaca' : 'Demo'}
+            {brokerConnected ? (brokerType === 'alpaca' ? 'Alpaca' : 'Paper account') : 'Not connected'}
           </Badge>
           {paperTrading && <Badge variant="info">Paper Trading</Badge>}
           {!isMarketOpen && <Badge variant="neutral">Market Closed</Badge>}
@@ -60,11 +51,15 @@ export const AccountSummary = React.memo(function AccountSummary({
           <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" />
           Loading account...
         </div>
+      ) : error ? (
+        <div role="alert" className="workspace-inline-error">{error}
+          {onRetry && <button type="button" className="ml-2 underline" onClick={onRetry}>Retry account</button>}
+        </div>
       ) : account ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pl-2">
           <div className="glass-slab-floating rounded-xl p-3">
             <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">Buying Power</p>
-            <p className="mt-1 mono text-lg font-semibold tabular-nums text-[var(--color-positive)]">
+            <p className="mt-1 mono text-lg font-semibold tabular-nums text-theme">
               ${account.buyingPower.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>

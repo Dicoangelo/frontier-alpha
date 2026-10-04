@@ -10,104 +10,59 @@ import type React from 'react';
  * Usage:
  *   CSS/Tailwind  → var(--color-positive)  or  text-accent
  *   TypeScript     → import { colors, cssVar } from '@/lib/theme'
- *                    colors.positive        // '#10b981'
+ *                    colors.positive        // '#197764'
  *                    cssVar('--color-positive')  // 'var(--color-positive)'
  */
 
 // ─── Brand Palette ────────────────────────────────────────────────────
 export const brand = {
-  amethyst: '#7B2CFF',
-  cyan: '#18E6FF',
-  magenta: '#FF3DF2',
-  gold: '#D7B26D',
-  teal: '#00FFC6',
-  holo: '#5AA7FF',
+  amethyst: '#176b96', cyan: '#167c80', magenta: '#7976a8',
+  gold: '#ae803d', teal: '#268573', holo: '#247fac',
 } as const;
 
-// ─── Semantic Colors (light mode defaults) ────────────────────────────
-// These match the CSS custom properties in index.css :root / .dark
+// Mirrors the workspace's light palette. Chart components prefer cssVar().
 export const colors = {
-  // Primary action color (accent amethyst)
-  primary: brand.amethyst,
-  accent: brand.amethyst,
-  accentHover: '#6920e0',
-  accentLight: 'rgba(123, 44, 255, 0.08)',
-  accentSecondary: brand.cyan,
-
-  // Semantic state colors
-  positive: '#10b981',
-  negative: '#ef4444',
-  success: '#10b981',
-  danger: '#ef4444',
-  warning: '#f59e0b',
-  info: '#3b82f6',
-
-  // Text
-  text: '#0B1020',
-  textSecondary: 'rgba(0, 0, 0, 0.6)',
-  textMuted: 'rgba(0, 0, 0, 0.4)',
-
-  // Backgrounds
-  bg: '#F8FAFC',
-  bgSecondary: 'rgba(255, 255, 255, 0.85)',
-  bgTertiary: 'rgba(0, 0, 0, 0.03)',
-
-  // Borders
-  border: 'rgba(11, 16, 32, 0.1)',
-  borderLight: 'rgba(11, 16, 32, 0.05)',
+  primary: '#176b96', accent: '#176b96', accentHover: '#12577b',
+  accentLight: '#e7f2f8', accentSecondary: '#167c80',
+  accentSecondaryText: '#146f73',
+  actionPrimary: '#176b96', actionPrimaryHover: '#12577b',
+  actionDanger: '#b5474d', actionDangerHover: '#a2363e', actionPositive: '#197764',
+  positive: '#197764', negative: '#b5474d', success: '#197764',
+  danger: '#b5474d', warning: '#94631f', info: '#176b96',
+  text: '#182b3a', textSecondary: '#4f6475', textMuted: '#5b6f81',
+  bg: '#f1f4f7', bgSecondary: '#ffffff', bgTertiary: '#eaf0f4',
+  border: '#d7e0e7', borderLight: '#e8edf1', controlBorder: '#788a99', focus: '#176b96',
 } as const;
 
-// ─── Dark Mode Overrides ──────────────────────────────────────────────
 export const darkColors = {
-  primary: brand.amethyst,
-  accent: brand.amethyst,
-  accentHover: '#9454ff',
-  accentLight: 'rgba(123, 44, 255, 0.15)',
-  accentSecondary: brand.cyan,
-
-  positive: '#34d399',
-  negative: '#f87171',
-  success: '#34d399',
-  danger: '#f87171',
-  warning: '#fbbf24',
-  info: '#60a5fa',
-
-  text: '#E6EDF5',
-  textSecondary: 'rgba(255, 255, 255, 0.65)',
-  textMuted: 'rgba(255, 255, 255, 0.45)',
-
-  bg: '#0F1219',
-  bgSecondary: 'rgba(22, 28, 45, 0.55)',
-  bgTertiary: 'rgba(255, 255, 255, 0.04)',
-
-  border: 'rgba(255, 255, 255, 0.12)',
-  borderLight: 'rgba(255, 255, 255, 0.06)',
+  primary: '#257da9', accent: '#257da9', accentHover: '#1b6c95',
+  accentLight: '#203f53', accentSecondary: '#7ec3c5',
+  accentSecondaryText: '#7ec3c5',
+  actionPrimary: '#23769f', actionPrimaryHover: '#1b6c95',
+  actionDanger: '#b5474d', actionDangerHover: '#a2363e', actionPositive: '#197764',
+  positive: '#7fcbb4', negative: '#e5a0a6', success: '#7fcbb4',
+  danger: '#e5a0a6', warning: '#ddbc82', info: '#8dc8e6',
+  text: '#e3ecf3', textSecondary: '#b7c8d6', textMuted: '#93aabe',
+  bg: '#101923', bgSecondary: '#17232f', bgTertiary: '#213141',
+  border: '#314353', borderLight: '#253747', controlBorder: '#748b9e', focus: '#8dc8e6',
 } as const;
 
-// ─── Surfaces ─────────────────────────────────────────────────────────
 export const surfaces = {
-  light: '#F5F7FA',
-  dark: '#0B1020',
-  deep: '#0F1219',
+  light: '#f1f4f7', dark: '#17232f', deep: '#101923',
 } as const;
 
-// ─── Alert Severity Scale ─────────────────────────────────────────────
+// Semantic states follow the selected appearance, including tooltip text.
 export const severity = {
-  critical: { text: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.2)' },
-  high:     { text: '#f97316', bg: 'rgba(249, 115, 22, 0.1)', border: 'rgba(249, 115, 22, 0.2)' },
-  medium:   { text: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.2)' },
-  low:      { text: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)', border: 'rgba(59, 130, 246, 0.2)' },
+  critical: { text: 'var(--color-negative)', bg: 'color-mix(in srgb, var(--color-negative) 8%, transparent)', border: 'color-mix(in srgb, var(--color-negative) 24%, transparent)' },
+  high: { text: 'var(--color-warning)', bg: 'color-mix(in srgb, var(--color-warning) 8%, transparent)', border: 'color-mix(in srgb, var(--color-warning) 24%, transparent)' },
+  medium: { text: 'var(--color-warning)', bg: 'color-mix(in srgb, var(--color-warning) 8%, transparent)', border: 'color-mix(in srgb, var(--color-warning) 24%, transparent)' },
+  low: { text: 'var(--color-info)', bg: 'var(--color-accent-light)', border: 'var(--color-border)' },
 } as const;
 
-// ─── Factor Category Colors ───────────────────────────────────────────
 export const factorColors = {
-  momentum:   '#3b82f6',
-  quality:    '#10b981',
-  value:      '#8b5cf6',
-  volatility: '#f97316',
-  size:       '#6366f1',
-  macro:      '#ef4444',
-  sector:     '#06b6d4',
+  momentum: 'var(--chart-primary)', quality: 'var(--chart-secondary)',
+  value: 'var(--chart-purple)', volatility: 'var(--chart-accent)',
+  size: 'var(--chart-teal)', macro: 'var(--chart-danger)', sector: 'var(--chart-cyan)',
 } as const;
 
 // ─── CSS Variable Helper ──────────────────────────────────────────────
@@ -128,6 +83,8 @@ export const cssVars = {
   textMuted:       '--color-text-muted',
   border:          '--color-border',
   borderLight:     '--color-border-light',
+  controlBorder:   '--color-control-border',
+  focus:           '--color-focus',
 
   // Brand / accent
   primary:         '--color-primary',
@@ -135,6 +92,12 @@ export const cssVars = {
   accentHover:     '--color-accent-hover',
   accentLight:     '--color-accent-light',
   accentSecondary: '--color-accent-secondary',
+  accentSecondaryText: '--color-accent-secondary-text',
+  actionPrimary:   '--color-action-primary',
+  actionPrimaryHover: '--color-action-primary-hover',
+  actionDanger:    '--color-action-danger',
+  actionDangerHover: '--color-action-danger-hover',
+  actionPositive:  '--color-action-positive',
 
   // Semantic states
   positive:        '--color-positive',
@@ -220,7 +183,7 @@ export const rechartsTooltipStyle: React.CSSProperties = {
   borderRadius: '8px',
   fontSize: '12px',
   color: 'var(--color-text)',
-  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+  boxShadow: '0 4px 16px rgba(25, 43, 69, 0.12)',
 };
 
 // Recharts <Tooltip> draws individual entries via separate <li> nodes that

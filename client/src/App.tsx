@@ -24,6 +24,7 @@ const Terms = lazy(() => import('@/pages/Terms').then(m => ({ default: m.Terms }
 const Privacy = lazy(() => import('@/pages/Privacy').then(m => ({ default: m.Privacy })));
 const Dashboard = lazy(() => import('@/pages/Dashboard').then(m => ({ default: m.Dashboard })));
 const Portfolio = lazy(() => import('@/pages/Portfolio').then(m => ({ default: m.Portfolio })));
+const AgentResearch = lazy(() => import('@/pages/AgentResearch').then(m => ({ default: m.AgentResearch })));
 const Factors = lazy(() => import('@/pages/Factors').then(m => ({ default: m.Factors })));
 const Earnings = lazy(() => import('@/pages/Earnings').then(m => ({ default: m.Earnings })));
 const Optimize = lazy(() => import('@/pages/Optimize').then(m => ({ default: m.Optimize })));
@@ -142,6 +143,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="/research" element={<ProtectedRoute><Layout><ErrorBoundary><AgentResearch /></ErrorBoundary></Layout></ProtectedRoute>} />
       <Route
         path="/factors"
         element={

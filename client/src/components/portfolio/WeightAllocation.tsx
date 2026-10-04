@@ -1,36 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Card } from '@/components/shared/Card';
+import React, { useState, useMemo, useRef } from 'react';
 import { useThemeStore } from '@/stores/themeStore';
 import type { Position } from '@/types';
-
-// Count-up animation for the donut center value — runs once on mount
-function useCenterCountUp(target: number, formatter: (v: number) => string) {
-  const ref = useRef<SVGTextElement>(null);
-  const hasRun = useRef(false);
-
-  const animate = useCallback(() => {
-    if (!ref.current || hasRun.current) return;
-    hasRun.current = true;
-    const el = ref.current;
-    let start: number | null = null;
-
-    const step = (ts: number) => {
-      if (!start) start = ts;
-      const p = Math.min((ts - start) / 800, 1);
-      const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
-      el.textContent = formatter(eased * target);
-      if (p < 1) requestAnimationFrame(step);
-    };
-
-    requestAnimationFrame(step);
-  }, [target, formatter]);
-
-  useEffect(() => {
-    animate();
-  }, [animate]);
-
-  return ref;
-}
 
 // Read chart palette from CSS variables at render time (theme-reactive)
 function getSegmentColors(): string[] {
@@ -47,7 +17,6 @@ function getSegmentColors(): string[] {
 
 interface WeightAllocationProps {
   positions: Position[];
-  totalValue: number;
 }
 
 interface Segment {
@@ -59,7 +28,7 @@ interface Segment {
   dashOffset: number;
 }
 
-function buildSegments(positions: Position[], _totalValue: number, segmentColors: string[]): Segment[] {
+function buildSegments(positions: Position[], segmentColors: string[]): Segment[] {
   const r = 54;
   const circumference = 2 * Math.PI * r;
 
@@ -94,49 +63,36 @@ function buildSegments(positions: Position[], _totalValue: number, segmentColors
   });
 }
 
-export const WeightAllocation = React.memo(function WeightAllocation({ positions, totalValue }: WeightAllocationProps) {
+export const WeightAllocation = React.memo(function WeightAllocation({ positions }: WeightAllocationProps) {
   const [hoveredSymbol, setHoveredSymbol] = useState<string | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const hasAnimated = useRef(false);
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+  const legendRef = useRef<HTMLDivElement>(null);
   const isDark = useThemeStore((s) => s.resolved === 'dark');
-
-  const centerRef = useCenterCountUp(totalValue, (v) =>
-    v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v.toFixed(0)}`
-  );
-
-  useEffect(() => {
-    if (hasAnimated.current) return;
-    hasAnimated.current = true;
-    const frame = requestAnimationFrame(() => setIsVisible(true));
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
-  if (positions.length === 0) return null;
 
   const SIZE = 160;
   const cx = SIZE / 2;
   const cy = SIZE / 2;
   const r = 54;
-  const circumference = 2 * Math.PI * r;
   const strokeWidth = 20;
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const segmentColors = useMemo(() => getSegmentColors(), [isDark]);
-  const segments = useMemo(() => buildSegments(positions, totalValue, segmentColors), [positions, totalValue, segmentColors]);
-  const hovered = hoveredSymbol ? segments.find(s => s.symbol === hoveredSymbol) : null;
+  const segments = useMemo(() => buildSegments(positions, segmentColors), [positions, segmentColors]);
+  const activeSymbol = hoveredSymbol ?? selectedSymbol;
+  const hovered = activeSymbol ? segments.find(s => s.symbol === activeSymbol) : null;
+  const hasSelection = segments.some(segment => segment.symbol === selectedSymbol);
 
-  const formattedTotal = totalValue >= 1000
-    ? `$${(totalValue / 1000).toFixed(0)}k`
-    : `$${totalValue.toFixed(0)}`;
+  if (positions.length === 0) return null;
 
   return (
-    <Card title="Weight Allocation">
-      <div className="flex flex-col sm:flex-row items-center gap-6">
+    <section className="desk-panel allocation-panel" aria-labelledby="allocation-heading">
+      <header className="allocation-header"><h2 id="allocation-heading">Holdings mix</h2><p>Invested holdings · cash excluded</p></header>
+      <div className="allocation-body">
         {/* SVG Donut */}
-        <div className="relative flex-shrink-0" style={{ minWidth: 160, minHeight: 160 }}>
+        <div className="relative flex-shrink-0" style={{ width: 144, height: 144, flexShrink: 0 }}>
           <svg
-            width={SIZE}
-            height={SIZE}
+            width="144"
+            height="144"
             viewBox={`0 0 ${SIZE} ${SIZE}`}
             aria-label="Portfolio weight allocation donut chart"
             role="img"
@@ -153,7 +109,7 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
 
             {/* Segments — rotate so first segment starts at top */}
             <g transform={`rotate(-90 ${cx} ${cy})`}>
-              {segments.map((seg, i) => (
+              {segments.map((seg) => (
                 <circle
                   key={seg.symbol}
                   cx={cx}
@@ -161,16 +117,12 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
                   r={r}
                   fill="none"
                   stroke={seg.color}
-                  strokeWidth={hoveredSymbol === seg.symbol ? strokeWidth + 4 : strokeWidth}
+                  strokeWidth={activeSymbol === seg.symbol ? strokeWidth + 4 : strokeWidth}
                   strokeDasharray={seg.dashArray}
-                  strokeDashoffset={isVisible ? seg.dashOffset : circumference}
+                  strokeDashoffset={seg.dashOffset}
                   strokeLinecap="butt"
                   className="cursor-pointer"
-                  style={{
-                    transition: isVisible
-                      ? `stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${i * 80}ms, stroke-width 0.15s ease`
-                      : 'none',
-                  }}
+                  style={{ transition: 'stroke-width 0.15s ease' }}
                   onMouseEnter={() => setHoveredSymbol(seg.symbol)}
                   onMouseLeave={() => setHoveredSymbol(null)}
                   onTouchStart={() => setHoveredSymbol(seg.symbol)}
@@ -185,10 +137,10 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
               <>
                 <text
                   x={cx}
-                  y={cy - 8}
+                  y={cy - 14}
                   textAnchor="middle"
                   className="fill-[var(--color-text)] font-semibold"
-                  fontSize="11"
+                  fontSize="15"
                   fontWeight="600"
                   fill="var(--color-text)"
                 >
@@ -196,18 +148,18 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
                 </text>
                 <text
                   x={cx}
-                  y={cy + 6}
+                  y={cy + 5}
                   textAnchor="middle"
-                  fontSize="10"
+                  fontSize="14"
                   fill="var(--color-text-muted)"
                 >
                   {(hovered.weight * 100).toFixed(1)}%
                 </text>
                 <text
                   x={cx}
-                  y={cy + 20}
+                  y={cy + 24}
                   textAnchor="middle"
-                  fontSize="9"
+                  fontSize="14"
                   fill="var(--color-text-muted)"
                 >
                   ${hovered.value >= 1000 ? `${(hovered.value / 1000).toFixed(1)}k` : hovered.value.toFixed(0)}
@@ -216,7 +168,6 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
             ) : (
               <>
                 <text
-                  ref={centerRef}
                   x={cx}
                   y={cy - 2}
                   textAnchor="middle"
@@ -224,16 +175,16 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
                   fontWeight="700"
                   fill="var(--color-text)"
                 >
-                  {formattedTotal}
+                  {positions.length}
                 </text>
                 <text
                   x={cx}
                   y={cy + 14}
                   textAnchor="middle"
-                  fontSize="9"
+                  fontSize="14"
                   fill="var(--color-text-muted)"
                 >
-                  total value
+                  {positions.length === 1 ? 'position' : 'positions'}
                 </text>
               </>
             )}
@@ -241,28 +192,32 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
         </div>
 
         {/* Legend */}
-        <div className="flex flex-col gap-2 flex-1 min-w-0">
+        <div ref={legendRef} className="allocation-legend">
           {segments.map((seg) => (
-            <div
+            <button
               key={seg.symbol}
-              className={`flex items-center gap-2 cursor-pointer rounded px-2 py-1 transition-colors ${hoveredSymbol === seg.symbol ? 'bg-[var(--color-bg-tertiary)]' : ''}`}
+              type="button"
+              className={`allocation-row ${activeSymbol === seg.symbol ? 'is-active' : ''}`}
               onMouseEnter={() => setHoveredSymbol(seg.symbol)}
               onMouseLeave={() => setHoveredSymbol(null)}
+              onFocus={() => setHoveredSymbol(seg.symbol)}
+              onBlur={() => setHoveredSymbol(null)}
+              onClick={() => setSelectedSymbol(current => current === seg.symbol ? null : seg.symbol)}
+              aria-pressed={selectedSymbol === seg.symbol}
+              aria-label={`Inspect ${seg.symbol} allocation: ${(seg.weight * 100).toFixed(1)}% of holdings, ${seg.value.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}`}
             >
               <div
                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                 style={{ backgroundColor: seg.color }}
               />
-              <span className="text-xs font-medium text-[var(--color-text)] truncate flex-1">
-                {seg.symbol}
-              </span>
-              <span className="text-xs text-[var(--color-text-muted)] flex-shrink-0">
-                {(seg.weight * 100).toFixed(1)}%
-              </span>
-            </div>
+              <span className="allocation-symbol">{seg.symbol}</span>
+              <span className="allocation-bar"><i style={{ width: `${Math.max(0, Math.min(100, seg.weight * 100))}%`, backgroundColor: seg.color }} /></span>
+              <span className="allocation-weight">{(seg.weight * 100).toFixed(1)}%</span>
+            </button>
           ))}
         </div>
       </div>
-    </Card>
+      <footer className="allocation-footer">Percentages are normalized across holdings, excluding cash. Select a symbol to pin its details.{hasSelection && <button type="button" onClick={() => { legendRef.current?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')?.focus(); setSelectedSymbol(null); setHoveredSymbol(null); }}>Clear selection</button>}</footer>
+    </section>
   );
 });

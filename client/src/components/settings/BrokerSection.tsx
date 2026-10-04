@@ -22,7 +22,7 @@ const inputClass =
   'block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm';
 
 const labelClass =
-  'block text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-2';
+  'block text-xs font-medium text-[var(--color-text-muted)] mb-2';
 
 export function BrokerSection() {
   const { plan } = useSubscription();
@@ -134,7 +134,7 @@ export function BrokerSection() {
               Alpaca {status.isPaper ? 'Paper' : 'Live'}
             </p>
             {status.lastVerifiedAt && (
-              <p className="mono text-[9px] tracking-[0.2em] uppercase text-[var(--color-text-muted)] mt-1 tabular-nums">
+              <p className="text-xs leading-relaxed text-[var(--color-text-muted)] mt-1 tabular-nums">
                 Verified {new Date(status.lastVerifiedAt).toLocaleString()}
               </p>
             )}
@@ -208,7 +208,7 @@ export function BrokerSection() {
         />
       </div>
 
-      <label className="flex items-center gap-3 cursor-pointer">
+      <label className="flex min-h-10 items-center gap-3 cursor-pointer">
         <input
           type="checkbox"
           checked={isPaper}

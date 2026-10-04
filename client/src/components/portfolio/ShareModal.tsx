@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
+import { DialogSurface } from '@/components/shared/DialogSurface';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   X,
@@ -62,6 +63,7 @@ const EXPIRATION_OPTIONS = [
 
 export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: ShareModalProps) {
   const queryClient = useQueryClient();
+  const titleId = useId();
   const [copied, setCopied] = useState(false);
   const [newShareUrl, setNewShareUrl] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -147,43 +149,37 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 transition-opacity"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="relative min-h-full flex items-start sm:items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="relative bg-[var(--color-bg)] rounded-xl shadow-xl w-full max-w-xl lg:max-w-2xl max-h-[90vh] overflow-y-auto">
+    <DialogSurface onClose={onClose} labelledBy={titleId} busy={createShareMutation.isPending || revokeShareMutation.isPending}>
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] rounded-lg">
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-4 sm:px-6 py-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="p-2 shrink-0 bg-[color-mix(in_srgb,var(--color-info)_10%,transparent)] rounded-lg">
                 <Users className="w-5 h-5 text-[var(--color-info)]" />
               </div>
-              <div>
-                <h2 className="text-lg font-semibold text-[var(--color-text)]">Share Portfolio</h2>
-                <p className="text-sm text-[var(--color-text-muted)]">{portfolioName}</p>
+              <div className="min-w-0">
+                <h2 id={titleId} className="text-lg font-semibold text-[var(--color-text)]">Share Portfolio</h2>
+                <p className="text-sm text-[var(--color-text-muted)] break-words">{portfolioName}</p>
               </div>
             </div>
             <button
+              type="button"
+              aria-label="Close sharing"
+              disabled={createShareMutation.isPending || revokeShareMutation.isPending}
               onClick={onClose}
-              className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors"
+              className="p-2 shrink-0 min-w-[44px] min-h-[44px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-6">
             {/* Success message for new share */}
             {newShareUrl && (
               <div className="bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)] border border-[color-mix(in_srgb,var(--color-positive)_20%,transparent)] rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-[var(--color-positive)] mt-0.5" />
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[var(--color-positive)]">Share link created!</p>
                     <div className="mt-2 flex items-center gap-2">
                       <input
@@ -222,7 +218,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                   <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
                     Permissions
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, permissions: 'view' })}
@@ -310,7 +306,7 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
                   <Button
                     type="submit"
                     disabled={createShareMutation.isPending}
-                    className="flex-1"
+                    className="flex-1 min-w-0"
                   >
                     {createShareMutation.isPending ? (
                       <Spinner className="w-4 h-4" />
@@ -435,8 +431,6 @@ export function ShareModal({ isOpen, onClose, portfolioId, portfolioName }: Shar
               )}
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+    </DialogSurface>
   );
 }

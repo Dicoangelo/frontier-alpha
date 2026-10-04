@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { SignupForm } from '@/components/auth/SignupForm';
+import { BrandLogo } from '@/components/shared/BrandLogo';
 
 export function Login() {
   const [searchParams] = useSearchParams();
@@ -14,17 +15,9 @@ export function Login() {
       <div className="sovereign-bar fixed top-0 left-0 right-0 z-50" />
 
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <img
-            src="/metaventions-logo.png"
-            alt="Metaventions AI"
-            width={64}
-            height={64}
-            className="w-16 h-16 rounded-sm mx-auto mb-4"
-          />
-          <h1 className="text-3xl font-black text-[var(--color-text)]">
-            Frontier <span className="text-gradient-brand">Alpha</span>
-          </h1>
+        <div className="fa-auth-brand text-center mb-8">
+          <BrandLogo variant="wordmark" />
+          <h1 className="text-3xl font-semibold text-[var(--color-text)]">Frontier Alpha</h1>
           <p className="text-[10px] text-[var(--color-text-muted)] mt-2 mono tracking-[0.4em] uppercase">
             Cognitive Factor Intelligence Platform
           </p>

@@ -10,6 +10,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Scale, ShieldCheck, ShieldAlert, ShieldQuestion } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/shared/Button';
 import { Card } from '@/components/shared/Card';
 import { api } from '@/api/client';
 import { usePlanGate, useAuthReady } from '@/hooks/useSubscription';
@@ -70,7 +72,7 @@ export function MethodConsensus({ symbols }: { symbols: string[] }) {
   // /explain/* is requirePlan('pro'): do not fire for anonymous or free users.
   const authReady = useAuthReady();
   const planOk = usePlanGate('pro');
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['explain', 'methods', symbol],
     queryFn: () => fetchConsensus(symbol),
     enabled: Boolean(symbol) && planOk,
@@ -87,20 +89,9 @@ export function MethodConsensus({ symbols }: { symbols: string[] }) {
       title="Method Consensus"
       action={
         symbols.length > 1 ? (
-          <div className="flex gap-1 flex-wrap justify-end">
-            {symbols.slice(0, 6).map((s, i) => (
-              <button
-                key={s}
-                onClick={() => setSelected(i)}
-                aria-pressed={i === selected}
-                className={`px-2 py-0.5 min-h-[32px] inline-flex items-center justify-center mono text-[10px] tracking-wider uppercase rounded-md animate-press transition-[background-color,color] duration-200 ${
-                  i === selected ? 'bg-theme shadow text-theme' : 'text-theme-secondary hover:text-theme'
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
+          <select aria-label="Method consensus holding" value={symbol} onChange={event => setSelected(symbols.indexOf(event.target.value))} className="max-w-[160px] rounded-md border border-[var(--color-border)] bg-[var(--color-bg-secondary)] px-2 py-1.5 text-xs text-theme">
+            {symbols.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
         ) : undefined
       }
     >
@@ -110,8 +101,9 @@ export function MethodConsensus({ symbols }: { symbols: string[] }) {
           <p className="text-sm text-theme-secondary">
             {authReady
               ? 'Method consensus is part of the Pro plan.'
-              : 'Sign in to see three independent rankings agree or disagree on each holding.'}
+              : 'Sign in to review independent factor rankings for each holding.'}
           </p>
+          <Link to={authReady ? '/pricing' : '/login'} className="mt-3 inline-block text-sm font-medium text-[var(--color-accent-text)] hover:underline">{authReady ? 'View plans' : 'Sign in'}</Link>
         </div>
       ) : isLoading ? (
         <div className="h-28 rounded-lg animate-pulse-subtle bg-theme-tertiary" aria-busy="true" />
@@ -121,6 +113,7 @@ export function MethodConsensus({ symbols }: { symbols: string[] }) {
           <p className="text-sm text-theme-secondary">
             Method consensus unavailable for {symbol} right now.
           </p>
+          {isError && <Button variant="outline" size="sm" onClick={() => refetch()} className="mx-auto mt-3">Retry method consensus</Button>}
         </div>
       ) : (
         <div className="space-y-4">

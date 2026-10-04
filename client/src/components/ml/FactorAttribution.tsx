@@ -87,11 +87,11 @@ function FactorAttributionInner({ waterfall, topDrivers }: FactorAttributionProp
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light, var(--color-border))" vertical={false} />
             <XAxis
               dataKey="label"
-              tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+              tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
               axisLine={{ stroke: 'var(--color-border)' }}
             />
             <YAxis
-              tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+              tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }}
               tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
               axisLine={{ stroke: 'var(--color-border)' }}
             />

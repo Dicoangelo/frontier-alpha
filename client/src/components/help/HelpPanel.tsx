@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { OverlayPortal } from '@/components/shared/OverlayPortal';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useDialogFocus } from '@/hooks/useDialogFocus';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -38,6 +40,8 @@ const kickerClass =
   'text-[10px] mono tracking-[0.3em] uppercase text-theme-muted';
 
 export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(panelRef, isOpen);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<HelpTopic | null>(null);
@@ -63,11 +67,12 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
   // Reset state when panel closes
   useEffect(() => {
     if (!isOpen) {
-      setTimeout(() => {
+      const timer = window.setTimeout(() => {
         setSearchQuery('');
         setSelectedSection(null);
         setSelectedTopic(null);
       }, 300);
+      return () => window.clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -77,6 +82,8 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
         if (selectedTopic) {
           setSelectedTopic(null);
         } else {
@@ -88,18 +95,6 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, selectedTopic, onClose]);
-
-  // Lock body scroll when open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
 
   const toggleSection = useCallback((sectionId: string) => {
     setExpandedSections((prev) => {
@@ -129,6 +124,7 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
   if (!isOpen) return null;
 
   return (
+    <OverlayPortal>
     <div className="fixed inset-0 z-50">
       {/* Backdrop */}
       <div
@@ -140,6 +136,8 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
       {/* Panel — side drawer */}
       <div
         className="glass-slab-floating absolute right-0 top-0 bottom-0 w-full max-w-lg overflow-hidden animate-slide-in-right flex flex-col shadow-[0_30px_80px_-20px_rgba(123,44,255,0.35)]"
+        ref={panelRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label="Help panel"
@@ -228,6 +226,7 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
               expandedSections={expandedSections}
               onToggleSection={toggleSection}
               onSelectTopic={selectTopic}
+              onNavigate={onClose}
             />
           )}
         </div>
@@ -254,6 +253,7 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }
 
@@ -263,9 +263,10 @@ interface SectionListProps {
   expandedSections: Set<string>;
   onToggleSection: (id: string) => void;
   onSelectTopic: (topic: HelpTopic) => void;
+  onNavigate: () => void;
 }
 
-function SectionList({ sections, expandedSections, onToggleSection, onSelectTopic }: SectionListProps) {
+function SectionList({ sections, expandedSections, onToggleSection, onSelectTopic, onNavigate }: SectionListProps) {
   return (
     <div className="p-4 space-y-3 animate-stagger">
       {sections.map((section) => {
@@ -321,20 +322,21 @@ function SectionList({ sections, expandedSections, onToggleSection, onSelectTopi
       <div className="pt-4 mt-4 border-t border-theme">
         <h3 className="text-[10px] mono tracking-[0.3em] uppercase text-theme-muted mb-3">Quick Links</h3>
         <div className="grid grid-cols-2 gap-2">
-          <QuickLink to="/help#faq" label="FAQ" />
-          <QuickLink to="/help#factors" label="Factor Guide" />
-          <QuickLink to="/help#risk" label="Risk Metrics" />
-          <QuickLink to="/help#optimization" label="Optimization" />
+          <QuickLink onNavigate={onNavigate} to="/help#faq" label="FAQ" />
+          <QuickLink onNavigate={onNavigate} to="/help#factors" label="Factor Guide" />
+          <QuickLink onNavigate={onNavigate} to="/help#sharpe-volatility" label="Risk Metrics" />
+          <QuickLink onNavigate={onNavigate} to="/help#optimization-basics" label="Optimization" />
         </div>
       </div>
     </div>
   );
 }
 
-function QuickLink({ to, label }: { to: string; label: string }) {
+function QuickLink({ to, label, onNavigate }: { to: string; label: string; onNavigate: () => void }) {
   return (
     <Link
       to={to}
+      onClick={onNavigate}
       className="glass-slab flex items-center justify-between px-3 py-2 rounded-lg text-sm text-theme-secondary hover:text-theme hover:border-[color:var(--color-border-hover)] animate-press animate-lift"
     >
       {label}

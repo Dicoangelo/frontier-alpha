@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, AlertTriangle, TrendingUp, TrendingDown, Shield, Zap, RefreshCw } from 'lucide-react';
+import { ChartNoAxesCombined, AlertTriangle, TrendingUp, TrendingDown, Shield, Zap, RefreshCw } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
 import { Button } from '@/components/shared/Button';
 import { api } from '@/api/client';
@@ -25,9 +25,9 @@ function generateInsights(symbols: string[], factors: FactorExposure[]): Insight
   if (factors.length === 0) {
     return [{
       type: 'action',
-      icon: <Sparkles className="w-4 h-4" />,
+      icon: <ChartNoAxesCombined className="w-4 h-4" />,
       title: 'Getting Started',
-      content: 'Add positions to your portfolio to receive AI-powered insights and factor analysis.',
+      content: 'Add positions to your portfolio to receive portfolio insights and factor analysis.',
     }];
   }
 
@@ -135,7 +135,7 @@ function generateInsights(symbols: string[], factors: FactorExposure[]): Insight
     } else {
       insights.unshift({
         type: 'action',
-        icon: <Sparkles className="w-4 h-4 text-[var(--color-info)]" />,
+        icon: <ChartNoAxesCombined className="w-4 h-4 text-[var(--color-info)]" />,
         title: 'Portfolio Assessment',
         content: `Your ${symbols.length}-position portfolio shows ${oppCount} favorable factor tilts. The factor exposures align well with long-term return premiums documented in academic research.`,
         confidence: 0.85,
@@ -227,7 +227,7 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
 
   return (
     <Card
-      title="AI-Powered Insights"
+      title="Portfolio insights"
       action={
         <Button onClick={refreshInsights} isLoading={isLoading} size="sm" variant="secondary">
           <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
@@ -237,10 +237,10 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
     >
       {insights.length === 0 ? (
         <div className="text-center py-8 text-theme-muted">
-          <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-50" aria-hidden="true" />
-          <p className="leading-relaxed">Add positions to receive AI-powered analysis of your portfolio.</p>
+          <ChartNoAxesCombined className="w-12 h-12 mx-auto mb-3 opacity-50" aria-hidden="true" />
+          <p className="leading-relaxed">Add positions to see portfolio insights.</p>
           <p className="text-sm mt-2 leading-relaxed">
-            Our cognitive engine analyzes 80+ factors to provide actionable insights.
+            Review the factors that contribute to your portfolio’s risk and return.
           </p>
         </div>
       ) : (
@@ -250,10 +250,8 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
             return (
               <div
                 key={index}
-                className="glass-slab-floating relative overflow-hidden rounded-xl pl-5 pr-4 py-4 animate-slide-in-left transition-[box-shadow] duration-200 hover:shadow-lg before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px]"
+                className="relative overflow-hidden rounded-lg border border-[var(--color-border-light)] pl-5 pr-4 py-4"
                 style={{
-                  animationDelay: `${index * 50}ms`,
-                  animationFillMode: 'both',
                   ...insightTypeBg[insight.type],
                 }}
               >
@@ -264,7 +262,7 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                       <h4 className="font-medium text-theme">{insight.title}</h4>
                       {insight.confidence && (
-                        <span className="mono text-[10px] tracking-[0.2em] uppercase tabular-nums text-theme-muted">
+                        <span className="text-xs tabular-nums text-theme-muted">
                           {(insight.confidence * 100).toFixed(0)}% confidence
                         </span>
                       )}
@@ -277,7 +275,7 @@ export function CognitiveInsight({ symbols, factors = [] }: CognitiveInsightProp
           })}
 
           {lastUpdated && (
-            <p className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted text-right">
+            <p className="text-xs text-theme-muted text-right">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </p>
           )}

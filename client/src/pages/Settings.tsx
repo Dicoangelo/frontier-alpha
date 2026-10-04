@@ -28,7 +28,7 @@ const inputClass =
   'block w-full px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm';
 
 const labelClass =
-  'block text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-2';
+  'block text-xs font-medium text-[var(--color-text-secondary)] mb-2';
 
 const kickerClass =
   'text-[10px] mono tracking-[0.3em] uppercase text-[var(--color-text-muted)]';

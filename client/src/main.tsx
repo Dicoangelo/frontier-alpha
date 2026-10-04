@@ -26,13 +26,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 // Hide loader once DOM is ready
 requestAnimationFrame(hideLoader);
 
-// Register service worker for PWA support
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .catch(() => {
-        // Service worker registration failed — non-critical, ignore
-      });
-  });
-}
+// Production worker registration is injected into HTML before the entry module.
+// It can repair an old cached entry bundle even when React cannot boot.

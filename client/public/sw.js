@@ -1,147 +1,100 @@
-// Frontier Alpha Service Worker
-const CACHE_NAME = 'frontier-alpha-v1';
-const STATIC_CACHE = 'frontier-static-v1';
-const DYNAMIC_CACHE = 'frontier-dynamic-v1';
+// Frontier Alpha service worker. Keep /sw.js stable so installed clients upgrade.
+const STATIC_CACHE = 'frontier-static-v2';
+const DYNAMIC_CACHE = 'frontier-dynamic-v2';
 const API_CACHE = 'frontier-api-v1';
+// Only obsolete response caches are disposable. Pending portfolio actions are not.
+const OBSOLETE_CACHES = ['frontier-static-v1', 'frontier-dynamic-v1'];
 
-// Assets to cache immediately on install
-const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-];
-
-// Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker...');
-
-  event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then((cache) => {
-        console.log('[SW] Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil((async () => {
+    try {
+      const response = await fetch('/index.html', { cache: 'reload' });
+      if (isHtml(response)) await saveResponse(STATIC_CACHE, '/index.html', response);
+    } catch { /* An offline install may still replace a poisoned old worker. */ }
+    await self.skipWaiting();
+  })());
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker...');
-
-  event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => {
-        return Promise.all(
-          cacheNames
-            .filter((name) => {
-              return name.startsWith('frontier-') &&
-                     name !== STATIC_CACHE &&
-                     name !== DYNAMIC_CACHE &&
-                     name !== API_CACHE;
-            })
-            .map((name) => {
-              console.log('[SW] Deleting old cache:', name);
-              return caches.delete(name);
-            })
-        );
-      })
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    await Promise.all(OBSOLETE_CACHES.map((name) => caches.delete(name)));
+    await self.clients.claim();
+  })());
 });
 
-// Fetch event - handle requests with appropriate strategy
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
-    return;
-  }
-
-  // Skip Chrome extension requests
-  if (url.protocol === 'chrome-extension:') {
-    return;
-  }
-
-  // API requests - Network first, fallback to cache
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(networkFirst(request, API_CACHE));
-    return;
+  } else if (isStaticAsset(url.pathname)) {
+    event.respondWith(cacheFirst(request));
+  } else if (request.mode === 'navigate') {
+    event.respondWith(networkFirst(request, DYNAMIC_CACHE, true));
   }
-
-  // Static assets (JS, CSS, images) - Cache first
-  if (isStaticAsset(url.pathname)) {
-    event.respondWith(cacheFirst(request, STATIC_CACHE));
-    return;
-  }
-
-  // HTML pages - Network first for freshness
-  if (request.headers.get('accept')?.includes('text/html')) {
-    event.respondWith(networkFirst(request, DYNAMIC_CACHE));
-    return;
-  }
-
-  // Default - Network first
-  event.respondWith(networkFirst(request, DYNAMIC_CACHE));
 });
 
-// Cache-first strategy
-async function cacheFirst(request, cacheName) {
-  const cachedResponse = await caches.match(request);
+function isHtml(response) {
+  return response && response.ok && response.headers.get('content-type')?.includes('text/html');
+}
 
-  if (cachedResponse) {
-    return cachedResponse;
-  }
+function isValidAsset(request, response) {
+  if (!response || !response.ok) return false;
+  const type = (response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+  const pathname = new URL(request.url).pathname;
+  if (/\.m?js$/i.test(pathname)) return /^(application|text)\/(javascript|x-javascript|ecmascript)$/.test(type);
+  if (/\.css$/i.test(pathname)) return type === 'text/css';
+  if (/\.(png|jpg|jpeg|gif|svg|ico|webp|avif)$/i.test(pathname)) return type.startsWith('image/');
+  return type.startsWith('font/') || /^(application\/(font|x-font)[-a-z0-9]*|application\/(octet-stream|vnd.ms-fontobject))$/.test(type);
+}
+
+async function saveResponse(cacheName, request, response) {
+  try {
+    const cache = await caches.open(cacheName);
+    await cache.put(request, response.clone());
+  } catch { /* Storage restrictions must not prevent a successful network load. */ }
+}
+
+async function cacheFirst(request) {
+  const cache = await caches.open(STATIC_CACHE);
+  const cached = await cache.match(request);
+  if (isValidAsset(request, cached)) return cached;
+  if (cached) await cache.delete(request);
 
   try {
-    const networkResponse = await fetch(request);
-
-    if (networkResponse.ok) {
-      const cache = await caches.open(cacheName);
-      cache.put(request, networkResponse.clone());
-    }
-
-    return networkResponse;
-  } catch (error) {
-    console.log('[SW] Network request failed:', error);
+    let response = await fetch(request);
+    // A missing deployment chunk can receive the SPA HTML fallback with 200.
+    // Retry past the browser HTTP cache, and never store or execute that HTML.
+    if (!isValidAsset(request, response)) response = await fetch(request, { cache: 'reload' });
+    if (!isValidAsset(request, response)) return new Response('Asset unavailable', { status: 502, headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' } });
+    await saveResponse(STATIC_CACHE, request, response);
+    return response;
+  } catch {
     return new Response('Offline', { status: 503 });
   }
 }
 
-// Network-first strategy
-async function networkFirst(request, cacheName) {
+async function networkFirst(request, cacheName, navigation = false) {
   try {
-    const networkResponse = await fetch(request);
-
-    if (networkResponse.ok) {
-      const cache = await caches.open(cacheName);
-      cache.put(request, networkResponse.clone());
+    const response = await fetch(request);
+    if (response.ok && (!navigation || isHtml(response))) await saveResponse(cacheName, request, response);
+    return response;
+  } catch {
+    const cache = await caches.open(cacheName);
+    const cached = await cache.match(request);
+    if (cached && (!navigation || isHtml(cached))) return cached;
+    if (navigation) {
+      const shell = await (await caches.open(STATIC_CACHE)).match('/index.html');
+      if (isHtml(shell)) return shell;
     }
-
-    return networkResponse;
-  } catch (error) {
-    console.log('[SW] Network failed, trying cache:', request.url);
-
-    const cachedResponse = await caches.match(request);
-
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-
-    // Return offline page for navigation requests
-    if (request.headers.get('accept')?.includes('text/html')) {
-      return caches.match('/') || new Response('Offline', { status: 503 });
-    }
-
     return new Response('Offline', { status: 503 });
   }
 }
 
-// Check if URL is a static asset
 function isStaticAsset(pathname) {
-  return /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/i.test(pathname);
+  return /\.(m?js|css|png|jpg|jpeg|gif|svg|ico|webp|avif|woff|woff2|ttf|eot)$/i.test(pathname);
 }
 
 // Handle push notifications

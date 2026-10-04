@@ -593,7 +593,7 @@ export function Portfolio() {
         >
           {positions.length === 0 ? (
             <div className="glass-slab gradient-brand-subtle rounded-2xl p-6">
-              <EmptyPortfolio onAddPosition={handleAddPositionClick} />
+              <EmptyPortfolio onAddPosition={handleAddPositionClick} showDemoAction={!session} />
             </div>
           ) : (
             <>
@@ -727,7 +727,7 @@ export function Portfolio() {
                   <tr>
                     <td colSpan={6} className="p-2">
                       <div className="gradient-brand-subtle rounded-xl">
-                        <EmptyPortfolio onAddPosition={handleAddPositionClick} />
+                        <EmptyPortfolio onAddPosition={handleAddPositionClick} showDemoAction={!session} />
                       </div>
                     </td>
                   </tr>

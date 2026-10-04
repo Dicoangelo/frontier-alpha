@@ -1,3 +1,4 @@
+import { DialogSurface } from '@/components/shared/DialogSurface';
 import { useEffect, useState } from 'react';
 import { X, ArrowRight, TrendingUp, BarChart2, Bell, Zap, Sparkles } from 'lucide-react';
 
@@ -78,6 +79,7 @@ export function WelcomeModal({
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- refresh imported symbols from external storage on open
       setDemoSymbols(readDemoSymbols());
       setBannerDismissed(false);
     }
@@ -121,21 +123,8 @@ export function WelcomeModal({
   const remainingCount = Math.max(0, demoSymbols.length - previewSymbols.length);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
-        onClick={handleClose}
-        aria-hidden="true"
-      />
-
-      {/* Modal */}
-      <div
-        className="glass-modal relative max-w-lg w-full rounded-2xl overflow-hidden animate-enter shadow-[0_30px_80px_-20px_rgba(123,44,255,0.45)]"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Welcome to Frontier Alpha"
-      >
+    <DialogSurface label="Welcome to Frontier Alpha" onClose={handleClose}>
+      <div className="relative w-full">
         {/* Sovereign top rail */}
         <div className="sovereign-bar absolute top-0 left-0 right-0" />
 
@@ -294,7 +283,7 @@ export function WelcomeModal({
           </div>
         </div>
       </div>
-    </div>
+    </DialogSurface>
   );
 }
 

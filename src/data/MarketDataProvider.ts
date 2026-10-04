@@ -460,7 +460,8 @@ export class MarketDataProvider {
    */
   async getHistoricalPrices(
     symbol: string,
-    days: number = 252
+    days: number = 252,
+    options: { allowMockFallback?: boolean } = {},
   ): Promise<Price[]> {
     const upperSymbol = symbol.toUpperCase();
 
@@ -473,11 +474,12 @@ export class MarketDataProvider {
     // The key includes `days` because callers can request different windows.
     // This stays separate from the cache layer because request coalescing
     // and caching are different concerns.
-    const inflightKey = `${upperSymbol}:${days}`;
+    const strict = options.allowMockFallback === false;
+    const inflightKey = `${upperSymbol}:${days}${strict ? ':real-only' : ''}`;
     const existing = this.inflightHistoricalPrices.get(inflightKey);
     if (existing) return existing;
 
-    const fetcher = this.doFetchHistoricalPrices(upperSymbol, days);
+    const fetcher = this.doFetchHistoricalPrices(upperSymbol, days, strict);
     this.inflightHistoricalPrices.set(inflightKey, fetcher);
     try {
       return await fetcher;
@@ -502,6 +504,7 @@ export class MarketDataProvider {
   private async doFetchHistoricalPrices(
     upperSymbol: string,
     days: number,
+    strict = false,
   ): Promise<Price[]> {
     // Provider chain — try Polygon REST first (higher rate limits, no daily
     // cap on the free tier), fall back to Alpha Vantage when Polygon errors
@@ -604,7 +607,7 @@ export class MarketDataProvider {
     }
 
     // PRODUCTION: Throw error, no mock fallback
-    if (!this.config.allowMockFallback) {
+    if (strict || !this.config.allowMockFallback) {
       throw new DataNotAvailableError(
         `Unable to fetch historical prices for ${upperSymbol}: all providers failed and no ` +
         `cached data is available. Ensure POLYGON_API_KEY / ALPACA_API_KEY / ALPHA_VANTAGE_API_KEY are set.`

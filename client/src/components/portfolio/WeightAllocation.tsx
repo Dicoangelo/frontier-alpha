@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useThemeStore } from '@/stores/themeStore';
 import type { Position } from '@/types';
 
@@ -65,6 +65,8 @@ function buildSegments(positions: Position[], segmentColors: string[]): Segment[
 
 export const WeightAllocation = React.memo(function WeightAllocation({ positions }: WeightAllocationProps) {
   const [hoveredSymbol, setHoveredSymbol] = useState<string | null>(null);
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+  const legendRef = useRef<HTMLDivElement>(null);
   const isDark = useThemeStore((s) => s.resolved === 'dark');
 
   const SIZE = 160;
@@ -76,7 +78,9 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const segmentColors = useMemo(() => getSegmentColors(), [isDark]);
   const segments = useMemo(() => buildSegments(positions, segmentColors), [positions, segmentColors]);
-  const hovered = hoveredSymbol ? segments.find(s => s.symbol === hoveredSymbol) : null;
+  const activeSymbol = hoveredSymbol ?? selectedSymbol;
+  const hovered = activeSymbol ? segments.find(s => s.symbol === activeSymbol) : null;
+  const hasSelection = segments.some(segment => segment.symbol === selectedSymbol);
 
   if (positions.length === 0) return null;
 
@@ -85,10 +89,10 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
       <header className="allocation-header"><h2 id="allocation-heading">Holdings mix</h2><p>Invested holdings · cash excluded</p></header>
       <div className="allocation-body">
         {/* SVG Donut */}
-        <div className="relative flex-shrink-0" style={{ width: 136, height: 136, flexShrink: 0 }}>
+        <div className="relative flex-shrink-0" style={{ width: 144, height: 144, flexShrink: 0 }}>
           <svg
-            width="136"
-            height="136"
+            width="144"
+            height="144"
             viewBox={`0 0 ${SIZE} ${SIZE}`}
             aria-label="Portfolio weight allocation donut chart"
             role="img"
@@ -113,7 +117,7 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
                   r={r}
                   fill="none"
                   stroke={seg.color}
-                  strokeWidth={hoveredSymbol === seg.symbol ? strokeWidth + 4 : strokeWidth}
+                  strokeWidth={activeSymbol === seg.symbol ? strokeWidth + 4 : strokeWidth}
                   strokeDasharray={seg.dashArray}
                   strokeDashoffset={seg.dashOffset}
                   strokeLinecap="butt"
@@ -188,17 +192,18 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
         </div>
 
         {/* Legend */}
-        <div className="allocation-legend">
+        <div ref={legendRef} className="allocation-legend">
           {segments.map((seg) => (
             <button
               key={seg.symbol}
               type="button"
-              className={`allocation-row ${hoveredSymbol === seg.symbol ? 'is-active' : ''}`}
+              className={`allocation-row ${activeSymbol === seg.symbol ? 'is-active' : ''}`}
               onMouseEnter={() => setHoveredSymbol(seg.symbol)}
               onMouseLeave={() => setHoveredSymbol(null)}
               onFocus={() => setHoveredSymbol(seg.symbol)}
               onBlur={() => setHoveredSymbol(null)}
-              onClick={() => setHoveredSymbol(seg.symbol)}
+              onClick={() => setSelectedSymbol(current => current === seg.symbol ? null : seg.symbol)}
+              aria-pressed={selectedSymbol === seg.symbol}
               aria-label={`Inspect ${seg.symbol} allocation: ${(seg.weight * 100).toFixed(1)}% of holdings, ${seg.value.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}`}
             >
               <div
@@ -212,7 +217,7 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
           ))}
         </div>
       </div>
-      <footer className="allocation-footer">Percentages are normalized across holdings, excluding cash. Select a symbol to inspect its value.</footer>
+      <footer className="allocation-footer">Percentages are normalized across holdings, excluding cash. Select a symbol to pin its details.{hasSelection && <button type="button" onClick={() => { legendRef.current?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')?.focus(); setSelectedSymbol(null); setHoveredSymbol(null); }}>Clear selection</button>}</footer>
     </section>
   );
 });

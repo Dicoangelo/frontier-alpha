@@ -49,6 +49,7 @@ const pageTitleMap: Record<string, string> = {
   '/portfolio': 'Portfolio',
   '/trade': 'Trade',
   '/optimize': 'Optimize',
+  '/research': 'Agent research',
   '/factors': 'Factors',
   '/earnings': 'Earnings',
   '/alerts': 'Alerts',

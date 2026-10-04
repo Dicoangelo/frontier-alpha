@@ -27,6 +27,8 @@ declare module 'fastify' {
     user?: AuthenticatedUser;
     apiKeyId?: string;
     apiKeyRateLimit?: number;
+    apiKeyPermissions?: Record<string, boolean>;
+    apiKeyOwnerVerified?: boolean;
   }
 }
 
@@ -167,6 +169,7 @@ async function authenticateWithApiKey(
 
   // Fetch the user associated with this API key
   const { data: { user }, error } = await supabase.auth.admin.getUserById(keyRecord.user_id);
+  request.apiKeyOwnerVerified = !error && !!user;
 
   if (error || !user) {
     // If we can't look up the user, still set basic info from key record
@@ -186,6 +189,7 @@ async function authenticateWithApiKey(
   // Tag request with API key metadata for rate limiter
   request.apiKeyId = keyRecord.id;
   request.apiKeyRateLimit = keyRecord.rate_limit;
+  request.apiKeyPermissions = keyRecord.permissions;
 
   return true;
 }

@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ArrowUpRight, Moon, Sun, LogOut, X } from 'lucide-react';
+import { Search, ArrowUpRight, Moon, Sun, LogOut, X, Workflow, PanelLeft, PanelRight, RotateCcw } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { OverlayPortal } from './OverlayPortal';
 import { useThemeStore } from '@/stores/themeStore';
 
 interface CommandItem {
   id: string;
   label: string;
-  group: 'Navigate' | 'Account' | 'Appearance';
+  group: 'Navigate' | 'Account' | 'Appearance' | 'Workspace' | 'Research';
   keywords: string;
   icon?: React.ReactNode;
   perform: () => void | Promise<void>;
@@ -16,7 +17,7 @@ interface CommandItem {
 const routes = [
   ['/', 'Dashboard', 'home overview'], ['/portfolio', 'Portfolio', 'positions holdings'],
   ['/trade', 'Trade', 'buy sell order execution'], ['/options', 'Options', 'greeks calls puts'],
-  ['/factors', 'Factors', 'exposure quality momentum'], ['/cvrf', 'CVRF beliefs', 'learning episodes'],
+  ['/research', 'Agent research', 'deepseek ai agent evidence analysis brief'], ['/factors', 'Factors', 'exposure quality momentum'], ['/cvrf', 'CVRF beliefs', 'learning episodes'],
   ['/earnings', 'Earnings', 'calendar reports quarterly'], ['/alerts', 'Alerts', 'notifications risk'],
   ['/optimize', 'Optimize', 'allocation monte carlo sharpe'], ['/backtest', 'Backtest', 'history strategy'],
   ['/ml', 'Models', 'ml neural regime'], ['/tax', 'Tax', 'harvest lots'],
@@ -24,7 +25,9 @@ const routes = [
   ['/settings', 'Settings', 'preferences account'], ['/help', 'Help', 'documentation guide'],
 ];
 
-export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenChange: (value: boolean) => void }) {
+interface CommandPaletteProps { open: boolean; onOpenChange: (value: boolean) => void; onToggleNavigation?: () => void; onToggleContext?: () => void; onResetLayout?: () => void }
+
+export function CommandPalette({ open, onOpenChange, onToggleNavigation, onToggleContext, onResetLayout }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const [error, setError] = useState('');
@@ -38,14 +41,25 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   const close = useCallback(() => { onOpenChange(false); setQuery(''); setActive(0); setError(''); }, [onOpenChange]);
   const commands = useMemo<CommandItem[]>(() => [
     ...routes.map(([path, label, keywords]) => ({ id: path, label, group: 'Navigate' as const, keywords, perform: () => { navigate(path); close(); } })),
+    ...([['navigation', 'Toggle navigation panel', onToggleNavigation, <PanelLeft size={16} />], ['context', 'Toggle portfolio panel', onToggleContext, <PanelRight size={16} />], ['reset-layout', 'Reset workspace layout', onResetLayout, <RotateCcw size={16} />]] as const).filter(([, , action]) => action).map(([id, label, action, icon]) => ({ id, label, group: 'Workspace' as const, keywords: 'resize panels workspace layout', icon, perform: () => { close(); action?.(); } })),
     { id: 'theme', label: `Switch to ${resolved === 'dark' ? 'light' : 'dark'} theme`, group: 'Appearance', keywords: 'theme dark light mode', icon: resolved === 'dark' ? <Sun size={16} /> : <Moon size={16} />, perform: () => { setTheme(resolved === 'dark' ? 'light' : 'dark'); close(); } },
     ...(session ? [{ id: 'logout', label: 'Sign out', group: 'Account' as const, keywords: 'logout exit', icon: <LogOut size={16} />, perform: async () => { await logout(); close(); navigate('/landing'); } }] : []),
-  ], [navigate, close, resolved, setTheme, session, logout]);
+  ], [navigate, close, resolved, setTheme, session, logout, onToggleNavigation, onToggleContext, onResetLayout]);
   // The visible order is also the keyboard execution order.
   const filtered = useMemo(() => {
     const terms = query.toLowerCase().trim().split(/\s+/);
-    return commands.filter(item => terms.every(term => `${item.label} ${item.keywords} ${item.group}`.toLowerCase().includes(term)));
-  }, [commands, query]);
+    const matches = commands.filter(item => terms.every(term => `${item.label} ${item.keywords} ${item.group}`.toLowerCase().includes(term)));
+    const text = query.trim();
+    const symbols = text.replace(/^\$/, '').toUpperCase().split(/[\s,]+/).filter(Boolean);
+    // Only offer a ticker action for ticker-shaped input; the research form confirms scope.
+    if (matches.length === 0 && symbols.length <= 4 && symbols.every(symbol => /^[A-Z][A-Z0-9.-]{0,5}$/.test(symbol))) {
+      return [{ id: 'research-symbols', label: `Research ${symbols.join(', ')}`, group: 'Research' as const, keywords: '', icon: <Workflow size={16} />, perform: () => { navigate(`/research?symbols=${encodeURIComponent(symbols.join(','))}`); close(); } }];
+    }
+    if (matches.length === 0 && text.length >= 15 && text.includes(' ')) {
+      return [{ id: 'research-question', label: 'Prepare a research question', group: 'Research' as const, keywords: '', icon: <Workflow size={16} />, perform: () => { navigate(`/research?question=${encodeURIComponent(text.slice(0, 1200))}`); close(); } }];
+    }
+    return matches;
+  }, [commands, query, navigate, close]);
   const selected = Math.min(active, Math.max(0, filtered.length - 1));
   const perform = async (item: CommandItem | undefined) => {
     if (!item) return;
@@ -79,7 +93,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   }, [selected, query]);
 
   if (!open) return null;
-  return <div className="workspace-command-overlay" onClick={close}>
+  return <OverlayPortal><div className="workspace-command-overlay" onClick={close}>
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Command palette" className="workspace-command" onClick={event => event.stopPropagation()} onKeyDown={event => {
       if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); }
       if (event.key === 'Tab') {
@@ -90,7 +104,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       }
     }}>
       <div className="workspace-command-search"><Search size={18} aria-hidden="true" />
-        <input ref={inputRef} value={query} onChange={event => { setQuery(event.target.value); setActive(0); }} aria-label="Command palette search" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-controls="workspace-command-results" aria-activedescendant={filtered[selected] ? `command-${selected}` : undefined} placeholder="Find a page or action…" onKeyDown={event => {
+        <input ref={inputRef} value={query} onChange={event => { setQuery(event.target.value); setActive(0); }} aria-label="Command palette search" role="combobox" aria-autocomplete="list" aria-expanded="true" aria-controls="workspace-command-results" aria-activedescendant={filtered[selected] ? `command-${selected}` : undefined} placeholder="Page, action, ticker, or research question…" maxLength={1200} onKeyDown={event => {
           if (event.key === 'ArrowDown') { event.preventDefault(); setActive(index => Math.min(index + 1, filtered.length - 1)); }
           if (event.key === 'ArrowUp') { event.preventDefault(); setActive(index => Math.max(index - 1, 0)); }
           if (event.key === 'Enter') { event.preventDefault(); void perform(filtered[selected]); }
@@ -109,7 +123,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       </div>
       <div className="workspace-command-footer"><span>↑ ↓ navigate · Enter open</span><span>Esc close</span></div>
     </div>
-  </div>;
+  </div></OverlayPortal>;
 }
 
 export default CommandPalette;

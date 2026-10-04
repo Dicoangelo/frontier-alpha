@@ -34,6 +34,34 @@ describe('PositionList', () => {
     expect(bodyRows()).toHaveLength(2);
   });
 
+  it('combines gain/loss filters with symbol search and updates only the shown totals', () => {
+    render(<PositionList positions={positions} />);
+    fireEvent.click(screen.getByRole('button', { name: 'With losses' }));
+    expect(bodyRows()).toHaveLength(1);
+    expect(bodyRows()[0]).toHaveTextContent('AAA');
+    expect(screen.getByText('Shown value')).toHaveTextContent('$1,000.00');
+    expect(screen.getByText('Shown P&L')).toHaveTextContent('−$100.00');
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Search holdings' }), { target: { value: 'BBB' } });
+    expect(bodyRows()).toHaveLength(0);
+    expect(screen.getByRole('status')).toHaveTextContent('with this P&L filter');
+    fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }));
+    expect(bodyRows()).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'All holdings' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('searchbox', { name: 'Search holdings' })).toHaveValue('');
+  });
+
+  it('changes table density without altering values or the selected sort', () => {
+    render(<PositionList positions={positions} />);
+    const compact = screen.getByRole('button', { name: 'Compact' });
+    fireEvent.click(compact);
+    expect(compact).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('region', { name: /Holdings/ })).toHaveClass('holdings-density-compact');
+    expect(bodyRows()[0]).toHaveTextContent('BBB');
+    expect(bodyRows()).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Comfortable' }));
+    expect(compact).toHaveAttribute('aria-pressed', 'false');
+  });
+
   it('uses real focusable sort buttons, preserves focus, and updates aria-sort and row order', () => {
     render(<PositionList positions={positions} />);
     expect(bodyRows()[0]).toHaveTextContent('BBB');

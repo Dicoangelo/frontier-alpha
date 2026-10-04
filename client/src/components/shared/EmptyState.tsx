@@ -156,7 +156,7 @@ export function EmptyState({
 }
 
 // Pre-built empty states
-export function EmptyPortfolio({ onAddPosition }: { onAddPosition: () => void }) {
+export function EmptyPortfolio({ onAddPosition, showDemoAction = true }: { onAddPosition: () => void; showDemoAction?: boolean }) {
   return (
     <EmptyState
       icon={<TrendingUp className="w-8 h-8" />}
@@ -167,10 +167,10 @@ export function EmptyPortfolio({ onAddPosition }: { onAddPosition: () => void })
         label: 'Add Position',
         onClick: onAddPosition,
       }}
-      secondaryAction={{
+      secondaryAction={showDemoAction ? {
         label: 'Try Demo Portfolio',
         onClick: () => window.location.href = '/dashboard?demo=true',
-      }}
+      } : undefined}
     />
   );
 }

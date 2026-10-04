@@ -3,7 +3,6 @@ import { logger } from '../observability/logger.js';
 import { EarningsOracle } from '../earnings/EarningsOracle.js';
 import type { EarningsCalendar } from '../earnings/EarningsCalendar.js';
 import type { APIResponse, Price } from '../types/index.js';
-import { BASE_HISTORY_DAYS } from '../factors/historySlice.js';
 
 interface EarningsReaction {
   surprise: number | null;

@@ -138,7 +138,7 @@ export function Layout({ children }: LayoutProps) {
             />
           )}
         </aside>
-        <WorkspaceTabs />
+        <WorkspaceTabs onSearch={() => setCommandOpen(true)} />
         {showContext && <aside className="workspace-context" aria-label="Portfolio pulse"><div className="workspace-context-heading"><strong>Portfolio pulse</strong><button type="button" className="workspace-icon-button" aria-label="Hide portfolio pulse" onClick={toggleContext}><X size={16} /></button></div><PortfolioContext /><PanelResizeHandle value={layout.contextWidth} min={228} max={340} defaultValue={252} direction={-1} label="Resize portfolio panel" className="workspace-context-resize" onChange={contextWidth => setLayout(state => ({ ...state, contextWidth }))} /></aside>}
         <main id="main-content" className="workspace-main" role="main" tabIndex={-1}>
           <div className="workspace-data-notice"><MockDataBanner /></div>
@@ -163,7 +163,7 @@ export function Layout({ children }: LayoutProps) {
       {contextOpen && <div className="workspace-mobile-overlay" role="dialog" aria-modal="true" aria-label="Portfolio pulse" ref={contextRef}><div className="workspace-mobile-backdrop" aria-hidden="true" onClick={() => setContextOpen(false)} /><div className="workspace-context-drawer"><div className="workspace-context-heading"><strong>Portfolio pulse</strong><button type="button" className="workspace-icon-button" aria-label="Close portfolio pulse" onClick={() => setContextOpen(false)}><X size={18} /></button></div><PortfolioContext onNavigate={() => setContextOpen(false)} /></div></div>}
       <HelpPanel isOpen={helpOpen} onClose={closeHelp} initialTopic={initialTopic} />
       <KeyboardHelpModal isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
-      <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
+      <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} onToggleNavigation={() => setLayout(state => ({ ...state, collapsed: !state.collapsed }))} onToggleContext={toggleContext} onResetLayout={() => { setLayout({ width: NAV_DEFAULT, collapsed: false, contextWidth: 252, contextHidden: false }); setContextOpen(false); }} />
     </div>
   );
 }

@@ -47,4 +47,18 @@ describe('WeightAllocation', () => {
     expect(within(screen.getByRole('img')).getByText('$1.0k')).toBeInTheDocument();
   });
 
+  it('pins a selected holding after pointer or keyboard focus leaves, and clears on request', () => {
+    render(<WeightAllocation positions={positions} />);
+    const holding = screen.getByRole('button', { name: /Inspect AAA allocation/ });
+    fireEvent.click(holding);
+    fireEvent.mouseLeave(holding);
+    fireEvent.blur(holding);
+    expect(holding).toHaveAttribute('aria-pressed', 'true');
+    expect(within(screen.getByRole('img')).getByText('$1.0k')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear selection' }));
+    expect(holding).toHaveAttribute('aria-pressed', 'false');
+    expect(holding).toHaveFocus();
+    expect(within(screen.getByRole('img')).getByText('2')).toBeInTheDocument();
+  });
+
 });

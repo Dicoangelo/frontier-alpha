@@ -45,6 +45,7 @@ import { portfolioRoutes } from './routes/portfolio.js';
 import { quotesRoutes } from './routes/quotes.js';
 import { earningsRoutes } from './routes/earnings.js';
 import { explainRoutes } from './routes/explain.js';
+import { agentRoutes } from './routes/agent.js';
 import { cvrfRoutes } from './routes/cvrf.js';
 import { mlRoutes } from './routes/ml.js';
 import { optionsRoutes } from './routes/options.js';
@@ -242,6 +243,7 @@ export async function buildApp(
   app.register(quotesRoutes, ctx);
   app.register(earningsRoutes, ctx);
   app.register(explainRoutes, ctx);
+  app.register(agentRoutes, ctx);
   app.register(cvrfRoutes, ctx);
   app.register(mlRoutes, ctx);
   app.register(optionsRoutes, ctx);

@@ -118,6 +118,7 @@ function useSparklineData(positions: Position[]): Map<string, SparklineEntry> {
 
 type SortField = 'symbol' | 'shares' | 'currentPrice' | 'value' | 'unrealizedPnL' | 'weight';
 type SortDir = 'asc' | 'desc';
+type PnlFilter = 'all' | 'gains' | 'losses';
 
 interface PositionListProps {
   positions: Position[];
@@ -212,6 +213,8 @@ export function PositionList({ positions, quotes }: PositionListProps) {
   const [sortField, setSortField] = useState<SortField>('value');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [search, setSearch] = useState('');
+  const [pnlFilter, setPnlFilter] = useState<PnlFilter>('all');
+  const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
   const flashMap = useQuoteFlash(quotes);
   const sparklineMap = useSparklineData(positions);
 
@@ -228,19 +231,22 @@ export function PositionList({ positions, quotes }: PositionListProps) {
     const valueOf = (position: Position): string | number => sortField === 'value'
       ? position.shares * position.currentPrice
       : position[sortField];
-    return positions.filter(p => p.symbol.toUpperCase().includes(query)).sort((a, b) => {
+    return positions.filter(p => p.symbol.toUpperCase().includes(query) && (pnlFilter === 'all' || (pnlFilter === 'gains' ? p.unrealizedPnL > 0 : p.unrealizedPnL < 0))).sort((a, b) => {
       const av = valueOf(a);
       const bv = valueOf(b);
       const comparison = typeof av === 'string' ? av.localeCompare(bv as string) : av - (bv as number);
       return sortDir === 'asc' ? comparison : -comparison;
     });
-  }, [positions, search, sortField, sortDir]);
+  }, [positions, search, pnlFilter, sortField, sortDir]);
 
+  const shownValue = sorted.reduce((sum, position) => sum + position.shares * position.currentPrice, 0);
+  const shownPnl = sorted.reduce((sum, position) => sum + position.unrealizedPnL, 0);
+  const clearFilters = () => { setSearch(''); setPnlFilter('all'); };
   const sortProps = { sortField, sortDir, onSort: handleSort };
   const currency = (value: number, digits = 2) => value.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
   return (
-    <section className="holdings-panel desk-panel" aria-labelledby="holdings-heading">
+    <section className={`holdings-panel desk-panel holdings-density-${density}`} aria-labelledby="holdings-heading">
       <header className="holdings-toolbar">
         <div>
           <h2 id="holdings-heading">Holdings <span className="desk-count">{positions.length}</span></h2>
@@ -272,8 +278,18 @@ export function PositionList({ positions, quotes }: PositionListProps) {
           </select>
         </div>
       </header>
+      <div className="holdings-view-toolbar">
+        <div className="holdings-filters" role="group" aria-label="Filter by unrealized P&L">
+          {([['all', 'All holdings'], ['gains', 'With gains'], ['losses', 'With losses']] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={pnlFilter === value} onClick={() => setPnlFilter(value)}>{label}</button>)}
+        </div>
+        <div className="holdings-density" role="group" aria-label="Holdings row density">
+          <span>Rows</span>
+          <button type="button" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}>Compact</button>
+          <button type="button" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}>Comfortable</button>
+        </div>
+      </div>
       <ScrollableTable className="holdings-table-wrap" label="Scroll holdings table horizontally">
-        <table className="holdings-table">
+        <table className="holdings-table" aria-describedby="holdings-table-note">
           <thead>
             <tr>
               <SortableHeader field="symbol" label="Symbol" align="left" {...sortProps} />
@@ -309,9 +325,13 @@ export function PositionList({ positions, quotes }: PositionListProps) {
           </tbody>
         </table>
       </ScrollableTable>
-      {sorted.length === 0 && <div className="holdings-empty" role="status">{search ? `No holdings match “${search}”.` : 'No positions to display.'}{search && <button type="button" onClick={() => setSearch('')}>Clear search</button>}</div>}
+      {sorted.length === 0 && <div className="holdings-empty" role="status">{search ? `No holdings match “${search}”${pnlFilter === 'all' ? '' : ' with this P&L filter'}.` : pnlFilter !== 'all' ? 'No holdings match this P&L filter.' : 'No positions to display.'}{(search || pnlFilter !== 'all') && <button type="button" onClick={clearFilters}>Reset filters</button>}</div>}
       <footer className="holdings-footer" id="holdings-table-note">
-        <span aria-live="polite">{sorted.length} of {positions.length} positions</span>
+        <div className="holdings-summary" aria-live="polite">
+          <span>{sorted.length} of {positions.length} positions</span>
+          <span>Shown value <strong>${currency(shownValue)}</strong></span>
+          <span>Shown P&amp;L <strong className={pnlColor(shownPnl)}>{pnlSign(shownPnl)}${currency(Math.abs(shownPnl))}</strong></span>
+        </div>
         <span>Weights include cash in portfolio value. 7D data uses cached daily closes.</span>
       </footer>
     </section>

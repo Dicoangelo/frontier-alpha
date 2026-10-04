@@ -1,0 +1,74 @@
+.viewport-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgb(9 18 30 / .58);
+}
+.viewport-dialog-panel {
+  width: 100%;
+  max-width: 44rem;
+  max-height: calc(100dvh - 32px);
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+  box-shadow: 0 24px 64px rgb(0 0 0 / .24);
+  outline: none;
+}
+.viewport-dialog-overlay-full { padding: 0; }
+.viewport-dialog-panel-full {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  max-width: none;
+  max-height: 100dvh;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+}
+.viewport-dialog-panel :where(button, a):focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.trade-reasoning-header, .trade-reasoning-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px clamp(16px, 3vw, 40px);
+  background: var(--color-bg-secondary);
+}
+.trade-reasoning-header { border-bottom: 1px solid var(--color-border); padding-top: max(16px, env(safe-area-inset-top)); }
+.trade-reasoning-header h2 { font-size: clamp(22px, 3vw, 30px); font-weight: 600; }
+.trade-reasoning-header p { color: var(--color-text-secondary); font-size: 13px; line-height: 1.5; }
+.trade-reasoning-header .reasoning-kicker { font-size: 12px; font-weight: 500; margin-bottom: 2px; }
+.trade-reasoning-close { display: flex; align-items: center; justify-content: center; flex-shrink: 0; min-width: 44px; min-height: 44px; border: 1px solid var(--color-control-border); border-radius: 8px; }
+.trade-reasoning-close:hover { background: var(--color-bg-tertiary); }
+.trade-reasoning-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 24px clamp(16px, 3vw, 40px); background: var(--color-bg); overflow-wrap: anywhere; }
+.trade-reasoning-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; max-width: 1440px; margin-inline: auto; }
+.trade-reasoning-summary { align-self: start; padding: 20px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-bg-secondary); }
+.trade-reasoning-steps { min-width: 0; }
+.trade-reasoning-steps > h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.trade-reasoning-steps > p { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 16px; }
+.trade-reasoning-footer { flex-wrap: wrap; border-top: 1px solid var(--color-border); padding-block: 12px max(12px, env(safe-area-inset-bottom)); }
+.trade-reasoning-footer p { font-size: 12px; color: var(--color-text-secondary); }
+.trade-reasoning-actions { display: flex; align-items: center; gap: 8px; }
+.trade-reasoning-research-link { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 14px; border-radius: 8px; background: var(--color-action-primary); color: #fff; font-size: 14px; font-weight: 500; text-align: center; line-height: 1.4; }
+.trade-reasoning-research-link:hover { background: var(--color-action-primary-hover); }
+@media (min-width: 900px) { .trade-reasoning-layout { grid-template-columns: 260px minmax(0, 1fr); } }
+@media (max-width: 480px) {
+  .viewport-dialog-overlay:not(.viewport-dialog-overlay-full) { padding: 8px; }
+  .viewport-dialog-panel:not(.viewport-dialog-panel-full) { max-height: calc(100dvh - 16px); }
+  .trade-reasoning-header { gap: 12px; }
+  .trade-reasoning-header p { font-size: 12px; }
+  .trade-reasoning-body { padding-block: 16px; }
+  .trade-reasoning-summary { padding: 16px; }
+  .trade-reasoning-footer p { max-width: 100%; }
+  .trade-reasoning-actions { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+}

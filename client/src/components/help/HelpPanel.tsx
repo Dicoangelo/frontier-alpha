@@ -1,3 +1,4 @@
+import { OverlayPortal } from '@/components/shared/OverlayPortal';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useDialogFocus } from '@/hooks/useDialogFocus';
@@ -123,6 +124,7 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
   if (!isOpen) return null;
 
   return (
+    <OverlayPortal>
     <div className="fixed inset-0 z-50">
       {/* Backdrop */}
       <div
@@ -251,6 +253,7 @@ export function HelpPanel({ isOpen, onClose, initialTopic }: HelpPanelProps) {
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }
 

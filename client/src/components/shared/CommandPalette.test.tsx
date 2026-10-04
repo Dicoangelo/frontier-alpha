@@ -12,7 +12,8 @@ vi.mock('@/stores/authStore', () => ({ useAuthStore: (selector: (store: typeof s
 vi.mock('@/stores/themeStore', () => ({ useThemeStore: (selector: (store: typeof state.theme) => unknown) => selector(state.theme) }));
 
 function Location() {
-  return <output data-testid="location">{useLocation().pathname}</output>;
+  const location = useLocation();
+  return <output data-testid="location">{location.pathname}{location.search}</output>;
 }
 function Harness() {
   const [open, setOpen] = useState(false);
@@ -116,6 +117,26 @@ describe('Command palette interaction contract', () => {
     expect(screen.getByRole('option', { name: /Portfolio/ })).toHaveAttribute('aria-selected', 'true');
     fireEvent.keyDown(search, { key: 'Enter' });
     await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/portfolio'));
+  });
+
+  it('prepares ticker research without issuing an AI run', async () => {
+    const { search } = setup();
+    fireEvent.change(search, { target: { value: 'AAPL,MSFT' } });
+    expect(screen.getByRole('option', { name: /Research AAPL, MSFT/ })).toBeInTheDocument();
+    fireEvent.keyDown(search, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/research?symbols=AAPL%2CMSFT'));
+  });
+
+  it('prepares a natural language question and runs layout actions', async () => {
+    const reset = vi.fn();
+    const { rerender } = render(<MemoryRouter><CommandPalette open onOpenChange={vi.fn()} onResetLayout={reset} /><Location /></MemoryRouter>);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'reset layout' } });
+    fireEvent.keyDown(screen.getByRole('combobox'), { key: 'Enter' });
+    await waitFor(() => expect(reset).toHaveBeenCalledOnce());
+    rerender(<MemoryRouter><CommandPalette open onOpenChange={vi.fn()} /><Location /></MemoryRouter>);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'Compare the recent momentum of AAPL and MSFT' } });
+    fireEvent.click(screen.getByRole('option', { name: /Prepare a research question/ }));
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/research?question=Compare%20the%20recent'));
   });
 
   it('retains the dialog and reports a failed sign-out action', async () => {

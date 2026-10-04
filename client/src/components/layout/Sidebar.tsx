@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { BrandLogo } from '@/components/shared/BrandLogo';
 import {
+  Workflow,
   LayoutDashboard,
   Briefcase,
   ShoppingCart,
@@ -28,6 +29,7 @@ const routePrefetchMap: Record<string, () => Promise<unknown>> = {
   '/portfolio': () => import('@/pages/Portfolio'),
   '/trade':    () => import('@/pages/Trading'),
   '/optimize': () => import('@/pages/Optimize'),
+  '/research': () => import('@/pages/AgentResearch'),
   '/factors':  () => import('@/pages/Factors'),
   '/earnings': () => import('@/pages/Earnings'),
   '/alerts':   () => import('@/pages/Alerts'),
@@ -72,6 +74,7 @@ const navSections: NavSection[] = [
   {
     label: 'Intelligence',
     items: [
+      { name: 'Agent research', icon: Workflow, href: '/research' },
       { name: 'Factors', icon: BarChart3, href: '/factors' },
       { name: 'CVRF', icon: Brain, href: '/cvrf' },
       { name: 'ML', icon: Cpu, href: '/ml' },

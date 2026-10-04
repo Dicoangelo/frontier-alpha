@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react';
+import { DialogSurface } from '@/components/shared/DialogSurface';
 import {
   Play,
   StopCircle,
@@ -105,8 +106,8 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="glass-slab-floating rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto animate-enter">
+    <DialogSurface label="Record trading decision" onClose={handleClose} busy={recordDecision.isPending}>
+      <div className="glass-slab-floating rounded-2xl p-4 sm:p-6 w-full animate-enter">
         <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
           New Decision
         </p>
@@ -134,7 +135,7 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
           <label className="block text-sm font-medium text-theme-secondary mb-2">
             Action <span className="text-[var(--color-negative)]">*</span>
           </label>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {ACTION_OPTIONS.map((opt) => {
               const Icon = opt.icon;
               const isSelected = action === opt.value;
@@ -268,7 +269,7 @@ function RecordDecisionModal({ isOpen, onClose, onSuccess }: RecordDecisionModal
           </button>
         </div>
       </div>
-    </div>
+    </DialogSurface>
   );
 }
 
@@ -306,8 +307,8 @@ function CloseEpisodeModal({ isOpen, onClose, onConfirm, isClosing }: CloseEpiso
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="glass-slab-floating rounded-2xl p-6 w-full max-w-md shadow-2xl animate-enter">
+    <DialogSurface label="Close episode" onClose={onClose} busy={isClosing}>
+      <div className="glass-slab-floating rounded-2xl p-4 sm:p-6 w-full animate-enter">
         <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-theme-muted mb-2">
           Wrap Episode
         </p>
@@ -395,7 +396,7 @@ function CloseEpisodeModal({ isOpen, onClose, onConfirm, isClosing }: CloseEpiso
           </button>
         </div>
       </div>
-    </div>
+    </DialogSurface>
   );
 }
 

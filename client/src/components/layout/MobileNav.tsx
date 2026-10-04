@@ -1,5 +1,6 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
+  Workflow,
   LayoutDashboard,
   Briefcase,
   ShoppingCart,
@@ -29,6 +30,7 @@ const mobileNavigation = [
 ];
 
 const morePages = [
+  { name: 'Agent research', icon: Workflow, href: '/research' },
   { name: 'Insights', icon: ScrollText, href: '/insights' },
   { name: 'Alerts', icon: Bell, href: '/alerts' },
   { name: 'Factors', icon: BarChart3, href: '/factors' },

@@ -1,9 +1,11 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
 import { Plus, SlidersHorizontal, ArrowRightLeft } from 'lucide-react';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useAuthStore } from '@/stores/authStore';
-import { supabase } from '@/lib/supabase';
+import { portfolioApi } from '@/api/portfolio';
+import { usePortfolio } from '@/hooks/usePortfolio';
 import { PortfolioOverview } from '@/components/portfolio/PortfolioOverview';
 import { PositionList } from '@/components/portfolio/PositionList';
 import { FactorExposures } from '@/components/factors/FactorExposures';
@@ -86,74 +88,15 @@ function getGreeting(): string {
   return 'Good evening';
 }
 
-// API functions
-//
-// v1.3.0: previously read `localStorage.getItem('supabase_token')` which is
-// the WRONG key — Supabase JS stores the token under `sb-{projectRef}-auth-token`.
-// Result: every authed user got a 401 and fell back to demo data, masking
-// the real portfolio. Read the live session via the supabase SDK instead;
-// it's already cached locally so this is a synchronous-feeling call.
-async function fetchPortfolio(): Promise<Portfolio | null> {
-  let signedIn = false;
-  try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData.session?.access_token;
-    signedIn = Boolean(token);
-    // Anonymous visitor: the endpoint can only 401. Go straight to the demo
-    // fixture instead of logging a failed request on every public page load.
-    if (!token) return getDemoPortfolio();
-    const response = await fetch('/api/v1/portfolio', {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        // Not authenticated — fall back to demo portfolio
-        return getDemoPortfolio();
-      }
-      throw new Error(`Portfolio fetch failed: ${response.status}`);
-    }
-
-    const json = await response.json();
-    // Server returns { success, data: { positions, cash, totalValue, ... }, meta }
-    // — unwrap the envelope. Falls back to .portfolio (legacy shape) or the raw
-    // body so callers and tests stay tolerant.
-    return (json.data || json.portfolio || json) as Portfolio;
-  } catch (error) {
-    console.error('Failed to fetch portfolio:', error);
-    // A signed-in user whose fetch failed (404 on a fresh account, 5xx, network)
-    // must NEVER see the $125K demo fixture under a LIVE badge — that is what
-    // every new account saw in production. Return null so the caller renders
-    // the honest empty state; demo data is for anonymous visitors only.
-    return signedIn ? null : getDemoPortfolio();
-  }
-}
-
-async function fetchFactors(symbols: string[]): Promise<FactorExposure[]> {
+// Use the shared API client so factor requests honor VITE_API_URL and the
+// current session in the same way as the canonical portfolio query.
+async function fetchFactors(symbols: string[], isAuthenticated: boolean): Promise<FactorExposure[]> {
   if (symbols.length === 0) return [];
-
   try {
-    const response = await fetch(`/api/v1/portfolio/factors/${symbols.join(',')}`);
-    if (!response.ok) {
-      throw new Error(`Factor fetch failed: ${response.status}`);
-    }
-
-    const json: unknown = await response.json();
-
-    // The server wraps the per-symbol map in { success, data }. Indexing the
-    // envelope by symbol (the previous code) silently yielded nothing, which
-    // blanked Factor Exposures, Risk Metrics and the AI Insight for every
-    // visitor. `aggregatePortfolioFactors` unwraps and folds to a portfolio-
-    // level top-10 (average across holdings, ranked by |exposure|).
-    return aggregatePortfolioFactors(json, symbols);
-  } catch (error) {
-    console.error('Failed to fetch factors:', error);
-    // Demo factors are for the anonymous preview only. A signed-in user whose
-    // factor fetch failed gets an honest empty card, never fixture numbers.
-    return useAuthStore.getState().session ? [] : getDemoFactors();
+    return aggregatePortfolioFactors(await portfolioApi.getFactors(symbols), symbols);
+  } catch {
+    // Illustrative fallback belongs only to the anonymous preview.
+    return isAuthenticated ? [] : getDemoFactors();
   }
 }
 
@@ -287,127 +230,49 @@ function QuickAction({ to, icon, label }: { to: string; icon: React.ReactNode; l
 export function Dashboard() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
-  const [portfolioSnapshot, setPortfolio] = useState<Portfolio>(EMPTY_PORTFOLIO);
-  const [factors, setFactors] = useState<FactorExposure[]>(EMPTY_FACTORS);
-  const [metrics, setMetrics] = useState<DataSource<RiskMetricsData>>(EMPTY);
-  const [insight, setInsight] = useState<string>('Loading portfolio data...');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [contentVisible, setContentVisible] = useState(false);
+  const isReady = useAuthStore((s) => s.isReady);
+  const session = useAuthStore((s) => s.session);
+  const isAuthenticated = Boolean(session?.access_token);
+  const portfolioQuery = usePortfolio({ retry: false });
+  const [chartExpanded, setChartExpanded] = useState(false);
 
-  // Real-time quote streaming via useQuotes hook
-  const symbols = portfolioSnapshot.positions.map(p => p.symbol);
+  // Dashboard and Portfolio must render the same saved snapshot. An empty or
+  // failed account never acquires positions from a demo/import preview.
+  const portfolioSnapshot = useMemo<Portfolio>(() => {
+    if (!isReady) return EMPTY_PORTFOLIO;
+    if (!isAuthenticated) return getDemoPortfolio();
+    return portfolioQuery.data
+      ? { ...portfolioQuery.data, currency: portfolioQuery.data.currency ?? 'USD' }
+      : { ...EMPTY_PORTFOLIO, name: 'My Portfolio' };
+  }, [isReady, isAuthenticated, portfolioQuery.data]);
+
+  const symbols = useMemo(() => portfolioSnapshot.positions.map(p => p.symbol), [portfolioSnapshot]);
   const { quotes, isConnected, lastUpdate } = useQuotes(symbols);
   const portfolio = useMemo(() => markPortfolio(portfolioSnapshot, quotes), [portfolioSnapshot, quotes]);
   const feed = useFeedStatus();
-  // Real equity history (holdings marked to cached daily closes). The chart
-  // used to fall back to a seeded random walk when this was absent.
   const equity = useEquityHistory(portfolio.positions, portfolio.cash);
+  const factorsEnabled = isReady && (!isAuthenticated || portfolioQuery.isSuccess) && symbols.length > 0;
+  const factorsQuery = useQuery({
+    queryKey: ['dashboard-factors', session?.user?.id ?? null, symbols],
+    queryFn: () => fetchFactors(symbols, isAuthenticated),
+    enabled: factorsEnabled,
+    retry: false,
+  });
+  const factors = factorsQuery.data ?? EMPTY_FACTORS;
+  const metrics = useMemo<DataSource<RiskMetricsData>>(() => {
+    const calculated = calculateMetrics(portfolio, factors);
+    return calculated ? wrapReal(calculated) : EMPTY;
+  }, [portfolio, factors]);
+  const insight = generateInsight(factors);
+  const isLoading = !isReady || (isAuthenticated && portfolioQuery.isPending) || (factorsEnabled && factorsQuery.isPending);
+  const error = isAuthenticated && portfolioQuery.error
+    ? portfolioQuery.error.message || 'Failed to load portfolio'
+    : null;
 
-  // Fetch portfolio data
   const loadPortfolioData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Fetch portfolio
-      let portfolioData = await fetchPortfolio();
-      // v1.3.1: read auth state from authStore (already hydrated via US-003
-      // isReady gate before this hook fires) — wrong-key localStorage check
-      // was always returning false and forcing demo data even for authed users.
-      const isAuthenticated = Boolean(useAuthStore.getState().session);
-
-      // If empty portfolio, seed from imported_symbols (welcome handoff)
-      // or analyze_symbols (raw landing flow). Authenticated users with no
-      // positions see the empty state — never synthesized demo numbers.
-      // Unauthenticated visitors fall back to the demo portfolio so the
-      // dashboard remains a useful preview surface.
-      if (!portfolioData || !portfolioData.positions || portfolioData.positions.length === 0) {
-        const stored =
-          localStorage.getItem('imported_symbols') ||
-          localStorage.getItem('analyze_symbols');
-        if (stored) {
-          try {
-            const symbols: string[] = JSON.parse(stored);
-            if (Array.isArray(symbols) && symbols.length > 0) {
-              const weight = 1 / symbols.length;
-              portfolioData = {
-                id: 'demo',
-                name: 'Demo Portfolio',
-                positions: symbols.map(s => ({
-                  symbol: s,
-                  shares: 100,
-                  weight,
-                  costBasis: 100,
-                  currentPrice: 100,
-                  unrealizedPnL: 0,
-                })),
-                cash: 10000,
-                totalValue: symbols.length * 100 * 100 + 10000,
-                currency: 'USD',
-              };
-            }
-          } catch { /* ignore parse errors */ }
-        }
-        if (
-          (!portfolioData || portfolioData.positions.length === 0) &&
-          !isAuthenticated
-        ) {
-          portfolioData = getDemoPortfolio();
-        }
-        if (!portfolioData) {
-          portfolioData = {
-            ...EMPTY_PORTFOLIO,
-            id: 'user',
-            name: 'My Portfolio',
-          };
-        }
-      }
-
-      setPortfolio(portfolioData);
-
-      // Fetch factors for portfolio symbols
-      const symbols = portfolioData.positions.map(p => p.symbol);
-      const factorData = await fetchFactors(symbols);
-      setFactors(factorData);
-
-      // Calculate metrics — wrap as `empty` when there are no positions
-      // OR when factor data is too sparse to derive honest values.
-      // calculateMetrics now returns null in both cases (v1.3.2). Otherwise
-      // wrap as `real`. Synthesizing zeros / CAPM defaults into the
-      // components has been the source of every "Sharpe 0.28 / Drawdown
-      // -27%" leak on fresh accounts.
-      const metricsData = calculateMetrics(portfolioData, factorData);
-      setMetrics(metricsData ? wrapReal(metricsData) : EMPTY);
-
-      // Generate insight
-      const insightText = generateInsight(factorData);
-      setInsight(insightText);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load portfolio');
-      // Demo fallback is for UNAUTHENTICATED preview only. An authenticated
-      // user whose portfolio fetch errored (e.g. upstream quote 500) must see
-      // the honest error/empty state — the walkthrough on 2026-06-11 caught
-      // this path rendering $125K synthetic numbers under a LIVE badge.
-      if (useAuthStore.getState().session) {
-        setPortfolio({ ...EMPTY_PORTFOLIO, id: 'user', name: 'My Portfolio' });
-        setFactors(EMPTY_FACTORS);
-      } else {
-        setPortfolio(getDemoPortfolio());
-        setFactors(getDemoFactors());
-      }
-      setMetrics(EMPTY);
-    } finally {
-      setIsLoading(false);
-      // Trigger fade-in after a tick to allow DOM paint
-      requestAnimationFrame(() => setContentVisible(true));
-    }
-  }, []);
-
-  // Load portfolio data on mount
-  useEffect(() => {
-    loadPortfolioData();
-  }, [loadPortfolioData]);
+    if (isAuthenticated) await portfolioQuery.refetch();
+    if (factorsEnabled) await factorsQuery.refetch();
+  }, [isAuthenticated, portfolioQuery, factorsEnabled, factorsQuery]);
 
   // Show skeleton while loading. Render inside the SAME PullToRefresh +
   // pt-6 chrome the loaded view uses, so the only thing that swaps is
@@ -440,7 +305,6 @@ export function Dashboard() {
       <PullToRefresh onRefresh={loadPortfolioData} className="dashboard-workspace min-h-screen">
         <div
           className="desk-content transition-opacity duration-200 ease-out"
-          style={{ opacity: contentVisible ? 1 : 0 }}
         >
           {/* Hero Header — Greeting + Quick Actions (kept visible per US-005) */}
           <div className="desk-page-header">
@@ -457,8 +321,9 @@ export function Dashboard() {
             </div>
           </div>
 
+          <PortfolioOverview portfolio={portfolio} />
           <div className="animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
-            <EmptyPortfolio onAddPosition={() => navigate('/portfolio')} />
+            <EmptyPortfolio onAddPosition={() => navigate('/portfolio')} showDemoAction={!isAuthenticated} />
           </div>
         </div>
       </PullToRefresh>
@@ -475,7 +340,6 @@ export function Dashboard() {
       </div>
       <div
         className="desk-content transition-opacity duration-200 ease-out"
-        style={{ opacity: contentVisible ? 1 : 0 }}
         data-testid="visual-dashboard-ready"
       >
 
@@ -522,15 +386,17 @@ export function Dashboard() {
           <PortfolioOverview portfolio={portfolio} />
         </div>
 
-        <div className="desk-chart-grid">
+        <div className={`desk-chart-grid${chartExpanded ? ' desk-chart-grid-expanded' : ''}`}>
           <div data-tour="equity-curve" className="min-w-0">
             <EquityCurve
               portfolioValue={portfolio.totalValue}
               series={equity.series}
               seriesStatus={equity.status}
+              expanded={chartExpanded}
+              onToggleExpand={() => setChartExpanded(value => !value)}
             />
           </div>
-          <div data-tour="weight-allocation" className="min-w-0">
+          <div data-tour="weight-allocation" className="min-w-0" hidden={chartExpanded}>
             <WeightAllocation positions={portfolio.positions} />
           </div>
         </div>

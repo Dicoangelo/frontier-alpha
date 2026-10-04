@@ -21,7 +21,7 @@ export interface PortfolioSnapshot {
   currency?: string;
 }
 
-/** The React Query key every portfolio consumer shares. */
+/** Shared prefix: position mutations invalidate every account-scoped snapshot. */
 export const PORTFOLIO_QUERY_KEY = ['portfolio'] as const;
 
 /**
@@ -74,7 +74,10 @@ export function usePortfolio(options: Options = {}) {
   const { enabled = true, ...rest } = options;
 
   return useQuery<PortfolioSnapshot | null>({
-    queryKey: PORTFOLIO_QUERY_KEY,
+    // Account identity prevents a sign-in/sign-out or account switch from
+    // displaying the previous user's cached holdings. Prefix invalidations
+    // (['portfolio']) continue to refresh every consumer.
+    queryKey: [...PORTFOLIO_QUERY_KEY, session?.user?.id ?? null],
     queryFn: fetchPortfolioSnapshot,
     enabled: authReady && enabled,
     ...rest,

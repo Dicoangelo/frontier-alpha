@@ -1,24 +1,24 @@
 {
-  "generatedAt": "2026-10-04T11:07:39.275Z",
-  "headSha": "e4b12f99cf5e62397bd4fded4c867f2782e17ef5",
+  "generatedAt": "2026-10-04T20:59:24.593Z",
+  "headSha": "19357f8f3b6b4f664169039ed285557360812e89",
   "version": "1.15.2",
   "server": {
-    "tsFiles": 149,
-    "tsNonTestFiles": 141,
+    "tsFiles": 154,
+    "tsNonTestFiles": 146,
     "inSourceTestFiles": 8,
-    "routeModules": 33,
+    "routeModules": 34,
     "endpoints": 124,
     "migrations": 18,
     "vercelApiFiles": 4,
-    "testFiles": 68
+    "testFiles": 73
   },
   "client": {
-    "pages": 25,
-    "components": 124,
+    "pages": 26,
+    "components": 127,
     "stores": 6,
     "hooks": 19,
-    "apiModules": 10,
-    "appRoutes": 27
+    "apiModules": 11,
+    "appRoutes": 28
   },
   "integrations": [
     "alpaca",
@@ -38,6 +38,10 @@
     "weeklyDigestCron"
   ],
   "routes": [
+    {
+      "module": "agent.ts",
+      "endpoints": 0
+    },
     {
       "module": "alerts.ts",
       "endpoints": 7
@@ -192,6 +196,7 @@
     "20260730_portfolio_shares.sql"
   ],
   "pages": [
+    "AgentResearch",
     "Alerts",
     "Backtest",
     "BillingCanceled",
@@ -239,6 +244,7 @@
     "/portfolio",
     "/pricing",
     "/privacy",
+    "/research",
     "/reset-password",
     "/settings",
     "/shared/:token",
@@ -277,6 +283,7 @@
     "useTrading"
   ],
   "apiModulesList": [
+    "agent",
     "client",
     "cvrf",
     "earnings",

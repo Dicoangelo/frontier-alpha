@@ -1,3 +1,4 @@
+import { OverlayPortal } from '@/components/shared/OverlayPortal';
 import { useEffect, useRef } from 'react';
 import { X, Keyboard } from 'lucide-react';
 import { ALL_SHORTCUTS } from '@/hooks/useKeyboardShortcuts';
@@ -31,6 +32,7 @@ export function KeyboardHelpModal({ isOpen, onClose }: KeyboardHelpModalProps) {
   if (!isOpen) return null;
 
   return (
+    <OverlayPortal>
     <div className="fixed inset-0 z-[60]" role="presentation">
       {/* Backdrop — family pattern */}
       <div
@@ -105,5 +107,6 @@ export function KeyboardHelpModal({ isOpen, onClose }: KeyboardHelpModalProps) {
         </div>
       </div>
     </div>
+    </OverlayPortal>
   );
 }

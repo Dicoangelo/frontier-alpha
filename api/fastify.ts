@@ -16,6 +16,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../src/app.js';
 
+// Research has a bounded 55-second pipeline plus response/auth overhead.
+export const maxDuration = 65;
+
 let appPromise: Promise<FastifyInstance> | null = null;
 
 async function getApp(): Promise<FastifyInstance> {

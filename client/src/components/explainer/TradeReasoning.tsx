@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { X, Brain, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Zap, Activity, GitBranch, Target } from 'lucide-react';
+import { useId, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { X, Brain, ChevronDown, ChevronUp, Zap, Activity, GitBranch, Target } from 'lucide-react';
 import { api, getErrorMessage } from '@/api/client';
 import { Spinner } from '@/components/shared/Spinner';
-import { Card } from '@/components/shared/Card';
+import { DialogSurface } from '@/components/shared/DialogSurface';
+import { Button } from '@/components/shared/Button';
 
 interface TradeReasoningProps {
   symbol: string;
@@ -37,33 +39,14 @@ const STEP_COLORS = [
   'text-[var(--color-positive)] bg-[color-mix(in_srgb,var(--color-positive)_10%,transparent)]',
 ];
 
-// Kept to suppress unused import warnings from linter
-const _icons = { TrendingUp, TrendingDown, Minus };
-void _icons;
-
-function RecommendationBadge({ rec }: { rec: string }) {
-  const styles: Record<string, string> = {
-    buy: 'bg-[var(--color-positive)]/10 text-[var(--color-positive)]',
-    add: 'bg-[var(--color-positive)]/10 text-[var(--color-positive)]',
-    hold: 'bg-[var(--color-accent)]/10 text-[var(--color-accent-text)]',
-    sell: 'bg-[var(--color-negative)]/10 text-[var(--color-negative)]',
-    reduce: 'bg-[var(--color-warning)]/10 text-[var(--color-warning)]',
-  };
-
-  return (
-    <span className={`px-2.5 py-0.5 rounded-full mono text-[10px] tracking-[0.3em] uppercase font-semibold ${styles[rec] || styles.hold}`}>
-      {rec}
-    </span>
-  );
-}
-
 /**
  * Individual step card — collapsed by default, expand to see full detail
  */
 function ChainStep({ step, index }: { step: TradeReasoningStep; index: number }) {
   const [expanded, setExpanded] = useState(false);
-  const Icon = STEP_ICONS[index];
-  const colorClass = STEP_COLORS[index];
+  const Icon = STEP_ICONS[index] ?? Activity;
+  const colorClass = STEP_COLORS[index] ?? STEP_COLORS[0];
+  const detailId = useId();
 
   return (
     <div
@@ -71,15 +54,17 @@ function ChainStep({ step, index }: { step: TradeReasoningStep; index: number })
       data-testid={`chain-step-${step.step}`}
     >
       <button
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--color-bg-tertiary)] animate-press transition-[background-color] duration-150"
+        className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 text-left hover:bg-[var(--color-bg-tertiary)] animate-press transition-[background-color] duration-150"
         onClick={() => setExpanded(!expanded)}
         aria-expanded={expanded}
+        aria-controls={detailId}
+        type="button"
       >
         <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${colorClass}`}>
           <Icon className="w-4 h-4" aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted font-medium">
               Step {step.step}
             </span>
@@ -92,9 +77,6 @@ function ChainStep({ step, index }: { step: TradeReasoningStep; index: number })
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="mono text-xs tabular-nums text-theme-muted">
-            {(step.confidence * 100).toFixed(0)}%
-          </span>
           {expanded ? (
             <ChevronUp className="w-4 h-4 text-theme-muted" aria-hidden="true" />
           ) : (
@@ -104,24 +86,11 @@ function ChainStep({ step, index }: { step: TradeReasoningStep; index: number })
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 space-y-3 border-t border-theme-light">
-          <p className="text-sm leading-relaxed text-theme pt-3">
+        <div id={detailId} className="px-4 pb-4 space-y-3 border-t border-theme-light">
+          <p className="text-xs font-medium text-theme-secondary pt-3">Illustrative example — fixed text and figures</p>
+          <p className="text-sm leading-relaxed text-theme">
             {step.explanation}
           </p>
-          <div className="flex justify-between items-center">
-            <span className="mono text-[10px] tracking-[0.2em] uppercase text-theme-muted">Step confidence</span>
-            <div className="flex items-center gap-2">
-              <div className="w-24 h-1.5 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-[var(--color-accent)] transition-[width] duration-500 ease-out"
-                  style={{ width: `${step.confidence * 100}%` }}
-                />
-              </div>
-              <span className="mono text-xs tabular-nums text-theme-muted">
-                {(step.confidence * 100).toFixed(0)}%
-              </span>
-            </div>
-          </div>
           {step.dataPoints.length > 0 && (
             <div className="glass-slab-floating rounded-lg p-3 space-y-1">
               {step.dataPoints.map((point, i) => (
@@ -139,109 +108,66 @@ function ChainStep({ step, index }: { step: TradeReasoningStep; index: number })
 }
 
 export function TradeReasoning({ symbol, isOpen, onClose }: TradeReasoningProps) {
-  const { mutate: fetchChain, data: chain, isPending, error, reset } = useMutation({
-    mutationFn: async (sym: string) => {
-      const response = await api.get(`/explain/trade/${sym}`);
+  const titleId = useId();
+  const { data: chain, isPending, error, refetch } = useQuery({
+    queryKey: ['trade-reasoning', symbol],
+    queryFn: async () => {
+      const response = await api.get(`/explain/trade/${encodeURIComponent(symbol)}`);
       return response.data as TradeReasoningChain;
     },
+    enabled: isOpen && !!symbol,
+    retry: false,
+    staleTime: 60_000,
   });
 
-  // Fetch when opened
-  if (isOpen && !chain && !isPending && !error) {
-    fetchChain(symbol);
-  }
-
   if (!isOpen) return null;
+  const researchHref = `/research?${new URLSearchParams({
+    symbols: symbol,
+    question: `Review ${symbol} using available market evidence. Cite the sources and explain any missing or stale data.`,
+  })}`;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative min-h-full flex items-start sm:items-center justify-center p-4 sm:p-6 lg:p-8">
-        <Card className="relative w-full max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-y-auto shadow-xl">
-          <div className="sovereign-bar absolute left-0 right-0 top-0" aria-hidden="true" />
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-theme-light pb-4 mb-4 -mx-6 px-6 -mt-6 pt-7">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-[var(--color-accent)]/10 rounded-lg">
-                <Brain className="w-5 h-5 text-[var(--color-accent-text)]" aria-hidden="true" />
-              </div>
-              <div>
-                <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
-                  Trade Reasoning
-                </p>
-                <h2 className="mt-0.5 text-lg font-semibold text-theme">Why {symbol}?</h2>
-                <p className="text-xs text-theme-muted">CVRF chain-of-thought reasoning</p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 min-h-[40px] min-w-[40px] hover:bg-[var(--color-bg-tertiary)] rounded-lg animate-press transition-[background-color] duration-200"
-              aria-label="Close trade reasoning"
-            >
-              <X className="w-5 h-5 text-theme-muted" aria-hidden="true" />
-            </button>
-          </div>
+    <DialogSurface labelledBy={titleId} onClose={onClose} fullViewport className="trade-reasoning-dialog">
+      <header className="trade-reasoning-header">
+        <div className="min-w-0">
+          <p className="reasoning-kicker">Illustrative strategy walkthrough</p>
+          <h2 id={titleId}>Why {symbol}?</h2>
+          <p>This reference uses fixed examples, not current analysis of {symbol} or your portfolio.</p>
+        </div>
+        <button type="button" onClick={onClose} className="trade-reasoning-close" aria-label="Close trade reasoning">
+          <X className="w-5 h-5" aria-hidden="true" />
+        </button>
+      </header>
 
-          {/* Content */}
-          <div className="space-y-4">
-            {isPending && (
-              <div className="flex flex-col items-center justify-center h-48 gap-3">
-                <Spinner className="w-8 h-8" />
-                <p className="mono text-[11px] tracking-[0.2em] uppercase text-theme-muted">Analyzing CVRF reasoning...</p>
-              </div>
-            )}
-
-            {error && (
-              <div className="text-center py-8">
-                <p className="text-sm text-[var(--color-danger)] leading-relaxed">
-                  {getErrorMessage(error)}
-                </p>
-                <button
-                  onClick={() => { reset(); fetchChain(symbol); }}
-                  className="mt-3 text-sm text-[var(--color-accent-text)] hover:underline animate-press transition-[opacity] duration-200"
-                >
-                  Try again
-                </button>
-              </div>
-            )}
-
-            {chain && (
-              <>
-                {/* Recommendation + Overall Confidence */}
-                <div className="flex items-center justify-between glass-slab-floating rounded-xl p-3">
-                  <div className="flex items-center gap-2">
-                    <RecommendationBadge rec={chain.recommendation} />
-                    {chain.cached && (
-                      <span className="mono text-[10px] tracking-[0.2em] uppercase px-2 py-0.5 glass-slab-floating text-theme-muted rounded-full">
-                        cached
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="mono text-[10px] tracking-[0.3em] uppercase text-theme-muted">
-                      Overall confidence
-                    </p>
-                    <p className="mt-0.5 mono text-base font-semibold tabular-nums text-theme">
-                      {(chain.overallConfidence * 100).toFixed(0)}%
-                    </p>
-                  </div>
-                </div>
-
-                {/* 4-Step Chain of Thought (collapsed by default) */}
-                <div className="space-y-2">
-                  <p className="mono text-[10px] tracking-[0.3em] uppercase font-medium text-theme-muted">
-                    Chain of Thought — expand each step
-                  </p>
-                  {chain.steps.map((step, i) => (
-                    <ChainStep key={step.step} step={step} index={i} />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </Card>
+      <div className="trade-reasoning-body" data-testid="trade-reasoning-scroll-region">
+        {isPending && <div role="status" className="flex flex-col items-center justify-center min-h-48 gap-3">
+          <Spinner className="w-8 h-8" /><p className="text-sm text-theme-secondary">Loading illustrative reference…</p>
+        </div>}
+        {error && <div role="alert" className="text-center py-8">
+          <p className="text-sm text-[var(--color-negative)] leading-relaxed">{getErrorMessage(error)}</p>
+          <Button variant="outline" onClick={() => void refetch()} className="mx-auto mt-4">Try again</Button>
+        </div>}
+        {chain && <div className="trade-reasoning-layout">
+          <aside className="trade-reasoning-summary" aria-label="Reference information">
+            <h3 className="text-base font-semibold text-theme mb-3">Illustrative reference</h3>
+            <p className="text-sm leading-relaxed text-theme-secondary">These fixed examples explain how a strategy review could be structured. The figures and trade actions are examples, not measurements or recommendations for {symbol}.</p>
+            <p className="mt-4 text-sm leading-relaxed text-theme-secondary">No current market evidence or saved holdings were used to create this walkthrough. Use Agent research for a separate brief with inspectable sources.</p>
+          </aside>
+          <section className="trade-reasoning-steps" aria-label="Example strategy steps">
+            <h3>Example strategy steps</h3>
+            <p>Expand a step to view its sample explanation and illustrative figures.</p>
+            <div className="space-y-3">{chain.steps.map((step, index) => <ChainStep key={`${symbol}-${step.step}`} step={step} index={index} />)}</div>
+          </section>
+        </div>}
       </div>
-    </div>
+      <footer className="trade-reasoning-footer">
+        <p>{chain ? `${chain.steps.length} example steps · ${symbol}` : `Illustrative reference · ${symbol}`}</p>
+        <div className="trade-reasoning-actions">
+          <Link to={researchHref} onClick={onClose} className="trade-reasoning-research-link">Research with current evidence</Link>
+          <Button variant="outline" onClick={onClose}>Done</Button>
+        </div>
+      </footer>
+    </DialogSurface>
   );
 }
 

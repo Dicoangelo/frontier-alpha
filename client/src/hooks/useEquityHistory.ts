@@ -51,7 +51,7 @@ export function useEquityHistory(holdings: EquityHolding[], cash: number): {
     return series
       ? { series, status: 'ready' as const }
       : { series: null, status: 'unavailable' as const };
-    // results is a new array each render; depend on its data identities.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [holdings, cash, symbols, ...results.map((r) => r.data), ...results.map((r) => r.isPending)]);
+    // Keep the dependency list a fixed length as holdings/query counts change.
+    // Rebuilding this small daily series is cheaper than stale cached results.
+  }, [holdings, cash, symbols, results]);
 }

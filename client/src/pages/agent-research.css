@@ -36,6 +36,7 @@
 .agent-result-toolbar [role=tab] { border-bottom:2px solid transparent; display:flex; align-items:center; gap:7px; padding:14px 0; font-size:12px; white-space:nowrap; color:var(--color-text-muted); }
 .agent-result-toolbar [aria-selected=true] { color:var(--color-accent-text); border-color:var(--color-accent); font-weight:600; }
 .agent-result-toolbar [role=tab] span { background:var(--color-bg-tertiary); padding:0 5px; border-radius:3px; font-size:11px; }
+.agent-results { scroll-margin-top:110px; }
 .agent-result-body { padding:24px; min-height:650px; }
 .agent-empty { max-width:470px; margin:55px auto; color:var(--color-text-muted); }
 .agent-empty > svg { color:var(--color-accent-text); margin-bottom:20px; }

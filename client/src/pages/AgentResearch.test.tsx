@@ -115,7 +115,7 @@ describe('Agent research request lifecycle', () => {
     expect(screen.getByRole('button', { name: 'Research running' })).toBeDisabled();
     expect(screen.getByLabelText(/^Question/)).toBeDisabled();
     await act(async () => request.resolve(RESULT));
-    expect(await screen.findByText(RESULT.answer)).toBeInTheDocument();
+    expect(await screen.findByText(RESULT.claims[0].text)).toBeInTheDocument();
   });
 
   it('surfaces a failure without automatically repeating a potentially processed request', async () => {
@@ -132,7 +132,9 @@ describe('Agent research request lifecycle', () => {
 
   it('opens a cited source and exposes the receipt and tool activity in their tabs', async () => {
     setup(); await ready(); setTask(); submitForm();
-    expect(await screen.findByText(RESULT.answer)).toBeInTheDocument();
+    expect(await screen.findByText(RESULT.claims[0].text)).toBeInTheDocument();
+    expect(screen.getAllByText(RESULT.claims[0].text)).toHaveLength(1);
+    expect(screen.queryByText(RESULT.answer)).not.toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Research results' })).toHaveFocus();
     expect(screen.getByText(RESULT.warnings[0])).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'S1' }));
@@ -149,17 +151,25 @@ describe('Agent research request lifecycle', () => {
     expect(screen.getByRole('button', { name: 'Download research receipt' })).toBeEnabled();
     fireEvent.keyDown(screen.getByRole('tab', { name: 'Run receipt' }), { key: 'Home' });
     expect(screen.getByRole('tab', { name: 'Brief' })).toHaveFocus();
-    expect(screen.getByText(RESULT.answer)).toBeInTheDocument();
+    expect(screen.getByText(RESULT.claims[0].text)).toBeInTheDocument();
+  });
+
+  it('shows the withheld-answer explanation when no claims pass the support check', async () => {
+    mocks.research.mockResolvedValue({ ...RESULT, status: 'abstained', claims: [], answer: 'The available sources did not support a publishable brief.', verification: { ...RESULT.verification, status: 'withheld' } });
+    setup(); await ready(); setTask(); submitForm();
+    expect(await screen.findByText('The available sources did not support a publishable brief.')).toBeVisible();
+    expect(screen.getByText('Answer withheld')).toBeVisible();
+    expect(screen.queryByRole('heading', { name: 'Supported findings' })).not.toBeInTheDocument();
   });
 
   it('hides prior evidence and disables its download after the account changes', async () => {
     const view = setup(); await ready(); setTask(); submitForm();
-    expect(await screen.findByText(RESULT.answer)).toBeInTheDocument();
+    expect(await screen.findByText(RESULT.claims[0].text)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'S1' }));
     expect(screen.getByText(RESULT.sources[0].content)).toBeVisible();
     mocks.actor = 'actor-b'; view.refreshActor();
     expect(screen.queryByText(RESULT.sources[0].content)).not.toBeInTheDocument();
-    expect(screen.queryByText(RESULT.answer)).not.toBeInTheDocument();
+    expect(screen.queryByText(RESULT.claims[0].text)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Download research receipt' })).toBeDisabled();
     expect(mocks.research).toHaveBeenCalledOnce();
   });
@@ -170,7 +180,7 @@ describe('Agent research request lifecycle', () => {
     mocks.actor = 'actor-b'; view.refreshActor();
     await act(async () => request.resolve(RESULT));
     await ready();
-    expect(screen.queryByText(RESULT.answer)).not.toBeInTheDocument();
+    expect(screen.queryByText(RESULT.claims[0].text)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Download research receipt' })).toBeDisabled();
     expect(mocks.research).toHaveBeenCalledOnce();
   });

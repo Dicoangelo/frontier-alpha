@@ -20,7 +20,8 @@
     --color-bg-tertiary: #eaf0f4;
     --color-text: #182b3a;
     --color-text-secondary: #4f6475;
-    --color-text-muted: #617587;
+    /* #617587 was 4.32:1 on --color-bg; #5b6f81 clears 4.5:1 on bg, bg-tertiary and white */
+    --color-text-muted: #5b6f81;
     --color-border: #d7e0e7;
     --color-border-light: #e8edf1;
     --color-border-hover: #aebfcf;
@@ -145,6 +146,15 @@
   :focus:not(:focus-visible) {
     outline: none;
   }
+
+  /* Browser surfaces carry the palette, not UA defaults */
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 25%, transparent);
+    color: var(--color-text);
+  }
+  input, textarea {
+    caret-color: var(--color-accent);
+  }
 }
 
 @layer components {
@@ -238,13 +248,15 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 0;
+    width: 100%;
     height: 3px;
     background: linear-gradient(to right, #FF3DF2, #7B2CFF, #18E6FF);
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .nav-link:hover::after {
-    width: 100%;
+    transform: scaleX(1);
   }
 
   /* ── Click Feedback (legacy alias — prefer .animate-press in new code) ── */

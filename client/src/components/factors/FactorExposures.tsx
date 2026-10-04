@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus, HelpCircle, FileText } from 'lucide-react';
 import { Card } from '@/components/shared/Card';
@@ -63,27 +63,14 @@ function NetExposureIndicator({ value }: { value: number }) {
 }
 
 function AccordionContent({ isExpanded, children }: { isExpanded: boolean; children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState(0);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    if (isExpanded) {
-      setHeight(ref.current.scrollHeight);
-    } else {
-      setHeight(0);
-    }
-  }, [isExpanded]);
-
+  // grid-template-rows 0fr -> 1fr animates to the content's natural height without
+  // measuring it, so the panel also stays correct when its children change while open.
   return (
     <div
-      style={{
-        height: `${height}px`,
-        overflow: 'hidden',
-        transition: 'height 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-      }}
+      className="grid transition-[grid-template-rows] duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+      style={{ gridTemplateRows: isExpanded ? '1fr' : '0fr' }}
     >
-      <div ref={ref}>
+      <div className="overflow-hidden min-h-0">
         {children}
       </div>
     </div>

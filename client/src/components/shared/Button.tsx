@@ -67,7 +67,6 @@ export function Button({
         transition-[background-color,color,border-color,box-shadow] duration-150
         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none
         flex items-center justify-center gap-2
-        outline-none
         ${fullWidth ? 'w-full' : ''}
         ${className}
       `}
@@ -118,7 +117,6 @@ export function IconButton({
         transition-[background-color,color,border-color,box-shadow] duration-200 ease-out
         disabled:opacity-50 disabled:cursor-not-allowed
         flex items-center justify-center
-        outline-none
         ${className}
       `}
       {...props}

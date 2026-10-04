@@ -202,11 +202,11 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
                     </span>
                     <div className="h-1.5 rounded-full bg-[var(--color-bg-tertiary)] overflow-hidden">
                       <div
-                        className="h-full rounded-full"
+                        className="h-full w-full rounded-full origin-left"
                         style={{
-                          width: `${w}%`,
+                          transform: `scaleX(${w / 100})`,
                           background: color,
-                          transition: `width 700ms cubic-bezier(0.2, 0.8, 0.2, 1) ${i * 60}ms`,
+                          transition: `transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1) ${i * 60}ms`,
                         }}
                       />
                     </div>

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChartNoAxesCombined } from 'lucide-react';
 import { HeroEnhanced } from '@/components/landing/HeroEnhanced';
 
 // Below-the-fold sections lazy-load so the hero ships in the smallest bundle.
@@ -48,6 +49,11 @@ export function Landing() {
 
   const handleAnalyze = useCallback(() => runDemo(tickers), [runDemo, tickers]);
 
+  const handleExplore = useCallback(() => {
+    document.getElementById('portfolio-entry')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('ticker-input')?.focus({ preventScroll: true });
+  }, []);
+
   const handleViewDemo = useCallback(() => {
     setTickers(MAG7_SYMBOLS);
     runDemo(MAG7_SYMBOLS);
@@ -74,31 +80,26 @@ export function Landing() {
     { name: 'Mag 7', symbols: MAG7_SYMBOLS },
     { name: 'Financials', symbols: 'JPM, BAC, GS, MS, V, MA' },
     { name: 'Healthcare', symbols: 'JNJ, UNH, PFE, MRK, ABBV, LLY' },
-    { name: 'AI Leaders', symbols: 'NVDA, AMD, MSFT, GOOGL, META' },
+    { name: 'Technology', symbols: 'NVDA, AMD, MSFT, GOOGL, META' },
   ];
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col" data-testid="visual-landing-ready">
-      <div className="sovereign-bar fixed top-0 left-0 right-0 z-50" />
-
-      {/* ── Top auth strip — Sign In + Sign Up always visible ─────────────── */}
-      <div className="absolute top-0 left-0 right-0 z-40 pt-1.5 px-4 sm:px-6 flex justify-end items-center gap-3">
-        <button
-          onClick={handleSignin}
-          className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-text-muted)] hover:text-[var(--color-text)] px-3 py-2 transition-colors animate-press"
-        >
-          Sign In
-        </button>
-        <button
-          onClick={handleSignup}
-          className="px-4 py-2 bg-[image:var(--gradient-sovereign)] text-white rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift shadow-[0_4px_20px_rgba(123,44,255,0.3)] hover:brightness-110"
-        >
-          Sign Up Free
-        </button>
-      </div>
+      <header className="border-b border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] px-4 sm:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 py-4">
+          <a href="/" className="flex shrink-0 items-center gap-2.5 text-sm sm:text-base font-semibold tracking-tight text-[var(--color-text)]">
+            <span className="hidden h-9 w-9 items-center justify-center sm:flex rounded-lg bg-[var(--color-accent-light)] text-[var(--color-accent-text)]"><ChartNoAxesCombined size={20} aria-hidden="true" /></span>
+            Frontier Alpha
+          </a>
+          <nav className="flex items-center gap-2 sm:gap-4" aria-label="Account navigation">
+            <button onClick={handleSignin} className="rounded-lg px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text)]">Sign in</button>
+            <button onClick={handleSignup} className="rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-accent-hover)]">Get started</button>
+          </nav>
+        </div>
+      </header>
 
       <HeroEnhanced
-        onAnalyze={handleAnalyze}
+        onAnalyze={handleExplore}
         onLoadDemo={handleViewDemo}
         isAnalyzing={isAnalyzing}
       />
@@ -107,6 +108,7 @@ export function Landing() {
         <div ref={demoRef}>
           <Suspense fallback={<div className="min-h-[400px]" aria-hidden="true" />}>
             <DemoPreview
+              key={demoSymbols.join(',')}
               symbols={demoSymbols}
               onSignup={handleSignup}
               onSignin={handleSignin}
@@ -117,21 +119,21 @@ export function Landing() {
       )}
 
       {/* ── Analyze your portfolio (preserved from v1) ───────────────────── */}
-      <section className="relative px-4 sm:px-6 py-6 sm:py-8 border-t border-[var(--color-border-light)]">
+      <section id="portfolio-entry" className="px-4 py-12 sm:px-6 sm:py-14 border-t border-[var(--color-border-light)]">
         <div className="w-full max-w-6xl mx-auto">
          <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text)]">
-              Paste a portfolio. Get the model's read.
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--color-text)]">
+              Explore your holdings
             </h2>
             <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-              Up to 20 symbols. We score each on 80+ factors and explain the output.
+              Enter up to 20 ticker symbols to preview the analysis workspace with sample scores.
             </p>
           </div>
 
-          <div className="glass-slab rounded-sm p-4 sm:p-6 md:p-8">
-            <label htmlFor="ticker-input" className="block text-[10px] mono tracking-[0.4em] uppercase text-[var(--color-text-muted)] mb-3">
-              Enter your portfolio tickers
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 sm:p-6 md:p-8">
+            <label htmlFor="ticker-input" className="block text-sm font-medium text-[var(--color-text)] mb-3">
+              Ticker symbols
             </label>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
@@ -141,24 +143,26 @@ export function Landing() {
                 onChange={(e) => setTickers(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="NVDA, AAPL, MSFT, GOOGL..."
-                className="flex-1 px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)] rounded-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 mono text-sm"
+                className="flex-1 px-4 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border-light)] rounded-lg text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] transition-[border-color,box-shadow] duration-200 text-sm min-w-0"
                 disabled={isAnalyzing}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'ticker-error' : undefined}
               />
               <button
                 onClick={handleAnalyze}
                 disabled={isAnalyzing}
-                className="px-8 py-3 bg-[image:var(--gradient-sovereign)] text-white rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)] hover:brightness-110 min-w-[140px]"
+                className="px-6 py-3 bg-[var(--color-accent)] text-white rounded-lg text-sm font-semibold disabled:opacity-50 hover:bg-[var(--color-accent-hover)] transition-colors min-w-[140px]"
               >
-                {isAnalyzing ? 'Analyzing' : 'Analyze'}
+                {isAnalyzing ? 'Loading…' : 'Preview portfolio'}
               </button>
             </div>
 
             {error && (
-              <p className="mt-3 text-[var(--color-danger)] text-sm mono" role="alert">{error}</p>
+              <p id="ticker-error" className="mt-3 text-[var(--color-danger)] text-sm" role="alert">{error}</p>
             )}
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="text-[9px] text-[var(--color-text-muted)] mono tracking-[0.3em] uppercase">Quick start:</span>
+              <span className="text-xs text-[var(--color-text-muted)]">Quick start:</span>
               {quickPortfolios.map((portfolio) => (
                 <button
                   key={portfolio.name}
@@ -166,7 +170,7 @@ export function Landing() {
                     setTickers(portfolio.symbols);
                     runDemo(portfolio.symbols);
                   }}
-                  className="px-3 py-1 text-[10px] mono tracking-[0.2em] uppercase bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary-text)] rounded-sm transition-colors border border-[var(--color-border-light)] animate-press"
+                  className="px-3 py-1.5 text-xs bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent-text)] rounded-md transition-colors border border-[var(--color-border)]"
                 >
                   {portfolio.name}
                 </button>
@@ -178,7 +182,7 @@ export function Landing() {
       </section>
 
       <Suspense fallback={<div className="min-h-[200px]" aria-hidden="true" />}>
-        <HowItWorks onCTAClick={handleAnalyze} />
+        <HowItWorks onCTAClick={handleExplore} />
       </Suspense>
 
       <Suspense fallback={<div className="min-h-[200px]" aria-hidden="true" />}>
@@ -187,19 +191,19 @@ export function Landing() {
 
       <footer className="mt-auto border-t border-[var(--color-border-light)] py-6 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-[10px] text-[var(--color-text-muted)] mono tracking-[0.2em] uppercase">
-            Powered by <span className="text-[var(--color-accent-text)]">Metaventions AI</span> — institutional-grade factor models
+          <div className="text-xs text-[var(--color-text-muted)]">
+            Frontier Alpha · Built by <span className="text-[var(--color-text-secondary)]">Metaventions AI</span>
           </div>
-          <nav className="flex gap-6" aria-label="Footer navigation">
+          <nav className="flex flex-wrap justify-center gap-x-5 gap-y-3" aria-label="Footer navigation">
             <button
               onClick={() => navigate('/login')}
-              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary-text)] mono tracking-[0.2em] uppercase transition-colors"
+              className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent-text)] transition-colors"
             >
-              Sign In
+              Sign in
             </button>
             <button
               onClick={() => navigate('/help')}
-              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary-text)] mono tracking-[0.2em] uppercase transition-colors"
+              className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent-text)] transition-colors"
             >
               Documentation
             </button>
@@ -207,7 +211,7 @@ export function Landing() {
               href="/api/v1/openapi"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary-text)] mono tracking-[0.2em] uppercase transition-colors"
+              className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent-text)] transition-colors"
             >
               API
             </a>
@@ -215,7 +219,7 @@ export function Landing() {
               href="/terms"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary-text)] mono tracking-[0.2em] uppercase transition-colors"
+              className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent-text)] transition-colors"
             >
               Terms
             </a>
@@ -223,7 +227,7 @@ export function Landing() {
               href="/privacy"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent-secondary-text)] mono tracking-[0.2em] uppercase transition-colors"
+              className="text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent-text)] transition-colors"
             >
               Privacy
             </a>

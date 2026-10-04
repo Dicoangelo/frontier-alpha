@@ -1,0 +1,56 @@
+/* Shared customer-facing surfaces. Existing class names remain compatible with every route. */
+:is(.glass-slab,.glass-slab-floating,.glass-liquid-subtle,.glass-gold),
+.dark :is(.glass-slab,.glass-slab-floating,.glass-liquid-subtle,.glass-gold) {
+  background: var(--color-bg-secondary);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-color: var(--color-border);
+  box-shadow: var(--color-card-shadow);
+}
+.glass-modal,.dark .glass-modal {
+  background: var(--color-bg-secondary);
+  backdrop-filter: none;
+  border-color: var(--color-border);
+  box-shadow: 0 16px 48px #172b4d26;
+}
+.grid-bg,.dark .grid-bg { background-image: none; }
+.border-sovereign,.dark .border-sovereign { background: var(--color-bg-secondary); border-color: var(--color-border); }
+:is(.gradient-brand,.gradient-brand-135,.gradient-gold,.gradient-halo) { background: var(--color-accent); }
+.gradient-brand-subtle,.dark .gradient-brand-subtle { background: var(--color-bg-secondary); }
+:is(.text-gradient-brand,.text-gradient-gold,.text-gradient-halo) {
+  background: none;
+  background-clip: border-box;
+  -webkit-text-fill-color: currentColor;
+  color: var(--color-text);
+}
+.sovereign-bar { display: none; }
+.nav-link::after { background: var(--color-accent); height: 2px; }
+:is(.holo-pulse,.animate-glow,.animate-pulse-green) { animation: none; text-shadow: none; box-shadow: none; }
+.animate-lift:hover { transform: none; box-shadow: var(--color-card-shadow); }
+/* Labels use the same human-readable type as the rest of the workspace. */
+.mono:not(code):not(pre) { font-family: Inter, system-ui, sans-serif; letter-spacing: 0; text-transform: none; }
+.mono.text-\[10px\],.mono.text-\[9px\] { font-size: 11px; line-height: 1.5; }
+h1,h2,h3 { letter-spacing: -.025em; }
+h1 { font-weight: 600; }
+button,input,select,textarea { font-family: inherit; }
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),select,textarea { border-radius: 7px; }
+input::placeholder,textarea::placeholder { color: var(--color-text-muted); opacity: 1; }
+button:disabled { cursor: not-allowed; }
+.text-accent { color: var(--color-accent-text); }
+/* Older forms use their own action classes rather than the shared Button. */
+button[class*="gradient-sovereign"] {
+  background: var(--color-accent);
+  border-radius: 7px;
+  font-weight: 600;
+}
+button[class*="gradient-sovereign"]:not(:focus-visible) { box-shadow: none; }
+/* Decorative rails do not compete with the values or action on a card. */
+.glass-slab-floating[class*="shadow-["],.glass-slab[class*="shadow-["] { box-shadow: var(--color-card-shadow); }
+.glass-slab-floating[class*="before:shadow-"]::before { box-shadow: none; }
+.recharts-cartesian-axis-tick-value { fill: var(--color-text-muted); }
+.recharts-cartesian-grid line { stroke: var(--color-border-light); }
+.recharts-default-tooltip { border-radius: 8px !important; }
+.recharts-legend-item-text { color: var(--color-text-secondary) !important; }
+::selection { color: var(--color-text); background: var(--color-accent-light); }
+
+:is(.glass-slab,.glass-slab-floating,.glass-liquid-subtle).rounded-sm { border-radius: 10px; }

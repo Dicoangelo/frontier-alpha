@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus, Zap, ArrowRightLeft } from 'lucide-react';
+import { Plus, SlidersHorizontal, ArrowRightLeft } from 'lucide-react';
 import { useQuotes } from '@/hooks/useQuotes';
 import { useAuthStore } from '@/stores/authStore';
 import { supabase } from '@/lib/supabase';
@@ -23,6 +23,7 @@ import { DEMO_HOLDINGS, DEMO_CASH, DEMO_TOTAL_VALUE, DEMO_FACTORS } from '@/lib/
 import { aggregatePortfolioFactors } from '@/lib/aggregateFactors';
 import { useFeedStatus } from '@/hooks/useFeedStatus';
 import { useEquityHistory } from '@/hooks/useEquityHistory';
+import './dashboard-saas.css';
 
 // Types
 interface Position {
@@ -270,11 +271,11 @@ function QuickAction({ to, icon, label }: { to: string; icon: React.ReactNode; l
   return (
     <Link
       to={to}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
-        bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]
+      className="inline-flex items-center gap-2 px-3 py-2 min-h-10 rounded-lg text-sm font-medium
+        bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)]
         border border-[var(--color-border-light)]
         hover:border-[var(--color-accent)] hover:text-[var(--color-accent-text)]
-        transition-[border-color,color,background-color] duration-200 animate-press"
+        transition-[border-color,color,background-color] duration-150"
     >
       {icon}
       {label}
@@ -447,7 +448,7 @@ export function Dashboard() {
   // skeleton-shimmer -> content within identically-sized boxes.
   if (isLoading) {
     return (
-      <div className="min-h-screen">
+      <div className="dashboard-workspace min-h-screen">
         <SkeletonDashboard />
       </div>
     );
@@ -470,7 +471,7 @@ export function Dashboard() {
   // Holdings, Equity curve).
   if (portfolio.positions.length === 0 && portfolio.id !== 'demo') {
     return (
-      <PullToRefresh onRefresh={loadPortfolioData} className="min-h-screen">
+      <PullToRefresh onRefresh={loadPortfolioData} className="dashboard-workspace min-h-screen">
         <div
           className="space-y-6 transition-opacity duration-300 ease-out pt-6"
           style={{ opacity: contentVisible ? 1 : 0 }}
@@ -478,15 +479,14 @@ export function Dashboard() {
           {/* Hero Header — Greeting + Quick Actions (kept visible per US-005) */}
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold">
-                <span className="text-gradient-brand">{getGreeting()}</span>
-                <span className="text-[var(--color-text)]">, {getDisplayName(user?.email)}</span>
+              <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight">
+                <span className="text-[var(--color-text)]">Portfolio overview</span>
               </h1>
-              <p className="text-sm text-[var(--color-text-muted)] mt-1">{today}</p>
+              <p className="text-sm text-[var(--color-text-muted)] mt-1">{getGreeting()}, {getDisplayName(user?.email)}. {today}.</p>
               <div className="flex items-center gap-2 mt-3 flex-wrap">
-                <QuickAction to="/portfolio" icon={<Plus className="w-3 h-3" />} label="Add Position" />
-                <QuickAction to="/optimize" icon={<Zap className="w-3 h-3" />} label="Optimize" />
-                <QuickAction to="/trade" icon={<ArrowRightLeft className="w-3 h-3" />} label="Trade" />
+                <QuickAction to="/portfolio" icon={<Plus className="w-4 h-4" />} label="Add position" />
+                <QuickAction to="/optimize" icon={<SlidersHorizontal className="w-4 h-4" />} label="Optimize" />
+                <QuickAction to="/trade" icon={<ArrowRightLeft className="w-4 h-4" />} label="Trade" />
               </div>
             </div>
           </div>
@@ -500,11 +500,13 @@ export function Dashboard() {
   }
 
   return (
-    <PullToRefresh onRefresh={loadPortfolioData} className="min-h-screen">
-      <MarketStatusStrip
-        isConnected={isConnected}
-        lastUpdate={lastUpdate ? lastUpdate.getTime() : null}
-      />
+    <PullToRefresh onRefresh={loadPortfolioData} className="dashboard-workspace min-h-screen">
+      <div className="dashboard-market-status">
+        <MarketStatusStrip
+          isConnected={isConnected}
+          lastUpdate={lastUpdate ? lastUpdate.getTime() : null}
+        />
+      </div>
       <div
         className="space-y-6 transition-opacity duration-300 ease-out pt-6"
         style={{ opacity: contentVisible ? 1 : 0 }}
@@ -514,29 +516,28 @@ export function Dashboard() {
         {/* Hero Header — Greeting + Quick Actions + Live Status */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 animate-fade-in-up" style={{ animationFillMode: 'both' }}>
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold">
-              <span className="text-gradient-brand">{getGreeting()}</span>
-              <span className="text-[var(--color-text)]">, {getDisplayName(user?.email)}</span>
+            <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight">
+              <span className="text-[var(--color-text)]">Portfolio overview</span>
             </h1>
-            <p className="text-sm text-[var(--color-text-muted)] mt-1">{today}</p>
+            <p className="text-sm text-[var(--color-text-muted)] mt-1">{getGreeting()}, {getDisplayName(user?.email)}. {today}.</p>
             {/* Quick action pills */}
             <div className="flex items-center gap-2 mt-3 flex-wrap">
-              <QuickAction to="/portfolio" icon={<Plus className="w-3 h-3" />} label="Add Position" />
-              <QuickAction to="/optimize" icon={<Zap className="w-3 h-3" />} label="Optimize" />
-              <QuickAction to="/trade" icon={<ArrowRightLeft className="w-3 h-3" />} label="Trade" />
+              <QuickAction to="/portfolio" icon={<Plus className="w-4 h-4" />} label="Add position" />
+              <QuickAction to="/optimize" icon={<SlidersHorizontal className="w-4 h-4" />} label="Optimize" />
+              <QuickAction to="/trade" icon={<ArrowRightLeft className="w-4 h-4" />} label="Trade" />
             </div>
           </div>
 
-          {/* Live status pill — glass morphism. min-w + tabular-nums + reserved
+          {/* Feed status. min-w + tabular-nums + reserved
               timestamp slot prevents header CLS when first quote arrives and
               when seconds tick (digit width swap). */}
           <div
-            className="glass-slab rounded-full px-4 py-2 flex items-center gap-2 self-start flex-shrink-0 min-w-[168px] h-9"
+            className="border border-[var(--color-border)] bg-[var(--color-bg-secondary)] rounded-lg px-3 py-2 flex items-center gap-2 self-start flex-shrink-0 min-w-[168px] h-9"
           >
             <span
               className={`inline-block w-2 h-2 rounded-full transition-colors duration-300 ${
                 isConnected
-                  ? 'bg-[var(--color-positive)] animate-pulse-green'
+                  ? 'bg-[var(--color-positive)]'
                   : 'bg-[var(--color-text-muted)]'
               }`}
             />
@@ -561,10 +562,10 @@ export function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 animate-fade-in-up" style={{ animationDelay: '50ms', animationFillMode: 'both' }}>
           <DashZone
             id="overview"
-            title="Portfolio Overview"
-            subtitle="Total value · PnL · Allocation"
+            title="Performance"
+            subtitle="Portfolio value and historical returns"
             weight="primary"
-            className="lg:col-span-2"
+            className="dashboard-zone lg:col-span-2"
           >
             <div data-tour="portfolio-overview" className="min-h-[260px]">
               <PortfolioOverview portfolio={portfolio} />
@@ -580,33 +581,42 @@ export function Dashboard() {
             </div>
           </DashZone>
 
-          {/* Secondary zone — positions + weights (1x weight) */}
+          {/* Allocation keeps its own supporting column. */}
           <DashZone
             id="allocation"
-            title="Holdings & Weights"
-            subtitle="Positions · Allocation"
+            title="Allocation"
+            subtitle="How your holdings are distributed"
             weight="secondary"
-            className="lg:col-span-1"
+            className="dashboard-zone lg:col-span-1"
           >
             {/* WeightAllocation donut SVG — reserve donut box so the SVG
                 can't pop secondary column up when positions stream. */}
             <div data-tour="weight-allocation" className="min-h-[260px]">
-              <WeightAllocation positions={portfolio.positions} totalValue={portfolio.totalValue} />
-            </div>
-            <div data-tour="positions" className="mt-5 min-h-[320px]">
-              <PositionList positions={portfolio.positions} quotes={quotes} />
+              <WeightAllocation positions={portfolio.positions} />
             </div>
           </DashZone>
         </div>
 
+        <DashZone
+          id="holdings"
+          title="Holdings"
+          subtitle="Position values, returns, and portfolio weights"
+          weight="secondary"
+          className="dashboard-zone"
+        >
+          <div data-tour="positions" className="min-h-[320px]">
+            <PositionList positions={portfolio.positions} quotes={quotes} />
+          </div>
+        </DashZone>
+
         {/* Tertiary zone — collapsible analytics */}
         <DashZone
           id="analytics"
-          title="Analytics & Insight"
-          subtitle="Factor exposures · Risk · Cognitive explainer"
+          title="Portfolio analysis"
+          subtitle="Factor exposures, risk metrics, and portfolio insights"
           weight="tertiary"
           collapsible
-          className="animate-fade-in-up"
+          className="dashboard-zone animate-fade-in-up"
         >
           {/* Tertiary tiles — match skeleton min-h so async cognitive-insight
               fetch can't push the page footer when it lands. */}

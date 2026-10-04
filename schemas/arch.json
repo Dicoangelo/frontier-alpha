@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-06T22:20:05.843Z",
-  "headSha": "a52529ac8e775a2473cdd262c5d96e5aa0f33180",
+  "generatedAt": "2026-10-04T10:22:41.878Z",
+  "headSha": "05ae417c48dc72f640816b4fc450b04a115299b1",
   "version": "1.15.2",
   "server": {
     "tsFiles": 149,
@@ -14,7 +14,7 @@
   },
   "client": {
     "pages": 25,
-    "components": 121,
+    "components": 122,
     "stores": 6,
     "hooks": 18,
     "apiModules": 10,

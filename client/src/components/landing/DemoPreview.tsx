@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 const FACTORS = [
   { key: 'quality', label: 'Quality', tone: 'positive' },
@@ -17,11 +17,11 @@ type SymbolReading = { symbol: string; conviction: number; regime: string; facto
 const REGIMES = ['Quality-Led', 'Macro Tightening', 'Momentum Decay', 'Sentiment-Driven', 'Mean-Reverting', 'AI-Capex Cycle'];
 
 const BECAUSE_TEMPLATES: Array<(s: string, top: string) => string> = [
-  (s, top) => `${s}: ${top.toLowerCase()} dominates the read; cross-sectional rank is top decile.`,
-  (_, top) => `Long screen: ${top.toLowerCase()} + buyback yield outweigh macro drag.`,
-  (_, top) => `Conviction held: ${top.toLowerCase()} factor flags positive surprise risk into earnings.`,
-  (_, top) => `${top} momentum compounds vs sector; regime-adjusted alpha intact.`,
-  (s, top) => `Adaptive belief: ${top.toLowerCase()} weight ↑ as ${s} regime shifts to risk-on.`,
+  (s, top) => `${top} is the strongest displayed factor for ${s} in this sample.`,
+  (_, top) => `This sample highlights ${top.toLowerCase()} alongside the other displayed exposures.`,
+  (_, top) => `Compare ${top.toLowerCase()} with the remaining sample factors to explore the breakdown.`,
+  (_, top) => `${top} has the highest score in this illustrative factor breakdown.`,
+  (s, top) => `The sample for ${s} places ${top.toLowerCase()} at the top of the displayed factors.`,
 ];
 
 function hashSymbol(s: string): number {
@@ -72,14 +72,6 @@ interface DemoPreviewProps {
 export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPreviewProps) {
   const readings = useMemo(() => symbols.slice(0, 12).map(buildReading), [symbols]);
   const [active, setActive] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-
-  useEffect(() => {
-    setActive(0);
-    setRevealed(false);
-    const t = window.setTimeout(() => setRevealed(true), 80);
-    return () => window.clearTimeout(t);
-  }, [symbols]);
 
   if (readings.length === 0) return null;
 
@@ -99,38 +91,38 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <p className="mono text-[10px] sm:text-xs tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-2">
-              Demo Read · {readings.length} {readings.length === 1 ? 'Position' : 'Positions'} · Cached Factor Cores
+            <p className="text-xs text-[var(--color-text-muted)] mb-2">
+              Sample portfolio · {readings.length} {readings.length === 1 ? 'Position' : 'Positions'} · Illustrative data
             </p>
             <h2
               id="demo-preview-heading"
-              className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--color-text)]"
+              className="text-3xl sm:text-4xl font-semibold tracking-tight text-[var(--color-text)]"
             >
-              Cognitive read on{' '}
-              <span className="text-gradient-halo">{readings[0].symbol}</span>
+              Portfolio preview for{' '}
+              <span className="text-[var(--color-text)]">{readings[0].symbol}</span>
               {readings.length > 1 && (
                 <span className="text-[var(--color-text-muted)]"> + {readings.length - 1} more</span>
               )}
             </h2>
             <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-              Mock scoring with our factor cores. Sign up to wire live data, save portfolios, and unlock live risk analysis.
+              Scores are generated for this preview and are not a live assessment. Create an account to set up your own portfolio.
             </p>
           </div>
 
           <button
             type="button"
             onClick={onClear}
-            className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors animate-press"
+            className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors animate-press"
           >
-            ← Clear
+            Clear preview
           </button>
         </div>
 
-        <div className={`grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6 transition-opacity duration-500 ${revealed ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6">
           {/* Left: position list */}
-          <div className="glass-slab rounded-2xl p-4 sm:p-5">
-            <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-3 px-2">
-              Portfolio · Click to inspect
+          <div className="border border-[var(--color-border)] bg-[var(--color-bg-secondary)] rounded-xl p-4 sm:p-5">
+            <p className="text-xs text-[var(--color-text-muted)] mb-3 px-2">
+              Holdings · Select to view
             </p>
             <ul className="space-y-1.5" role="listbox" aria-label="Portfolio positions">
               {readings.map((r, i) => {
@@ -149,19 +141,18 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
                       }`}
                     >
                       <span className="flex items-center gap-3 min-w-0">
-                        <span className={`mono font-bold text-sm ${isActive ? 'text-[var(--color-accent-text)]' : 'text-[var(--color-text)]'}`}>
+                        <span className={`font-bold text-sm ${isActive ? 'text-[var(--color-accent-text)]' : 'text-[var(--color-text)]'}`}>
                           {r.symbol}
                         </span>
-                        <span className="mono text-[9px] tracking-[0.25em] uppercase text-[var(--color-text-muted)] truncate">
+                        <span className="text-xs text-[var(--color-text-muted)] truncate">
                           {r.regime}
                         </span>
                       </span>
                       <span
-                        className={`mono tabular-nums text-xs font-semibold ${
+                        className={`tabular-nums text-xs font-semibold ${
                           r.conviction >= 50 ? 'text-[var(--color-positive)]' : r.conviction < 25 ? 'text-[var(--color-negative)]' : 'text-[var(--color-text-secondary)]'
                         }`}
                       >
-                        {r.conviction >= 50 ? '+' : ''}
                         {r.conviction}
                       </span>
                     </button>
@@ -171,28 +162,27 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
             </ul>
 
             <div className="mt-4 pt-4 border-t border-[var(--color-border-light)] grid grid-cols-3 gap-2">
-              <Stat label="Conv." value={meanConviction} positive />
-              <Stat label="Long" value={longCount} positive />
-              <Stat label="Tail" value={shortCount} negative={shortCount > 0} />
+              <Stat label="Avg. score" value={meanConviction} positive />
+              <Stat label="High scores" value={longCount} positive />
+              <Stat label="Low scores" value={shortCount} negative={shortCount > 0} />
             </div>
           </div>
 
           {/* Right: factor reading */}
-          <div className="glass-slab-floating rounded-2xl p-5 sm:p-7 relative overflow-hidden">
-            <div className="sovereign-bar absolute top-0 left-0 right-0" />
+          <div className="border border-[var(--color-border)] bg-[var(--color-bg-secondary)] rounded-xl p-5 sm:p-7 relative overflow-hidden">
 
             <div className="flex items-baseline justify-between mb-5">
               <div>
-                <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-1">
-                  Live Factor Read
+                <p className="text-xs text-[var(--color-text-muted)] mb-1">
+                  Sample factor breakdown
                 </p>
-                <h3 className="text-2xl sm:text-3xl font-black tabular-nums text-gradient-halo holo-pulse">
+                <h3 className="text-2xl sm:text-3xl font-semibold tabular-nums text-[var(--color-text)]">
                   {current.symbol}
                 </h3>
               </div>
               <div className="text-right">
-                <p className="mono text-[9px] tracking-[0.3em] uppercase text-[var(--color-text-muted)]">Regime</p>
-                <p className="mono text-[11px] sm:text-xs font-semibold text-[var(--color-accent-secondary-text)] uppercase tracking-[0.2em] mt-0.5">
+                <p className="text-xs text-[var(--color-text-muted)]">Regime</p>
+                <p className="text-xs font-semibold text-[var(--color-accent-secondary-text)] mt-0.5">
                   {current.regime}
                 </p>
               </div>
@@ -207,7 +197,7 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
                     : 'var(--color-negative)';
                 return (
                   <li key={f.key} className="grid grid-cols-[110px_1fr_56px] items-center gap-3">
-                    <span className="mono text-[10px] tracking-[0.25em] uppercase text-[var(--color-text-muted)]">
+                    <span className="text-xs text-[var(--color-text-muted)]">
                       {f.label}
                     </span>
                     <div className="h-1.5 rounded-full bg-[var(--color-bg-tertiary)] overflow-hidden">
@@ -217,12 +207,11 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
                           width: `${w}%`,
                           background: color,
                           transition: `width 700ms cubic-bezier(0.2, 0.8, 0.2, 1) ${i * 60}ms`,
-                          boxShadow: `0 0 12px ${color}`,
                         }}
                       />
                     </div>
                     <span
-                      className={`mono tabular-nums text-xs text-right font-semibold ${
+                      className={`tabular-nums text-xs text-right font-semibold ${
                         f.score >= 25
                           ? 'text-[var(--color-positive)]'
                           : f.score < -15
@@ -238,9 +227,9 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
               })}
             </ul>
 
-            <div className="rounded-xl glass-slab p-4 mb-5">
-              <p className="mono text-[10px] tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-2">
-                Because
+            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-4 mb-5">
+              <p className="text-xs text-[var(--color-text-muted)] mb-2">
+                Sample interpretation
               </p>
               <p className="text-sm text-[var(--color-text)] leading-relaxed">{current.because}</p>
             </div>
@@ -249,21 +238,21 @@ export function DemoPreview({ symbols, onSignup, onSignin, onClear }: DemoPrevie
               <button
                 type="button"
                 onClick={onSignup}
-                className="flex-1 px-6 py-3 bg-[image:var(--gradient-sovereign)] text-white rounded-sm mono text-[10px] font-black tracking-[0.3em] uppercase animate-press animate-lift shadow-[0_4px_30px_rgba(123,44,255,0.35)] hover:shadow-[0_6px_40px_rgba(123,44,255,0.5)] hover:brightness-110"
+                className="flex-1 px-6 py-3 bg-[var(--color-accent)] text-white rounded-lg text-sm font-semibold hover:bg-[var(--color-accent-hover)] transition-colors"
               >
-                Save & Run Live →
+                Create your portfolio
               </button>
               <button
                 type="button"
                 onClick={onSignin}
-                className="px-6 py-3 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent-secondary)] hover:text-[var(--color-accent-secondary-text)] rounded-sm mono text-[10px] font-bold tracking-[0.3em] uppercase animate-press animate-lift transition-[background-color,border-color,color] duration-200"
+                className="px-6 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-lg text-sm font-medium transition-colors"
               >
-                Sign In
+                Sign in
               </button>
             </div>
 
-            <p className="mt-4 mono text-[9px] tracking-[0.3em] uppercase text-[var(--color-text-muted)]">
-              Demo · Cached factor scoring. Live mode adds: streaming (delayed) quotes · CVRF beliefs · regime detection · alerts.
+            <p className="mt-4 text-xs text-[var(--color-text-muted)]">
+              Illustrative demo only. Sample scores and interpretations are not investment recommendations.
             </p>
           </div>
         </div>
@@ -280,10 +269,10 @@ function Stat({ label, value, positive, negative }: { label: string; value: numb
       : 'text-[var(--color-text)]';
   return (
     <div className="text-center">
-      <p className="mono text-[9px] tracking-[0.3em] uppercase text-[var(--color-text-muted)] mb-1">
+      <p className="text-xs text-[var(--color-text-muted)] mb-1">
         {label}
       </p>
-      <p className={`mono tabular-nums text-base font-bold ${color}`}>{value}</p>
+      <p className={`tabular-nums text-base font-bold ${color}`}>{value}</p>
     </div>
   );
 }

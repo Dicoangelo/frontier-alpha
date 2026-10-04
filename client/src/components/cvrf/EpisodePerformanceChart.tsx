@@ -73,7 +73,7 @@ function ChartTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!data) return null;
 
   return (
-    <div className="backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-text-inverse)] border border-theme-light rounded-lg shadow-lg px-3 py-2 text-xs">
+    <div className="backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-tooltip-text)] border border-theme-light rounded-lg shadow-lg px-3 py-2 text-xs">
       <p className="mono text-[10px] tracking-[0.3em] uppercase opacity-70 mb-1">{label}</p>
       <div className="space-y-1">
         <div className="flex justify-between gap-4">

@@ -1,0 +1,70 @@
+/* Group related cards without adding another decorative frame. */
+.dashboard-workspace { min-width: 0; }
+.dashboard-workspace .dashboard-zone,
+.dashboard-workspace .dashboard-zone:hover {
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+.dashboard-workspace .dashboard-zone > header {
+  min-height: 56px;
+  padding: 0 0 16px;
+  border-bottom: 0;
+}
+.dashboard-workspace .dashboard-zone > header > div > span { display: none; }
+.dashboard-workspace .dashboard-zone > header h2 {
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.dashboard-workspace .dashboard-zone > header p {
+  margin-top: 4px;
+  font-size: 12px;
+}
+.dashboard-workspace .dashboard-zone > header button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg-secondary);
+}
+.dashboard-workspace .dashboard-zone > div { padding: 0; }
+.dashboard-market-status > [role='status'] {
+  position: relative;
+  z-index: 1;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  backdrop-filter: none;
+}
+.dashboard-market-status > [role='status'] > div:first-child {
+  max-width: none;
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.dashboard-market-status .glass-slab,
+.dashboard-market-status .glass-slab-floating {
+  padding-right: 10px;
+  padding-left: 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.dashboard-market-status .glass-slab-floating > span[aria-hidden='true']:first-child { display: none; }
+.dashboard-market-status [class*='animate-pulse'] { animation: none; }
+.dashboard-workspace [data-tour='equity-curve'] > div,
+.dashboard-workspace [data-tour='equity-curve'] > section { border-radius: 12px; }
+.dashboard-workspace .surface-card { min-width: 0; }
+@media (max-width: 640px) {
+  .dashboard-market-status > [role='status'] > div:first-child { height: 32px; }
+  .dashboard-workspace .dashboard-zone > header p { white-space: normal; }
+}

@@ -11,12 +11,14 @@ interface ThemeState {
 }
 
 function getSystemTheme(): 'light' | 'dark' {
-  if (typeof window === 'undefined') return 'dark';
+  if (typeof window === 'undefined') return 'light';
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 function applyTheme(resolved: 'light' | 'dark') {
   const root = document.documentElement;
+  const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (themeColor) themeColor.content = resolved === 'dark' ? '#171d26' : '#f6f8fb';
   if (resolved === 'dark') {
     root.classList.add('dark');
   } else {
@@ -27,8 +29,8 @@ function applyTheme(resolved: 'light' | 'dark') {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
-      theme: 'dark',
-      resolved: 'dark',
+      theme: 'light',
+      resolved: 'light',
 
       setTheme: (theme: Theme) => {
         const resolved = theme === 'system' ? getSystemTheme() : theme;
@@ -58,7 +60,7 @@ export const useThemeStore = create<ThemeState>()(
 
 // Listen for system theme changes
 if (typeof window !== 'undefined') {
-  // Apply dark class immediately on load (before React hydrates)
+  // Apply the saved appearance before React mounts.
   applyTheme(useThemeStore.getState().resolved);
 
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {

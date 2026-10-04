@@ -1,11 +1,11 @@
 {
   "name": "Frontier Alpha",
   "short_name": "Frontier",
-  "description": "💎 AI-Powered Cognitive Factor Intelligence Platform — Institutional-grade portfolio analytics with AI-powered explanations.",
+  "description": "Portfolio analytics, factor research, and clear risk insights.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0F1219",
-  "theme_color": "#7B2CFF",
+  "background_color": "#f6f8fb",
+  "theme_color": "#285cc4",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [

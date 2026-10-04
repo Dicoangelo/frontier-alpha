@@ -7,7 +7,7 @@ import {
   MoreHorizontal,
   BarChart3,
   Calendar,
-  Sparkles,
+  SlidersHorizontal,
   Cpu,
   Sigma,
   Users,
@@ -29,7 +29,7 @@ const mobileNavigation = [
 const morePages = [
   { name: 'Factors', icon: BarChart3, href: '/factors' },
   { name: 'Earnings', icon: Calendar, href: '/earnings' },
-  { name: 'Optimize', icon: Sparkles, href: '/optimize' },
+  { name: 'Optimize', icon: SlidersHorizontal, href: '/optimize' },
   { name: 'ML', icon: Cpu, href: '/ml' },
   { name: 'Backtest', icon: LineChart, href: '/backtest' },
   { name: 'Options', icon: Sigma, href: '/options' },
@@ -49,7 +49,7 @@ function navButtonClass(isActive: boolean) {
     before:content-[''] before:absolute before:top-0 before:left-1/2 before:-translate-x-1/2
     before:h-[3px] before:w-8 before:rounded-full
     ${isActive
-      ? 'text-[var(--color-accent-text)] before:bg-[image:var(--gradient-sovereign)]'
+      ? 'text-[var(--color-accent-text)] before:bg-[var(--color-accent)]'
       : 'text-theme-secondary hover:text-theme before:bg-transparent'
     }
   `;
@@ -65,7 +65,7 @@ function NavButtonContent({
   return (
     <>
       <Icon className="w-[22px] h-[22px]" aria-hidden="true" />
-      <span className="mono text-[10px] tracking-[0.15em] uppercase">{label}</span>
+      <span className="text-[11px] font-medium">{label}</span>
     </>
   );
 }
@@ -80,7 +80,7 @@ export function MobileNav() {
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden glass-slab-floating border-t border-theme"
+        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden workspace-mobile-nav border-t border-theme"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0)' }}
         aria-label="Mobile navigation"
       >

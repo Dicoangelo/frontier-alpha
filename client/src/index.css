@@ -7,182 +7,104 @@
 
 @layer base {
   :root {
-    /* Backgrounds */
-    --color-bg: #F8FAFC;
-    --color-bg-secondary: rgba(255, 255, 255, 0.85);
-    --color-bg-tertiary: rgba(0, 0, 0, 0.03);
-
-    /* Text */
-    --color-text: #0B1020;
-    --color-text-secondary: rgba(0, 0, 0, 0.6);
-    --color-text-muted: rgba(0, 0, 0, 0.4);
-
-    /* Borders */
-    --color-border: rgba(11, 16, 32, 0.1);
-    --color-border-light: rgba(11, 16, 32, 0.05);
-    --color-border-hover: rgba(11, 16, 32, 0.2);
-
-    /* Primary / Accent */
-    --color-primary: #7B2CFF;
-    --color-accent: #7B2CFF;
-    --color-accent-hover: #6920e0;
-    --color-accent-light: rgba(123, 44, 255, 0.08);
-    --color-accent-secondary: #18E6FF;
-    /* Accent used as TEXT. On light surfaces the brand violet is already
-     * readable (5.76:1 on white), so this matches --color-accent here and
-     * only diverges in dark mode. Split out because --color-accent also backs
-     * borders, glows and gradient stops, which must keep the exact brand hue. */
-    --color-accent-text: #7B2CFF;
-    /* Secondary accent as TEXT. Brand cyan #18E6FF is 1.52:1 on white —
-     * effectively invisible for the "Required" field markers and inline links
-     * that use it. cyan-700 holds the hue and clears AA at 5.36:1. */
-    --color-accent-secondary-text: #0e7490;
-
-    /* Semantic state — LIGHT THEME.
-     *
-     * These are read as TEXT (gain/loss figures, badges, status labels), so
-     * they are held to WCAG AA 4.5:1 against the light surfaces, not to the
-     * dark-theme palette they were copied from. The vivid 500-weights below
-     * were inherited from `.dark` and fail badly on white:
-     *   #10b981 positive -> 2.54:1   #ef4444 negative -> 3.76:1
-     *   #f59e0b warning  -> 2.15:1   #3b82f6 info     -> 3.68:1
-     * Every "+$3,500.00" and "-8.03%" in the app rendered below the readable
-     * floor in light mode. Measured against #f8fafc (page) and #fff (card).
-     *
-     * The --chart-* palette below is deliberately NOT darkened: chart strokes
-     * and fills are not text, and keeping the 500-weights preserves the
-     * product's visual identity. Dark theme is unaffected (.dark overrides). */
-    --color-positive: #047857; /* emerald-700  5.48:1 on card */
-    --color-negative: #b91c1c; /* red-700      6.47:1 */
-    --color-success: #047857;
-    --color-danger: #b91c1c;
-    --color-warning: #b45309;  /* amber-700    5.02:1 */
-    --color-info: #1d4ed8;     /* blue-700     6.70:1 */
-
-    /* Live/streaming status TEXT. The brand teal (#00FFC6) is theme-invariant
-     * by design and renders at 1.30:1 on a light card — effectively invisible.
-     * Decorative uses (the pulsing dot, glows) keep the brand teal; anything
-     * carrying meaning as text uses this. */
-    --color-live: #0f766e;     /* teal-700     5.47:1 */
-
-    /* Chart Palette */
-    --chart-primary: #3b82f6;
-    --chart-secondary: #10b981;
-    --chart-accent: #f59e0b;
-    --chart-danger: #ef4444;
-    --chart-purple: #8b5cf6;
-    --chart-cyan: #06b6d4;
-
-    /* Tooltip / Inverse */
-    --color-bg-tooltip: #0F1219;
+    color-scheme: light;
+    --color-bg: #f6f8fb;
+    --color-bg-secondary: #ffffff;
+    --color-bg-tertiary: #eef2f7;
+    --color-text: #202b3c;
+    --color-text-secondary: #526175;
+    --color-text-muted: #65748a;
+    --color-border: #dfe5ed;
+    --color-border-light: #edf0f4;
+    --color-border-hover: #c5cfdd;
+    --color-primary: #285cc4;
+    --color-accent: #285cc4;
+    --color-accent-hover: #204ca5;
+    --color-accent-light: #eaf0fc;
+    --color-accent-text: #285cc4;
+    --color-accent-secondary: #327991;
+    --color-accent-secondary-text: #327991;
+    --color-positive: #20764f;
+    --color-negative: #b43f48;
+    --color-success: #20764f;
+    --color-danger: #b43f48;
+    --color-warning: #94620d;
+    --color-info: #285cc4;
+    --color-live: #20764f;
+    --chart-primary: #3972c5;
+    --chart-secondary: #318565;
+    --chart-accent: #ae7c30;
+    --chart-danger: #bf5960;
+    --chart-purple: #7b72b4;
+    --chart-cyan: #40879b;
+    --chart-pink: #b57695;
+    --chart-teal: #5f918b;
+    --color-bg-tooltip: #ffffff;
+    --color-tooltip-text: #202b3c;
     --color-text-inverse: #ffffff;
-
-    /* Brand — Metaventions AI sovereign spectrum (theme-invariant) */
-    --brand-amethyst: #7B2CFF;
-    --brand-cyan: #18E6FF;
-    --brand-magenta: #FF3DF2;
-    --brand-teal: #00FFC6;
-    --brand-gold: #D7B26D;
-    --gradient-sovereign: linear-gradient(90deg, #FF3DF2 0%, #7B2CFF 50%, #18E6FF 100%);
-    --gradient-halo: linear-gradient(135deg, rgba(0, 255, 198, 0.18) 0%, rgba(24, 230, 255, 0.14) 50%, rgba(90, 167, 255, 0.18) 100%);
-    /* Legacy alias */
-    --color-brand-teal: #00FFC6;
-
-    /* Chart extras */
-    --chart-pink: #EC4899;
-    --chart-teal: #14B8A6;
-
-    /* Misc */
-    --color-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+    --brand-amethyst: #285cc4;
+    --brand-cyan: #327991;
+    --brand-magenta: #7b72b4;
+    --brand-teal: #318565;
+    --brand-gold: #ae7c30;
+    --color-brand-teal: #318565;
+    /* Retain image-compatible aliases for existing component utilities. */
+    --gradient-sovereign: linear-gradient(90deg, var(--color-accent), var(--color-accent));
+    --gradient-halo: linear-gradient(var(--color-bg-secondary), var(--color-bg-secondary));
+    --color-card-shadow: 0 1px 2px rgba(25, 43, 69, 0.03);
     --font-mono: 'JetBrains Mono', monospace;
-
-    /* ── Motion System (MOTION-001) ─────────────────────────────────────
-       Durations and easings for the unified motion grammar.
-       Usage:
-         transition: transform var(--motion-duration-fast) var(--motion-ease-out);
-         animation-delay: calc(var(--index) * var(--motion-stagger-step));
-    */
-    --motion-duration-fast: 150ms;   /* presses, focus-rings, micro-hovers */
-    --motion-duration-base: 240ms;   /* card enter, tab switch, dropdowns */
-    --motion-duration-slow: 400ms;   /* route transitions, panel expand */
-    --motion-duration-hero: 620ms;   /* landing hero reveals only */
-    --motion-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);   /* decelerating enter */
-    --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);        /* accelerating exit */
-    --motion-ease-inout: cubic-bezier(0.4, 0, 0.2, 1);   /* standard transform */
-    --motion-stagger-step: 60ms;     /* per-item delay for list reveals */
+    --motion-duration-fast: 150ms;
+    --motion-duration-base: 180ms;
+    --motion-duration-slow: 220ms;
+    --motion-duration-hero: 300ms;
+    --motion-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --motion-ease-inout: cubic-bezier(0.4, 0, 0.2, 1);
+    --motion-stagger-step: 40ms;
   }
 
   .dark {
-    /* Backgrounds */
-    --color-bg: #0F1219;
-    --color-bg-secondary: rgba(22, 28, 45, 0.55);
-    --color-bg-tertiary: rgba(255, 255, 255, 0.04);
-
-    /* Text */
-    --color-text: #E6EDF5;
-    --color-text-secondary: rgba(255, 255, 255, 0.65);
-    --color-text-muted: rgba(255, 255, 255, 0.45);
-
-    /* Borders */
-    --color-border: rgba(255, 255, 255, 0.12);
-    --color-border-light: rgba(255, 255, 255, 0.06);
-    --color-border-hover: rgba(255, 255, 255, 0.22);
-
-    /* Primary / Accent */
-    --color-primary: #7B2CFF;
-    --color-accent: #7B2CFF;
-    --color-accent-hover: #9454ff;
-    --color-accent-light: rgba(123, 44, 255, 0.15);
-    --color-accent-secondary: #18E6FF;
-    /* Accent used as TEXT on dark surfaces. The brand violet #7B2CFF only
-     * reaches 2.85:1 on a dark card — below the readable floor at the 10-12px
-     * sizes it is used at. violet-400 keeps the hue and clears AA at 6.03:1.
-     * --color-accent itself is unchanged so borders, glows and the sovereign
-     * gradient keep the exact brand colour. */
-    --color-accent-text: #a78bfa;
-    /* Brand cyan is already 10.79:1 on a dark card, so it stands as text here. */
-    --color-accent-secondary-text: #18E6FF;
-
-    /* Semantic state — DARK THEME. Already contrast-correct on #0f1219. */
-    --color-positive: #34d399;
-    --color-negative: #f87171;
-    --color-success: #34d399;
-    --color-danger: #f87171;
-    --color-warning: #fbbf24;
-    --color-info: #60a5fa;
-
-    /* Live status text — the brand teal is readable on dark, so it stands. */
-    --color-live: #00FFC6;
-
-    /* Chart Palette */
-    --chart-primary: #60a5fa;
-    --chart-secondary: #34d399;
-    --chart-accent: #fbbf24;
-    --chart-danger: #f87171;
-    --chart-purple: #a78bfa;
-    --chart-cyan: #22d3ee;
-
-    /* Tooltip / Inverse */
-    --color-bg-tooltip: #1a1f2e;
-    --color-text-inverse: #0B1020;
-
-    /* Brand — Metaventions AI sovereign spectrum (theme-invariant) */
-    --brand-amethyst: #7B2CFF;
-    --brand-cyan: #18E6FF;
-    --brand-magenta: #FF3DF2;
-    --brand-teal: #00FFC6;
-    --brand-gold: #D7B26D;
-    --gradient-sovereign: linear-gradient(90deg, #FF3DF2 0%, #7B2CFF 50%, #18E6FF 100%);
-    --gradient-halo: linear-gradient(135deg, rgba(0, 255, 198, 0.22) 0%, rgba(24, 230, 255, 0.18) 50%, rgba(90, 167, 255, 0.22) 100%);
-    /* Legacy alias */
-    --color-brand-teal: #00FFC6;
-
-    /* Chart extras */
-    --chart-pink: #F472B6;
-    --chart-teal: #2DD4BF;
-
-    /* Misc */
-    --color-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    color-scheme: dark;
+    --color-bg: #171d26;
+    --color-bg-secondary: #1e2632;
+    --color-bg-tertiary: #293344;
+    --color-text: #e6ecf4;
+    --color-text-secondary: #b8c5d6;
+    --color-text-muted: #99a9bd;
+    --color-border: #354153;
+    --color-border-light: #2c3747;
+    --color-border-hover: #53627a;
+    --color-primary: #366bd0;
+    --color-accent: #366bd0;
+    --color-accent-hover: #447bdf;
+    --color-accent-light: #273a57;
+    --color-accent-text: #94baff;
+    --color-accent-secondary: #87b4c6;
+    --color-accent-secondary-text: #87b4c6;
+    --color-positive: #8ac9a6;
+    --color-negative: #e3a0a4;
+    --color-success: #8ac9a6;
+    --color-danger: #e3a0a4;
+    --color-warning: #dabc7b;
+    --color-info: #94baff;
+    --color-live: #8ac9a6;
+    --chart-primary: #84acf0;
+    --chart-secondary: #8ac9a6;
+    --chart-accent: #dabc7b;
+    --chart-danger: #e3a0a4;
+    --chart-purple: #b1a9df;
+    --chart-cyan: #87b4c6;
+    --chart-pink: #cea3b9;
+    --chart-teal: #8cbcb5;
+    --color-bg-tooltip: #1e2632;
+    --color-tooltip-text: #e6ecf4;
+    --brand-amethyst: #94baff;
+    --brand-cyan: #87b4c6;
+    --brand-magenta: #b1a9df;
+    --brand-teal: #8ac9a6;
+    --brand-gold: #dabc7b;
+    --color-brand-teal: #8ac9a6;
+    --color-card-shadow: none;
   }
 
   html {

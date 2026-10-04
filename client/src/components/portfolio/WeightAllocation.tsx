@@ -1,36 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card } from '@/components/shared/Card';
 import { useThemeStore } from '@/stores/themeStore';
 import type { Position } from '@/types';
-
-// Count-up animation for the donut center value — runs once on mount
-function useCenterCountUp(target: number, formatter: (v: number) => string) {
-  const ref = useRef<SVGTextElement>(null);
-  const hasRun = useRef(false);
-
-  const animate = useCallback(() => {
-    if (!ref.current || hasRun.current) return;
-    hasRun.current = true;
-    const el = ref.current;
-    let start: number | null = null;
-
-    const step = (ts: number) => {
-      if (!start) start = ts;
-      const p = Math.min((ts - start) / 800, 1);
-      const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
-      el.textContent = formatter(eased * target);
-      if (p < 1) requestAnimationFrame(step);
-    };
-
-    requestAnimationFrame(step);
-  }, [target, formatter]);
-
-  useEffect(() => {
-    animate();
-  }, [animate]);
-
-  return ref;
-}
 
 // Read chart palette from CSS variables at render time (theme-reactive)
 function getSegmentColors(): string[] {
@@ -47,7 +18,6 @@ function getSegmentColors(): string[] {
 
 interface WeightAllocationProps {
   positions: Position[];
-  totalValue: number;
 }
 
 interface Segment {
@@ -59,7 +29,7 @@ interface Segment {
   dashOffset: number;
 }
 
-function buildSegments(positions: Position[], _totalValue: number, segmentColors: string[]): Segment[] {
+function buildSegments(positions: Position[], segmentColors: string[]): Segment[] {
   const r = 54;
   const circumference = 2 * Math.PI * r;
 
@@ -94,44 +64,26 @@ function buildSegments(positions: Position[], _totalValue: number, segmentColors
   });
 }
 
-export const WeightAllocation = React.memo(function WeightAllocation({ positions, totalValue }: WeightAllocationProps) {
+export const WeightAllocation = React.memo(function WeightAllocation({ positions }: WeightAllocationProps) {
   const [hoveredSymbol, setHoveredSymbol] = useState<string | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const hasAnimated = useRef(false);
   const isDark = useThemeStore((s) => s.resolved === 'dark');
-
-  const centerRef = useCenterCountUp(totalValue, (v) =>
-    v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v.toFixed(0)}`
-  );
-
-  useEffect(() => {
-    if (hasAnimated.current) return;
-    hasAnimated.current = true;
-    const frame = requestAnimationFrame(() => setIsVisible(true));
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
-  if (positions.length === 0) return null;
 
   const SIZE = 160;
   const cx = SIZE / 2;
   const cy = SIZE / 2;
   const r = 54;
-  const circumference = 2 * Math.PI * r;
   const strokeWidth = 20;
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const segmentColors = useMemo(() => getSegmentColors(), [isDark]);
-  const segments = useMemo(() => buildSegments(positions, totalValue, segmentColors), [positions, totalValue, segmentColors]);
+  const segments = useMemo(() => buildSegments(positions, segmentColors), [positions, segmentColors]);
   const hovered = hoveredSymbol ? segments.find(s => s.symbol === hoveredSymbol) : null;
 
-  const formattedTotal = totalValue >= 1000
-    ? `$${(totalValue / 1000).toFixed(0)}k`
-    : `$${totalValue.toFixed(0)}`;
+  if (positions.length === 0) return null;
 
   return (
-    <Card title="Weight Allocation">
-      <div className="flex flex-col sm:flex-row items-center gap-6">
+    <Card title="Weight allocation">
+      <div className="flex flex-wrap items-center justify-center gap-5">
         {/* SVG Donut */}
         <div className="relative flex-shrink-0" style={{ minWidth: 160, minHeight: 160 }}>
           <svg
@@ -153,7 +105,7 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
 
             {/* Segments — rotate so first segment starts at top */}
             <g transform={`rotate(-90 ${cx} ${cy})`}>
-              {segments.map((seg, i) => (
+              {segments.map((seg) => (
                 <circle
                   key={seg.symbol}
                   cx={cx}
@@ -163,14 +115,10 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
                   stroke={seg.color}
                   strokeWidth={hoveredSymbol === seg.symbol ? strokeWidth + 4 : strokeWidth}
                   strokeDasharray={seg.dashArray}
-                  strokeDashoffset={isVisible ? seg.dashOffset : circumference}
+                  strokeDashoffset={seg.dashOffset}
                   strokeLinecap="butt"
                   className="cursor-pointer"
-                  style={{
-                    transition: isVisible
-                      ? `stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${i * 80}ms, stroke-width 0.15s ease`
-                      : 'none',
-                  }}
+                  style={{ transition: 'stroke-width 0.15s ease' }}
                   onMouseEnter={() => setHoveredSymbol(seg.symbol)}
                   onMouseLeave={() => setHoveredSymbol(null)}
                   onTouchStart={() => setHoveredSymbol(seg.symbol)}
@@ -216,7 +164,6 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
             ) : (
               <>
                 <text
-                  ref={centerRef}
                   x={cx}
                   y={cy - 2}
                   textAnchor="middle"
@@ -224,7 +171,7 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
                   fontWeight="700"
                   fill="var(--color-text)"
                 >
-                  {formattedTotal}
+                  {positions.length}
                 </text>
                 <text
                   x={cx}
@@ -233,7 +180,7 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
                   fontSize="9"
                   fill="var(--color-text-muted)"
                 >
-                  total value
+                  {positions.length === 1 ? 'position' : 'positions'}
                 </text>
               </>
             )}
@@ -241,7 +188,7 @@ export const WeightAllocation = React.memo(function WeightAllocation({ positions
         </div>
 
         {/* Legend */}
-        <div className="flex flex-col gap-2 flex-1 min-w-0">
+        <div className="flex flex-col gap-2 flex-1 basis-36 min-w-0">
           {segments.map((seg) => (
             <div
               key={seg.symbol}

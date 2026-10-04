@@ -69,7 +69,7 @@ function ConvictionTooltip({ active, payload, label }: ConvictionTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
 
   return (
-    <div className="backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-text-inverse)] border border-theme-light rounded-lg p-3 shadow-lg text-xs">
+    <div className="backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-tooltip-text)] border border-theme-light rounded-lg p-3 shadow-lg text-xs">
       <p className="mono text-[10px] tracking-[0.3em] uppercase opacity-70 mb-1">{label}</p>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center justify-between gap-3 py-0.5">

@@ -138,7 +138,7 @@ export function RegimeTimeline() {
 
               {/* Tooltip on hover — backdrop-blurred */}
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                <div className="backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-text-inverse)] border border-theme-light rounded-lg shadow-lg p-2 text-xs whitespace-nowrap">
+                <div className="backdrop-blur-md bg-[var(--color-bg-tooltip)] text-[var(--color-tooltip-text)] border border-theme-light rounded-lg shadow-lg p-2 text-xs whitespace-nowrap">
                   <div className={`font-semibold capitalize ${style.text}`}>{segment.regime}</div>
                   <div className="opacity-70 tabular-nums">
                     Cycles {segment.startCycle}–{segment.endCycle} ({segment.duration} cycle{segment.duration !== 1 ? 's' : ''})
